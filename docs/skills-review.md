@@ -50,16 +50,22 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [ ] copywriting
 
 ## Workflows (19)
-- [ ] agent-browser, skill-creator, brainstorming, systematic-debugging
-- [ ] writing-plans, executing-plans, test-driven-development
-- [ ] requesting-code-review, subagent-driven-development
-- [ ] verification-before-completion, dispatching-parallel-agents
+- [ ] agent-browser, skill-creator, brainstorming
+- [R] systematic-debugging — auditada 26-oct (C1: fix en origen, unificar dispatch)
+- [ ] writing-plans, executing-plans
+- [R] test-driven-development — auditada 26-oct (C15 change-detector → borrar)
+- [R] requesting-code-review — auditada 26-oct (calibración fortalezas/debilidades)
+- [ ] subagent-driven-development
+- [R] verification-before-completion — auditada 26-oct (gaps E2E: console-errors, ramas API)
+- [ ] dispatching-parallel-agents
 - [ ] using-git-worktrees, finishing-a-development-branch, browser-use
 - [ ] ralph-tui-prd, ralph-tui-create-beads, ralph-tui-create-json
 - [ ] ralph-wiggum, ralph-loop-workflow
 
 ## Testing (3)
-- [ ] webapp-testing, playwright-best-practices, playwright-cli
+- [R] webapp-testing — auditada 26-oct (suite: behavior sí, oráculos independientes sí)
+- [R] playwright-best-practices — auditada 26-oct (selectores/wait OK; falta console-error fail, E10 anotar)
+- [ ] playwright-cli
 
 ## Next.js (5)
 - [ ] vercel-react-best-practices, deploy-to-vercel, turborepo, ai-sdk
@@ -111,3 +117,24 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - F13 aria-live charla en scrub → estrechar región o aria-busy.
 - F14 empty states en 2 tablas. F15 PricingLab 832 líneas (descomponer al tocar). F16 menores a11y/URL.
 - NO tocar: dark mode/restyle, recharts/react-query, motion libs, toasts de error, copy honesta, user-scalable=no.
+### Código/tests (26-oct, auditor solo-lectura, 7 skills)
+- C1 DIVERGENCIA: producción (`evaluation.py:227`) vs dispatch muerto (`evaluate_anomaly`, 0 callers) en rglcap85 cierre-25 y unsupported. DECISIÓN LEAD: gana producción (RULE_ENGINE/T22 verificado: rglcap SIN cierre25, unsupported→not_applicable); unificar dispatch a producción, corregir test_anomaly:126-129, añadir integración rglcap por POST /scenarios/evaluate.
+- C2 `eligibility._decimal` acepta Infinity→met / NaN→not_met engañoso → reutilizar `money.parse_decimal` + regresión.
+- C3 idempotencia check→store con carrera → capturar conflicto en store, devolver respuesta ganadora + test concurrencia.
+- C4 KPIs stale con input inválido → limpiar/marcar (frontend).
+- C5 contrato anuncia createTender/uploadDocument/getHistory sin implementar → anotar unimplemented-by-design o implementar.
+- C6 budget-exhaust no persiste traza (rollback) → decidir persist-then-raise + test.
+- C7 html_path sin validar forma uuid-hex → validar.
+- C8 list_tenders N+1 + paginación en Python → SQL al llegar 2º tender.
+- C9 E2E storage compartido workers:1 → documentar o aislar por worker.
+- C10 E2E sin console/page-error fail → añadir listener.
+- C11 E10 waitForTimeout justificado → anotar como intencional.
+- C12 recharts en bundle inicial → lazy CurveChart + Suspense.
+- C13 añadir eslint-plugin-react-hooks.
+- C14 E2E no pasa VITE_API_URL → pasar o asertar default.
+- C15 borrar test_placeholder change-detector (versión ya pineada en test_health).
+- C16 fixture DB copiada en 7 ficheros → conftest.py.
+- C17 nits (OpName, depth, pyc stale, precisión curva 28→34).
+- Suite: behavior sí, oráculos independientes sí, selectores/wait OK.
+- DEAD: repositories.py, schemas/* shims, to_dict duplicados, OpName, evaluate_anomaly (tras C1), extract_pages sin cablear (tras C5), HistoricalAward, clamp sin caller; deps: openai, pdfplumber, python-multipart, pdfjs-dist, react-hook-form; exports: getTender, getHealth+Health, 4 type-alias, clearSession, scoreStatusEs, rateToDiscountPercent, scenarioNameInputSchema, RivalPrice.
+- NO borrar aún: traces computadas (exponer o quitar — decisión), helpers dominio testeados (superficie pública intencional?), AuditEvent write-only (auditoría real), run_job retry (inaccesible sin ruta — decidir).
