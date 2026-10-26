@@ -51,24 +51,18 @@ def test_stub_refusal_and_invalid_json_raise_typed_errors() -> None:
         meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL).extract(_pages())
     assert exc.value.code == "provider_refusal"
     with pytest.raises(meta_adapter.AdapterError) as exc:
-        meta_adapter.StubExtractor(meta_adapter.StubScenario.INVALID_JSON).extract(
-            _pages()
-        )
+        meta_adapter.StubExtractor(meta_adapter.StubScenario.INVALID_JSON).extract(_pages())
     assert exc.value.code == "invalid_model_output"
 
 
 def test_stub_truncated_stays_explicit() -> None:
-    result = meta_adapter.StubExtractor(meta_adapter.StubScenario.TRUNCATED).extract(
-        _pages()
-    )
+    result = meta_adapter.StubExtractor(meta_adapter.StubScenario.TRUNCATED).extract(_pages())
     assert any("truncated" in w for w in result.warnings)
     g.ExtractionProposal.model_validate(result.proposal)
 
 
 def test_pages_input_hash_deterministic() -> None:
-    assert meta_adapter.pages_input_hash(_pages()) == meta_adapter.pages_input_hash(
-        _pages()
-    )
+    assert meta_adapter.pages_input_hash(_pages()) == meta_adapter.pages_input_hash(_pages())
 
 
 def test_select_adapter_demo_needs_no_key(monkeypatch: pytest.MonkeyPatch) -> None:

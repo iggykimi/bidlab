@@ -8,9 +8,12 @@ points are computed. Float inputs are rejected everywhere: no Decimal(float).
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
 from contextlib import contextmanager
 from decimal import ROUND_HALF_UP, Decimal, DivisionByZero, InvalidOperation, Overflow, localcontext
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 PRECISION = 34
 CENT = Decimal("0.01")

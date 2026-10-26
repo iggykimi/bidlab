@@ -23,7 +23,7 @@ def get_db() -> Iterator[Session]:
     yield from get_session()
 
 
-async def require_local_client(
+def require_local_client(
     request: Request,
     x_bidlab_client: str | None = Header(default=None),
 ) -> None:

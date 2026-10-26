@@ -83,7 +83,9 @@ def seed() -> dict[str, int]:
         created = _now()
 
         meta = tender["metadata_evidence"]
-        assert isinstance(meta, list)
+        if not isinstance(meta, list):
+            msg = "fixture tender.json: metadata_evidence must be a list"
+            raise TypeError(msg)
         session.add(
             models.Tender(
                 id="tias",
@@ -121,11 +123,17 @@ def seed() -> dict[str, int]:
             )
         )
         scopes = tender["scopes"]
-        assert isinstance(scopes, list)
+        if not isinstance(scopes, list):
+            msg = "fixture tender.json: scopes must be a list"
+            raise TypeError(msg)
         scope0 = scopes[0]
-        assert isinstance(scope0, dict)
+        if not isinstance(scope0, dict):
+            msg = "fixture tender.json: scopes[0] must be an object"
+            raise TypeError(msg)
         basis_inner = scope0["basis"]
-        assert isinstance(basis_inner, dict)
+        if not isinstance(basis_inner, dict):
+            msg = "fixture tender.json: scopes[0].basis must be an object"
+            raise TypeError(msg)
         basis = dict(basis_inner)
         basis["review_status"] = "approved"
         basis["evidence_ids"] = [
@@ -161,9 +169,13 @@ def seed() -> dict[str, int]:
         )
 
         proposal = interp["proposal"]
-        assert isinstance(proposal, dict)
+        if not isinstance(proposal, dict):
+            msg = "fixture interpretation.json: proposal must be an object"
+            raise TypeError(msg)
         claims = proposal["claims"]
-        assert isinstance(claims, list)
+        if not isinstance(claims, list):
+            msg = "fixture interpretation.json: proposal.claims must be a list"
+            raise TypeError(msg)
         by_page: dict[int, list[str]] = {}
         for claim in claims:
             for cit in claim["citations"]:
@@ -193,7 +205,8 @@ def seed() -> dict[str, int]:
             quote = str(cit0["verbatim_excerpt"])
             start = norm.find(_normalize(quote))
             if start < 0:
-                raise RuntimeError(f"seed quote not found for claim {claim['key']}")
+                msg = f"seed quote not found for claim {claim['key']}"
+                raise RuntimeError(msg)
             session.add(
                 models.Citation(
                     id=f"cit-{claim['key']}",
@@ -228,7 +241,9 @@ def seed() -> dict[str, int]:
         )
         rule = review["rule"]
         anomaly = review["anomaly_policy"]
-        assert isinstance(rule, dict) and isinstance(anomaly, dict)
+        if not isinstance(rule, dict) or not isinstance(anomaly, dict):
+            msg = "fixture review.json: rule and anomaly_policy must be objects"
+            raise TypeError(msg)
         session.flush()
         session.add(
             models.RuleRevision(
@@ -283,7 +298,9 @@ def seed() -> dict[str, int]:
         session.add(models.Company(id=str(company["id"]), created_at=created))
         session.flush()
         company_rev = company["revision"]
-        assert isinstance(company_rev, int)
+        if not isinstance(company_rev, int):
+            msg = "fixture company.json: revision must be an integer"
+            raise TypeError(msg)
         session.add(
             models.CompanyRevision(
                 company_id=str(company["id"]),

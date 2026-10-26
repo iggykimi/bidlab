@@ -13,6 +13,12 @@ def test_health_ok() -> None:
     assert body == {"status": "ok", "engine_version": "1.0.0", "schema_version": "1.0.0"}
 
 
+def test_ready_reports_quick_check(fresh_client: TestClient) -> None:
+    res = fresh_client.get("/api/v1/ready")
+    assert res.status_code == 200
+    assert res.json() == {"status": "ready", "db_quick_check": "ok"}
+
+
 def test_capabilities_demo_shape() -> None:
     res = client.get("/api/v1/capabilities")
     assert res.status_code == 200

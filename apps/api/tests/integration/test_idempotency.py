@@ -61,18 +61,14 @@ def test_store_conflict_returns_winner_response(seeded_client: TestClient) -> No
     body = b'{"name":"w"}'
     first = Session(get_engine())
     try:
-        stored = idempotency.store(
-            first, "POST /api/v1/scenarios", "k-winner", body, {"id": "s1"}
-        )
+        stored = idempotency.store(first, "POST /api/v1/scenarios", "k-winner", body, {"id": "s1"})
         assert stored is None
         first.commit()
     finally:
         first.close()
     second = Session(get_engine())
     try:
-        winner = idempotency.store(
-            second, "POST /api/v1/scenarios", "k-winner", body, {"id": "s2"}
-        )
+        winner = idempotency.store(second, "POST /api/v1/scenarios", "k-winner", body, {"id": "s2"})
     finally:
         second.close()
     assert winner == {"id": "s1"}

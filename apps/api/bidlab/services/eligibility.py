@@ -244,9 +244,9 @@ def check(session: Session, req: g.EligibilityRequest) -> dict[str, Any]:
     profile = company.profile_json if isinstance(company.profile_json, dict) else {}
     hypothetical = bool(profile.get("synthetic", False))
     raw_evidence = profile.get("evidence", [])
-    company_evidence = [e for e in raw_evidence if isinstance(e, dict)] if isinstance(
-        raw_evidence, list
-    ) else []
+    company_evidence = (
+        [e for e in raw_evidence if isinstance(e, dict)] if isinstance(raw_evidence, list) else []
+    )
     reviewed = interp.reviewed_json if isinstance(interp.reviewed_json, dict) else {}
     tree = reviewed.get("requirements_tree")
     if not isinstance(tree, dict):

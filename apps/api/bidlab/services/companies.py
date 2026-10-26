@@ -7,6 +7,7 @@ as integer cents; the full profile (incl. evidence) lives in profile_json.
 
 import datetime as dt
 import uuid
+from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -76,10 +77,8 @@ def _normalize_evidence(evidence: Any) -> Any:
         for key in ("period_from", "period_to"):
             raw = fixed.get(key)
             if isinstance(raw, str):
-                try:
+                with suppress(ValueError):
                     fixed[key] = date.fromisoformat(raw)
-                except ValueError:
-                    pass
         out.append(fixed)
     return out
 
@@ -149,14 +148,13 @@ def get_company(session: Session, company_id: str) -> dict[str, Any]:
     return company_to_dict(company_id, get_revision(session, company_id, latest))
 
 
-def update_company(
-    session: Session, company_id: str, payload: g.CompanyUpdate
-) -> dict[str, Any]:
+def update_company(session: Session, company_id: str, payload: g.CompanyUpdate) -> dict[str, Any]:
     if session.get(models.Company, company_id) is None:
         raise ApiError(404, "company_not_found", f"unknown company {company_id}")
     data = payload.model_dump(mode="json")
     latest = latest_revision(session, company_id)
-    assert latest is not None
+    if latest is None:
+        raise ApiError(500, "company_without_revision", f"company {company_id} has no revision")
     expected = int(data["expected_revision"])
     if expected != latest:
         raise ApiError(

@@ -11,11 +11,10 @@ from __future__ import annotations
 import datetime as dt
 import secrets
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
@@ -23,6 +22,9 @@ from bidlab.schemas import generated as g
 from bidlab.services import meta_adapter
 from bidlab.services import pdf as pdf_service
 from bidlab.settings import get_settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 LEASE_MINUTES = 10
 NON_PROPOSED_CLAIM = frozenset({"not_found", "ambiguous", "unsupported"})
@@ -120,9 +122,7 @@ def check_live_budget(session: Session) -> None:
         raise ApiError(429, "budget_exhausted", "live model budget exhausted")
 
 
-def start_analysis(
-    session: Session, tender_id: str, payload: g.AnalysisRequest
-) -> models.Job:
+def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest) -> models.Job:
     tender = session.get(models.Tender, tender_id)
     if tender is None:
         raise ApiError(404, "tender_not_found", f"unknown tender {tender_id}")
@@ -143,9 +143,7 @@ def start_analysis(
             f"got {payload.expected_interpretation_revision}",
         )
     doc_ids = list(dict.fromkeys(item.root for item in payload.document_ids))
-    docs = session.scalars(
-        select(models.Document).where(models.Document.id.in_(doc_ids))
-    ).all()
+    docs = session.scalars(select(models.Document).where(models.Document.id.in_(doc_ids))).all()
     by_id = {doc.id: doc for doc in docs}
     for doc_id in doc_ids:
         doc = by_id.get(doc_id)
@@ -166,9 +164,7 @@ def start_analysis(
                 "document_ids": doc_ids,
                 "mode": payload.mode,
                 "allow_remote_processing": payload.allow_remote_processing,
-                "expected_interpretation_revision": (
-                    payload.expected_interpretation_revision
-                ),
+                "expected_interpretation_revision": (payload.expected_interpretation_revision),
             },
             "progress": {"processed_pages": 0, "total_pages": total_pages},
             "warnings": [],
@@ -248,22 +244,14 @@ def _iter_proposal_citations(proposal: dict[str, Any]) -> list[dict[str, Any]]:
     found: list[dict[str, Any]] = []
     for claim in proposal.get("claims", []) or []:
         if isinstance(claim, dict):
-            found.extend(
-                c for c in (claim.get("citations", []) or []) if isinstance(c, dict)
-            )
+            found.extend(c for c in (claim.get("citations", []) or []) if isinstance(c, dict))
     for req in proposal.get("requirements", []) or []:
         if isinstance(req, dict):
-            found.extend(
-                c for c in (req.get("citations", []) or []) if isinstance(c, dict)
-            )
+            found.extend(c for c in (req.get("citations", []) or []) if isinstance(c, dict))
     formula = proposal.get("pricing_formula")
     if isinstance(formula, dict):
-        found.extend(
-            c for c in (formula.get("citations", []) or []) if isinstance(c, dict)
-        )
-    found.extend(
-        c for c in (proposal.get("anomaly_citations", []) or []) if isinstance(c, dict)
-    )
+        found.extend(c for c in (formula.get("citations", []) or []) if isinstance(c, dict))
+    found.extend(c for c in (proposal.get("anomaly_citations", []) or []) if isinstance(c, dict))
     return found
 
 
@@ -294,17 +282,13 @@ def verify_and_store_citations(
         if page_text is None or sha is None:
             missing += 1
             if len(warnings) < 5:
-                warnings.append(
-                    f"citation {index}: no extracted text for {doc_id} p.{page_number}"
-                )
+                warnings.append(f"citation {index}: no extracted text for {doc_id} p.{page_number}")
             continue
         match = pdf_service.locate_citation(page_text, excerpt)
         if match.match_status == "missing":
             missing += 1
             if len(warnings) < 5:
-                warnings.append(
-                    f"citation {index}: quote not found on {doc_id} p.{page_number}"
-                )
+                warnings.append(f"citation {index}: quote not found on {doc_id} p.{page_number}")
         citation_id = f"{id_prefix}-{index:03d}"
         session.add(
             models.Citation(
@@ -410,9 +394,7 @@ def run_job(
         )
     proposal_data = proposal.model_dump(mode="json")
 
-    docs = session.scalars(
-        select(models.Document).where(models.Document.id.in_(doc_ids))
-    ).all()
+    docs = session.scalars(select(models.Document).where(models.Document.id.in_(doc_ids))).all()
     doc_sha256 = {doc.id: doc.sha256 for doc in docs}
     by_doc: dict[str, int] = {}
     for page in pages:
@@ -421,13 +403,9 @@ def run_job(
     for doc in docs:
         have = by_doc.get(doc.id, 0)
         if have < doc.pages_count:
-            job_warnings.append(
-                f"document {doc.id}: {have} of {doc.pages_count} pages have text"
-            )
+            job_warnings.append(f"document {doc.id}: {have} of {doc.pages_count} pages have text")
 
-    text_by_page = {
-        (page.document_id, page.page_number): page.normalized_text for page in pages
-    }
+    text_by_page = {(page.document_id, page.page_number): page.normalized_text for page in pages}
     _, citation_warnings, unmatched = verify_and_store_citations(
         session,
         id_prefix=f"cit-{job.id}-a{attempt}",
@@ -471,15 +449,9 @@ def run_job(
     )
     claims = proposal_data.get("claims", []) or []
     weak_claim = any(
-        isinstance(claim, dict) and claim.get("status") in NON_PROPOSED_CLAIM
-        for claim in claims
+        isinstance(claim, dict) and claim.get("status") in NON_PROPOSED_CLAIM for claim in claims
     )
-    needs_review = (
-        bool(job_warnings)
-        or bool(proposal.unread_pages)
-        or weak_claim
-        or unmatched > 0
-    )
+    needs_review = bool(job_warnings) or bool(proposal.unread_pages) or weak_claim or unmatched > 0
     job.status = "needs_review" if needs_review else "succeeded"
     job.stage = "awaiting_review" if needs_review else "done"
     job.result_revision = new_revision

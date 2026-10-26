@@ -54,7 +54,10 @@ def test_scoring_keeps_all_declared_offers() -> None:
     all_offers = offers_for_scoring("100", rivals)
     assert all_offers == (Decimal("100"), Decimal("60"), Decimal("61"), Decimal("100"))
     result = evaluate_score(
-        template_for("proportional_inverse"), "49", all_offers[0], all_offers[1:],
+        template_for("proportional_inverse"),
+        "49",
+        all_offers[0],
+        all_offers[1:],
         complete=True,
     )
     assert result.status == "defined"
@@ -71,8 +74,11 @@ def test_unknown_group_keeps_score_defined() -> None:
     assert resolved.reference_offers == ()
     assert resolved.reason_codes == ("incomplete_group_data",)
     scored = evaluate_score(
-        template_for("proportional_inverse"), "49", "100",
-        [offer.price for offer in rivals], complete=True,
+        template_for("proportional_inverse"),
+        "49",
+        "100",
+        [offer.price for offer in rivals],
+        complete=True,
     )
     assert scored.status == "defined"
     assert scored.value_serialized == "44.100000000000"

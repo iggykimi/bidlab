@@ -10,7 +10,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] review-animations — auditada 26-oct: BLOCK a CurveChart (line-draw 1500ms por tick → borrar)
 - [R] break-ui — leída completa propia + auditada 26-oct (F8 NaN, F10 overflow, F14 empty states)
 - [R] apple-design — leída completa propia + auditada 26-oct (contraste, reduced-motion, system-ui OK)
-- [R] pick-ui-library — auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
+- [R] pick-ui-library — leída completa propia + auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
 - [R] prototype — auditada 26-oct
 - [R] mobile-native — auditada 26-oct (F3 targets, F4 16px, viewport-fit, safe-area)
 - [R] ask-sonner — auditada 26-oct (F7: Toaster + toast.success en export)
@@ -92,6 +92,16 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 ## Imagen (2)
 - [ ] imagegen-frontend-web, imagegen-frontend-mobile
 
+## Plan wave (9)
+- [R] writing-openapi-specs — auditada 26-oct (O1-O10)
+- [R] extract-openapi-from-code — auditada 26-oct (O1-O10)
+- [R] fastapi — auditada 26-oct (O8, tags routers)
+- [R] security-audit — guidance mode 26-oct (sin vulns; S1-S6)
+- [R] code-review — leída 26-oct (sin run CLI; cubierto por gates)
+- [R] copywriting (marketingskills) — aplicada 26-oct (docs/copy-style-es.md)
+- [ ] receiving-code-review
+- [ ] validate-evaluator, write-judge-prompt
+
 ## Hallazgos super-review (handoff a escritores)
 ### Motion (26-oct, auditor solo-lectura)
 - BLOCK: `CurveChart` recharts `isAnimationActive` (line-draw 1500ms por tick slider) → `false` + gate reduced-motion.
@@ -139,3 +149,22 @@ APLICADO backend 26-oct (commit 87f2ea6, 205 tests, ruff/mypy verde): C1+C2+C3+C
 - Suite: behavior sí, oráculos independientes sí, selectores/wait OK.
 - DEAD: repositories.py, schemas/* shims, to_dict duplicados, OpName, evaluate_anomaly (tras C1), extract_pages sin cablear (tras C5), HistoricalAward, clamp sin caller; deps: openai, pdfplumber, python-multipart, pdfjs-dist, react-hook-form; exports: getTender, getHealth+Health, 4 type-alias, clearSession, scoreStatusEs, rateToDiscountPercent, scenarioNameInputSchema, RivalPrice.
 - NO borrar aún: traces computadas (exponer o quitar — decisión), helpers dominio testeados (superficie pública intencional?), AuditEvent write-only (auditoría real), run_job retry (inaccesible sin ruta — decidir).
+### OpenAPI (26-oct, auditor solo-lectura, 3 skills)
+- O1 3 ops sin implementar con métodos muertos en SDKs → DECISIÓN: BORRAR del contrato + regen (verdad > compat con nada).
+- O2 operationIds camelCase vs snake del skill + drift con auto-IDs app → renombrar contrato a snake + `operation_id=` explícitos en routers.
+- O3 sin tags/summary/descriptions/examples (24/24) → tags por router + summary+description+examples.
+- O4 ~250 bloques error idénticos, `Error.code` string libre → enum/literal + `components/responses` (corta el YAML a la mitad).
+- O5 Money/Decimal/ID inlinados (113 clases, 6 money RootModel) → `components/schemas` + discriminator en oneOf + `components/parameters` para headers.
+- O6 review acepta Idempotency-Key no declarado → declarar opcional.
+- O7 CORS bloquea PUT companies (latente) → añadir PUT (ver S1).
+- O8 health/capabilities sin response_model → tipar (ver py-9).
+- O9 sin gate conformidad contrato↔app + versiones difieren (1.0.0 vs 0.1.0) → test conformidad + unificar versión.
+- O10 sync OK + nits (page_size sin máximo, media_type PDF).
+### Seguridad (26-oct, guidance mode, 2 skills): SIN vulnerabilidades confirmadas
+- S1 CORS omite PUT (= O7) → añadir + verificar.
+- S2 walkers árbol requisitos sin cota profundidad → MAX_TREE_DEPTH + 422 + test 500-deep.
+- S3 precondiciones T14 (jail blob_path, handler PdfError→422/413/415, límite body upload).
+- S4 CSP + nosniff en report HTML FileResponse.
+- S5 nota deploy (bind real lo posee CLI uvicorn, no settings).
+- S6 hmac.compare_digest en hashes idempotencia (higiene).
+### Copy ES (26-oct, docs/copy-style-es.md): tú en UI, impersonal en backend, ERROR_ES map, 57 cambios (A12+B5+C36+D4). Ojo: C3 renombra pestaña → actualizar E2E; A-items pueden romper asertos exactos de tests → actualizar tests en el mismo diff.

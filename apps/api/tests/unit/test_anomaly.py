@@ -70,9 +70,7 @@ def test_n3_absolute_close_tias_only() -> None:
     tias = evaluate_tias("74", ["74", "75", "76"], "100")
     assert tias.status == "possible_justification_required"
     assert "absolute_25_close" in tias.reason_codes
-    alfresco = evaluate_tias(
-        "74", ["74", "75", "76"], "100", three_bidder_absolute_25=False
-    )
+    alfresco = evaluate_tias("74", ["74", "75", "76"], "100", three_bidder_absolute_25=False)
     assert alfresco.status == "not_flagged_under_assumptions"
     edge = evaluate_tias("75", ["75", "75", "76"], "100")
     assert edge.status == "not_flagged_under_assumptions"
@@ -128,14 +126,13 @@ def test_variants_and_reduction() -> None:
     )
     assert rglcap.status == "not_flagged_under_assumptions"
     assert "absolute_25_close" not in rglcap.reason_codes
-    reduced = evaluate_tias("40", ["40", "41", "100", "100"], "100",
-                            percentage_reduction_one_third=True)
+    reduced = evaluate_tias(
+        "40", ["40", "41", "100", "100"], "100", percentage_reduction_one_third=True
+    )
     assert reduced.status == "unknown"
     assert reduced.branch is None
     assert reduced.reason_codes == ("unsupported_percentage_reduction",)
-    unsupported = evaluate_anomaly(
-        "unsupported", "40", ["40", "41"], "100", policy_id="mixed"
-    )
+    unsupported = evaluate_anomaly("unsupported", "40", ["40", "41"], "100", policy_id="mixed")
     assert unsupported.status == "not_applicable"
     assert unsupported.reason_codes == ("unsupported_variant",)
     with pytest.raises(AnomalyError):

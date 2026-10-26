@@ -7,10 +7,8 @@ without an authorized clamp are unsupported, never silently corrected.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from bidlab.domain import expressions as E
 from bidlab.domain.money import (
@@ -19,6 +17,10 @@ from bidlab.domain.money import (
     quantize_money,
     serialize_12dp,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from decimal import Decimal
 
 MAX_RIVALS = 20
 

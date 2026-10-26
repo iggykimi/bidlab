@@ -18,9 +18,7 @@ CLIENT_HEADERS = {"X-BidLab-Client": "local-ui"}
 
 
 @pytest.fixture()
-def demo_client(
-    seeded_client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> TestClient:
+def demo_client(seeded_client: TestClient, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     # Offline by default: live selection needs an explicit key + endpoint.
     # (Seeded first: seed/demo data never read these variables.)
     monkeypatch.delenv("MODEL_API_KEY", raising=False)
@@ -49,9 +47,7 @@ def _db() -> Session:
 
 
 def test_start_and_poll_needs_review(demo_client: TestClient) -> None:
-    res = demo_client.post(
-        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k1")
-    )
+    res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k1"))
     assert res.status_code == 202
     assert res.headers["Location"].startswith("/api/v1/jobs/job-")
     job = g.Job.model_validate(res.json())
@@ -68,28 +64,20 @@ def test_start_and_poll_needs_review(demo_client: TestClient) -> None:
 
     with _db() as session:
         invocation = session.scalars(
-            select(models.ModelInvocation).where(
-                models.ModelInvocation.job_id == job.id
-            )
+            select(models.ModelInvocation).where(models.ModelInvocation.job_id == job.id)
         ).one()
         assert invocation.mode == "fixture"
         assert invocation.model is None
         assert invocation.prompt_tokens is None
         assert invocation.completion_tokens is None
-        revision = session.get(
-            models.InterpretationRevision, ("tias", 2)
-        )
+        revision = session.get(models.InterpretationRevision, ("tias", 2))
         assert revision is not None
         assert revision.mode == "fixture"
 
 
 def test_idempotent_replay_and_body_conflict(demo_client: TestClient) -> None:
-    first = demo_client.post(
-        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k2")
-    )
-    replay = demo_client.post(
-        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k2")
-    )
+    first = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k2"))
+    replay = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k2"))
     assert replay.status_code == 202
     assert replay.json()["id"] == first.json()["id"]
     conflict = demo_client.post(
@@ -111,9 +99,7 @@ def test_missing_client_header_forbidden(demo_client: TestClient) -> None:
 
 
 def test_unknown_tender_document_and_job(demo_client: TestClient) -> None:
-    res = demo_client.post(
-        "/api/v1/tenders/nope/analysis", json=_body(), headers=_headers("k4")
-    )
+    res = demo_client.post("/api/v1/tenders/nope/analysis", json=_body(), headers=_headers("k4"))
     assert res.status_code == 404
     assert res.json()["code"] == "tender_not_found"
     res = demo_client.post(
@@ -199,9 +185,7 @@ def test_stub_failure_fails_job_explicitly(
         "bidlab.services.jobs.meta_adapter.select_adapter",
         lambda mode: meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL),
     )
-    res = demo_client.post(
-        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k10")
-    )
+    res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k10"))
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
     assert job.status == "failed"
@@ -218,9 +202,7 @@ def test_offline_stub_makes_no_network_calls(
 
     monkeypatch.setattr(socket, "create_connection", _blocked)
     monkeypatch.setattr(httpx, "post", _blocked)
-    res = demo_client.post(
-        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k11")
-    )
+    res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k11"))
     assert res.status_code == 202
 
 
@@ -249,16 +231,12 @@ def test_budget_exhaust_persists_failed_job(
     assert res.status_code == 429
     assert res.json()["code"] == "budget_exhausted"
     with _db() as session:
-        jobs = session.scalars(
-            select(models.Job).where(models.Job.tender_id == "tias")
-        ).all()
+        jobs = session.scalars(select(models.Job).where(models.Job.tender_id == "tias")).all()
         assert len(jobs) == 1
         assert jobs[0].status == "failed"
         assert jobs[0].error_code == "budget_exhausted"
         invocations = session.scalars(
-            select(models.ModelInvocation).where(
-                models.ModelInvocation.job_id == jobs[0].id
-            )
+            select(models.ModelInvocation).where(models.ModelInvocation.job_id == jobs[0].id)
         ).all()
         assert len(invocations) == 1
         assert invocations[0].status == "failed"

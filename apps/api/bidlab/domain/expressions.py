@@ -145,7 +145,7 @@ def parse_expr(data: object) -> Expr:
             if set(node.keys()) != {"kind", "value"}:
                 raise ExprError("bad_shape", "const: keys must be exactly kind,value")
             raw_value: object = node["value"]
-            if isinstance(raw_value, bool) or isinstance(raw_value, float):
+            if isinstance(raw_value, bool | float):
                 raise ExprError("const_float_forbidden", "const: float/bool value forbidden")
             if not isinstance(raw_value, str | int | Decimal):
                 raise ExprError("const_bad_type", "const: value must be a decimal string")

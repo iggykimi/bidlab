@@ -24,6 +24,7 @@ jobs:
       - run: npm run build
       - run: npm run test:unit
       - run: uv run ruff check .
+      - run: uv run ruff format --check apps/api
       - run: uv run mypy apps/api/bidlab
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

@@ -53,9 +53,7 @@ def _proposal(citations: list[dict[str, object]]) -> dict[str, object]:
 
 
 def test_verify_exact_citation_persisted_with_offsets(session: Session) -> None:
-    proposal = _proposal(
-        [{"document_id": "d1", "page_number": 6, "verbatim_excerpt": "118336.00"}]
-    )
+    proposal = _proposal([{"document_id": "d1", "page_number": 6, "verbatim_excerpt": "118336.00"}])
     ids, warnings, unmatched = jobs_service.verify_and_store_citations(
         session,
         id_prefix="cit-x",
@@ -73,9 +71,7 @@ def test_verify_exact_citation_persisted_with_offsets(session: Session) -> None:
 
 
 def test_verify_missing_quote_recorded_not_upgraded(session: Session) -> None:
-    proposal = _proposal(
-        [{"document_id": "d1", "page_number": 6, "verbatim_excerpt": "no existe"}]
-    )
+    proposal = _proposal([{"document_id": "d1", "page_number": 6, "verbatim_excerpt": "no existe"}])
     ids, warnings, unmatched = jobs_service.verify_and_store_citations(
         session,
         id_prefix="cit-x",
@@ -92,9 +88,7 @@ def test_verify_missing_quote_recorded_not_upgraded(session: Session) -> None:
 
 
 def test_verify_skips_pages_without_text(session: Session) -> None:
-    proposal = _proposal(
-        [{"document_id": "d1", "page_number": 9, "verbatim_excerpt": "hola"}]
-    )
+    proposal = _proposal([{"document_id": "d1", "page_number": 9, "verbatim_excerpt": "hola"}])
     ids, warnings, unmatched = jobs_service.verify_and_store_citations(
         session,
         id_prefix="cit-x",
@@ -149,9 +143,7 @@ def test_live_spend_sums_and_ignores_garbage(session: Session) -> None:
     assert str(jobs_service.live_spend_usd(session)) == "3.75"
 
 
-def test_budget_guard_blocks_at_ceiling(
-    session: Session, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_budget_guard_blocks_at_ceiling(session: Session, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BIDLAB_META_BUDGET_USD", "0.00")
     get_settings.cache_clear()
     try:
@@ -205,9 +197,7 @@ def test_run_job_running_with_live_lease_conflicts(session: Session) -> None:
 def test_run_job_failed_retries_as_new_attempt(session: Session) -> None:
     session.add(_job_row("failed"))
     session.commit()
-    job = jobs_service.run_job(
-        session, "job-test-1", adapter=meta_adapter.StubExtractor()
-    )
+    job = jobs_service.run_job(session, "job-test-1", adapter=meta_adapter.StubExtractor())
     assert job.status == "needs_review"
     assert job.result_revision == 1
     assert job.error_code is None

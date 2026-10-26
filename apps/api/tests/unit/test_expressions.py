@@ -171,10 +171,14 @@ def test_div_by_zero_is_unknown_never_infinite() -> None:
                     "op": "div",
                     "args": [
                         {"kind": "var", "name": "max_points"},
-                        {"kind": "call", "op": "sub", "args": [
-                            {"kind": "var", "name": "own_price"},
-                            {"kind": "var", "name": "own_price"},
-                        ]},
+                        {
+                            "kind": "call",
+                            "op": "sub",
+                            "args": [
+                                {"kind": "var", "name": "own_price"},
+                                {"kind": "var", "name": "own_price"},
+                            ],
+                        },
                     ],
                 },
                 {"kind": "const", "value": "5"},

@@ -82,13 +82,9 @@ def test_evaluate_rglcap_has_no_absolute_close(seeded_client: TestClient) -> Non
             {"label": "R2", "price_net": "88500.00", "group_id": "g2"},
         ],
     }
-    tias = seeded_client.post(
-        "/api/v1/scenarios/evaluate", json=payload, headers=HEADERS
-    )
+    tias = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert tias.status_code == 200, tias.text
-    tias_anomaly = g.EvaluationResult.model_validate(tias.json()).model_dump(mode="json")[
-        "anomaly"
-    ]
+    tias_anomaly = g.EvaluationResult.model_validate(tias.json()).model_dump(mode="json")["anomaly"]
     assert tias_anomaly["status"] == "possible_justification_required"
     assert tias_anomaly["branch"] == "n3_no_trim"
     assert "absolute_25_close" in tias_anomaly["reason_codes"]
@@ -104,13 +100,11 @@ def test_evaluate_rglcap_has_no_absolute_close(seeded_client: TestClient) -> Non
         rule.rule_json = rule_json
         session.commit()
 
-    rglcap = seeded_client.post(
-        "/api/v1/scenarios/evaluate", json=payload, headers=HEADERS
-    )
+    rglcap = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert rglcap.status_code == 200, rglcap.text
-    rglcap_anomaly = g.EvaluationResult.model_validate(rglcap.json()).model_dump(
-        mode="json"
-    )["anomaly"]
+    rglcap_anomaly = g.EvaluationResult.model_validate(rglcap.json()).model_dump(mode="json")[
+        "anomaly"
+    ]
     assert rglcap_anomaly["status"] == "not_flagged_under_assumptions"
     assert rglcap_anomaly["branch"] == "n3_no_trim"
     assert "absolute_25_close" not in rglcap_anomaly["reason_codes"]

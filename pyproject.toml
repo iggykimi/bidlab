@@ -20,24 +20,42 @@ members = ["apps/api"]
 
 [tool.pytest.ini_options]
 testpaths = ["apps/api/tests"]
-addopts = "-q"
+addopts = "-q --strict-markers --strict-config -ra --tb=short"
 markers = ["live: tests requiring real Meta API access"]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
 # tools/ holds frozen research probes from the blueprint import; style fixes there
-# would churn evidence, so lint covers only product code.
-exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git", "apps/web", "tools"]
+# would churn evidence, so lint covers only product code. .agents/ holds
+# third-party skill scripts, likewise outside the product gates.
+exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git", "apps/web", "tools", ".agents"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B"]
+select = ["E", "F", "W", "I", "UP", "B", "RUF", "N", "S", "C4", "DTZ", "TRY", "EM", "RET", "SIM", "TCH", "ASYNC"]
+ignore = [
+  # Contract envelope carries literal codes/messages by design; every raise site
+  # is asserted by contract/integration tests. Assigning to temporaries adds noise.
+  "EM101",
+  "EM102",
+  # Short uppercase domain aliases (EX, MO, SC, ...) are the codebase convention.
+  "N812",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"apps/api/bidlab/schemas/generated.py" = ["E501", "I001"]
+"apps/api/bidlab/schemas/generated.py" = ["E501", "I001", "TC003"]
+"apps/api/tests/**" = ["S101", "EM101", "EM102", "TRY003"]
+# Dev-only orchestrators invoking static repo-local commands (no user input).
+"scripts/**" = ["S602", "S603"]
+
+[tool.ruff.format]
+# datamodel-codegen output; reformat only as part of a contract regen.
+exclude = ["apps/api/bidlab/schemas/generated.py"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 explicit_package_bases = true
 mypy_path = "apps/api"
+show_error_codes = true
+plugins = ["pydantic.mypy"]

@@ -85,25 +85,19 @@ def document_to_dict(doc: models.Document) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
     rights = RIGHTS_MAP.get(doc.rights_status)
     if rights is None:
-        warnings.append(
-            f"document {doc.id}: unmapped rights_status {doc.rights_status!r}"
-        )
+        warnings.append(f"document {doc.id}: unmapped rights_status {doc.rights_status!r}")
         rights = "unknown"
     elif rights != doc.rights_status:
         warnings.append(
-            f"document {doc.id}: internal status {doc.rights_status!r} "
-            f"served as {rights!r}"
+            f"document {doc.id}: internal status {doc.rights_status!r} served as {rights!r}"
         )
     parse = PARSE_MAP.get(doc.parse_status)
     if parse is None:
-        warnings.append(
-            f"document {doc.id}: unmapped parse_status {doc.parse_status!r}"
-        )
+        warnings.append(f"document {doc.id}: unmapped parse_status {doc.parse_status!r}")
         parse = "needs_review"
     elif parse != doc.parse_status:
         warnings.append(
-            f"document {doc.id}: internal status {doc.parse_status!r} "
-            f"served as {parse!r}"
+            f"document {doc.id}: internal status {doc.parse_status!r} served as {parse!r}"
         )
     if not doc.blob_path:
         warnings.append(

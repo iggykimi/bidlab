@@ -8,12 +8,14 @@ anomaly references while scoring stays defined.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from bidlab.domain.money import DecimalInput, parse_decimal
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from decimal import Decimal
 
 GroupStatus = Literal["resolved", "unknown"]
 
@@ -42,9 +44,7 @@ class GroupResolution:
     trace: tuple[str, ...] = field(default_factory=tuple)
 
 
-def make_offer(
-    price: DecimalInput, group_id: str | None, label: str = ""
-) -> Offer:
+def make_offer(price: DecimalInput, group_id: str | None, label: str = "") -> Offer:
     """Build a validated declared offer (price must be > 0)."""
     amount = parse_decimal(price, field=label or "price_net")
     if amount <= 0:
@@ -121,9 +121,7 @@ def resolve_anomaly_references(
     )
 
 
-def offers_for_scoring(
-    own_price: DecimalInput, rivals: Sequence[Offer]
-) -> tuple[Decimal, ...]:
+def offers_for_scoring(own_price: DecimalInput, rivals: Sequence[Offer]) -> tuple[Decimal, ...]:
     """Every declared offer including own; scoring never dedups by group."""
     own = parse_decimal(own_price, field="own_price")
     return (own, *(offer.price for offer in rivals))

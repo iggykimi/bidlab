@@ -1,11 +1,12 @@
 """BidLab API entrypoint. Loopback only; no multi-user auth (see ARCHITECTURE)."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.responses import Response
 
 from bidlab.api import (
     capabilities,
@@ -35,11 +36,14 @@ register_handlers(app)
 
 
 @app.middleware("http")
-async def _request_id(request: Request, call_next):  # type: ignore[no-untyped-def]
+async def _request_id(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     request.state.request_id = new_request_id()
     response = await call_next(request)
     response.headers["X-Request-ID"] = request.state.request_id
     return response
+
 
 app.add_middleware(
     TrustedHostMiddleware,

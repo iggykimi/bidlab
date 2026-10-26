@@ -7,11 +7,12 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from bidlab.api import deps
+from bidlab.api.errors import ERROR_RESPONSES
 from bidlab.schemas import generated as g
 from bidlab.services import idempotency
 from bidlab.services import reports as reports_service
 
-router = APIRouter()
+router = APIRouter(responses=ERROR_RESPONSES)
 
 CREATE_ROUTE = "POST /api/v1/reports"
 
@@ -24,33 +25,29 @@ async def create_report(
     db: Annotated[Session, Depends(deps.get_db)],
     _guard: Annotated[None, Depends(deps.require_local_client)],
     idempotency_key: str = Header(max_length=100),
-) -> dict[str, Any]:
+) -> g.Report:
     body = await request.body()
     stored = idempotency.check(db, CREATE_ROUTE, idempotency_key, body)
     if stored is not None:
         response.status_code = 200
-        return stored
+        return g.Report.model_validate(stored)
     created: dict[str, Any] = dict(
         reports_service.create_report(db, payload.scenario_id, str(payload.decision), payload.note)
     )
     winner = idempotency.store(db, CREATE_ROUTE, idempotency_key, body, created)
     if winner is not None:
         response.status_code = 200
-        return winner
-    return created
+        return g.Report.model_validate(winner)
+    return g.Report.model_validate(created)
 
 
 @router.get("/reports/{report_id}", response_model=g.Report)
-def get_report(
-    report_id: str, db: Annotated[Session, Depends(deps.get_db)]
-) -> dict[str, Any]:
-    return reports_service.get_report(db, report_id)
+def get_report(report_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Report:
+    return g.Report.model_validate(reports_service.get_report(db, report_id))
 
 
 @router.get("/reports/{report_id}/html")
-def get_report_html(
-    report_id: str, db: Annotated[Session, Depends(deps.get_db)]
-) -> Response:
+def get_report_html(report_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> Response:
     reports_service.get_report(db, report_id)  # 404 envelope when missing
     path = reports_service.html_path(report_id)
     return FileResponse(path, media_type="text/html")

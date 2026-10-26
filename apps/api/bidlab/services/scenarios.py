@@ -27,9 +27,7 @@ def snapshot_hash(core: dict[str, Any]) -> str:
 
 def _latest_rule_revision(session: Session, rule_id: str) -> int | None:
     return session.scalar(
-        select(func.max(models.RuleRevision.revision)).where(
-            models.RuleRevision.rule_id == rule_id
-        )
+        select(func.max(models.RuleRevision.revision)).where(models.RuleRevision.rule_id == rule_id)
     )
 
 
@@ -133,7 +131,8 @@ def save_scenario(session: Session, name: str, req: g.EvaluationRequest) -> dict
     scope = session.get(models.Scope, str(input_data["scope_id"]))
     rule_row = session.get(models.RuleRevision, (rule_id, rule_rev))
     company_row = session.get(models.CompanyRevision, (company_id, company_rev))
-    assert scope is not None and rule_row is not None and company_row is not None
+    if scope is None or rule_row is None or company_row is None:
+        raise ApiError(500, "scenario_snapshot_incomplete", "referenced rows vanished mid-save")
     rule = rule_row.rule_json if isinstance(rule_row.rule_json, dict) else {}
     basis = scope.basis_json if isinstance(scope.basis_json, dict) else {}
     profile = company_row.profile_json if isinstance(company_row.profile_json, dict) else {}

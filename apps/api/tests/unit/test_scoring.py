@@ -116,7 +116,12 @@ def test_out_of_range_unsupported_without_clamp() -> None:
     assert bad.value is None
     assert bad.reason_codes == ("out_of_range",)
     clamped = evaluate_score(
-        linear, "35", "110", ["90"], "100", complete=True,
+        linear,
+        "35",
+        "110",
+        ["90"],
+        "100",
+        complete=True,
         clamp=(Decimal(0), Decimal(35)),
     )
     assert clamped.status == "defined"
@@ -130,7 +135,7 @@ def test_out_of_range_unsupported_without_clamp() -> None:
     own=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("500000"), places=2),
     rival=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("500000"), places=2),
 )
-@settings(max_examples=40)
+@settings(max_examples=40, deadline=None)
 def test_inverse_score_in_range(weight: Decimal, own: Decimal, rival: Decimal) -> None:
     result = evaluate_score(
         template_for("proportional_inverse"), weight, own, [rival], complete=True
@@ -145,7 +150,7 @@ def test_inverse_score_in_range(weight: Decimal, own: Decimal, rival: Decimal) -
     bump=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("500000"), places=2),
     rival=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("500000"), places=2),
 )
-@settings(max_examples=40)
+@settings(max_examples=40, deadline=None)
 def test_inverse_monotone_in_own_price(own_low: Decimal, bump: Decimal, rival: Decimal) -> None:
     expr = template_for("proportional_inverse")
     cheaper = evaluate_score(expr, "49", own_low, [rival], complete=True)

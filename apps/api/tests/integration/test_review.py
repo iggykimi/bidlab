@@ -153,9 +153,7 @@ def test_corrected_proposal_citation_located(seeded_client: TestClient) -> None:
     corrected = _corrected_with_real_quote()
     res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
-        json=_review_body(
-            corrected_proposal=corrected, approved_claim_keys=["pbl_check"]
-        ),
+        json=_review_body(corrected_proposal=corrected, approved_claim_keys=["pbl_check"]),
         headers=CLIENT_HEADERS,
     )
     assert res.status_code == 200
@@ -166,9 +164,7 @@ def test_corrected_proposal_citation_located(seeded_client: TestClient) -> None:
         stored = session.get(models.Citation, "cit-tias-r2-000")
         assert stored is not None
         assert stored.match_status == "exact"
-        assert stored.quote == corrected["claims"][0]["citations"][0][
-            "verbatim_excerpt"
-        ]
+        assert stored.quote == corrected["claims"][0]["citations"][0]["verbatim_excerpt"]
 
 
 def _tree() -> dict[str, Any]:
@@ -200,9 +196,7 @@ def test_tree_stored_and_idempotency_optional(seeded_client: TestClient) -> None
     first = seeded_client.post("/api/v1/tenders/tias/reviews", json=payload, headers=headers)
     assert first.status_code == 200
     assert first.json()["requirements"][0]["operator"] == "AND"
-    replay = seeded_client.post(
-        "/api/v1/tenders/tias/reviews", json=payload, headers=headers
-    )
+    replay = seeded_client.post("/api/v1/tenders/tias/reviews", json=payload, headers=headers)
     assert replay.status_code == 200
     assert _current_revision() == 2
     without_key = seeded_client.post(

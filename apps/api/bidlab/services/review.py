@@ -11,17 +11,20 @@ Every review writes an audit event.
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
-from bidlab.schemas import generated as g
 from bidlab.services import jobs as jobs_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from bidlab.schemas import generated as g
 
 
 def route_for(tender_id: str) -> str:
@@ -38,9 +41,7 @@ def _as_dict(value: object) -> dict[str, Any]:
     return {}
 
 
-def latest_revision_row(
-    session: Session, tender_id: str
-) -> models.InterpretationRevision | None:
+def latest_revision_row(session: Session, tender_id: str) -> models.InterpretationRevision | None:
     return session.scalars(
         select(models.InterpretationRevision)
         .where(models.InterpretationRevision.tender_id == tender_id)
@@ -48,9 +49,7 @@ def latest_revision_row(
     ).first()
 
 
-def apply_review(
-    session: Session, tender_id: str, payload: g.ReviewRequest
-) -> dict[str, Any]:
+def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> dict[str, Any]:
     tender = session.get(models.Tender, tender_id)
     if tender is None:
         raise ApiError(404, "tender_not_found", f"unknown tender {tender_id}")
@@ -61,8 +60,7 @@ def apply_review(
         raise ApiError(
             409,
             "revision_conflict",
-            f"expected interpretation revision {latest.revision}, "
-            f"got {payload.expected_revision}",
+            f"expected interpretation revision {latest.revision}, got {payload.expected_revision}",
         )
     proposal_data = (
         payload.corrected_proposal.model_dump(mode="json")
@@ -95,8 +93,7 @@ def apply_review(
             id_prefix=f"cit-{tender_id}-r{new_revision}",
             proposal=proposal_data,
             text_by_page={
-                (page.document_id, page.page_number): page.normalized_text
-                for page in pages
+                (page.document_id, page.page_number): page.normalized_text for page in pages
             },
             doc_sha256={doc.id: doc.sha256 for doc in docs},
         )

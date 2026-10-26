@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from bidlab.api.errors import ApiError
@@ -15,6 +14,9 @@ from bidlab.services import eligibility as eligibility_service
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 @pytest.fixture()
@@ -178,8 +180,9 @@ def test_update_bumps_revision_and_rejects_stale(session: Session) -> None:
     updated = companies_service.update_company(
         session,
         company_id,
-        g.CompanyUpdate.model_validate({**_write(name="ACME 2").model_dump(mode="json"),
-                                        "expected_revision": 1}),
+        g.CompanyUpdate.model_validate(
+            {**_write(name="ACME 2").model_dump(mode="json"), "expected_revision": 1}
+        ),
     )
     assert updated["revision"] == 2
     assert updated["name"] == "ACME 2"
@@ -204,9 +207,11 @@ def test_company_not_found_variants(session: Session) -> None:
     assert (exc.value.status_code, exc.value.code) == (404, "scope_not_found")
     with pytest.raises(ApiError) as exc:
         companies_service.update_company(
-            session, "nope", g.CompanyUpdate.model_validate(
+            session,
+            "nope",
+            g.CompanyUpdate.model_validate(
                 {**_write().model_dump(mode="json"), "expected_revision": 1}
-            )
+            ),
         )
     assert (exc.value.status_code, exc.value.code) == (404, "company_not_found")
 
@@ -329,8 +334,10 @@ def test_numeric_operators(
     created = companies_service.create_company(
         session, _write(evidence=[_evidence("team_feder_years", value, unit="years")])
     )
-    _interp(session, _leaf(field="team_feder_years", operator=operator,
-                           threshold=threshold, unit="years"))
+    _interp(
+        session,
+        _leaf(field="team_feder_years", operator=operator, threshold=threshold, unit="years"),
+    )
     result = eligibility_service.check(session, _check(str(created["id"])))
     item = _item(result, "req-1")
     assert item["verdict"] == verdict
@@ -341,13 +348,19 @@ def test_contains_operator(session: Session) -> None:
     created = companies_service.create_company(
         session, _write(evidence=[_evidence("team_feder_years", "5 years FEDER", unit="text")])
     )
-    _interp(session, _leaf(field="team_feder_years", operator="contains",
-                           threshold="FEDER", unit="text"))
-    assert _item(eligibility_service.check(session, _check(str(created["id"]))), "req-1")[
-        "verdict"
-    ] == "met"
-    _interp(session, _leaf(field="team_feder_years", operator="contains",
-                           threshold="FSE", unit="text"), revision=2)
+    _interp(
+        session,
+        _leaf(field="team_feder_years", operator="contains", threshold="FEDER", unit="text"),
+    )
+    assert (
+        _item(eligibility_service.check(session, _check(str(created["id"]))), "req-1")["verdict"]
+        == "met"
+    )
+    _interp(
+        session,
+        _leaf(field="team_feder_years", operator="contains", threshold="FSE", unit="text"),
+        revision=2,
+    )
     result = eligibility_service.check(
         session, _check(str(created["id"]), interpretation_revision=2)
     )
@@ -425,9 +438,7 @@ def test_non_finite_or_exponent_values_are_unknown(session: Session, value: str)
 
 
 @pytest.mark.parametrize("threshold", ["Infinity", "-Infinity", "NaN", "1e2"])
-def test_non_finite_or_exponent_threshold_is_unknown(
-    session: Session, threshold: str
-) -> None:
+def test_non_finite_or_exponent_threshold_is_unknown(session: Session, threshold: str) -> None:
     created = companies_service.create_company(
         session, _write(evidence=[_evidence("team_feder_years", "5", unit="years")])
     )
@@ -460,12 +471,12 @@ def test_scope_guards(session: Session) -> None:
         )
     )
     session.add(
-        models.Scope(id="s2", tender_id="t1", lot_key="lot2", basis_json={},
-                     budget_net_cents=100)
+        models.Scope(id="s2", tender_id="t1", lot_key="lot2", basis_json={}, budget_net_cents=100)
     )
     session.add(
-        models.Scope(id="s9", tender_id="t2", lot_key="__whole__", basis_json={},
-                     budget_net_cents=100)
+        models.Scope(
+            id="s9", tender_id="t2", lot_key="__whole__", basis_json={}, budget_net_cents=100
+        )
     )
     session.commit()
     created = companies_service.create_company(session, _write())

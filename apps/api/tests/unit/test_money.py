@@ -151,6 +151,6 @@ def test_serialize_12dp_rounding() -> None:
     low=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("100000"), places=2),
     bump=st.decimals(min_value=Decimal("0.01"), max_value=Decimal("100000"), places=2),
 )
-@settings(max_examples=40)
+@settings(max_examples=40, deadline=None)
 def test_profit_rises_with_price(cost: Decimal, low: Decimal, bump: Decimal) -> None:
     assert profit(low + bump, cost) > profit(low, cost)

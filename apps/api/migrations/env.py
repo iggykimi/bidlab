@@ -11,7 +11,7 @@ config = context.config
 def run_migrations_offline() -> None:
     settings = get_settings()
     url = f"sqlite:///{settings.storage_path / 'bidlab.sqlite3'}"
-    context.configure(url=url, literal_binds=True)
+    context.configure(url=url, target_metadata=Base.metadata, literal_binds=True)
 
     with context.begin_transaction():
         context.run_migrations()

@@ -28,10 +28,9 @@ import hashlib
 import json
 import os
 import time
-from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import httpx
 from pydantic import ValidationError
@@ -39,6 +38,9 @@ from pydantic import ValidationError
 from bidlab.api.errors import ApiError
 from bidlab.schemas import generated as g
 from bidlab.settings import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 PROMPT_VERSION = "bidlab-extract-1"
 META_API_URL_ENV = "META_API_URL"
@@ -95,9 +97,7 @@ def pages_input_hash(pages: Sequence[PageInput]) -> str:
             {
                 "document_id": page.document_id,
                 "page_number": page.page_number,
-                "text_sha256": hashlib.sha256(
-                    page.normalized_text.encode("utf-8")
-                ).hexdigest(),
+                "text_sha256": hashlib.sha256(page.normalized_text.encode("utf-8")).hexdigest(),
             }
             for page in pages
         ],
@@ -116,13 +116,9 @@ class StubExtractor:
 
     def extract(self, pages: Sequence[PageInput]) -> AdapterResult:
         if self._scenario == StubScenario.REFUSAL:
-            raise AdapterError(
-                "provider_refusal", "fixture stub simulating a provider refusal"
-            )
+            raise AdapterError("provider_refusal", "fixture stub simulating a provider refusal")
         if self._scenario == StubScenario.INVALID_JSON:
-            raise AdapterError(
-                "invalid_model_output", "fixture stub simulating unparseable output"
-            )
+            raise AdapterError("invalid_model_output", "fixture stub simulating unparseable output")
         warnings = [
             "fixture_stub: offline deterministic stub; no model was called",
             "demo: proposal is empty until a live extraction plus human review",
@@ -222,9 +218,7 @@ class LiveExtractor:
         try:
             data = response.json()
         except ValueError as exc:
-            raise AdapterError(
-                "invalid_model_output", "model endpoint answered non-JSON"
-            ) from exc
+            raise AdapterError("invalid_model_output", "model endpoint answered non-JSON") from exc
         body = _as_dict(data)
         candidate = body.get("proposal", data)
         try:
@@ -258,7 +252,8 @@ def select_adapter(mode: str) -> ExtractionAdapter:
     if mode != "live":
         return StubExtractor()
     settings = get_settings()
-    if not settings.model_api_key:
+    api_key = settings.model_api_key.get_secret_value()
+    if not api_key:
         raise ApiError(
             503,
             "provider_not_configured",
@@ -272,7 +267,7 @@ def select_adapter(mode: str) -> ExtractionAdapter:
             f"{META_API_URL_ENV} is not set; no verified Muse endpoint (G3 blocked)",
         )
     return LiveExtractor(
-        api_key=settings.model_api_key,
+        api_key=api_key,
         model=settings.meta_model,
         endpoint_url=endpoint,
     )
