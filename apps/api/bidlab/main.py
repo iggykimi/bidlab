@@ -1,5 +1,8 @@
 """BidLab API entrypoint. Loopback only; no multi-user auth (see ARCHITECTURE)."""
 
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -16,8 +19,17 @@ from bidlab.api import (
     tenders,
 )
 from bidlab.api.errors import new_request_id, register_handlers
+from bidlab.services import seed as seed_service
 
-app = FastAPI(title="BidLab", version="0.1.0")
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # Fresh installs get tables on boot (no seed: demo stays explicit).
+    seed_service.migrate()
+    yield
+
+
+app = FastAPI(title="BidLab", version="0.1.0", lifespan=_lifespan)
 
 register_handlers(app)
 

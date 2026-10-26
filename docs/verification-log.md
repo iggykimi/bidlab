@@ -218,3 +218,23 @@ Rutas en contrato (analysis, jobs/{id}, reviews).
   `mypy` limpio (48 ficheros).
 - Nota: los routers jobs/review quedaron registrados en main.py por el
   helper T14 antes del commit T13; verificado presente, sin duplicar.
+
+## Producto T19/T20/T22-UI/T29 — Pricing Lab, informe, E2E (Windows)
+
+Fecha: 2026-10-26. Helper acotado (apps/web + tests/e2e, sin commit);
+lead re-ejecutó todos los gates. Pricing Lab contra API real: hipótesis
+explícitas (rivales A/B con grupo), KPIs (precio/beneficio/puntos/
+anomalía), curva, supuestos visibles; sin cómputo en frontend (los
+números son strings del backend). Vista informe: guardar escenario,
+crear informe, HTML con fuentes. Badge honesto (Demo curada / Análisis
+en vivo / nada). Sesiones demo persistidas en localStorage (solo ids).
+E2E E01–E12 + offline guard (solo loopback) + concurrencia +
+responsive + seguridad.
+- `npm run lint/typecheck/build` verdes, `test:unit` 8 passed,
+  `test:e2e` 14 passed (29s, Chromium, API+web reales).
+- `npm audit` → 0 vulnerabilidades (zod ^4.6.7, vitest ^5.0.5).
+- Hallazgo del lead: primera petición sobre storage fresco devolvía
+  500 `no such table: tender`. Fix: lifespan en main.py que ejecuta
+  `seed.migrate()` al arrancar (tablas sí, semilla no: la demo sigue
+  explícita). Re-ejecución E2E con storage borrado: 14 passed, cero
+  OperationalError en el log.
