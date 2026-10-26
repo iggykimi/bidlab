@@ -35,3 +35,21 @@ pytest, integración de app, Playwright, frontendbuild, arranque de demo, benchm
 La localización de25citas no valida por sí sola todas las interpretaciones jurídicas. Los25hechos son gold inicial manual y no una muestra representativa. Las cuatro parejas de adjudicación revisadas no forman un mercado homogéneo. Derechos de publicación de originales siguen por fichero en publication-manifest.
 
 Última ampliación: contrato51schemas, ejemplos Tender/Company/EvaluationResult validados y snapshot Atom original incluido con hash. Las copias de investigación (seisPDFyunAtom) permanecen con publicación desactivada. El script de recuperación de reglas reprodujo21817caracteres, SHA2568213d68a63cee86d31828cba34ec453669cd49be9185ada5640395407ca0888d.
+
+## Producto T05 — scaffold y gates vacíos (Windows)
+
+Fecha: 2026-10-26. Commit: 6a2ca69. Entorno: Windows, Python 3.14.7,
+Node v26.3.0, npm 12.0.2, uv 0.12.5, Chromium (playwright install).
+
+`python scripts/verify.py` → exit 0, ALL CHECKS PASSED:
+deps-python, pytest-unit (1 passed), pytest-integration-contracts (2 passed,
+1 skipped honesto), npm lint/typecheck/build, npm test:unit (2 passed),
+ruff, mypy (7 ficheros), playwright-e2e (1 passed, API real vía webServer).
+
+Incidencias resueltas durante T05 (no ocultadas): `uv sync` por defecto no
+instala el miembro apps/api (se usa --all-packages); hatchling exigió
+packages=["bidlab"] explícito; npm 12 bloqueó postinstall de esbuild hasta
+`npm install-scripts approve esbuild`; typecheck exigió @types/react(y -dom).
+Health/Capabilities se alinearon al contrato (schema_version, limits,
+additionalProperties). Lint cubre código de producto; tools/ (sondas de
+investigación) excluido y documentado en pyproject.
