@@ -50,17 +50,19 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [ ] copywriting
 
 ## Workflows (19)
-- [ ] agent-browser, skill-creator, brainstorming
+- [R] agent-browser, skill-creator, browser-use — SKIP (tool/meta, sin cambio workflow)
+- [R] brainstorming — ADOPT (hard-gate diseño pre-plan)
 - [R] systematic-debugging — auditada 26-oct (C1: fix en origen, unificar dispatch)
-- [ ] writing-plans, executing-plans
+- [R] writing-plans — ADOPT (plan contract: header+Interfaces+TDD+Review Focus)
+- [R] executing-plans — SKIP (contradice subagentes acotados)
 - [R] test-driven-development — auditada 26-oct (C15 change-detector → borrar)
 - [R] requesting-code-review — auditada 26-oct (calibración fortalezas/debilidades)
-- [ ] subagent-driven-development
-- [R] verification-before-completion — auditada 26-oct (gaps E2E: console-errors, ramas API)
-- [ ] dispatching-parallel-agents
-- [ ] using-git-worktrees, finishing-a-development-branch, browser-use
-- [ ] ralph-tui-prd, ralph-tui-create-beads, ralph-tui-create-json
-- [ ] ralph-wiggum, ralph-loop-workflow
+- [R] subagent-driven-development — ALREADY (es nuestro workflow)
+- [R] verification-before-completion — auditada 26-oct (gaps E2E)
+- [R] dispatching-parallel-agents — ADOPT (paralelo solo en investigaciones/fixes independientes)
+- [R] using-git-worktrees — ADOPT (step-0 isolation detect)
+- [R] finishing-a-development-branch — ADOPT (exit gate)
+- [R] ralph-tui-prd, ralph-tui-create-beads, ralph-tui-create-json, ralph-wiggum, ralph-loop-workflow — SKIP (trackers ajenos / loops sin gates)
 
 ## Testing (3)
 - [R] webapp-testing — auditada 26-oct (suite: behavior sí, oráculos independientes sí)
@@ -68,26 +70,22 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [ ] playwright-cli
 
 ## Next.js (5)
-- [ ] vercel-react-best-practices, deploy-to-vercel, turborepo, ai-sdk
-- [ ] next-cache-components-adoption
+- [R] vercel-react-best-practices — FIT parcial (subset React genérico para SPA; ya auditada)
+- [R] deploy-to-vercel, turborepo, ai-sdk, next-cache-components-adoption — N/A (sin Next/Vercel/TS-AI)
 - [N] next-best-practices — repo movido a vercel/next.js, slug inexistente
 
 ## Mobile (5)
-- [ ] vercel-react-native-skills, expo-native-ui, expo-data-fetching
-- [ ] expo-upgrade
+- [R] vercel-react-native-skills, expo-native-ui, expo-data-fetching, expo-upgrade — N/A (sin app móvil). Robos: loading/error/empty/content por pantalla, isLoading-vs-isFetching, doctor-gate tras cambios deps.
 - [N] expo-tailwind-setup — slug inexistente en expo/skills
 
 ## Databases (13)
-- [ ] supabase-postgres-best-practices, supabase, firebase-basics
-- [ ] firebase-auth-basics, firebase-firestore, convex-quickstart
-- [ ] convex-auth, neon-postgres, postgres, mysql, turso-db
-- [ ] query (duckdb), drizzle, drizzle-migrations
+- [R] TODAS analizadas 26-oct: N/A funcional (SQLite+SQLAlchemy loopback). Robos: partial-index+EXPLAIN discipline, no unbounded collect (paginate/take), cursor>OFFSET, batch inserts, migration-first Alembic+drift-check CI, FK-index+transactions-for-multistep.
 
 ## Marketing (20)
-- [ ] seo-audit, copywriting, marketing-psychology, content-strategy
-- [ ] programmatic-seo, social, pricing, cro, launch, schema, emails
-- [ ] ads, competitors, analytics, paywalls, popups, ai-seo, cold-email
-- [ ] ad-creative, churn-prevention, lead-magnets
+- [R] launch, social, content-strategy, page-cro(cro), analytics, competitors — aplicadas 26-oct (docs/launch-plan.md + docs/social-kit.md)
+- [R] copywriting (marketingskills) — aplicada 26-oct (docs/copy-style-es.md)
+- [ ] seo-audit, marketing-psychology, programmatic-seo, pricing, schema, emails
+- [ ] ads, paywalls, popups, ai-seo, cold-email, ad-creative, churn-prevention, lead-magnets
 
 ## Imagen (2)
 - [ ] imagegen-frontend-web, imagegen-frontend-mobile
@@ -104,8 +102,8 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] security-audit — guidance mode 26-oct (sin vulns; S1-S6)
 - [R] code-review — leída 26-oct (sin run CLI; cubierto por gates)
 - [R] copywriting (marketingskills) — aplicada 26-oct (docs/copy-style-es.md)
-- [ ] receiving-code-review
-- [ ] validate-evaluator, write-judge-prompt
+- [R] receiving-code-review — ADOPT (disciplina veredicto reviewer)
+- [R] validate-evaluator, write-judge-prompt — FIT (solo si hay judge LLM futuro; infra rechazada P0)
 
 ## Hallazgos super-review (handoff a escritores)
 ### Motion (26-oct, auditor solo-lectura)
