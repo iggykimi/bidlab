@@ -16,7 +16,7 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 |----|-----|---|------|--------|------------|
 | T01 | 26oct | 1 | — | done | environment.md + board + blockers |
 | T02 | 26oct | 0.5 | — | pending | admission/bases check; G0 partial/external |
-| T03 | 26oct | 0.5 | T01 | pending | real minimal Meta smoke + balance; G3 |
+| T03 | 26oct | 0.5 | T01 | done | real minimal Meta smoke + balance; G3 |
 | T04 | 26oct | 0.5 | — | pending | Tías rights/attribution review + manifest |
 | T05 | 26oct | 2 | T01 | done | monorepo bootstrap, locks, scripts, empty lint/build |
 | T06 | 27oct | 1.5 | T05 | pending | models, SQLite/migration, API contract |

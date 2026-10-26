@@ -45,6 +45,7 @@ Deviations from ARCHITECTURE (resolved, recorded):
 
 ## Keys (presence only, values never logged)
 
-- `.env` present at workspace root (author-created, gitignored). Content not inspected.
-- `MODEL_API_KEY` smoke (T03/G3) pending: run `tools/meta_smoke.py` once with
-  bounded consumption and record the real result in `docs/verification-log.md`.
+- `.env` present at workspace root (author-created, gitignored). Holds `MUSE_API`
+  (author) + `MODEL_API_KEY` (same value, wired explicitly for the app contract).
+  Values never logged or committed.
+- `MODEL_API_KEY` smoke (T03/G3): PASS 26oct, real inference, 250 tokens, ~$0.001.

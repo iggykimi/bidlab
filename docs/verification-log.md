@@ -53,3 +53,18 @@ packages=["bidlab"] explícito; npm 12 bloqueó postinstall de esbuild hasta
 Health/Capabilities se alinearon al contrato (schema_version, limits,
 additionalProperties). Lint cubre código de producto; tools/ (sondas de
 investigación) excluido y documentado en pyproject.
+
+## Producto T03 — smoke Meta real (Windows)
+
+Fecha: 2026-10-26T19:05:43Z. Resultado en evidence/meta_smoke_status.json.
+Comando: loader `.env` + `tools/meta_smoke.py --out evidence/meta_smoke_status.json`
+→ exit 0, status PASS, executed_inference true, model muse-spark-1.3,
+HTTP 200, usage 14 prompt + 236 completion (222 reasoning, 0 cached),
+total 250 tokens, 1647 ms. Coste estimado ~0.001 USD. Sin secretos en salida.
+G3-smoke verde; la extracción documental real (T16) queda pendiente.
+
+Incidencia honesta: la clave del autor venía como `MUSE_API` (48 chars), no
+`MODEL_API_KEY`; dos intentos PowerShell de añadir la línea pegaron/mezclaron
+contenido por manejo de arrays/saltos de línea. Se verificó por longitudes y
+mitades idénticas, y se reescribió el fichero byte-exacto con Python: dos
+líneas de 48 chars. La clave original quedó intacta (smoke PASS con ella).
