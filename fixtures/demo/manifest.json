@@ -1,0 +1,10 @@
+{
+  "kind": "curated_demo_seed",
+  "mode": "manual",
+  "created_from": "research evidence 2026-10-26 (examples/*, gold_claims g01-g14)",
+  "tender": "2026/00006554N (Tías PAI technical assistance)",
+  "atom_snapshot_sha256": "c15cf7144811345e9f547cc9b4a86e9054831bdc8c84481bdb830ca81ddb0da4",
+  "pcap_sha256": "c74d063237b012df89543da73390d76d8996a558a85b0202890182bcee289677",
+  "files": ["tender.json", "company.json", "interpretation.json", "review.json", "expected.json"],
+  "notes": "Curated excerpts only; original bytes not redistributed. Company synthetic. Rivals hypothetical at evaluation time."
+}

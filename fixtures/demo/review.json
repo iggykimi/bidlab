@@ -1,0 +1,28 @@
+{
+  "actor": "demo-seed",
+  "reason": "curated from research evidence 2026-10-26; demo declares reviewed data with Demo curada badge",
+  "basis": {
+    "scope_id": "tias-whole",
+    "review_status": "approved",
+    "reason": "XML metadata (net/gross/VEC) + PCAP p.8-9 visual table: 2 x 59168.00 = 118336.00",
+    "evidence_keys": ["pbl_net", "pbl_gross", "estimated_value", "gross_budget", "initial_duration_months"]
+  },
+  "rule": {
+    "rule_id": "tias-price-r1",
+    "revision": 1,
+    "review_status": "approved",
+    "reason": "inverse proportion selected from PCAP p.10 cl.12.2 (distinguishes inverse/direct); 49 points",
+    "template_id": "proportional_inverse",
+    "max_points": "49"
+  },
+  "anomaly_policy": {
+    "id": "tias-18-5",
+    "source_kind": "explicit_pcap",
+    "variant": "tias_18_5",
+    "review_status": "approved",
+    "three_bidder_absolute_25": true,
+    "percentage_reduction_one_third": false,
+    "reason": "PCAP p.20 cl.18.5 branches n=1/2/3/>=4 incl. n=3 absolute 25% close"
+  },
+  "requirements_tree": "approved as executable; manual leaves stay manual until accredited evidence"
+}

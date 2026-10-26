@@ -1,0 +1,281 @@
+{
+  "proposal": {
+    "schema_version": "1.0.0",
+    "claims": [
+      {
+        "key": "pbl_gross",
+        "raw_value": "126.619,52 €, incluido IGIC",
+        "normalized_value": "126619.52",
+        "unit": "EUR",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 8,
+            "verbatim_excerpt": "tiséis mil seiscientos diecinueve euros con cincuenta y dos céntimos (126.619,52 €), incluido IGIC, conforme a las siguientes anualidades: 6.- EXISTENCIA DE CRÉDITO PRESUPUESTARIO"
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g01"
+      },
+      {
+        "key": "estimated_value",
+        "raw_value": "295.840,00 €, sin IGIC",
+        "normalized_value": "295840.00",
+        "unit": "EUR",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 8,
+            "verbatim_excerpt": "asciende a DOSCIENTOS NOVENTA Y CINCO MIL OCHOCIENTOS CUARENTA EUROS (295.840,00 €), sin IGIC."
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g02"
+      },
+      {
+        "key": "initial_duration_months",
+        "raw_value": "DOS (2) AÑOS",
+        "normalized_value": "24",
+        "unit": "months",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 9,
+            "verbatim_excerpt": "EJECUCIÓN DE LA PRESTACIÓN El contrato tendrá un plazo de duración de DOS (2) AÑOS, a contar desde el día de la firma del acta de inicio de la prestación. Dicho plazo de vigencia pod"
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g03"
+      },
+      {
+        "key": "price_points",
+        "raw_value": "49 puntos",
+        "normalized_value": "49",
+        "unit": "points",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 10,
+            "verbatim_excerpt": "todetias.es sede.ayuntamientodetias.es CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g05"
+      },
+      {
+        "key": "turnover_threshold",
+        "raw_value": "295.840,00€",
+        "normalized_value": "295840.00",
+        "unit": "EUR",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 5,
+            "verbatim_excerpt": "l menos de doscientos noventa y cinco mil ochocientos cuarenta euros (295.840,00€)."
+          }
+        ],
+        "confidence": "medium",
+        "status": "proposed",
+        "notes": "gold g09"
+      },
+      {
+        "key": "insurance_threshold",
+        "raw_value": "295.840,00€",
+        "normalized_value": "295840.00",
+        "unit": "EUR",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 6,
+            "verbatim_excerpt": "superior a doscientos noventa y cinco mil ochocientos cuarenta euros (295.840,00€). c) Patrimonio neto, o bien ratio entre activos y pasivos, al cierre del último ejercicio económi"
+          }
+        ],
+        "confidence": "medium",
+        "status": "proposed",
+        "notes": "gold g10"
+      },
+      {
+        "key": "technical_services_threshold",
+        "raw_value": "207.088,00€",
+        "normalized_value": "207088.00",
+        "unit": "EUR",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 6,
+            "verbatim_excerpt": "ión sea igual o superior a doscientos siete mil ochenta y ocho euros (207.088,00€). A estos efectos, se considerarán servicios de igual o similar naturaleza los relacionados con re"
+          }
+        ],
+        "confidence": "medium",
+        "status": "proposed",
+        "notes": "gold g11"
+      },
+      {
+        "key": "anomaly_single_discount_gt",
+        "raw_value": "más de 25 unidades porcentuales",
+        "normalized_value": "0.25",
+        "unit": "rate",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 20,
+            "verbatim_excerpt": "o licitador, sea inferior al presupuesto base de licitación en más de 25 unidades porcentuales. 2. Cuando concurran dos licitadores, la que sea inferior en más de 20 unidades porcentuales a la o"
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g13"
+      },
+      {
+        "key": "anomaly_two_discount_gt",
+        "raw_value": "más de 20 unidades porcentuales",
+        "normalized_value": "0.20",
+        "unit": "rate",
+        "citations": [
+          {
+            "document_id": "doc-tias-pcap",
+            "page_number": 20,
+            "verbatim_excerpt": "s. 2. Cuando concurran dos licitadores, la que sea inferior en más de 20 unidades porcentuales a la otra oferta. 3. Cuando concurran tres licitadores, las que sean inferiores en más de 10 unidad"
+          }
+        ],
+        "confidence": "high",
+        "status": "proposed",
+        "notes": "gold g14"
+      }
+    ],
+    "requirements": [
+      {
+        "category": "economic",
+        "group": "solvencia_economica",
+        "logic_hint": "OR",
+        "condition_text": "Volumen anual de negocios, seguro profesional o patrimonio neto/ratio (PCAP p.5-6, tres medios alternativos).",
+        "citations": ["req-econ-turnover", "req-econ-insurance"]
+      },
+      {
+        "category": "technical",
+        "group": "solvencia_tecnica",
+        "logic_hint": "AND",
+        "condition_text": "Importe anual acumulado ≥ 207.088 € en el año de mayor ejecución de los últimos tres, de igual o similar naturaleza y acreditado (PCAP p.6).",
+        "citations": ["req-tech-amount"]
+      }
+    ],
+    "formula": {
+      "literal": null,
+      "template_hint": "proportional_inverse",
+      "max_points": "49",
+      "variables": ["own_price", "best_price", "max_points"],
+      "citations": [
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 10,
+          "verbatim_excerpt": "todetias.es sede.ayuntamientodetias.es CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
+        }
+      ],
+      "ambiguities": ["Clause 12.2 distinguishes inverse vs direct proportion; inverse selected on review, not by text match alone."]
+    },
+    "anomaly_text": {
+      "literal": null,
+      "citations": [
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 20,
+          "verbatim_excerpt": "o licitador, sea inferior al presupuesto base de licitación en más de 25 unidades porcentuales. 2. Cuando concurran dos licitadores, la que sea inferior en más de 20 unidades porcentuales a la o"
+        },
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 20,
+          "verbatim_excerpt": "s. 2. Cuando concurran dos licitadores, la que sea inferior en más de 20 unidades porcentuales a la otra oferta. 3. Cuando concurran tres licitadores, las que sean inferiores en más de 10 unidad"
+        }
+      ],
+      "notes": "Branches n=1/2/3/>=4 with 25/20/10 thresholds plus the n=3 absolute 25% close present in this PCAP."
+    },
+    "unread_pages": "curated excerpts only; full parse pending document bytes (not redistributed)"
+  },
+  "reviewed": {
+    "basis": "approved (see review.json)",
+    "requirements_tree": {
+      "kind": "group",
+      "id": "req-root",
+      "label": "Solvencia Tías (PCAP p.5-7)",
+      "operator": "AND",
+      "children": [
+        {
+          "kind": "group",
+          "id": "req-econ",
+          "label": "Solvencia económica: OR de tres medios (p.5-6)",
+          "operator": "OR",
+          "children": [
+            {
+              "kind": "leaf",
+              "id": "req-econ-turnover",
+              "label": "Volumen anual ≥ 295.840,00 € (mejor de 3 años)",
+              "company_field": "annual_turnover_best_3y_net",
+              "operator": "gte",
+              "threshold": "295840.00",
+              "unit": "EUR",
+              "review_status": "approved",
+              "evidence_ids": []
+            },
+            {
+              "kind": "leaf",
+              "id": "req-econ-insurance",
+              "label": "Seguro profesional ≥ 295.840,00 €",
+              "company_field": "professional_insurance_net",
+              "operator": "gte",
+              "threshold": "295840.00",
+              "unit": "EUR",
+              "review_status": "approved",
+              "evidence_ids": []
+            },
+            {
+              "kind": "leaf",
+              "id": "req-econ-networth",
+              "label": "Patrimonio neto o ratio activos/pasivos (ap.c) — manual",
+              "company_field": "manual",
+              "operator": "manual",
+              "threshold": null,
+              "unit": null,
+              "review_status": "approved",
+              "evidence_ids": []
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "id": "req-tech",
+          "label": "Solvencia técnica (p.6)",
+          "operator": "AND",
+          "children": [
+            {
+              "kind": "leaf",
+              "id": "req-tech-amount",
+              "label": "Servicios similares año mayor ejecución ≥ 207.088,00 €",
+              "company_field": "annual_similar_services_best_3y_net",
+              "operator": "gte",
+              "threshold": "207088.00",
+              "unit": "EUR",
+              "review_status": "approved",
+              "evidence_ids": []
+            },
+            {
+              "kind": "leaf",
+              "id": "req-tech-similarity",
+              "label": "Igual o similar naturaleza + acreditación — manual",
+              "company_field": "manual",
+              "operator": "manual",
+              "threshold": null,
+              "unit": null,
+              "review_status": "approved",
+              "evidence_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    "notes": "Manual leaves stay manual: tree is executable, accreditation still needs evidence."
+  }
+}

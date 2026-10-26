@@ -86,3 +86,22 @@ Fecha: 2026-10-26. Entorno: mismo que T05.
   `ruff check .` y `mypy apps/api/bidlab apps/api/migrations` → limpios.
 - Módulos finos schemas/{tender,extraction,company,scenario,report}.py
   re-exportan el contrato; db/{session,models,repositories}.py según árbol.
+
+## Producto T07 — semilla Tías idempotente (Windows)
+
+Fecha: 2026-10-26. `fixtures/demo/*.json` congelados (tender/company/
+interpretation/review/expected + manifest, mode manual). `scripts/seed_demo.py`
+migra vía alembic y carga: tender 1, notice 1, scope 1 (basis approved),
+document 1 (41 págs, solo metadatos), document_page 6 (extractos p.5/6/8/9/10/20),
+citation 9 (offsets reales), interpretation 1, rule 1 (proportional_inverse,
+AST canónico, anomaly tias_18_5), company 1+rev1 (80000/10000), audit 2.
+`pytest I01` (doble seed en DB temporal) → exit 0, mismos conteos, FK limpias.
+
+Hallazgo honesto 1: models.py declaraba las FK simples como String plano;
+SQLAlchemy no ordenaba INSERTs. Se declararon las 14 FK (verificación:
+sorted_tables correcto, FKs presentes en metadata).
+Hallazgo honesto 2: aun con metadatos correctos, un flush multitable emite
+hijos antes que padres en este entorno (sqlalchemy 2.1.6; reproducido hasta
+con dos modelos mínimos inline: c antes que p). La semilla usa flushes por
+etapa (una tabla por flush), verificados. Regla de proyecto: escrituras
+multitabla siempre por etapas con flush() intermedio.

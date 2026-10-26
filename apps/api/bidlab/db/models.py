@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy import (
     JSON,
     CheckConstraint,
+    ForeignKey,
     ForeignKeyConstraint,
     Index,
     Integer,
@@ -39,7 +40,7 @@ class NoticeVersion(Base):
         Index("ix_versions_latest", "tender_id", "updated_utc"),
     )
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    tender_id: Mapped[str] = mapped_column(String, nullable=False)
+    tender_id: Mapped[str] = mapped_column(ForeignKey("tender.id"), nullable=False)
     updated_utc: Mapped[str] = mapped_column(String, nullable=False)
     raw_sha256: Mapped[str] = mapped_column(String, nullable=False)
     blob_path: Mapped[str] = mapped_column(String, nullable=False)
@@ -52,7 +53,7 @@ class Scope(Base):
     __tablename__ = "scope"
     __table_args__ = (UniqueConstraint("tender_id", "lot_key"),)
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    tender_id: Mapped[str] = mapped_column(String, nullable=False)
+    tender_id: Mapped[str] = mapped_column(ForeignKey("tender.id"), nullable=False)
     lot_key: Mapped[str] = mapped_column(String, nullable=False)
     basis_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     budget_net_cents: Mapped[int | None] = mapped_column(Integer)
@@ -65,7 +66,7 @@ class Document(Base):
         CheckConstraint("pages_count BETWEEN 1 AND 120"),
     )
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    tender_id: Mapped[str] = mapped_column(String, nullable=False)
+    tender_id: Mapped[str] = mapped_column(ForeignKey("tender.id"), nullable=False)
     kind: Mapped[str] = mapped_column(String, nullable=False)
     sha256: Mapped[str] = mapped_column(String, nullable=False)
     blob_path: Mapped[str] = mapped_column(String, nullable=False)
@@ -78,7 +79,7 @@ class Document(Base):
 
 class DocumentPage(Base):
     __tablename__ = "document_page"
-    document_id: Mapped[str] = mapped_column(String, primary_key=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("document.id"), primary_key=True)
     page_number: Mapped[int] = mapped_column(Integer, primary_key=True)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_text: Mapped[str] = mapped_column(Text, nullable=False)
@@ -108,7 +109,7 @@ class Citation(Base):
 
 class InterpretationRevision(Base):
     __tablename__ = "interpretation_revision"
-    tender_id: Mapped[str] = mapped_column(String, primary_key=True)
+    tender_id: Mapped[str] = mapped_column(ForeignKey("tender.id"), primary_key=True)
     revision: Mapped[int] = mapped_column(Integer, primary_key=True)
     mode: Mapped[str] = mapped_column(String, nullable=False)
     proposal_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
@@ -123,7 +124,7 @@ class RuleRevision(Base):
     __tablename__ = "rule_revision"
     rule_id: Mapped[str] = mapped_column(String, primary_key=True)
     revision: Mapped[int] = mapped_column(Integer, primary_key=True)
-    scope_id: Mapped[str] = mapped_column(String, nullable=False)
+    scope_id: Mapped[str] = mapped_column(ForeignKey("scope.id"), nullable=False)
     interpretation_revision: Mapped[int] = mapped_column(Integer, nullable=False)
     rule_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     review_status: Mapped[str] = mapped_column(String, nullable=False)
@@ -140,9 +141,9 @@ class Company(Base):
 
 class CompanyRevision(Base):
     __tablename__ = "company_revision"
-    company_id: Mapped[str] = mapped_column(String, primary_key=True)
+    company_id: Mapped[str] = mapped_column(ForeignKey("company.id"), primary_key=True)
     revision: Mapped[int] = mapped_column(Integer, primary_key=True)
-    scope_id: Mapped[str] = mapped_column(String, nullable=False)
+    scope_id: Mapped[str] = mapped_column(ForeignKey("scope.id"), nullable=False)
     direct_cost_cents: Mapped[int | None] = mapped_column(Integer)
     overhead_cents: Mapped[int | None] = mapped_column(Integer)
     profile_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
@@ -156,8 +157,8 @@ class HistoricalAward(Base):
         Index("ix_awards_scope_date", "scope_id", "award_date"),
     )
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    notice_version_id: Mapped[str] = mapped_column(String, nullable=False)
-    scope_id: Mapped[str | None] = mapped_column(String)
+    notice_version_id: Mapped[str] = mapped_column(ForeignKey("notice_version.id"), nullable=False)
+    scope_id: Mapped[str | None] = mapped_column(ForeignKey("scope.id"))
     result_index: Mapped[int] = mapped_column(Integer, nullable=False)
     budget_net_cents: Mapped[int | None] = mapped_column(Integer)
     award_net_cents: Mapped[int | None] = mapped_column(Integer)
@@ -180,7 +181,7 @@ class Scenario(Base):
         ),
     )
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    scope_id: Mapped[str] = mapped_column(String, nullable=False)
+    scope_id: Mapped[str] = mapped_column(ForeignKey("scope.id"), nullable=False)
     rule_id: Mapped[str] = mapped_column(String, nullable=False)
     rule_revision: Mapped[int] = mapped_column(Integer, nullable=False)
     company_id: Mapped[str] = mapped_column(String, nullable=False)
@@ -193,7 +194,7 @@ class Scenario(Base):
 class Report(Base):
     __tablename__ = "report"
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    scenario_id: Mapped[str] = mapped_column(String, nullable=False)
+    scenario_id: Mapped[str] = mapped_column(ForeignKey("scenario.id"), nullable=False)
     report_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -202,7 +203,7 @@ class Job(Base):
     __tablename__ = "job"
     __table_args__ = (Index("ix_jobs_queue", "status", "created_at"),)
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    tender_id: Mapped[str] = mapped_column(String, nullable=False)
+    tender_id: Mapped[str] = mapped_column(ForeignKey("tender.id"), nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
     request_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     stage: Mapped[str] = mapped_column(String, nullable=False)
@@ -217,7 +218,7 @@ class Job(Base):
 class ModelInvocation(Base):
     __tablename__ = "model_invocation"
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    job_id: Mapped[str | None] = mapped_column(String)
+    job_id: Mapped[str | None] = mapped_column(ForeignKey("job.id"))
     mode: Mapped[str] = mapped_column(String, nullable=False)
     model: Mapped[str | None] = mapped_column(String)
     prompt_version: Mapped[str] = mapped_column(String, nullable=False)
