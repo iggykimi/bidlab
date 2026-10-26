@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing, openTab } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 test.describe("E11 desktop 1280x720", () => {
   test.use({ viewport: { width: 1280, height: 720 } });

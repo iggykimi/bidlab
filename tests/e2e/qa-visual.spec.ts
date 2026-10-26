@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openTab } from "./helpers";
+import { installOfflineGuard, loadDemo, openTab, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // T30: QA visual + accesibilidad básica. Captura cada pestaña en escritorio y
 // móvil, comprueba que no hay desbordamiento horizontal y valida roles,
@@ -27,14 +34,15 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     await page.screenshot({ path: "test-results/qa-desktop-requisitos.png" });
     await noHorizontalOverflow(page, "requisitos escritorio");
 
-    await openTab(page, "Pricing Lab");
+    await openTab(page, "Precio");
     await expect(page.getByTestId("price-net")).toContainText("112.419,20");
     await page.screenshot({ path: "test-results/qa-desktop-pricing.png" });
     await page.screenshot({ path: "test-results/qa-desktop-pricing-full.png", fullPage: true });
     const curve = page.getByTestId("curve-chart");
     await curve.scrollIntoViewIfNeeded();
     await expect(curve.locator("path.recharts-line-curve")).toHaveCount(2);
-    await page.waitForTimeout(2000); // deja que la animación de trazado termine
+    // Sin espera: la animación de trazado está desactivada y las curvas
+    // se pintan estáticas en el primer render.
     await curve.screenshot({ path: "test-results/qa-desktop-curve.png" });
     await noHorizontalOverflow(page, "pricing escritorio");
 
@@ -52,7 +60,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
   test("drawer is labelled, keyboard closable and returns focus", async ({ page }) => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
-    await openTab(page, "Pricing Lab");
+    await openTab(page, "Precio");
     await expect(page.getByTestId("price-net")).toContainText("112.419,20");
 
     const opener = page
@@ -82,7 +90,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
       "true"
     );
 
-    await openTab(page, "Pricing Lab");
+    await openTab(page, "Precio");
     await expect(page.getByTestId("discount-input")).toHaveAccessibleName(/Baja/);
     await expect(page.getByTestId("discount-slider")).toHaveAccessibleName(/Deslizador/);
     await expect(page.getByTestId("rival-a-price")).toHaveAccessibleName(/Hipótesis A/);
@@ -111,7 +119,7 @@ test.describe("T30 visual QA mobile 390x844", () => {
     await page.screenshot({ path: "test-results/qa-mobile-requisitos.png" });
     await noHorizontalOverflow(page, "requisitos móvil");
 
-    await openTab(page, "Pricing Lab");
+    await openTab(page, "Precio");
     await expect(page.getByTestId("price-net")).toContainText("112.419,20");
     await page.screenshot({ path: "test-results/qa-mobile-pricing.png" });
     await page.screenshot({ path: "test-results/qa-mobile-pricing-full.png", fullPage: true });

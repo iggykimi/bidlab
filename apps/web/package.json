@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5",
-    "pdfjs-dist": "^4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "react": "^19",
     "react-dom": "^19",
-    "react-hook-form": "^7",
     "react-router-dom": "^7",
     "recharts": "^2.15",
+    "sonner": "^2.0.8",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4",
     "openapi-typescript": "^7",
+    "rollup-plugin-visualizer": "^7.1.1",
     "tailwindcss": "^4",
     "typescript": "~5.7.0",
     "vite": "^6",

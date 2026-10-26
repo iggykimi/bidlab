@@ -29,39 +29,71 @@ export function storeSession(session: DemoSession): StoredSession {
   return stored;
 }
 
-export function clearSession(): void {
-  localStorage.removeItem(SESSION_KEY);
+export interface SavedScenarioEntry {
+  id: string;
+  name: string;
+  savedAt: string;
 }
 
-function idList(key: string): string[] {
+export interface SavedReportEntry {
+  id: string;
+  savedAt: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function entryList(key: string): { id: string; name: string; savedAt: string }[] {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const out: { id: string; name: string; savedAt: string }[] = [];
+    for (const item of parsed) {
+      // Backward compatible: v1 stored bare id strings.
+      if (typeof item === "string") {
+        out.push({ id: item, name: "", savedAt: "" });
+        continue;
+      }
+      if (isRecord(item) && typeof item.id === "string") {
+        out.push({
+          id: item.id,
+          name: typeof item.name === "string" ? item.name : "",
+          savedAt: typeof item.savedAt === "string" ? item.savedAt : "",
+        });
+      }
+    }
+    return out;
   } catch {
     return [];
   }
 }
 
-function rememberId(key: string, id: string): string[] {
-  const ids = [id, ...idList(key).filter((v) => v !== id)].slice(0, 50);
-  localStorage.setItem(key, JSON.stringify(ids));
-  return ids;
+function rememberEntry(
+  key: string,
+  entry: { id: string; name: string; savedAt: string }
+): { id: string; name: string; savedAt: string }[] {
+  const entries = [entry, ...entryList(key).filter((v) => v.id !== entry.id)].slice(0, 50);
+  localStorage.setItem(key, JSON.stringify(entries));
+  return entries;
 }
 
-export function listSavedScenarios(): string[] {
-  return idList(SCENARIOS_KEY);
+export function listSavedScenarios(): SavedScenarioEntry[] {
+  return entryList(SCENARIOS_KEY);
 }
 
-export function rememberScenario(id: string): string[] {
-  return rememberId(SCENARIOS_KEY, id);
+export function rememberScenario(id: string, name: string): SavedScenarioEntry[] {
+  return rememberEntry(SCENARIOS_KEY, { id, name, savedAt: new Date().toISOString() });
 }
 
-export function listSavedReports(): string[] {
-  return idList(REPORTS_KEY);
+export function listSavedReports(): SavedReportEntry[] {
+  return entryList(REPORTS_KEY).map(({ id, savedAt }) => ({ id, savedAt }));
 }
 
-export function rememberReport(id: string): string[] {
-  return rememberId(REPORTS_KEY, id);
+export function rememberReport(id: string): SavedReportEntry[] {
+  return rememberEntry(REPORTS_KEY, { id, name: "", savedAt: new Date().toISOString() }).map(
+    ({ id: entryId, savedAt }) => ({ id: entryId, savedAt })
+  );
 }

@@ -10,7 +10,9 @@ import {
   type Workspace,
 } from "../../api/client";
 import { loadSession } from "../../lib/session";
+import { Button } from "../../components/ui";
 import { EvidenceDrawer, type EvidenceTarget } from "../evidence/EvidenceDrawer";
+import { reasonEs } from "../pricing/sources";
 
 interface Props {
   workspace: Workspace;
@@ -19,7 +21,7 @@ interface Props {
 export function verdictEs(verdict: string): string {
   if (verdict === "met") return "Cumple";
   if (verdict === "not_met") return "No cumple";
-  return "Por verificar · unknown";
+  return "Por verificar";
 }
 
 interface LeafRow {
@@ -121,7 +123,7 @@ export function RequirementsTab({ workspace }: Props) {
         </p>
       ) : null}
       {companyQuery.isError || eligibilityQuery.isError ? (
-        <p role="alert" className="mt-2 text-sm text-[#B42318]">
+        <p role="alert" className="mt-2 text-sm text-error">
           No se pudo evaluar la elegibilidad. Reintenta cuando la API local responda.
         </p>
       ) : null}
@@ -134,56 +136,64 @@ export function RequirementsTab({ workspace }: Props) {
         </p>
       )}
 
-      <div className="mt-3 overflow-x-auto">
+      <div className="table-scroll mt-3 overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="text-left">
-              <th className="border-b border-[#C9D2E8] p-2">Requisito</th>
-              <th className="border-b border-[#C9D2E8] p-2">Grupo</th>
-              <th className="border-b border-[#C9D2E8] p-2">Umbral</th>
-              <th className="border-b border-[#C9D2E8] p-2">Resultado empresa</th>
-              <th className="border-b border-[#C9D2E8] p-2">Evidencia</th>
+              <th scope="col" className="border-b border-border p-2">Requisito</th>
+              <th scope="col" className="border-b border-border p-2">Grupo</th>
+              <th scope="col" className="border-b border-border p-2">Umbral</th>
+              <th scope="col" className="border-b border-border p-2">Resultado de la empresa</th>
+              <th scope="col" className="border-b border-border p-2">Evidencia</th>
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-muted">
+                  Sin requisitos revisados en esta licitación.
+                </td>
+              </tr>
+            )}
             {rows.map(({ leaf, groupLabel }) => {
               const item = verdictById.get(leaf.id);
               const citations = citationsForLeaf(workspace, leaf);
               return (
                 <tr key={leaf.id} data-testid={requirementTestId(leaf.id)} data-requirement-id={leaf.id}>
-                  <td className="border-b border-[#E5E9F2] p-2 font-medium">{leaf.label}</td>
-                  <td className="border-b border-[#E5E9F2] p-2">{groupLabel || "—"}</td>
-                  <td className="tnum border-b border-[#E5E9F2] p-2">
-                    {leaf.threshold ?? "manual"}
+                  <td className="border-b border-line p-2 font-medium">{leaf.label}</td>
+                  <td className="border-b border-line p-2">{groupLabel || "—"}</td>
+                  <td className="tnum border-b border-line p-2">
+                    {leaf.threshold ?? "revisión manual"}
                     {leaf.unit ? ` ${leaf.unit}` : ""}
                   </td>
-                  <td className="border-b border-[#E5E9F2] p-2">
+                  <td className="border-b border-line p-2">
                     {item ? (
                       <>
                         <strong>{verdictEs(item.verdict)}</strong>
                         {item.reason_codes.length > 0 && (
-                          <span className="block text-xs text-[#3A4560]">{item.reason_codes.join(", ")}</span>
+                          <span className="block text-xs text-muted">
+                            {item.reason_codes.map(reasonEs).join("; ")}
+                          </span>
                         )}
                       </>
                     ) : (
                       "…"
                     )}
                   </td>
-                  <td className="border-b border-[#E5E9F2] p-2">
+                  <td className="border-b border-line p-2">
                     {citations.length === 0 ? (
-                      <span className="text-[#3A4560]">Sin citas vinculadas</span>
+                      <span className="text-muted">Sin citas vinculadas</span>
                     ) : (
                       <span className="flex flex-wrap gap-2">
                         {citations.map((c) => (
-                          <button
+                          <Button
                             key={c.id}
-                            type="button"
+                            variant="chip"
                             onClick={() => setEvidence({ citation: c })}
-                            className="rounded-lg border border-[#3159D9] px-2 py-1 text-[#3159D9]"
                             aria-label={`Ver evidencia ${c.id}, página ${c.page_number}`}
                           >
                             p. {c.page_number}
-                          </button>
+                          </Button>
                         ))}
                       </span>
                     )}
@@ -194,13 +204,18 @@ export function RequirementsTab({ workspace }: Props) {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-[#3A4560]">
+      <p className="mt-3 text-xs text-muted">
         El resultado se refiere solo a requisitos revisados y evidencias acreditadas de esta empresa. Los grupos
-        OR/AND se pliegan con lógica trivaluada en el backend.
+        Y/O se combinan en el servidor: cumple, no cumple o por verificar.
       </p>
 
       {evidence && (
-        <EvidenceDrawer workspace={workspace} target={evidence} onClose={() => setEvidence(null)} />
+        <EvidenceDrawer
+          key={evidence.citation.id}
+          workspace={workspace}
+          target={evidence}
+          onClose={() => setEvidence(null)}
+        />
       )}
     </section>
   );

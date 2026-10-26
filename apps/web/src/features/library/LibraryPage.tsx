@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, createDemoSession, listTenders, type Tender } from "../../api/client";
+import { createDemoSession, listTenders, type Tender } from "../../api/client";
 import { formatEUR } from "../../lib/format";
+import { errorCode, errorEs } from "../../lib/errors";
 import { storeSession } from "../../lib/session";
 import { DemoBadge } from "../../components/DemoBadge";
+import { Skeleton } from "../../components/Skeleton";
+import { Alert, Button } from "../../components/ui";
 import { useQuery } from "@tanstack/react-query";
 
 export function LibraryPage() {
@@ -11,6 +14,7 @@ export function LibraryPage() {
   const [filter, setFilter] = useState("");
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [demoRawError, setDemoRawError] = useState<string | null>(null);
 
   const tendersQuery = useQuery({
     queryKey: ["tenders"],
@@ -20,12 +24,14 @@ export function LibraryPage() {
   async function handleDemoLoad() {
     setLoadingDemo(true);
     setDemoError(null);
+    setDemoRawError(null);
     try {
       const session = await createDemoSession();
       storeSession(session);
       await navigate(`/tenders/${session.tender_id}?tab=resumen`);
     } catch (error) {
-      setDemoError(error instanceof ApiError ? `${error.code}: ${error.message}` : "No se pudo crear la sesión demo");
+      setDemoError(errorEs(error, "No se pudo crear la sesión demo. Reintenta cuando la API local responda."));
+      setDemoRawError(errorCode(error));
     } finally {
       setLoadingDemo(false);
     }
@@ -45,34 +51,27 @@ export function LibraryPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">BidLab</h1>
-          <p className="mt-1 text-[#3A4560]">De un pliego a una decisión de oferta</p>
+          <p className="mt-1 text-muted">De un pliego a una decisión de oferta</p>
         </div>
         <DemoBadge mode={null} />
       </header>
 
       <div id="contenido" className="mt-6 flex flex-wrap gap-3">
-        <button
-          type="button"
-          data-testid="demo-load"
-          onClick={handleDemoLoad}
-          disabled={loadingDemo}
-          className="rounded-lg bg-[#3159D9] px-4 py-2 font-semibold text-white disabled:opacity-60"
-        >
+        <Button data-testid="demo-load" onClick={handleDemoLoad} disabled={loadingDemo}>
           {loadingDemo ? "Cargando ejemplo…" : "Cargar ejemplo"}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="subtle"
           disabled
-          title="No disponible en esta versión: falta el endpoint de creación de licitaciones"
-          className="rounded-lg border border-[#C9D2E8] bg-white px-4 py-2 font-semibold text-[#3A4560] disabled:opacity-60"
+          title="No disponible en esta versión: aún no se pueden añadir pliegos"
         >
           Añadir pliego
-        </button>
+        </Button>
       </div>
       {demoError && (
-        <p role="alert" className="mt-3 rounded-lg border border-[#B42318] bg-white p-3 text-[#B42318]">
+        <Alert className="mt-3" title={demoRawError ?? undefined}>
           {demoError}
-        </p>
+        </Alert>
       )}
 
       <section aria-label="Biblioteca local" className="mt-8 rounded-xl bg-white p-4 shadow-sm sm:p-6">
@@ -84,30 +83,32 @@ export function LibraryPage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Tías, 79411000…"
-            className="mt-1 w-full rounded-lg border border-[#C9D2E8] px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
           />
         </label>
 
-        {tendersQuery.isPending && <p className="mt-4">Cargando licitaciones…</p>}
+        {tendersQuery.isPending && (
+          <Skeleton lines={4} className="mt-4" label="Cargando licitaciones…" />
+        )}
         {tendersQuery.isError && (
-          <p role="alert" className="mt-4 text-[#B42318]">
-            No se pudo cargar la biblioteca. Comprueba que la API local está en marcha.
+          <p role="alert" className="mt-4 text-error" title={errorCode(tendersQuery.error) ?? undefined}>
+            {errorEs(tendersQuery.error, "No se pudo cargar la biblioteca. Comprueba que la API local está en marcha.")}
           </p>
         )}
         {tendersQuery.isSuccess && visible.length === 0 && (
           <p className="mt-4">Sin resultados. Carga el ejemplo para empezar.</p>
         )}
         {visible.length > 0 && (
-          <ul className="mt-4 divide-y divide-[#E5E9F2]">
+          <ul className="mt-4 divide-y divide-line">
             {visible.map((t) => (
               <li key={t.id} className="py-3">
                 <button
                   type="button"
                   onClick={() => navigate(`/tenders/${t.id}?tab=resumen`)}
-                  className="w-full text-left"
+                  className="w-full rounded-lg p-1 text-left hover:bg-surface"
                 >
-                  <span className="font-semibold text-[#3159D9] underline">{t.title}</span>
-                  <span className="mt-1 block text-sm text-[#3A4560]">
+                  <span className="font-semibold text-primary underline hover:text-primary-ink">{t.title}</span>
+                  <span className="mt-1 block text-sm text-muted">
                     {t.contracting_body} · Exp. {t.external_id} · CPV {t.cpv_codes.join(", ") || "—"}
                   </span>
                   <span className="tnum mt-1 block text-sm">

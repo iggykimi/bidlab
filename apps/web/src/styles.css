@@ -3,9 +3,18 @@
 @theme {
   --color-surface: #f6f7fb;
   --color-ink: #172033;
+  --color-muted: #3a4560;
   --color-primary: #3159d9;
+  --color-primary-hover: #2748b8;
+  --color-primary-ink: #1e3fa0;
+  --color-primary-soft: #e8efff;
+  --color-line: #e5e9f2;
+  --color-border: #c9d2e8;
   --color-alert: #9a5b00;
+  --color-warn-bg: #fff4d6;
+  --color-warn-ink: #7a4a00;
   --color-error: #b42318;
+  --drawer-curve: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body {
@@ -21,4 +30,113 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Long protocol tokens (hashes, decimals) must wrap inside table cells. */
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+/* Sticky headers for scrollable tables. */
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+/* O2/F11: press feedback on primary actions (color-only under reduced motion). */
+.pressable {
+  transition:
+    transform 120ms ease-out,
+    background-color 120ms ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pressable:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+/* O1: evidence drawer entry. Mount-only animation; exit is instant on unmount. */
+.drawer-enter {
+  transition:
+    transform 250ms var(--drawer-curve),
+    opacity 200ms ease-out;
+}
+@starting-style {
+  .drawer-enter {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-enter {
+    transition: opacity 200ms ease-out;
+  }
+  @starting-style {
+    .drawer-enter {
+      transform: none;
+    }
+  }
+}
+
+/* O3: KPI crossfade on value change (keyed remount retriggers, no movement). */
+@media (prefers-reduced-motion: no-preference) {
+  .kpi-crossfade {
+    animation: kpi-fade 150ms ease-out;
+  }
+}
+@keyframes kpi-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* O4: <details> expand animation via grid-rows (close snaps shut). */
+.details-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .details-body {
+    transition:
+      grid-template-rows 200ms ease-out,
+      opacity 200ms ease-out;
+  }
+  details:not([open]) .details-body {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+.details-body > div {
+  overflow: hidden;
+}
+
+/* Loading skeletons (static under reduced motion). */
+.skeleton {
+  border-radius: 0.75rem;
+  background: var(--color-line);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: skeleton-pulse 1200ms ease-in-out infinite alternate;
+  }
+}
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Larger range thumb for touch (visual only; keyboard behavior unchanged). */
+input[type="range"] {
+  min-height: 44px;
 }

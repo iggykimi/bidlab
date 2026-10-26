@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing, openTab } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // E12: HTML hostil en nombre/nota y documento sin bytes -> sin ejecución, error controlado.
 test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page }) => {
@@ -29,7 +36,7 @@ test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page })
 
   await openTab(page, "Requisitos");
   await page.getByTestId("requirement-tech-services").getByRole("button", { name: /página 6/ }).click();
-  await expect(page.getByTestId("evidence-drawer")).toContainText("Original no redistribuido");
+  await expect(page.getByTestId("evidence-drawer")).toContainText("PDF original no se redistribuye");
   await expect(page.getByRole("link", { name: /Ver fuente oficial/ }).first()).toBeVisible();
   expect(guard.blocked()).toBe(0);
 });

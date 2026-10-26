@@ -1,3 +1,5 @@
+import { Badge } from "./ui";
+
 interface Props {
   mode: string | null | undefined;
 }
@@ -6,22 +8,16 @@ interface Props {
 export function DemoBadge({ mode }: Props) {
   if (mode === "demo") {
     return (
-      <span
-        data-testid="demo-badge"
-        className="inline-block rounded-full border border-[#9A5B00] bg-[#FFF4D6] px-3 py-1 text-sm font-semibold text-[#7A4A00]"
-      >
+      <Badge tone="demo" data-testid="demo-badge">
         Demo curada
-      </span>
+      </Badge>
     );
   }
   if (mode === "live") {
     return (
-      <span
-        data-testid="demo-badge"
-        className="inline-block rounded-full border border-[#3159D9] bg-[#E8EFFF] px-3 py-1 text-sm font-semibold text-[#1E3FA0]"
-      >
+      <Badge tone="live" data-testid="demo-badge">
         Análisis en vivo
-      </span>
+      </Badge>
     );
   }
   return null;

@@ -1,8 +1,13 @@
+import { useRef, useTransition } from "react";
+import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ApiError, getCapabilities, getWorkspace } from "../../api/client";
+import { getCapabilities, getWorkspace } from "../../api/client";
 import { DemoBadge } from "../../components/DemoBadge";
+import { Skeleton } from "../../components/Skeleton";
+import { Alert } from "../../components/ui";
 import { formatEUR } from "../../lib/format";
+import { errorCode, errorEs } from "../../lib/errors";
 import { loadSession } from "../../lib/session";
 import { SummaryTab } from "./SummaryTab";
 import { RequirementsTab } from "../requirements/RequirementsTab";
@@ -13,7 +18,7 @@ import { ReportTab } from "../report/ReportTab";
 const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "requisitos", label: "Requisitos" },
-  { id: "pricing", label: "Pricing Lab" },
+  { id: "pricing", label: "Precio" },
   { id: "evidencia", label: "Evidencia" },
   { id: "informe", label: "Informe" },
 ] as const;
@@ -28,6 +33,8 @@ export function WorkspacePage() {
   const { tenderId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const tab = parseTab(params.get("tab"));
+  const [, startTransition] = useTransition();
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace", tenderId],
@@ -39,33 +46,49 @@ export function WorkspacePage() {
   });
 
   function selectTab(id: TabId) {
-    const next = new URLSearchParams(params);
-    next.set("tab", id);
-    setParams(next, { replace: false });
+    startTransition(() => {
+      const next = new URLSearchParams(params);
+      next.set("tab", id);
+      setParams(next, { replace: false });
+    });
+  }
+
+  /** APG roving tabindex: arrows move and select, Home/End jump. */
+  function onTabKey(event: React.KeyboardEvent, index: number) {
+    let next: number | null = null;
+    if (event.key === "ArrowRight") next = (index + 1) % TABS.length;
+    else if (event.key === "ArrowLeft") next = (index - 1 + TABS.length) % TABS.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = TABS.length - 1;
+    if (next === null) return;
+    const target = TABS[next];
+    if (!target) return;
+    event.preventDefault();
+    selectTab(target.id);
+    tabRefs.current[next]?.focus();
   }
 
   if (workspaceQuery.isPending) {
     return (
-      <main className="mx-auto max-w-6xl p-4 sm:p-8">
-        <p>Cargando espacio de trabajo…</p>
+      <main className="mx-auto max-w-6xl p-4 sm:p-8" aria-busy="true">
+        <p>Cargando la licitación…</p>
+        <Skeleton lines={6} className="mt-4" label="Cargando la licitación…" />
       </main>
     );
   }
 
   if (workspaceQuery.isError) {
     const error = workspaceQuery.error;
-    const message =
-      error instanceof ApiError ? `${error.code}: ${error.message}` : "No se pudo cargar la licitación";
     return (
       <main className="mx-auto max-w-6xl p-4 sm:p-8">
         <p>
-          <Link to="/" className="text-[#3159D9] underline">
-            ← Volver a la biblioteca
+          <Link to="/" className="text-primary underline hover:text-primary-ink">
+            ← Biblioteca
           </Link>
         </p>
-        <p role="alert" className="mt-4 rounded-lg border border-[#B42318] bg-white p-4 text-[#B42318]">
-          {message}
-        </p>
+        <Alert className="mt-4" title={errorCode(error) ?? undefined}>
+          {errorEs(error, "No se pudo cargar la licitación. Reintenta cuando la API local responda.")}
+        </Alert>
       </main>
     );
   }
@@ -82,7 +105,7 @@ export function WorkspacePage() {
         Saltar al contenido
       </a>
       <p>
-        <Link to="/" className="text-[#3159D9] underline">
+        <Link to="/" className="text-primary underline hover:text-primary-ink">
           ← Biblioteca
         </Link>
       </p>
@@ -91,46 +114,62 @@ export function WorkspacePage() {
           <h1 data-testid="tender-title" className="text-xl font-bold sm:text-2xl">
             {tender.title}
           </h1>
-          <p className="mt-1 text-sm text-[#3A4560]">
+          <p className="mt-1 text-sm text-muted">
             Exp. {tender.external_id} · {tender.contracting_body}
             {scope ? ` · ${scope.label}` : ""}
           </p>
           <p className="tnum mt-1 text-sm">
-            PBL neto {tender.pbl_net ? formatEUR(tender.pbl_net) : "no localizado"}
-            {tender.pbl_gross ? ` · Bruto ${formatEUR(tender.pbl_gross)}` : ""}
+            PBL neto {tender.pbl_net ? formatEUR(tender.pbl_net) : "No localizado"}
+            {tender.pbl_gross ? ` · bruto ${formatEUR(tender.pbl_gross)}` : ""}
           </p>
         </div>
         <DemoBadge mode={mode} />
       </header>
 
       {mode === "demo" && (
-        <p className="mt-3 rounded-lg border border-[#9A5B00] bg-[#FFF4D6] p-3 text-sm">
+        <p className="mt-3 rounded-lg border border-alert bg-warn-bg p-3 text-sm">
           Demo curada: cifras de semilla revisada del 25/10/2026, no extracción en vivo. Las hipótesis de
           rivales y el coste de empresa son sintéticos.
         </p>
       )}
 
-      <nav aria-label="Secciones de la licitación" className="mt-4">
-        <ul className="flex flex-wrap gap-2" role="tablist" aria-label="Secciones">
-          {TABS.map((t) => (
-            <li key={t.id}>
+      <div className="mt-4">
+        <ul role="tablist" aria-label="Secciones de la licitación" className="flex flex-wrap gap-2">
+          {TABS.map((t, i) => (
+            <li key={t.id} role="presentation">
               <button
+                ref={(el) => {
+                  tabRefs.current[i] = el;
+                }}
                 type="button"
                 role="tab"
+                id={`tab-${t.id}`}
                 aria-selected={tab === t.id}
+                aria-controls="contenido"
+                tabIndex={tab === t.id ? 0 : -1}
                 onClick={() => selectTab(t.id)}
-                className={`rounded-lg px-4 py-2 font-semibold ${
-                  tab === t.id ? "bg-[#3159D9] text-white" : "bg-white text-[#3159D9] shadow-sm"
-                }`}
+                onKeyDown={(e) => onTabKey(e, i)}
+                className={clsx(
+                  "pressable min-h-[44px] rounded-lg px-4 py-2 font-semibold",
+                  tab === t.id
+                    ? "bg-primary text-white hover:bg-primary-hover"
+                    : "bg-white text-primary shadow-sm hover:bg-primary-soft"
+                )}
               >
                 {t.label}
               </button>
             </li>
           ))}
         </ul>
-      </nav>
+      </div>
 
-      <div id="contenido" className="mt-4" role="tabpanel">
+      <div
+        id="contenido"
+        className="mt-4"
+        role="tabpanel"
+        aria-labelledby={`tab-${tab}`}
+        tabIndex={0}
+      >
         {tab === "resumen" && (
           <SummaryTab workspace={workspace} capabilities={capabilitiesQuery.data ?? null} />
         )}

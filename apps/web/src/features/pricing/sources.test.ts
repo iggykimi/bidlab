@@ -5,9 +5,11 @@ import {
   branchEs,
   citationsByIds,
   hashOrigin,
+  matchStatusEs,
   metadataForKey,
+  parseStatusEs,
   reasonEs,
-  scoreStatusEs,
+  rightsStatusEs,
   variableEs,
 } from "./sources";
 
@@ -81,13 +83,11 @@ describe("sources", () => {
   it("translates anomaly branches to Spanish", () => {
     expect(branchEs("n3_no_trim")).toContain("tres");
     expect(branchEs("n1")).toContain("75 %");
-    expect(branchEs(null)).toContain("unknown");
+    expect(branchEs(null)).toBe("sin rama aplicable");
     expect(branchEs("n9")).toBe("n9");
   });
 
-  it("translates score status and formula variables", () => {
-    expect(scoreStatusEs("defined")).toBe("definida");
-    expect(scoreStatusEs("unknown")).toContain("unknown");
+  it("translates formula variables to Spanish", () => {
     expect(variableEs("best_price")).toBe("mejor oferta");
     expect(variableEs("own_price")).toBe("precio propio");
   });
@@ -96,7 +96,16 @@ describe("sources", () => {
     expect(anomalyEs("possible_justification_required")).toBe("Posible necesidad de justificación");
     expect(anomalyEs("not_flagged_under_assumptions")).toBe("Sin presunción bajo estos supuestos");
     expect(anomalyEs("not_applicable")).toBe("No aplicable");
-    expect(anomalyEs("unknown")).toContain("unknown");
+    expect(anomalyEs("unknown")).toBe("Sin determinar");
+  });
+
+  it("translates evidence codes to Spanish", () => {
+    expect(matchStatusEs("exact")).toBe("literal");
+    expect(matchStatusEs("normalized_match")).toBe("normalizada");
+    expect(rightsStatusEs("reviewed_for_demo")).toBe("revisada para la demo");
+    expect(rightsStatusEs("unknown")).toBe("sin determinar");
+    expect(parseStatusEs("ready")).toBe("lista");
+    expect(parseStatusEs("needs_review")).toBe("por revisar");
   });
 
   it("matches source hashes to the snapshot or a document", () => {

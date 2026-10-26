@@ -8,6 +8,8 @@ import {
   type Citation,
   type Workspace,
 } from "../../api/client";
+import { Button } from "../../components/ui";
+import { matchStatusEs } from "../pricing/sources";
 
 export interface EvidenceTarget {
   citation: Citation;
@@ -19,27 +21,58 @@ interface Props {
   onClose: () => void;
 }
 
+function focusables(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>("a[href], button:not(:disabled), [tabindex]:not([tabindex='-1'])")].filter(
+    (el) => el.getClientRects().length > 0
+  );
+}
+
 /**
  * Accessible evidence drawer. Page text comes from the API; when the original
  * bytes are not redistributed it says so instead of rendering a fake preview.
+ * True modal: scrim, focus trap and body scroll lock; page resyncs when the
+ * citation changes (callers also key by citation id).
  */
 export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const { citation } = target;
   const [page, setPage] = useState(citation.page_number);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const doc = workspace.documents.find((d) => d.id === citation.document_id) ?? null;
 
+  // F1 stale-state: callers key by citation id, so a new citation remounts
+  // the drawer on its own page; no resync effect needed.
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
+      document.body.style.overflow = previousOverflow;
       opener?.focus();
     };
   }, []);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = focusables(panel);
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -60,73 +93,70 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const total = doc?.pages_count ?? null;
 
   return (
-    <div
-      data-testid="evidence-drawer"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Evidencia ${citation.id}`}
-      className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-xl"
-    >
-      <div className="flex items-start justify-between gap-3 border-b border-[#E5E9F2] p-4">
+    <div className="fixed inset-0 z-50">
+      <div
+        data-testid="evidence-scrim"
+        aria-hidden="true"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/40"
+      />
+      <div
+        ref={panelRef}
+        data-testid="evidence-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Evidencia ${citation.id}`}
+        className="drawer-enter absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl"
+      >
+      <div className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div>
           <h2 className="text-lg font-semibold">Evidencia documental</h2>
-          <p data-testid="evidence-page" className="tnum mt-1 text-sm text-[#3A4560]">
+          <p data-testid="evidence-page" className="tnum mt-1 text-sm text-muted">
             Página {page} de {total ?? "—"}
           </p>
         </div>
-        <button
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-[#C9D2E8] px-3 py-1 font-semibold"
-        >
+        <Button ref={closeRef} variant="subtle" onClick={onClose}>
           Cerrar
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
         <dl className="grid gap-2 text-sm">
           <div>
-            <dt className="font-medium text-[#3A4560]">Documento</dt>
+            <dt className="font-medium text-muted">Documento</dt>
             <dd>{doc?.display_name ?? citation.document_id}</dd>
           </div>
           <div>
-            <dt className="font-medium text-[#3A4560]">Cita ({citation.match_status})</dt>
-            <dd className="mt-1 rounded-lg bg-[#F6F7FB] p-3" data-testid="evidence-quote">
+            <dt className="font-medium text-muted">Cita ({matchStatusEs(citation.match_status)})</dt>
+            <dd className="mt-1 rounded-lg bg-surface p-3" data-testid="evidence-quote">
               {citation.verbatim_excerpt}
             </dd>
           </div>
           <div>
-            <dt className="font-medium text-[#3A4560]">SHA-256 del documento</dt>
+            <dt className="font-medium text-muted">SHA-256 del documento</dt>
             <dd className="tnum break-all text-xs">{citation.document_sha256}</dd>
           </div>
         </dl>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="subtle"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="rounded-lg border border-[#C9D2E8] px-3 py-1 disabled:opacity-50"
           >
             ← Anterior
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="subtle"
             onClick={() => setPage((p) => (total ? Math.min(total, p + 1) : p + 1))}
             disabled={total !== null && page >= total}
-            className="rounded-lg border border-[#C9D2E8] px-3 py-1 disabled:opacity-50"
           >
             Siguiente →
-          </button>
+          </Button>
           {page !== citation.page_number && (
-            <button
-              type="button"
-              onClick={() => setPage(citation.page_number)}
-              className="rounded-lg border border-[#3159D9] px-3 py-1 text-[#3159D9]"
-            >
+            <Button variant="secondary" onClick={() => setPage(citation.page_number)}>
               Volver a la cita (p. {citation.page_number})
-            </button>
+            </Button>
           )}
         </div>
 
@@ -134,7 +164,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
           <h3 className="font-semibold">Texto de la página (extracto curado)</h3>
           {pageQuery.isPending && <p className="mt-2 text-sm">Cargando página…</p>}
           {pageQuery.isError && (
-            <p role="alert" className="mt-2 text-sm text-[#B42318]">
+            <p role="alert" className="mt-2 text-sm text-error">
               {pageQuery.error instanceof ApiError && pageQuery.error.status === 404
                 ? `Página ${page} no disponible en los extractos curados.`
                 : "No se pudo cargar la página."}
@@ -143,7 +173,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
           {pageQuery.data && (
             <>
               <p className="mt-2 whitespace-pre-wrap text-sm">{pageQuery.data.raw_text}</p>
-              <p className="tnum mt-2 text-xs text-[#3A4560]">
+              <p className="tnum mt-2 text-xs text-muted">
                 Extractor {pageQuery.data.extractor_version}
                 {pageQuery.data.quality_flags.length > 0 && ` · ${pageQuery.data.quality_flags.join(", ")}`}
               </p>
@@ -159,7 +189,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
               <a
                 href={documentContentUrl(citation.document_id)}
                 download
-                className="text-[#3159D9] underline"
+                className="text-primary underline hover:text-primary-ink"
               >
                 Descargar PDF original
               </a>
@@ -167,15 +197,16 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
           )}
           {contentQuery.data && !contentQuery.data.ok && (
             <p role="status" className="mt-2 text-sm">
-              Original no redistribuido ({contentQuery.data.status}): {contentQuery.data.message}.{" "}
+              El PDF original no se redistribuye; usa la fuente oficial y los extractos curados.{" "}
               {doc?.source_url && (
-                <a href={doc.source_url} target="_blank" rel="noreferrer" className="text-[#3159D9] underline">
+                <a href={doc.source_url} target="_blank" rel="noreferrer" className="text-primary underline hover:text-primary-ink">
                   Ver fuente oficial
                 </a>
               )}
             </p>
           )}
         </section>
+      </div>
       </div>
     </div>
   );

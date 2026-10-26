@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discountPercentToRate, formatEUR, formatPoints, formatRate, rateToDiscountPercent } from "./format";
+import { discountPercentToRate, formatEUR, formatPoints, formatRate, formatSignedEUR } from "./format";
 
 const squashSpace = (s: string) => s.replace(/\s/g, " ");
 
@@ -19,6 +19,14 @@ describe("format", () => {
   it("encodes discount percent as protocol rate", () => {
     expect(discountPercentToRate(5)).toBe("0.0500");
     expect(discountPercentToRate(15)).toBe("0.1500");
-    expect(rateToDiscountPercent("0.3000")).toBe(30);
+  });
+
+  it("renders non-finite values as an em dash, never NaN", () => {
+    for (const bad of ["NaN", "Infinity", "-Infinity", "abc", ""]) {
+      expect(formatEUR(bad)).toBe("—");
+      expect(formatSignedEUR(bad)).toBe("—");
+      expect(formatPoints(bad)).toBe("—");
+      expect(formatRate(bad)).toBe("—");
+    }
   });
 });

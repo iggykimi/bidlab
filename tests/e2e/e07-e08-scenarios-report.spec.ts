@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing, openTab } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // E07: guardar, recargar, abrir -> mismos valores/hashes; revisión de empresa intacta.
 test("E07 saved scenario survives reload with identical values", async ({ page }) => {

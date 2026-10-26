@@ -2,7 +2,9 @@
 // Backend base URL comes from VITE_API_URL; default is the local API.
 // All money/points stay backend strings; this module never computes figures.
 
+import type { z } from "zod";
 import type { components } from "./generated";
+import { evaluationResultSchema, workspaceSchema } from "./schemas";
 
 export const API_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ??
@@ -10,17 +12,14 @@ export const API_BASE =
 
 export const LOCAL_CLIENT = "local-ui";
 
-export type Health = components["schemas"]["Health"];
 export type Capabilities = components["schemas"]["Capabilities"];
 export type Tender = components["schemas"]["Tender"];
 export type TenderList = components["schemas"]["TenderList"];
 export type Workspace = components["schemas"]["Workspace"];
 export type DemoSession = components["schemas"]["DemoSession"];
-export type DocumentInfo = components["schemas"]["Document"];
 export type MetadataEvidence = components["schemas"]["MetadataEvidence"];
 export type PageText = components["schemas"]["PageText"];
 export type Citation = components["schemas"]["Citation"];
-export type ClaimProposal = components["schemas"]["ClaimProposal"];
 export type RequirementNode = components["schemas"]["RequirementNode"];
 export type RequirementLeaf = components["schemas"]["RequirementLeaf"];
 export type RequirementGroup = components["schemas"]["RequirementGroup"];
@@ -28,11 +27,9 @@ export type PricingRule = components["schemas"]["PricingRule"];
 export type Company = components["schemas"]["Company"];
 export type EligibilityRequest = components["schemas"]["EligibilityRequest"];
 export type EligibilityResult = components["schemas"]["EligibilityResult"];
-export type EligibilityItem = components["schemas"]["EligibilityItem"];
 export type EvaluationRequest = components["schemas"]["EvaluationRequest"];
 export type EvaluationResult = components["schemas"]["EvaluationResult"];
 export type CurvePoint = components["schemas"]["CurvePoint"];
-export type RivalOffer = components["schemas"]["RivalOffer"];
 export type Scenario = components["schemas"]["Scenario"];
 export type Report = components["schemas"]["Report"];
 export type Decision = components["schemas"]["ReportCreate"]["decision"];
@@ -92,8 +89,13 @@ export function newIdempotencyKey(): string {
   return crypto.randomUUID();
 }
 
-export function getHealth(signal?: AbortSignal): Promise<Health> {
-  return getJson<Health>("/health", signal);
+/** Boundary-parse a payload; unexpected shapes fail closed, never half-render. */
+function parseOrThrow<T>(schema: z.ZodType<T>, payload: unknown): T {
+  const parsed = schema.safeParse(payload);
+  if (!parsed.success) {
+    throw new ApiError(500, "invalid_response", "La API devolvió una respuesta inesperada");
+  }
+  return parsed.data;
 }
 
 export function getCapabilities(signal?: AbortSignal): Promise<Capabilities> {
@@ -108,12 +110,9 @@ export function listTenders(signal?: AbortSignal): Promise<TenderList> {
   return getJson<TenderList>("/tenders?page=1&page_size=100", signal);
 }
 
-export function getTender(tenderId: string, signal?: AbortSignal): Promise<Tender> {
-  return getJson<Tender>(`/tenders/${encodeURIComponent(tenderId)}`, signal);
-}
-
-export function getWorkspace(tenderId: string, signal?: AbortSignal): Promise<Workspace> {
-  return getJson<Workspace>(`/tenders/${encodeURIComponent(tenderId)}/workspace`, signal);
+export async function getWorkspace(tenderId: string, signal?: AbortSignal): Promise<Workspace> {
+  const payload: unknown = await getJson(`/tenders/${encodeURIComponent(tenderId)}/workspace`, signal);
+  return parseOrThrow(workspaceSchema, payload);
 }
 
 export function getCompany(companyId: string, signal?: AbortSignal): Promise<Company> {
@@ -145,8 +144,9 @@ export function documentContentUrl(documentId: string): string {
   return `${API_BASE}/documents/${encodeURIComponent(documentId)}/content`;
 }
 
-export function evaluateScenario(payload: EvaluationRequest, signal?: AbortSignal): Promise<EvaluationResult> {
-  return sendJson<EvaluationResult>("POST", "/scenarios/evaluate", payload, { signal });
+export async function evaluateScenario(payload: EvaluationRequest, signal?: AbortSignal): Promise<EvaluationResult> {
+  const raw: unknown = await sendJson("POST", "/scenarios/evaluate", payload, { signal });
+  return parseOrThrow(evaluationResultSchema, raw);
 }
 
 export function saveScenario(name: string, input: EvaluationRequest, signal?: AbortSignal): Promise<Scenario> {

@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // T23: el flujo complete=false se declara en el panel y conserva la economía.
 test("T23 incomplete set declares unknown score and anomaly, economics intact", async ({
@@ -48,7 +55,7 @@ test("T23 group references show backend minima, mean, threshold and branch", asy
   await expect(page.getByTestId("anomaly-detail")).toContainText("3 ofertas de referencia");
 
   await page.getByTestId("groups-confirmed").uncheck();
-  await expect(refs).toContainText("Referencias unknown");
+  await expect(refs).toContainText("Referencias sin determinar");
   await expect(refs).toContainText("sin confirmar");
   expect(guard.blocked()).toBe(0);
 });

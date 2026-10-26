@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // E03: 5 -> 15 por campo y teclado del deslizador; precio, beneficio, puntos y traza.
 test("E03 discount 5 to 15 updates price profit score and trace", async ({ page }) => {

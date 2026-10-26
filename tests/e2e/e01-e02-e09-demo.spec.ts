@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo } from "./helpers";
+import { installOfflineGuard, loadDemo, takeConsoleFailures } from "./helpers";
+
+// C10: any console.error / pageerror fails the test.
+test.afterEach(() => {
+  const failures = takeConsoleFailures();
+  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  expect(failures.pageErrors, "page errors").toEqual([]);
+});
 
 // E01: cargar ejemplo -> título Tías, badge Demo curada, presupuesto neto, 0 llamadas externas.
 test("E01 demo load shows Tías with Demo badge and stays offline", async ({ page }) => {
@@ -13,13 +20,13 @@ test("E01 demo load shows Tías with Demo badge and stays offline", async ({ pag
   expect(guard.blocked()).toBe(0);
 });
 
-// E02: abrir requisito técnico -> unknown; drawer en página 6 de 41 con la cita.
+// E02: abrir requisito técnico -> por verificar; drawer en página 6 de 41 con la cita.
 test("E02 technical requirement is unknown with page 6 of 41 evidence", async ({ page }) => {
   const guard = await installOfflineGuard(page);
   await loadDemo(page);
   await page.getByRole("tab", { name: "Requisitos" }).click();
   const row = page.getByTestId("requirement-tech-services");
-  await expect(row).toContainText("unknown");
+  await expect(row).toContainText("Por verificar");
   await row.getByRole("button", { name: /página 6/ }).click();
   await expect(page.getByTestId("evidence-drawer")).toBeVisible();
   await expect(page.getByTestId("evidence-page")).toContainText("Página 6 de 41");

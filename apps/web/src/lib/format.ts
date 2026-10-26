@@ -30,21 +30,32 @@ const dateTime = new Intl.DateTimeFormat("es-ES", {
   timeStyle: "short",
 });
 
+/** Non-finite backend values render as an em dash, never NaN/Infinity. */
+function finiteOrNull(raw: string): number | null {
+  if (raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function formatEUR(amount: string): string {
-  return eur.format(Number(amount));
+  const n = finiteOrNull(amount);
+  return n === null ? "—" : eur.format(n);
 }
 
 export function formatSignedEUR(amount: string): string {
-  return signedEur.format(Number(amount));
+  const n = finiteOrNull(amount);
+  return n === null ? "—" : signedEur.format(n);
 }
 
 export function formatPoints(points: string): string {
-  return points4.format(Number(points));
+  const n = finiteOrNull(points);
+  return n === null ? "—" : points4.format(n);
 }
 
 /** Backend rate string ("0.0500") -> "5,0 %". Presentation only. */
 export function formatRate(rate: string): string {
-  return percent1.format(Number(rate));
+  const n = finiteOrNull(rate);
+  return n === null ? "—" : percent1.format(n);
 }
 
 export function formatDateTime(iso: string): string {
@@ -55,9 +66,4 @@ export function formatDateTime(iso: string): string {
 /** Discount percent (0-40, step 0.1) -> protocol rate string with 4 decimals. */
 export function discountPercentToRate(percent: number): string {
   return (percent / 100).toFixed(4);
-}
-
-/** Protocol rate string -> discount percent number for the slider. */
-export function rateToDiscountPercent(rate: string): number {
-  return Math.round(Number(rate) * 1000) / 10;
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Capabilities, Workspace } from "../../api/client";
+import { Button } from "../../components/ui";
 import { formatDateTime, formatEUR } from "../../lib/format";
 
 interface Props {
@@ -14,7 +15,7 @@ const LIMITATION_ES: Record<string, string> = {
 };
 
 function limitationText(code: string): string {
-  const key = code.split(":")[0];
+  const key = code.split(":")[0] ?? code;
   return LIMITATION_ES[key] ?? code;
 }
 
@@ -44,59 +45,59 @@ export function SummaryTab({ workspace, capabilities }: Props) {
         <h2 className="text-lg font-semibold">Hechos</h2>
         <dl className="mt-3 grid gap-2 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Presupuesto neto</dt>
+            <dt className="text-muted">Presupuesto neto</dt>
             <dd className="tnum font-semibold">{tender.pbl_net ? formatEUR(tender.pbl_net) : "No localizado"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Presupuesto bruto</dt>
+            <dt className="text-muted">Presupuesto bruto</dt>
             <dd className="tnum font-semibold">{tender.pbl_gross ? formatEUR(tender.pbl_gross) : "No localizado"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Valor estimado</dt>
+            <dt className="text-muted">Valor estimado</dt>
             <dd className="tnum font-semibold">
               {tender.estimated_value ? formatEUR(tender.estimated_value) : "No localizado"}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Puntos de precio</dt>
+            <dt className="text-muted">Puntos de precio</dt>
             <dd className="tnum font-semibold">
               {workspace.pricing_rules[0] ? `${workspace.pricing_rules[0].max_points} puntos` : "No localizado"}
-              <span className="font-normal text-[#3A4560]"> (los otros puntos no se inventan)</span>
+              <span className="font-normal text-muted"> (los demás puntos no se calculan en esta versión)</span>
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Fecha del snapshot</dt>
+            <dt className="text-muted">Fecha de la instantánea</dt>
             <dd className="font-semibold">{formatDateTime(tender.source_updated_at)}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Estado observado</dt>
+            <dt className="text-muted">Estado observado</dt>
             <dd className="font-semibold">{tender.status_raw || "—"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">CPV</dt>
+            <dt className="text-muted">CPV</dt>
             <dd className="font-semibold">{tender.cpv_codes.join(", ") || "—"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-[#3A4560]">Límite (literal)</dt>
+            <dt className="text-muted">Límite (literal)</dt>
             <dd className="font-semibold">{tender.deadline_literal ?? "—"}</dd>
           </div>
         </dl>
         <p className="mt-4 text-sm">
           <span className="font-medium">Fuente oficial: </span>
-          <a href={tender.source_url} target="_blank" rel="noreferrer" className="break-all text-[#3159D9] underline">
+          <a href={tender.source_url} target="_blank" rel="noreferrer" className="break-all text-primary underline">
             Ver publicación en Contratación del Estado
           </a>
         </p>
-        <p className="tnum mt-2 break-all text-xs text-[#3A4560]">Snapshot {tender.raw_snapshot_sha256}</p>
+        <p className="tnum mt-2 break-all text-xs text-muted">Snapshot {tender.raw_snapshot_sha256}</p>
         {tender.quality_flags.length > 0 && (
-          <ul className="mt-2 text-xs text-[#3A4560]">
+          <ul className="mt-2 text-xs text-muted">
             {tender.quality_flags.map((f) => (
               <li key={f}>Calidad: {f}</li>
             ))}
           </ul>
         )}
         {workspace.warnings.length > 0 && (
-          <ul className="mt-2 text-xs text-[#9A5B00]">
+          <ul className="mt-2 text-xs text-alert">
             {workspace.warnings.map((w) => (
               <li key={w}>Aviso: {w}</li>
             ))}
@@ -110,7 +111,7 @@ export function SummaryTab({ workspace, capabilities }: Props) {
           {workspace.pricing_rules.length === 0 && <p className="mt-2 text-sm">Sin reglas revisadas.</p>}
           <ul className="mt-2 space-y-2 text-sm">
             {workspace.pricing_rules.map((rule) => (
-              <li key={`${rule.id}:${rule.revision}`} className="rounded-lg border border-[#E5E9F2] p-3">
+              <li key={`${rule.id}:${rule.revision}`} className="rounded-lg border border-line p-3">
                 <p className="font-semibold">
                   {rule.template_id} · {rule.max_points} puntos · revisión {rule.revision}
                 </p>
@@ -138,36 +139,36 @@ export function SummaryTab({ workspace, capabilities }: Props) {
           {capabilities && (
             <dl className="mt-2 grid gap-1 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-[#3A4560]">Modo</dt>
+                <dt className="text-muted">Modo</dt>
                 <dd className="font-semibold">{capabilities.mode}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-[#3A4560]">Meta configurado</dt>
+                <dt className="text-muted">Meta configurado</dt>
                 <dd className="font-semibold">{capabilities.meta_configured ? "Sí" : "No"}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-[#3A4560]">Modelo</dt>
+                <dt className="text-muted">Modelo</dt>
                 <dd className="font-semibold">{capabilities.meta_model}</dd>
               </div>
             </dl>
           )}
           {capabilities && capabilities.limitations.length > 0 && (
-            <ul className="mt-2 text-sm text-[#3A4560]">
+            <ul className="mt-2 text-sm text-muted">
               {capabilities.limitations.map((l) => (
                 <li key={l}>· {limitationText(l)}</li>
               ))}
             </ul>
           )}
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             data-testid="live-attempt"
             onClick={handleLiveAttempt}
-            className="mt-3 rounded-lg border border-[#3159D9] bg-white px-4 py-2 font-semibold text-[#3159D9]"
+            className="mt-3"
           >
             Intentar análisis en vivo
-          </button>
+          </Button>
           {liveMessage && (
-            <p data-testid="live-message" role="status" className="mt-3 rounded-lg bg-[#F6F7FB] p-3 text-sm">
+            <p data-testid="live-message" role="status" className="mt-3 rounded-lg bg-surface p-3 text-sm">
               {liveMessage}
             </p>
           )}

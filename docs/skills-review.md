@@ -13,7 +13,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] pick-ui-library — leída completa propia + auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
 - [R] prototype — APPLY solo bajo invocación explícita (variantes contested)
 - [R] mobile-native — APPLY polish bajo (snippet baseline + safe-area; verificar en hardware)
-- [R] ask-sonner — APPLY (ref autoridad F7 sonner)
+- [R] ask-sonner — leída completa propia + APPLY (ref autoridad F7 sonner)
 - [R] animate — leída completa propia + auditada por subagente
 - [R] animate-expo — leída completa propia (N/A funcional: sin app Expo/RN)
 - [R] animation-performance — leída completa propia
@@ -175,3 +175,5 @@ APLICADO backend 26-oct (commit 87f2ea6, 205 tests, ruff/mypy verde): C1+C2+C3+C
 - S5 nota deploy (bind real lo posee CLI uvicorn, no settings).
 - S6 hmac.compare_digest en hashes idempotencia (higiene).
 ### Copy ES (26-oct, docs/copy-style-es.md): tú en UI, impersonal en backend, ERROR_ES map, 57 cambios (A12+B5+C36+D4). Ojo: C3 renombra pestaña → actualizar E2E; A-items pueden romper asertos exactos de tests → actualizar tests en el mismo diff.
+### FE wave A review (26-oct): PASS. Pendientes post-BoN: O4 details (fix ::details-content o drop claim), O1 exit drawer (delayed unmount), PricingLab:429 → <Alert>, tokens (CurveChart hexes, #fff sticky), 3 comentarios stale, axe-core ausente (integrar), flags=OK (noUncheckedIndexedAccess presente).
+NOTA E2E: no correr 2 suites Playwright a la vez (mismos puertos/storage) — causó 6 fallos espurios 26-oct; aislar o serializar.

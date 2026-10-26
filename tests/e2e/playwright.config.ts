@@ -34,6 +34,9 @@ export default defineConfig({
       cwd: ROOT,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
+      // C14: the preview build bakes VITE_API_URL at build time; point it at
+      // the same API the suite boots so a custom BIDLAB_PORT keeps working.
+      env: { VITE_API_URL: `${apiBase}/api/v1` },
     },
   ],
 });
