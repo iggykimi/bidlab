@@ -17,6 +17,7 @@ export type TenderList = components["schemas"]["TenderList"];
 export type Workspace = components["schemas"]["Workspace"];
 export type DemoSession = components["schemas"]["DemoSession"];
 export type DocumentInfo = components["schemas"]["Document"];
+export type MetadataEvidence = components["schemas"]["MetadataEvidence"];
 export type PageText = components["schemas"]["PageText"];
 export type Citation = components["schemas"]["Citation"];
 export type ClaimProposal = components["schemas"]["ClaimProposal"];

@@ -229,7 +229,7 @@ export function ReportTab({ workspace }: Props) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 [&>*]:min-w-0">
       <section aria-label="Escenarios guardados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Escenarios guardados</h2>
         {scenarioIds.length === 0 && (

@@ -1,5 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CurvePoint } from "../../api/client";
+import { formatEUR, formatPoints, formatRate, formatSignedEUR } from "../../lib/format";
+import { anomalyEs } from "./sources";
 
 interface Props {
   curve: CurvePoint[];
@@ -64,6 +66,44 @@ export function CurveChart({ curve }: Props) {
           </ResponsiveContainer>
         </div>
       </figure>
+      <details data-testid="curve-table">
+        <summary className="cursor-pointer text-sm font-semibold">
+          Ver puntos de la curva (tabla, {curve.length} filas del backend)
+        </summary>
+        <div className="mt-2 max-h-64 overflow-auto">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
+            <caption className="sr-only">
+              Puntos de la curva precio-puntos y precio-beneficio calculados por el backend
+            </caption>
+            <thead>
+              <tr className="text-left">
+                <th scope="col" className="border-b border-[#C9D2E8] p-2">Baja</th>
+                <th scope="col" className="border-b border-[#C9D2E8] p-2">Precio neto</th>
+                <th scope="col" className="border-b border-[#C9D2E8] p-2">Puntos</th>
+                <th scope="col" className="border-b border-[#C9D2E8] p-2">Beneficio</th>
+                <th scope="col" className="border-b border-[#C9D2E8] p-2">Anormalidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {curve.map((p) => (
+                <tr key={p.discount_rate}>
+                  <td className="tnum border-b border-[#E5E9F2] p-2">{formatRate(p.discount_rate)}</td>
+                  <td className="tnum border-b border-[#E5E9F2] p-2">{formatEUR(p.price_net)}</td>
+                  <td className="tnum border-b border-[#E5E9F2] p-2">
+                    {p.score.status === "defined" && p.score.value !== null
+                      ? formatPoints(p.score.value)
+                      : `Sin determinar (${p.score.status})`}
+                  </td>
+                  <td className="tnum border-b border-[#E5E9F2] p-2">
+                    {p.profit_net !== null ? formatSignedEUR(p.profit_net) : "—"}
+                  </td>
+                  <td className="border-b border-[#E5E9F2] p-2">{anomalyEs(p.anomaly_status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
   );
 }

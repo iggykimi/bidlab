@@ -7,6 +7,7 @@ import {
   getCompany,
   isAbort,
   saveScenario,
+  type Citation,
   type EvaluationRequest,
   type EvaluationResult,
   type Workspace,
@@ -29,25 +30,25 @@ import {
   scenarioNameSchema,
 } from "../../lib/validation";
 import { CurveChart } from "./CurveChart";
+import { SourceCitations } from "./SourceCitations";
+import { EvidenceDrawer, type EvidenceTarget } from "../evidence/EvidenceDrawer";
+import {
+  anomalyEs,
+  branchEs,
+  citationsByIds,
+  hashOrigin,
+  metadataForKey,
+  reasonEs,
+  variableEs,
+} from "./sources";
+
+export { anomalyEs };
 
 interface Props {
   workspace: Workspace;
 }
 
 const CURVE_POINTS = 41;
-
-export function anomalyEs(status: string): string {
-  switch (status) {
-    case "possible_justification_required":
-      return "Posible necesidad de justificación";
-    case "not_flagged_under_assumptions":
-      return "Sin presunción bajo estos supuestos";
-    case "not_applicable":
-      return "No aplicable";
-    default:
-      return "Sin determinar (unknown)";
-  }
-}
 
 /** Protocol decimal -> es-ES display. Money gets €, long decimals get comma separators. */
 function formatProtocol(value: string): string {
@@ -101,8 +102,18 @@ export function PricingLab({ workspace }: Props) {
   const [saveState, setSaveState] = useState<{ id: string; hash: string } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
   const latestRef = useRef(new LatestOnly());
   const seqRef = useRef(0);
+
+  const ruleCitations = citationsByIds(workspace, rule?.evidence_ids ?? []);
+  const anomalyCitations = citationsByIds(workspace, rule?.anomaly_policy.evidence_ids ?? []);
+  const basisCitations = citationsByIds(workspace, scope?.basis.evidence_ids ?? []);
+  const pblMeta = metadataForKey(workspace.tender, "pbl_net");
+
+  function openEvidence(citation: Citation) {
+    setEvidence({ citation });
+  }
 
   const companyQuery = useQuery({
     queryKey: ["company", companyId],
@@ -245,6 +256,25 @@ export function PricingLab({ workspace }: Props) {
           <p className="mt-1 text-xs text-[#3A4560]">
             Calculado · {result ? `baja ${formatRate(discountPercentToRate(h.discountPct))}` : "pendiente"}
           </p>
+          <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+            <span>
+              Fuente: PBL neto {workspace.tender.pbl_net ? formatEUR(workspace.tender.pbl_net) : "—"}
+              {pblMeta ? (
+                <>
+                  {" · "}
+                  <a
+                    href={pblMeta.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#3159D9] underline"
+                  >
+                    Fuente oficial (Atom)
+                  </a>
+                </>
+              ) : null}
+            </span>
+            <SourceCitations citations={basisCitations} onSelect={openEvidence} emptyText="" />
+          </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <h2 className="text-sm font-medium text-[#3A4560]">Beneficio / margen</h2>
@@ -254,6 +284,11 @@ export function PricingLab({ workspace }: Props) {
           <p className="mt-1 text-xs text-[#3A4560]">
             {result?.margin_rate ? `Margen ${formatRate(result.margin_rate)}` : "Margen —"} · coste{" "}
             {result?.cost_net ? formatEUR(result.cost_net) : "—"} (empresa sintética)
+          </p>
+          <p className="mt-1 text-xs text-[#3A4560]">
+            Fuente: coste de empresa sintética
+            {companyQuery.data?.name ? ` «${companyQuery.data.name}»` : ""} (hipótesis declarada, sin
+            cita documental).
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -269,8 +304,14 @@ export function PricingLab({ workspace }: Props) {
             {result
               ? result.score.status === "defined"
                 ? `Mejor oferta incluyendo la propia · máx. ${result.score.max_points}`
-                : `${result.score.reason_codes.join(", ") || "sin motivo"} · faltan: ${result.score.unknown_variables.join(", ") || "—"}`
+                : `${result.score.reason_codes.map(reasonEs).join("; ") || "sin motivo"} · faltan: ${result.score.unknown_variables.map(variableEs).join(", ") || "—"}`
               : "pendiente"}
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+            <span>
+              Fuente: regla {rule.template_id} · {rule.max_points} puntos (PCAP p. 10):{" "}
+            </span>
+            <SourceCitations citations={ruleCitations} onSelect={openEvidence} />
           </p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -278,10 +319,24 @@ export function PricingLab({ workspace }: Props) {
           <p data-testid="anomaly-status" className="text-2xl font-bold">
             {result ? anomalyEs(result.anomaly.status) : "—"}
           </p>
+          <p data-testid="anomaly-detail" className="tnum mt-1 text-xs text-[#3A4560]">
+            {result
+              ? result.anomaly.status === "unknown" || result.anomaly.status === "not_applicable"
+                ? `${result.anomaly.policy_id} · ${result.anomaly.reason_codes.map(reasonEs).join("; ") || "sin motivo"}`
+                : `${result.anomaly.policy_id} · rama ${branchEs(result.anomaly.branch)} · ` +
+                  `media ${result.anomaly.reference_mean_net ? formatProtocol(result.anomaly.reference_mean_net) : "—"} · ` +
+                  `umbral ${result.anomaly.threshold_net ? formatProtocol(result.anomaly.threshold_net) : "—"} · ` +
+                  `${result.anomaly.reference_offer_count} ofertas de referencia`
+              : "pendiente"}
+          </p>
           <p className="mt-1 text-xs text-[#3A4560]">
             {result
-              ? `${result.anomaly.policy_id}${result.anomaly.branch ? ` · rama ${result.anomaly.branch}` : ""} · presunción condicional, no exclusión automática`
+              ? `Presunción condicional, no exclusión automática${result.anomaly.branch ? ` · rama ${result.anomaly.branch}` : ""}`
               : "pendiente"}
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+            <span>Fuente: política {rule.anomaly_policy.variant} (PCAP p. 20): </span>
+            <SourceCitations citations={anomalyCitations} onSelect={openEvidence} />
           </p>
         </div>
       </section>
@@ -347,6 +402,15 @@ export function PricingLab({ workspace }: Props) {
             <h2 className="text-lg font-semibold">Curva precio-puntos</h2>
             {!result && <p className="mt-2 text-sm">Pendiente de cálculo.</p>}
             {result && <CurveChart curve={result.curve} />}
+            {result && (
+              <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+                <span>
+                  Curva del backend con rivales fijos ({result.curve.length} puntos); la propia
+                  oferta entra en cada punto. Fuente de la fórmula:{" "}
+                </span>
+                <SourceCitations citations={ruleCitations} onSelect={openEvidence} />
+              </p>
+            )}
           </section>
 
           <section aria-label="Cálculo" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
@@ -355,11 +419,15 @@ export function PricingLab({ workspace }: Props) {
             {result && (
               <div data-testid="calculation-trace" className="mt-2 overflow-x-auto">
                 <table className="w-full min-w-[560px] border-collapse text-sm">
+                  <caption className="sr-only">
+                    Pasos de cálculo devueltos por el backend: precio, mejor oferta, puntuación,
+                    anormalidad y margen
+                  </caption>
                   <thead>
                     <tr className="text-left">
-                      <th className="border-b border-[#C9D2E8] p-2">Paso</th>
-                      <th className="border-b border-[#C9D2E8] p-2">Expresión</th>
-                      <th className="border-b border-[#C9D2E8] p-2">Valor</th>
+                      <th scope="col" className="border-b border-[#C9D2E8] p-2">Paso</th>
+                      <th scope="col" className="border-b border-[#C9D2E8] p-2">Expresión</th>
+                      <th scope="col" className="border-b border-[#C9D2E8] p-2">Valor</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -383,6 +451,31 @@ export function PricingLab({ workspace }: Props) {
                   Regla {result.pricing_rule_id} rev. {result.pricing_rule_revision} · motor{" "}
                   {result.engine_version} · empresa rev. {result.company_revision}
                 </p>
+                <div data-testid="source-hashes" className="mt-3">
+                  <h3 className="text-sm font-semibold">
+                    Huellas de fuente ({result.source_hashes.length})
+                  </h3>
+                  {result.source_hashes.length === 0 && (
+                    <p className="mt-1 text-xs text-[#3A4560]">
+                      El backend no devolvió huellas de fuente.
+                    </p>
+                  )}
+                  <ul className="mt-1 space-y-1 text-xs">
+                    {result.source_hashes.map((hash) => (
+                      <li key={hash} className="tnum break-all">
+                        <code title={hash}>{hash.slice(0, 16)}…</code>{" "}
+                        <span className="text-[#3A4560]">· {hashOrigin(workspace, hash).label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+                    <span>Fuentes de la regla y la política: </span>
+                    <SourceCitations
+                      citations={[...ruleCitations, ...anomalyCitations]}
+                      onSelect={openEvidence}
+                    />
+                  </p>
+                </div>
               </div>
             )}
           </section>
@@ -500,10 +593,133 @@ export function PricingLab({ workspace }: Props) {
                 <span>Grupos independientes supuestos (sin marcar: anormalidad unknown)</span>
               </label>
             </fieldset>
+            <div
+              data-testid="rival-completeness"
+              role="status"
+              className="mt-3 rounded-lg bg-[#F6F7FB] p-3 text-sm"
+            >
+              {!result && <p>Pendiente de cálculo.</p>}
+              {result && (h.noRivals || !h.complete) && (
+                <p>
+                  <strong>Conjunto incompleto supuesto.</strong> Puntuación unknown
+                  {result.score.unknown_variables.length > 0 &&
+                    ` (faltan: ${result.score.unknown_variables.map(variableEs).join(", ")})`}
+                  {result.score.reason_codes.length > 0 &&
+                    ` — ${result.score.reason_codes.map(reasonEs).join("; ")}`}
+                  . Anormalidad unknown también. Precio, beneficio y margen siguen disponibles.
+                </p>
+              )}
+              {result && !h.noRivals && h.complete && (
+                <p>
+                  <strong>Conjunto completo supuesto</strong> (hipótesis declarada). La puntuación
+                  usa todas las ofertas declaradas, propia incluida
+                  {result.score.status !== "defined" &&
+                    `, pero el backend responde ${result.score.status}: ${result.score.reason_codes.map(reasonEs).join("; ") || "sin motivo"}`}
+                  .
+                </p>
+              )}
+              {result && !h.noRivals && (
+                <p className="mt-1">
+                  {h.groupsConfirmed ? (
+                    <>Grupos independientes supuestos: la anormalidad usa mínimos por grupo.</>
+                  ) : (
+                    <>
+                      <strong>Pertenencia a grupos sin confirmar:</strong> anormalidad unknown
+                      {result.anomaly.reason_codes.length > 0 &&
+                        ` — ${result.anomaly.reason_codes.map(reasonEs).join("; ")}`}
+                      ; la puntuación no depende de los grupos.
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
             <p className="mt-3 text-xs text-[#3A4560]">
               Sin las ofertas reales, estos escenarios son hipótesis declaradas. No se infiere ninguna
               distribución de rivales.
             </p>
+          </section>
+
+          <section
+            aria-label="Referencias de anormalidad por grupo"
+            className="rounded-xl bg-white p-4 shadow-sm sm:p-6"
+          >
+            <h2 className="text-lg font-semibold">Referencias por grupo</h2>
+            {!result && <p className="mt-2 text-sm">Pendiente de cálculo.</p>}
+            {result && (
+              <div data-testid="group-references" className="mt-2 grid gap-3 text-sm">
+                <div>
+                  <h3 className="text-sm font-semibold">Agrupación declarada (tus supuestos)</h3>
+                  <ul className="tnum mt-1 space-y-1 text-xs">
+                    <li>Oferta propia · grupo «{h.ownGroup.trim() || "sin indicar"}»</li>
+                    {h.noRivals ? (
+                      <li>Sin escenario rival: no hay ofertas rivales declaradas.</li>
+                    ) : (
+                      <>
+                        <li>
+                          Hipótesis A · {h.rivalAPrice || "—"} € · grupo «
+                          {h.rivalAGroup.trim() || "sin indicar"}»
+                        </li>
+                        <li>
+                          Hipótesis B · {h.rivalBPrice || "—"} € · grupo «
+                          {h.rivalBGroup.trim() || "sin indicar"}»
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Mínimos por grupo (responde el backend)</h3>
+                  {result.anomaly.status === "unknown" ||
+                  result.anomaly.status === "not_applicable" ? (
+                    <p className="mt-1 text-xs text-[#3A4560]">
+                      Referencias unknown:{" "}
+                      {result.anomaly.reason_codes.map(reasonEs).join("; ") || "sin motivo"}.
+                    </p>
+                  ) : (
+                    <dl className="tnum mt-1 grid gap-1 text-xs">
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-[#3A4560]">Ofertas de referencia (mínimos por grupo)</dt>
+                        <dd data-testid="reference-count" className="font-semibold">
+                          {result.anomaly.reference_offer_count}
+                        </dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-[#3A4560]">Media de referencia</dt>
+                        <dd className="break-all font-semibold">
+                          {result.anomaly.reference_mean_net
+                            ? formatProtocol(result.anomaly.reference_mean_net)
+                            : "—"}
+                        </dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-[#3A4560]">Umbral</dt>
+                        <dd className="break-all font-semibold">
+                          {result.anomaly.threshold_net
+                            ? formatProtocol(result.anomaly.threshold_net)
+                            : "—"}
+                        </dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-[#3A4560]">Rama aplicada</dt>
+                        <dd className="font-semibold">
+                          {branchEs(result.anomaly.branch)}
+                          {result.anomaly.branch ? ` (${result.anomaly.branch})` : ""}
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                </div>
+                <p className="text-xs text-[#3A4560]">
+                  El backend usa la oferta más baja de cada grupo confirmado (LCSP 149.3); dos
+                  rivales del mismo grupo no son dos observaciones independientes. El scoring
+                  conserva todas las ofertas declaradas.
+                </p>
+                <p className="flex flex-wrap items-center gap-1 text-xs text-[#3A4560]">
+                  <span>Fuente de la política: </span>
+                  <SourceCitations citations={anomalyCitations} onSelect={openEvidence} />
+                </p>
+              </div>
+            )}
           </section>
 
           <section aria-label="Supuestos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
@@ -566,7 +782,7 @@ export function PricingLab({ workspace }: Props) {
           </section>
 
           <details className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-            <summary className="cursor-pointer font-semibold">Identificadores</summary>
+            <summary className="cursor-pointer font-semibold">Identificadores y códigos</summary>
             <dl className="tnum mt-2 grid gap-1 text-xs">
               <div className="flex justify-between gap-2">
                 <dt>Scope</dt>
@@ -586,9 +802,33 @@ export function PricingLab({ workspace }: Props) {
                 </dd>
               </div>
             </dl>
+            {result && (
+              <dl className="tnum mt-2 grid gap-1 border-t border-[#E5E9F2] pt-2 text-xs">
+                <div className="flex justify-between gap-2">
+                  <dt>Puntos (código)</dt>
+                  <dd>
+                    {result.score.status}
+                    {result.score.reason_codes.length > 0 &&
+                      ` · ${result.score.reason_codes.join(", ")}`}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt>Anormalidad (código)</dt>
+                  <dd>
+                    {result.anomaly.status}
+                    {result.anomaly.branch ? ` · ${result.anomaly.branch}` : ""}
+                    {result.anomaly.reason_codes.length > 0 &&
+                      ` · ${result.anomaly.reason_codes.join(", ")}`}
+                  </dd>
+                </div>
+              </dl>
+            )}
           </details>
         </div>
       </div>
+      {evidence && (
+        <EvidenceDrawer workspace={workspace} target={evidence} onClose={() => setEvidence(null)} />
+      )}
     </div>
   );
 }

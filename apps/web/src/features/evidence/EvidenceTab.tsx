@@ -10,7 +10,7 @@ export function EvidenceTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 [&>*]:min-w-0">
       <section aria-label="Documentos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Documentos</h2>
         {workspace.documents.length === 0 && <p className="mt-2 text-sm">Sin documentos.</p>}

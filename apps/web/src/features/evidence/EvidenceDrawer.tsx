@@ -30,7 +30,11 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const doc = workspace.documents.find((d) => d.id === citation.document_id) ?? null;
 
   useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeRef.current?.focus();
+    return () => {
+      opener?.focus();
+    };
   }, []);
 
   useEffect(() => {
