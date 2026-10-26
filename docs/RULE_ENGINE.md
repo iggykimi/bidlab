@@ -48,7 +48,7 @@ Expediente 26 036 SR JD AB UA21, ID20777832, PCAP p.9, precio65 puntos. La líne
 Interpretación candidata:
 S(P)=65×(1+log10(best_price/P)), restringida al intervalo0..65 según texto.
   
-Ejemplo hipotético P=100000 y best=80000: 58.7003491543… puntos. P=best =>65; best/P≤0.1 =>0 si se confirma el tratamiento de límite inferior. “Despreciando puntos fuera del intervalo” puede requerir confirmar la interpretación exacta del clamp; no asignar cero por una lectura dudosa sin revisión.
+Ejemplo hipotético P=100000 y best=80000: 58.700849154476 puntos a 12 decimales (oráculo examples/math_vectors.json; el valor impreso anterior contenía un dígito erróneo y se corrige por el oráculo independiente). P=best =>65; best/P≤0.1 =>0 si se confirma el tratamiento de límite inferior. “Despreciando puntos fuera del intervalo” puede requerir confirmar la interpretación exacta del clamp; no asignar cero por una lectura dudosa sin revisión.
 
 Estado en semilla: blocked/pending, con issue sobre denominador y límites. El motor puede verificar la plantilla logarítmica en tests, pero la regla del expediente no pasa a approved por ese hecho. No corregir un error material del PCAP con una conjetura silenciosa.
 

@@ -105,3 +105,22 @@ hijos antes que padres en este entorno (sqlalchemy 2.1.6; reproducido hasta
 con dos modelos mínimos inline: c antes que p). La semilla usa flushes por
 etapa (una tabla por flush), verificados. Regla de proyecto: escrituras
 multitabla siempre por etapas con flush() intermedio.
+
+## Producto T09–T12 — motor determinista (Windows)
+
+Fecha: 2026-10-26. Helper acotado (solo domain/ + tests/unit, sin commit);
+lead revisó los 6 módulos línea a línea y re-ejecutó gates por su cuenta.
+- `pytest apps/api/tests/unit` → 90 passed. `ruff` + `mypy` limpios.
+- Verificación independiente del lead contra oráculos externos (no los tests
+  del helper): 6/6 vectores de math_vectors.json (R1×3, log R2, lineal R3,
+  linear_zero→unknown) + 3/3 casos demo_expected (precio/beneficio/margen) +
+  anomalía@30 possible_justification_required. Matriz RULE_ENGINE (n1/n2/n3/n4,
+  poda, cierre25 Tías-vs-Alfresco, fallback lowest3, igualdad-no-activa)
+  comprobada a mano contra el código.
+- Corrección documental: RULE_ENGINE §R2 imprimía 58.7003491543; el oráculo
+  independiente dice 58.700849154476 y el motor lo reproduce. Prevalece el
+  oráculo; documento corregido.
+- Pendiente menor: los tests del helper traían esperados hardcodeados; un
+  follow-up los está reconectando a math_vectors/demo_expected (mismo owner).
+  T13 sigue en progreso: el fold AND/OR/NOT está, el cómputo de veredictos de
+  hoja desde evidencias llega con servicios (T21).

@@ -22,11 +22,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T06 | 27oct | 1.5 | T05 | done | models, SQLite/migration, API contract |
 | T07 | 27oct | 1.5 | T06 | done | Tías/company/curated-evidence seed + idempotence |
 | T08 | 27oct | 1.5 | T07 | pending | library/workspace/document routes |
-| T09 | 27oct | 2 | T05 | pending | money, scope, numeric oracles |
-| T10 | 28oct | 1.5 | T09 | pending | inverse proportion, safe AST, unknown |
-| T11 | 28oct | 3 | T10 | pending | Tías policy 18.5 + abnormality edges |
-| T12 | 28oct | 1 | T11 | pending | grouping, hypotheses, non-computable cases |
-| T13 | 28oct | 2 | T06 | pending | AND/OR requirements tree + evidence |
+| T09 | 27oct | 2 | T05 | done | money, scope, numeric oracles |
+| T10 | 28oct | 1.5 | T09 | done | inverse proportion, safe AST, unknown |
+| T11 | 28oct | 3 | T10 | done | Tías policy 18.5 + abnormality edges |
+| T12 | 28oct | 1 | T11 | done | grouping, hypotheses, non-computable cases |
+| T13 | 28oct | 2 | T06 | in_progress | AND/OR requirements tree + evidence |
 | T14 | 29oct | 2 | T06 | pending | safe PDF, page extraction, limits |
 | T15 | 29oct | 2 | T14 | pending | citation/text/page verification + gold |
 | T16 | 29oct | 2.5 | T03 T15 | pending | Meta adapter, JSON schema, retry/cost/cache |
