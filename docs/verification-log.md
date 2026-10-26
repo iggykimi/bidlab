@@ -140,3 +140,19 @@ generados (validación runtime contra contrato).
 - Incidencias: replay devolvía 201 porque el override de test no hacía
   commit (se replica semántica get_session); DB vacía exigió migrar antes
   de leer idempotencia; asertos sobre RootModel generados vía model_dump.
+
+## Producto T22-backend — POST /scenarios/evaluate + curva (Windows)
+
+Fecha: 2026-10-26. Servicio puro (sin persistencia): checks approved 422,
+descuento 0–0.40, AST==template revalidado, grupos→mínimos para anormalidad,
+Tías/Alfresco/RGLCAP85 (sin cierre25)/unsupported→not_applicable,
+percentage_reduction→unknown en banda, complete=false→score+anomaly unknown,
+traza 4–5 pasos, assumptions, source_hashes, warnings de documentos, curva
+≤201 puntos (rivales fijos, score+anomalía por punto).
+- `pytest integration+unit` → 103 passed (I03 Tías 5% = oráculos precio/
+  beneficio/margen/puntos/rama n3_no_trim; I04 sin rivales rama n1 y 49 pts;
+  curva 11 puntos monótona; I11 0.50/number/unknown-field → 422 incl.
+  extra_forbidden).
+- Ramas del dominio tal cual ('n1', no 'n1_single'): el contrato admite
+  string ≤80; no se toca código verificado del helper por estética.
+- T22 sigue in_progress: falta el UI del Pricing Lab.

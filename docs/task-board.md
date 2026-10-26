@@ -35,7 +35,7 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T19 | 30oct | 2 | T08 | pending | UI layout, states, navigation |
 | T20 | 30oct | 1.5 | T19 | pending | library/summary + honest demo badge |
 | T21 | 31oct | 2 | T18 T19 | pending | requirements matrix / PDF drawer with sources |
-| T22 | 31oct | 2.5 | T10 T19 | pending | Pricing Lab, slider/KPI, backend curve |
+| T22 | 31oct | 2.5 | T10 T19 | in_progress | Pricing Lab, slider/KPI, backend curve |
 | T23 | 31oct | 1.5 | T12 T22 | pending | rival panel + complete fields/groups |
 | T24 | 31oct | 1.5 | T21 T22 | pending | calc trace + source links |
 | T25 | 1nov | 2 | T24 | pending | HTML/print report + pendings |
