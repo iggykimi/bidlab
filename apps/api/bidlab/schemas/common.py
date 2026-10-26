@@ -1,4 +1,4 @@
-"""Shared transport primitives. Mirrors API_CONTRACT anchors id001/id004/id005."""
+"""Shared transport primitives. Mirrors the API_CONTRACT Money/Decimal/EntityId shapes."""
 
 from typing import Annotated
 

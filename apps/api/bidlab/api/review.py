@@ -15,10 +15,14 @@ from bidlab.schemas import generated as g
 from bidlab.services import idempotency
 from bidlab.services import review as review_service
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["review"])
 
 
-@router.post("/tenders/{tender_id}/reviews", response_model=g.Workspace)
+@router.post(
+    "/tenders/{tender_id}/reviews",
+    response_model=g.Workspace,
+    operation_id="review_interpretation",
+)
 async def review_interpretation(
     payload: g.ReviewRequest,
     request: Request,

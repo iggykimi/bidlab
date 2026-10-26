@@ -195,8 +195,17 @@ def _evaluate_leaf(
 
 
 def _build_tree(
-    node: Any, company_evidence: list[dict[str, Any]], items: list[dict[str, Any]]
+    node: Any,
+    company_evidence: list[dict[str, Any]],
+    items: list[dict[str, Any]],
+    depth: int = 0,
 ) -> EL.Node:
+    if depth > EL.MAX_TREE_DEPTH:
+        raise ApiError(
+            422,
+            "requirements_tree_too_deep",
+            f"requirements tree exceeds depth {EL.MAX_TREE_DEPTH}",
+        )
     if not isinstance(node, dict):
         raise ApiError(500, "requirements_tree_corrupt", "requirements node is not an object")
     kind = node.get("kind")
@@ -209,7 +218,7 @@ def _build_tree(
         operator = node.get("operator")
         if not isinstance(children, list) or operator not in ("AND", "OR"):
             raise ApiError(500, "requirements_tree_corrupt", "requirements group malformed")
-        built = tuple(_build_tree(child, company_evidence, items) for child in children)
+        built = tuple(_build_tree(child, company_evidence, items, depth + 1) for child in children)
         if operator == "AND":
             return EL.And(children=built)
         return EL.Or(children=built)

@@ -30,7 +30,7 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="BidLab", version="0.1.0", lifespan=_lifespan)
+app = FastAPI(title="BidLab", version="1.0.0", lifespan=_lifespan)
 
 register_handlers(app)
 
@@ -54,7 +54,7 @@ app.add_middleware(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Content-Type", "X-BidLab-Client", "Idempotency-Key"],
     allow_credentials=False,
 )

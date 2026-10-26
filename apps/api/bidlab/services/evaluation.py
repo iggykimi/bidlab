@@ -184,12 +184,14 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     else:
         assumptions.append("Conjunto rival sin calificar")
     assumptions.append(
-        "Conjunto completo supuesto" if complete else "Conjunto incompleto: puntuación unknown"
+        "Conjunto completo supuesto"
+        if complete
+        else "Conjunto incompleto: puntuación sin determinar"
     )
     if bool(rivals.get("group_membership_confirmed")):
         assumptions.append("Grupos independientes supuestos")
     else:
-        assumptions.append("Pertenencia a grupos sin confirmar: anormalidad unknown")
+        assumptions.append("Pertenencia a grupos sin confirmar: anormalidad sin determinar")
 
     # T22-verified production mapping: the reviewed flag decides the n=3
     # absolute-25 close, except RGLCAP85 which never applies it in P0.
@@ -234,7 +236,7 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     if profile.get("synthetic"):
         assumptions.append("Coste de empresa sintética")
     if cost is None:
-        assumptions.append("Sin coste computable: beneficio y margen unknown")
+        assumptions.append("Sin coste computable: beneficio y margen sin determinar")
         cost_s: str | None = None
         profit_s: str | None = None
         margin_s: str | None = None
@@ -258,12 +260,12 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
         },
         {
             "label": "Puntuación económica",
-            "expression": f"template {rule.get('template_id')} sobre {MO.serialize_money(price)}",
+            "expression": f"plantilla {rule.get('template_id')} sobre {MO.serialize_money(price)}",
             "value": scored.value_serialized,
         },
         {
             "label": "Presunción de anormalidad",
-            "expression": f"policy {policy_id} branch {anomaly['branch']}",
+            "expression": (f"política {policy_id}, rama {anomaly['branch'] or 'sin determinar'}"),
             "value": anomaly["threshold_net"],
         },
     ]

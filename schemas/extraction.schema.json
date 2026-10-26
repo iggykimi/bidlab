@@ -77,12 +77,21 @@
   "additionalProperties": false,
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "EntityId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "description": "Opaque entity identifier (tender, scope, document, company, scenario, report, job)."
+    },
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?\\d{1,12}(\\.\\d{1,12})?$",
+      "description": "Base-10 decimal string; no locale separators, NaN or Infinity."
+    },
     "CitationProposal": {
       "type": "object",
       "properties": {
         "document_id": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9_-]{1,80}$"
+          "$ref": "#/$defs/EntityId"
         },
         "page_number": {
           "type": "integer",
@@ -289,9 +298,7 @@
         "max_points": {
           "anyOf": [
             {
-              "type": "string",
-              "pattern": "^-?\\d{1,12}(\\.\\d{1,12})?$",
-              "description": "Base-10 decimal string; no locale separators, NaN or Infinity."
+              "$ref": "#/$defs/Decimal"
             },
             {
               "type": "null"

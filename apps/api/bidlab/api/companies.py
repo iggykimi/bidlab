@@ -11,10 +11,10 @@ from bidlab.schemas import generated as g
 from bidlab.services import companies as companies_service
 from bidlab.services import eligibility as eligibility_service
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["companies"])
 
 
-@router.post("/companies", response_model=g.Company, status_code=201)
+@router.post("/companies", response_model=g.Company, status_code=201, operation_id="create_company")
 def create_company(
     payload: g.CompanyWrite,
     db: Annotated[Session, Depends(deps.get_db)],
@@ -23,12 +23,12 @@ def create_company(
     return g.Company.model_validate(companies_service.create_company(db, payload))
 
 
-@router.get("/companies/{company_id}", response_model=g.Company)
+@router.get("/companies/{company_id}", response_model=g.Company, operation_id="get_company")
 def get_company(company_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Company:
     return g.Company.model_validate(companies_service.get_company(db, company_id))
 
 
-@router.put("/companies/{company_id}", response_model=g.Company)
+@router.put("/companies/{company_id}", response_model=g.Company, operation_id="update_company")
 def update_company(
     company_id: str,
     payload: g.CompanyUpdate,
@@ -38,7 +38,11 @@ def update_company(
     return g.Company.model_validate(companies_service.update_company(db, company_id, payload))
 
 
-@router.post("/eligibility/check", response_model=g.EligibilityResult)
+@router.post(
+    "/eligibility/check",
+    response_model=g.EligibilityResult,
+    operation_id="check_eligibility",
+)
 def check_eligibility(
     payload: g.EligibilityRequest,
     db: Annotated[Session, Depends(deps.get_db)],

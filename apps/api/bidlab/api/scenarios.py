@@ -12,12 +12,14 @@ from bidlab.services import evaluation as evaluation_service
 from bidlab.services import idempotency
 from bidlab.services import scenarios as scenarios_service
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["scenarios"])
 
 SAVE_ROUTE = "POST /api/v1/scenarios"
 
 
-@router.post("/scenarios/evaluate", response_model=g.EvaluationResult)
+@router.post(
+    "/scenarios/evaluate", response_model=g.EvaluationResult, operation_id="evaluate_scenario"
+)
 def evaluate_scenario(
     payload: g.EvaluationRequest,
     db: Annotated[Session, Depends(deps.get_db)],
@@ -27,7 +29,7 @@ def evaluate_scenario(
     return g.EvaluationResult.model_validate(evaluation_service.evaluate(db, payload))
 
 
-@router.post("/scenarios", response_model=g.Scenario, status_code=201)
+@router.post("/scenarios", response_model=g.Scenario, status_code=201, operation_id="save_scenario")
 async def save_scenario(
     payload: g.ScenarioCreate,
     request: Request,
@@ -49,6 +51,6 @@ async def save_scenario(
     return g.Scenario.model_validate(saved)
 
 
-@router.get("/scenarios/{scenario_id}", response_model=g.Scenario)
+@router.get("/scenarios/{scenario_id}", response_model=g.Scenario, operation_id="get_scenario")
 def get_scenario(scenario_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Scenario:
     return g.Scenario.model_validate(scenarios_service.get_scenario(db, scenario_id))

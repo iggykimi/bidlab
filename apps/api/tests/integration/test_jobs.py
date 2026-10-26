@@ -58,13 +58,13 @@ def test_start_and_poll_needs_review(demo_client: TestClient) -> None:
     assert 0 < job.processed_pages <= job.total_pages
     assert any("fixture_stub" in w.root for w in job.warnings)
 
-    poll = demo_client.get(f"/api/v1/jobs/{job.id}")
+    poll = demo_client.get(f"/api/v1/jobs/{job.id.root}")
     assert poll.status_code == 200
     assert g.Job.model_validate(poll.json()).status == "needs_review"
 
     with _db() as session:
         invocation = session.scalars(
-            select(models.ModelInvocation).where(models.ModelInvocation.job_id == job.id)
+            select(models.ModelInvocation).where(models.ModelInvocation.job_id == job.id.root)
         ).one()
         assert invocation.mode == "fixture"
         assert invocation.model is None

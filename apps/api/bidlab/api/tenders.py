@@ -15,12 +15,12 @@ from bidlab.services import idempotency
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["tenders"])
 
 DEMO_ROUTE = "POST /api/v1/demo/sessions"
 
 
-@router.get("/tenders", response_model=g.TenderList)
+@router.get("/tenders", response_model=g.TenderList, operation_id="list_tenders")
 def list_tenders(
     db: Annotated[Session, Depends(deps.get_db)],
     q: str | None = Query(default=None, max_length=200),
@@ -49,18 +49,25 @@ def list_tenders(
     )
 
 
-@router.get("/tenders/{tender_id}", response_model=g.Tender)
+@router.get("/tenders/{tender_id}", response_model=g.Tender, operation_id="get_tender")
 def get_tender(tender_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Tender:
     return g.Tender.model_validate(workspace_service.tender_to_dict(db, tender_id))
 
 
-@router.get("/tenders/{tender_id}/workspace", response_model=g.Workspace)
+@router.get(
+    "/tenders/{tender_id}/workspace", response_model=g.Workspace, operation_id="get_workspace"
+)
 def get_workspace(tender_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Workspace:
     mode = get_settings().bidlab_mode
     return g.Workspace.model_validate(workspace_service.get_workspace(db, tender_id, mode))
 
 
-@router.post("/demo/sessions", response_model=g.DemoSession, status_code=201)
+@router.post(
+    "/demo/sessions",
+    response_model=g.DemoSession,
+    status_code=201,
+    operation_id="create_demo_session",
+)
 async def create_demo_session(
     request: Request,
     response: Response,

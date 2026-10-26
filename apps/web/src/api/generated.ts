@@ -11,7 +11,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Liveness probe
+         * @description Returns ok with engine/schema versions. Never touches Meta billing or the database.
+         */
         get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Readiness probe
+         * @description Liveness plus a SQLite PRAGMA quick_check; reports degraded with status 503 when the database is unhealthy.
+         */
+        get: operations["readiness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -27,6 +51,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Effective capabilities
+         * @description Mode, Meta configuration (never the key), history flag, hard limits and limitation notes.
+         */
         get: operations["capabilities"];
         put?: never;
         post?: never;
@@ -45,7 +73,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createDemoSession"];
+        /**
+         * Create demo session
+         * @description Ensures the curated seed exists on an empty database and returns its tender, scope and company ids. Idempotent via Idempotency-Key.
+         */
+        post: operations["create_demo_session"];
         delete?: never;
         options?: never;
         head?: never;
@@ -59,9 +91,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listTenders"];
+        /**
+         * List tenders
+         * @description Curated library search with q/cpv filters and page/page_size pagination.
+         */
+        get: operations["list_tenders"];
         put?: never;
-        post: operations["createTender"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -75,7 +111,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getTender"];
+        /**
+         * Get tender
+         * @description Single tender header with scopes and price bases.
+         */
+        get: operations["get_tender"];
         put?: never;
         post?: never;
         delete?: never;
@@ -91,25 +131,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getWorkspace"];
+        /**
+         * Get workspace
+         * @description Full working set: tender, interpretation revision, documents, claims, requirements, citations and pricing rules.
+         */
+        get: operations["get_workspace"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tenders/{tender_id}/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["uploadDocument"];
         delete?: never;
         options?: never;
         head?: never;
@@ -123,7 +151,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getPage"];
+        /**
+         * Get page text
+         * @description Curated page extract: raw and normalized text, hash and extractor version.
+         */
+        get: operations["get_page"];
         put?: never;
         post?: never;
         delete?: never;
@@ -139,7 +171,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getDocumentContent"];
+        /**
+         * Get document bytes
+         * @description Original PDF when redistribution is allowed; otherwise 404 document_bytes_unavailable (use source_url and curated excerpts).
+         */
+        get: operations["get_document_content"];
         put?: never;
         post?: never;
         delete?: never;
@@ -157,7 +193,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["startAnalysis"];
+        /**
+         * Start analysis job
+         * @description Queue extraction over curated pages; poll with get_job. The Location header points at the job resource.
+         */
+        post: operations["start_analysis"];
         delete?: never;
         options?: never;
         head?: never;
@@ -171,7 +211,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getJob"];
+        /**
+         * Get job
+         * @description Poll analysis job state and outcome.
+         */
+        get: operations["get_job"];
         put?: never;
         post?: never;
         delete?: never;
@@ -189,7 +233,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["reviewInterpretation"];
+        /**
+         * Review interpretation
+         * @description Approve claim keys and requirement trees (or submit a corrected proposal); returns the new Workspace revision. Idempotency-Key is optional here.
+         */
+        post: operations["review_interpretation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -205,7 +253,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createCompany"];
+        /**
+         * Create company
+         * @description Company profile revision 1: synthetic demo costs or user attestation with evidence.
+         */
+        post: operations["create_company"];
         delete?: never;
         options?: never;
         head?: never;
@@ -219,8 +271,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getCompany"];
-        put: operations["updateCompany"];
+        /**
+         * Get company
+         * @description Latest revision of a company profile.
+         */
+        get: operations["get_company"];
+        /**
+         * Update company
+         * @description Appends a revision when expected_revision matches latest; 409 stale_revision otherwise.
+         */
+        put: operations["update_company"];
         post?: never;
         delete?: never;
         options?: never;
@@ -237,7 +297,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["checkEligibility"];
+        /**
+         * Check eligibility
+         * @description Pure three-valued evaluation of the requirements tree against one pinned company revision; nothing is persisted.
+         */
+        post: operations["check_eligibility"];
         delete?: never;
         options?: never;
         head?: never;
@@ -253,7 +317,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["evaluateScenario"];
+        /**
+         * Evaluate scenario
+         * @description Pure pricing computation: price, profit, score, anomaly, trace and optional curve. Nothing is persisted.
+         */
+        post: operations["evaluate_scenario"];
         delete?: never;
         options?: never;
         head?: never;
@@ -269,7 +337,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["saveScenario"];
+        /**
+         * Save scenario
+         * @description Replays the input through the pure evaluator and persists an integrity-hashed snapshot with frozen context.
+         */
+        post: operations["save_scenario"];
         delete?: never;
         options?: never;
         head?: never;
@@ -283,7 +355,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getScenario"];
+        /**
+         * Get scenario
+         * @description Saved snapshot with input, result and frozen context.
+         */
+        get: operations["get_scenario"];
         put?: never;
         post?: never;
         delete?: never;
@@ -301,7 +377,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createReport"];
+        /**
+         * Create report
+         * @description Decision record over an immutable scenario, plus printable HTML with sources.
+         */
+        post: operations["create_report"];
         delete?: never;
         options?: never;
         head?: never;
@@ -315,7 +395,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getReport"];
+        /**
+         * Get report
+         * @description Decision record with its scenario snapshot and pending items.
+         */
+        get: operations["get_report"];
         put?: never;
         post?: never;
         delete?: never;
@@ -331,23 +415,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getReportHtml"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/historical-awards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getHistory"];
+        /**
+         * Get report HTML
+         * @description Printable decision record (text/html served with CSP and nosniff).
+         */
+        get: operations["get_report_html"];
         put?: never;
         post?: never;
         delete?: never;
@@ -360,8 +432,19 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Opaque entity identifier (tender, scope, document, company, scenario, report, job). */
+        EntityId: string;
+        /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
+        Decimal: string;
+        /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
+        Money: string;
+        /**
+         * @description Machine-readable failure code; the frontend maps known codes to Spanish copy.
+         * @enum {string}
+         */
+        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_too_large" | "validation_error";
         Error: {
-            code: string;
+            code: components["schemas"]["ErrorCode"];
             message: string;
             request_id: string;
             details: string[];
@@ -371,6 +454,11 @@ export interface components {
             status: "ok";
             engine_version: string;
             schema_version: string;
+        };
+        Ready: {
+            /** @enum {string} */
+            status: "ready" | "degraded";
+            db_quick_check: string;
         };
         Capabilities: {
             /** @enum {string} */
@@ -394,10 +482,10 @@ export interface components {
             source_updated_at: string;
         };
         PriceBasis: {
-            scope_id: string;
-            budget_net: string | null;
-            ceiling_net: string | null;
-            scoring_reference_net: string | null;
+            scope_id: components["schemas"]["EntityId"];
+            budget_net: components["schemas"]["Money"] | null;
+            ceiling_net: components["schemas"]["Money"] | null;
+            scoring_reference_net: components["schemas"]["Money"] | null;
             /** @enum {string} */
             reference_kind: "pbl" | "vec" | "custom" | "unknown";
             /** @enum {string} */
@@ -409,12 +497,12 @@ export interface components {
             tax_kind: "VAT" | "IGIC" | "other" | "unknown";
             /** @enum {string} */
             review_status: "pending" | "approved" | "blocked";
-            evidence_ids: string[];
+            evidence_ids: components["schemas"]["EntityId"][];
             metadata_evidence: components["schemas"]["MetadataEvidence"][];
         };
         Scope: {
-            id: string;
-            tender_id: string;
+            id: components["schemas"]["EntityId"];
+            tender_id: components["schemas"]["EntityId"];
             lot_id: string | null;
             label: string;
             basis: components["schemas"]["PriceBasis"];
@@ -422,7 +510,7 @@ export interface components {
         Tender: {
             raw_snapshot_sha256: string;
             metadata_evidence: components["schemas"]["MetadataEvidence"][];
-            id: string;
+            id: components["schemas"]["EntityId"];
             source_id: string;
             source_url: string;
             external_id: string;
@@ -433,17 +521,11 @@ export interface components {
             source_updated_at: string;
             deadline_literal: string | null;
             deadline_at: string | null;
-            pbl_net: string | null;
-            pbl_gross: string | null;
-            estimated_value: string | null;
+            pbl_net: components["schemas"]["Money"] | null;
+            pbl_gross: components["schemas"]["Money"] | null;
+            estimated_value: components["schemas"]["Money"] | null;
             scopes: components["schemas"]["Scope"][];
             quality_flags: string[];
-        };
-        TenderCreate: {
-            title: string;
-            external_id: string;
-            source_url: string | null;
-            contracting_body: string;
         };
         TenderList: {
             items: components["schemas"]["Tender"][];
@@ -452,8 +534,8 @@ export interface components {
             total: number;
         };
         Document: {
-            id: string;
-            tender_id: string;
+            id: components["schemas"]["EntityId"];
+            tender_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             kind: "pcap" | "ppt" | "other";
             display_name: string;
@@ -466,7 +548,7 @@ export interface components {
             parse_status: "queued" | "ready" | "needs_review" | "failed";
         };
         PageText: {
-            document_id: string;
+            document_id: components["schemas"]["EntityId"];
             page_number: number;
             printed_label: string | null;
             raw_text: string;
@@ -476,13 +558,13 @@ export interface components {
             quality_flags: string[];
         };
         CitationProposal: {
-            document_id: string;
+            document_id: components["schemas"]["EntityId"];
             page_number: number;
             verbatim_excerpt: string;
         };
         Citation: {
-            id: string;
-            document_id: string;
+            id: components["schemas"]["EntityId"];
+            document_id: components["schemas"]["EntityId"];
             document_sha256: string;
             page_number: number;
             printed_label: string | null;
@@ -521,7 +603,7 @@ export interface components {
             formula_literal: string | null;
             /** @enum {string} */
             template_hint: "proportional_inverse" | "linear_discount" | "log_ratio" | "unsupported";
-            max_points: string | null;
+            max_points: components["schemas"]["Decimal"] | null;
             variables: string[];
             citations: components["schemas"]["CitationProposal"][];
             ambiguities: string[];
@@ -538,9 +620,12 @@ export interface components {
             warnings: string[];
         };
         RequirementLeaf: {
-            /** @enum {string} */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             kind: "leaf";
-            id: string;
+            id: components["schemas"]["EntityId"];
             label: string;
             /** @enum {string} */
             company_field: "annual_turnover_best_3y_net" | "professional_insurance_net" | "net_worth_net" | "annual_similar_services_best_3y_net" | "team_feder_years" | "manual";
@@ -550,37 +635,51 @@ export interface components {
             unit: string | null;
             /** @enum {string} */
             review_status: "pending" | "approved" | "blocked";
-            evidence_ids: string[];
+            evidence_ids: components["schemas"]["EntityId"][];
         };
         RequirementGroup: {
-            /** @enum {string} */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             kind: "group";
-            id: string;
+            id: components["schemas"]["EntityId"];
             label: string;
             /** @enum {string} */
             operator: "AND" | "OR";
             children: components["schemas"]["RequirementNode"][];
         };
         RequirementNode: components["schemas"]["RequirementLeaf"] | components["schemas"]["RequirementGroup"];
-        Expr: {
-            /** @enum {string} */
+        ExprConst: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             kind: "const";
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            value: string;
-        } | {
-            /** @enum {string} */
+            value: components["schemas"]["Decimal"];
+        };
+        ExprVar: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             kind: "var";
             /** @enum {string} */
             name: "own_price" | "best_price" | "reference_price" | "max_points";
-        } | {
-            /** @enum {string} */
+        };
+        ExprCall: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             kind: "call";
             /** @enum {string} */
             op: "add" | "sub" | "mul" | "div" | "min" | "max" | "log10";
             args: components["schemas"]["Expr"][];
         };
+        Expr: components["schemas"]["ExprConst"] | components["schemas"]["ExprVar"] | components["schemas"]["ExprCall"];
         AnomalyPolicy: {
-            id: string;
+            id: components["schemas"]["EntityId"];
             /** @enum {string} */
             source_kind: "explicit_pcap" | "verified_supplementary" | "unknown";
             /** @enum {string} */
@@ -589,22 +688,21 @@ export interface components {
             review_status: "pending" | "approved" | "blocked";
             three_bidder_absolute_25: boolean;
             percentage_reduction_one_third: boolean;
-            evidence_ids: string[];
+            evidence_ids: components["schemas"]["EntityId"][];
         };
         PricingRule: {
-            id: string;
+            id: components["schemas"]["EntityId"];
             revision: number;
-            scope_id: string;
+            scope_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             template_id: "proportional_inverse" | "linear_discount" | "log_ratio" | "unsupported";
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            max_points: string;
+            max_points: components["schemas"]["Decimal"];
             expression: components["schemas"]["Expr"] | null;
             /** @enum {string} */
             review_status: "pending" | "approved" | "blocked";
             /** @enum {string} */
             zero_denominator_policy: "unknown";
-            evidence_ids: string[];
+            evidence_ids: components["schemas"]["EntityId"][];
             anomaly_policy: components["schemas"]["AnomalyPolicy"];
         };
         Workspace: {
@@ -620,22 +718,24 @@ export interface components {
             warnings: string[];
         };
         AnalysisRequest: {
-            document_ids: string[];
+            document_ids: components["schemas"]["EntityId"][];
             /** @enum {string} */
             mode: "live" | "curated_demo";
             allow_remote_processing: boolean;
             expected_interpretation_revision: number;
         };
+        /** @description Terminal job failure code (free string: job outcomes predate the Error envelope). */
+        JobErrorCode: string;
         Job: {
-            id: string;
-            tender_id: string;
+            id: components["schemas"]["EntityId"];
+            tender_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             status: "queued" | "running" | "succeeded" | "needs_review" | "failed" | "cancelled";
             stage: string;
             processed_pages: number;
             total_pages: number;
             result_revision: number | null;
-            error_code: string | null;
+            error_code: components["schemas"]["JobErrorCode"] | null;
             warnings: string[];
         };
         ReviewRequest: {
@@ -662,45 +762,45 @@ export interface components {
         CompanyWrite: {
             name: string;
             synthetic: boolean;
-            scope_id: string;
+            scope_id: components["schemas"]["EntityId"];
             period_months: number;
-            direct_cost_net: string | null;
-            overhead_net: string | null;
-            target_margin_rate: string | null;
+            direct_cost_net: components["schemas"]["Money"] | null;
+            overhead_net: components["schemas"]["Money"] | null;
+            target_margin_rate: components["schemas"]["Decimal"] | null;
             evidence: components["schemas"]["CompanyEvidence"][];
         };
         Company: {
-            id: string;
+            id: components["schemas"]["EntityId"];
             revision: number;
             name: string;
             synthetic: boolean;
-            scope_id: string;
+            scope_id: components["schemas"]["EntityId"];
             period_months: number;
-            direct_cost_net: string | null;
-            overhead_net: string | null;
-            target_margin_rate: string | null;
+            direct_cost_net: components["schemas"]["Money"] | null;
+            overhead_net: components["schemas"]["Money"] | null;
+            target_margin_rate: components["schemas"]["Decimal"] | null;
             evidence: components["schemas"]["CompanyEvidence"][];
         };
         CompanyUpdate: {
             expected_revision: number;
             name: string;
             synthetic: boolean;
-            scope_id: string;
+            scope_id: components["schemas"]["EntityId"];
             period_months: number;
-            direct_cost_net: string | null;
-            overhead_net: string | null;
-            target_margin_rate: string | null;
+            direct_cost_net: components["schemas"]["Money"] | null;
+            overhead_net: components["schemas"]["Money"] | null;
+            target_margin_rate: components["schemas"]["Decimal"] | null;
             evidence: components["schemas"]["CompanyEvidence"][];
         };
         EligibilityRequest: {
-            tender_id: string;
-            scope_id: string;
-            company_id: string;
+            tender_id: components["schemas"]["EntityId"];
+            scope_id: components["schemas"]["EntityId"];
+            company_id: components["schemas"]["EntityId"];
             company_revision: number;
             interpretation_revision: number;
         };
         EligibilityItem: {
-            requirement_id: string;
+            requirement_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             verdict: "met" | "not_met" | "unknown";
             reason_codes: string[];
@@ -716,8 +816,7 @@ export interface components {
         };
         RivalOffer: {
             label: string;
-            /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
-            price_net: string;
+            price_net: components["schemas"]["Money"];
             group_id: string | null;
         };
         RivalScenario: {
@@ -729,69 +828,62 @@ export interface components {
             offers: components["schemas"]["RivalOffer"][];
         };
         CurveRequest: {
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            from_discount_rate: string;
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            to_discount_rate: string;
+            from_discount_rate: components["schemas"]["Decimal"];
+            to_discount_rate: components["schemas"]["Decimal"];
             points: number;
         };
         EvaluationRequest: {
-            scope_id: string;
-            pricing_rule_id: string;
+            scope_id: components["schemas"]["EntityId"];
+            pricing_rule_id: components["schemas"]["EntityId"];
             pricing_rule_revision: number;
-            company_id: string;
+            company_id: components["schemas"]["EntityId"];
             company_revision: number;
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            discount_rate: string;
+            discount_rate: components["schemas"]["Decimal"];
             rivals: components["schemas"]["RivalScenario"];
             curve: components["schemas"]["CurveRequest"] | null;
         };
         ScoreResult: {
             /** @enum {string} */
             status: "defined" | "unknown" | "unsupported";
-            value: string | null;
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            max_points: string;
+            value: components["schemas"]["Decimal"] | null;
+            max_points: components["schemas"]["Decimal"];
             unknown_variables: string[];
             reason_codes: string[];
         };
         AnomalyResult: {
             /** @enum {string} */
             status: "unknown" | "not_applicable" | "possible_justification_required" | "not_flagged_under_assumptions";
-            policy_id: string;
+            policy_id: components["schemas"]["EntityId"];
             branch: string | null;
-            reference_mean_net: string | null;
-            threshold_net: string | null;
+            reference_mean_net: components["schemas"]["Decimal"] | null;
+            threshold_net: components["schemas"]["Decimal"] | null;
             reference_offer_count: number;
             reason_codes: string[];
         };
         TraceStep: {
             label: string;
             expression: string;
-            value: string | null;
+            value: components["schemas"]["Decimal"] | null;
         };
         CurvePoint: {
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            discount_rate: string;
-            /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
-            price_net: string;
-            profit_net: string | null;
-            margin_rate: string | null;
+            discount_rate: components["schemas"]["Decimal"];
+            price_net: components["schemas"]["Money"];
+            profit_net: components["schemas"]["Decimal"] | null;
+            margin_rate: components["schemas"]["Decimal"] | null;
             score: components["schemas"]["ScoreResult"];
             /** @enum {string} */
             anomaly_status: "unknown" | "not_applicable" | "possible_justification_required" | "not_flagged_under_assumptions";
         };
         EvaluationResult: {
             engine_version: string;
-            scope_id: string;
-            pricing_rule_id: string;
+            scope_id: components["schemas"]["EntityId"];
+            pricing_rule_id: components["schemas"]["EntityId"];
             pricing_rule_revision: number;
             company_revision: number;
-            /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
-            price_net: string;
-            cost_net: string | null;
-            profit_net: string | null;
-            margin_rate: string | null;
+            price_net: components["schemas"]["Money"];
+            cost_net: components["schemas"]["Money"] | null;
+            profit_net: components["schemas"]["Decimal"] | null;
+            margin_rate: components["schemas"]["Decimal"] | null;
             score: components["schemas"]["ScoreResult"];
             anomaly: components["schemas"]["AnomalyResult"];
             assumptions: string[];
@@ -816,7 +908,7 @@ export interface components {
         };
         Scenario: {
             context: components["schemas"]["ScenarioContext"];
-            id: string;
+            id: components["schemas"]["EntityId"];
             name: string;
             input: components["schemas"]["EvaluationRequest"];
             result: components["schemas"]["EvaluationResult"];
@@ -824,13 +916,13 @@ export interface components {
             created_at: string;
         };
         ReportCreate: {
-            scenario_id: string;
+            scenario_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             decision: "study" | "prepare" | "discard";
             note: string;
         };
         Report: {
-            id: string;
+            id: components["schemas"]["EntityId"];
             scenario: components["schemas"]["Scenario"];
             /** @enum {string} */
             decision: "study" | "prepare" | "discard";
@@ -839,48 +931,132 @@ export interface components {
             html_path: string;
             created_at: string;
         };
-        HistoricalAward: {
-            source_id: string;
-            source_url: string;
-            lot_id: string | null;
-            /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
-            pbl_net: string;
-            /** @description Nonnegative EUR net amount with two decimal places; positivity is a domain precondition. */
-            award_net: string;
-            /** @description Base-10 decimal string; no locale separators, NaN or Infinity. */
-            discount_rate: string;
-            /** Format: date */
-            award_date: string;
-            cpv: string;
-            /** @enum {string} */
-            comparability: "comparable";
-            basis_note: string;
-        };
-        HistoryResult: {
-            /** @enum {string} */
-            availability: "disabled" | "insufficient" | "descriptive";
-            n: number;
-            n_tenders: number;
-            items: components["schemas"]["HistoricalAward"][];
-            median: string | null;
-            q1: string | null;
-            q3: string | null;
-            exclusion_counts: {
-                flag: string;
-                count: number;
-            }[];
-            warnings: string[];
-        };
         DemoSession: {
-            tender_id: string;
-            scope_id: string;
-            company_id: string;
+            tender_id: components["schemas"]["EntityId"];
+            scope_id: components["schemas"]["EntityId"];
+            company_id: components["schemas"]["EntityId"];
             /** @enum {string} */
             mode: "demo";
         };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description See Error.code for exact failure */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        PayloadTooLarge: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        UnsupportedMedia: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        RateLimited: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        InternalError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        BadGateway: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description See Error.code for exact failure */
+        ServiceUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+    };
+    parameters: {
+        /**
+         * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+         * @example local-ui
+         */
+        XBidLabClient: "local-ui";
+        /**
+         * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+         * @example 550e8400-e29b-41d4-a716-446655440000
+         */
+        IdempotencyKey: string;
+        /**
+         * @description Optional on reviews: when sent, replays deduplicate like other mutations.
+         * @example 550e8400-e29b-41d4-a716-446655440000
+         */
+        IdempotencyKeyOptional: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -905,94 +1081,54 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    readiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["Ready"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            /** @description Database degraded; same Ready shape as the 200 body. */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["Ready"];
                 };
             };
         };
@@ -1015,104 +1151,33 @@ export interface operations {
                     "application/json": components["schemas"]["Capabilities"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    createDemoSession: {
+    create_demo_session: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
-                "Idempotency-Key": string;
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -1128,104 +1193,29 @@ export interface operations {
                     "application/json": components["schemas"]["DemoSession"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    listTenders: {
+    list_tenders: {
         parameters: {
             query?: {
+                /** @example Tias */
                 q?: string;
+                /** @example 79411000 */
                 cpv?: string;
+                /** @example 1 */
                 page?: number;
+                /** @example 20 */
                 page_size?: number;
             };
             header?: never;
@@ -1243,220 +1233,26 @@ export interface operations {
                     "application/json": components["schemas"]["TenderList"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    createTender: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-BidLab-Client": "local-ui";
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TenderCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tender"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getTender: {
+    get_tender: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                tender_id: string;
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -1471,104 +1267,26 @@ export interface operations {
                     "application/json": components["schemas"]["Tender"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getWorkspace: {
+    get_workspace: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                tender_id: string;
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -1583,228 +1301,27 @@ export interface operations {
                     "application/json": components["schemas"]["Workspace"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    uploadDocument: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-BidLab-Client": "local-ui";
-            };
-            path: {
-                tender_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** Format: binary */
-                    file: string;
-                    /** @enum {string} */
-                    kind: "pcap" | "ppt" | "other";
-                    source_url?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Successful response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Document"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getPage: {
+    get_page: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                document_id: string;
+                /** @example doc-tias-pcap */
+                document_id: components["schemas"]["EntityId"];
+                /** @example 6 */
                 page_number: number;
             };
             cookie?: never;
@@ -1820,104 +1337,26 @@ export interface operations {
                     "application/json": components["schemas"]["PageText"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getDocumentContent: {
+    get_document_content: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                document_id: string;
+                /** @example doc-tias-pcap */
+                document_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -1932,107 +1371,37 @@ export interface operations {
                     "application/pdf": string;
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    startAnalysis: {
+    start_analysis: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
-                "Idempotency-Key": string;
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path: {
-                tender_id: string;
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -2053,104 +1422,26 @@ export interface operations {
                     "application/json": components["schemas"]["Job"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getJob: {
+    get_job: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                job_id: string;
+                /** @example job-20261026-001 */
+                job_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -2165,106 +1456,37 @@ export interface operations {
                     "application/json": components["schemas"]["Job"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    reviewInterpretation: {
+    review_interpretation: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Optional on reviews: when sent, replays deduplicate like other mutations.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
             };
             path: {
-                tender_id: string;
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -2283,103 +1505,28 @@ export interface operations {
                     "application/json": components["schemas"]["Workspace"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    createCompany: {
+    create_company: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
             };
             path?: never;
             cookie?: never;
@@ -2399,104 +1546,26 @@ export interface operations {
                     "application/json": components["schemas"]["Company"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getCompany: {
+    get_company: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                company_id: string;
+                /** @example company-demo */
+                company_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -2511,106 +1580,32 @@ export interface operations {
                     "application/json": components["schemas"]["Company"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    updateCompany: {
+    update_company: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
             };
             path: {
-                company_id: string;
+                /** @example company-demo */
+                company_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -2629,103 +1624,28 @@ export interface operations {
                     "application/json": components["schemas"]["Company"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    checkEligibility: {
+    check_eligibility: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
             };
             path?: never;
             cookie?: never;
@@ -2745,103 +1665,28 @@ export interface operations {
                     "application/json": components["schemas"]["EligibilityResult"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    evaluateScenario: {
+    evaluate_scenario: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
             };
             path?: never;
             cookie?: never;
@@ -2861,104 +1706,33 @@ export interface operations {
                     "application/json": components["schemas"]["EvaluationResult"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    saveScenario: {
+    save_scenario: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
-                "Idempotency-Key": string;
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -2978,104 +1752,26 @@ export interface operations {
                     "application/json": components["schemas"]["Scenario"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getScenario: {
+    get_scenario: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                scenario_id: string;
+                /** @example 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d */
+                scenario_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -3090,104 +1786,33 @@ export interface operations {
                     "application/json": components["schemas"]["Scenario"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    createReport: {
+    create_report: {
         parameters: {
             query?: never;
             header: {
-                "X-BidLab-Client": "local-ui";
-                "Idempotency-Key": string;
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
@@ -3207,104 +1832,26 @@ export interface operations {
                     "application/json": components["schemas"]["Report"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getReport: {
+    get_report: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                report_id: string;
+                /** @example 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d */
+                report_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -3319,104 +1866,26 @@ export interface operations {
                     "application/json": components["schemas"]["Report"];
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
-    getReportHtml: {
+    get_report_html: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                report_id: string;
+                /** @example 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d */
+                report_id: components["schemas"]["EntityId"];
             };
             cookie?: never;
         };
@@ -3431,210 +1900,17 @@ export interface operations {
                     "text/html": string;
                 };
             };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getHistory: {
-        parameters: {
-            query?: {
-                cpv?: string;
-                before?: string;
-                nuts?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HistoryResult"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description See Error.code for exact failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
 }

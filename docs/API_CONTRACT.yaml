@@ -11,6 +11,9 @@ paths:
   /api/v1/health:
     get:
       operationId: health
+      summary: Liveness probe
+      description: Returns ok with engine/schema versions. Never touches Meta billing
+        or the database.
       responses:
         '200':
           description: Successful response
@@ -18,69 +21,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+              examples:
+                example:
+                  summary: health example
+                  value:
+                    status: ok
+                    engine_version: 1.0.0
+                    schema_version: 1.0.0
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - health
+  /api/v1/ready:
+    get:
+      operationId: readiness
+      summary: Readiness probe
+      description: Liveness plus a SQLite PRAGMA quick_check; reports degraded with
+        status 503 when the database is unhealthy.
+      responses:
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Ready'
+              examples:
+                example:
+                  summary: readiness example
+                  value:
+                    status: ready
+                    db_quick_check: ok
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          description: Database degraded; same Ready shape as the 200 body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ready'
+              examples:
+                example:
+                  summary: readiness example
+                  value:
+                    status: degraded
+                    db_quick_check: integrity check failed
+      tags:
+      - health
   /api/v1/capabilities:
     get:
       operationId: capabilities
+      summary: Effective capabilities
+      description: Mode, Meta configuration (never the key), history flag, hard limits
+        and limitation notes.
       responses:
         '200':
           description: Successful response
@@ -88,69 +118,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Capabilities'
+              examples:
+                example:
+                  summary: capabilities example
+                  value:
+                    mode: demo
+                    meta_configured: false
+                    meta_model: muse-spark-1.3
+                    history_enabled: false
+                    limits:
+                      pdf_bytes: 20971520
+                      pdf_pages: 120
+                      curve_points: 201
+                    limitations:
+                    - 'curated_demo: figures come from the reviewed seed, not live
+                      extraction'
+                    - history_disabled
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - capabilities
   /api/v1/demo/sessions:
     post:
-      operationId: createDemoSession
+      operationId: create_demo_session
+      summary: Create demo session
+      description: Ensures the curated seed exists on an empty database and returns
+        its tender, scope and company ids. Idempotent via Idempotency-Key.
       responses:
         '201':
           description: Successful response
@@ -158,83 +171,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DemoSession'
+              examples:
+                example:
+                  summary: create_demo_session example
+                  value:
+                    tender_id: tias
+                    scope_id: tias-whole
+                    company_id: company-demo
+                    mode: demo
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - tenders
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema:
-          type: string
-          maxLength: 100
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
   /api/v1/tenders:
     get:
-      operationId: listTenders
+      operationId: list_tenders
+      summary: List tenders
+      description: Curated library search with q/cpv filters and page/page_size pagination.
       responses:
         '200':
           description: Successful response
@@ -242,66 +218,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TenderList'
+              examples:
+                example:
+                  summary: list_tenders example
+                  value:
+                    items:
+                    - raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                      metadata_evidence: []
+                      id: tias
+                      source_id: placsp:2026/00006554N
+                      source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
+                      external_id: 2026/00006554N
+                      title: Servicio de limpieza (Tias, ejemplo curado)
+                      contracting_body: Ayuntamiento de Tias
+                      cpv_codes:
+                      - '79411000'
+                      status_raw: ADJ
+                      source_updated_at: '2026-01-01T00:00:00Z'
+                      deadline_literal: null
+                      deadline_at: null
+                      pbl_net: '118336.00'
+                      pbl_gross: '126619.52'
+                      estimated_value: '295840.00'
+                      scopes: []
+                      quality_flags: []
+                    page: 1
+                    page_size: 20
+                    total: 1
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - tenders
       parameters:
       - name: q
         in: query
@@ -309,12 +276,14 @@ paths:
         schema:
           type: string
           maxLength: 200
+        example: Tias
       - name: cpv
         in: query
         required: false
         schema:
           type: string
           maxLength: 12
+        example: '79411000'
       - name: page
         in: query
         required: false
@@ -322,6 +291,7 @@ paths:
           type: integer
           minimum: 1
           default: 1
+        example: 1
       - name: page_size
         in: query
         required: false
@@ -330,94 +300,12 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
-    post:
-      operationId: createTender
-      responses:
-        '201':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Tender'
-        '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      description: 'Unimplemented by design in P0: tenders come from the curated seed;
-        no arbitrary tender creation.'
-      parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TenderCreate'
+        example: 20
   /api/v1/tenders/{tender_id}:
     get:
-      operationId: getTender
+      operationId: get_tender
+      summary: Get tender
+      description: Single tender header with scopes and price bases.
       responses:
         '200':
           description: Successful response
@@ -425,76 +313,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tender'
+              examples:
+                example:
+                  summary: get_tender example
+                  value:
+                    raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                    metadata_evidence: []
+                    id: tias
+                    source_id: placsp:2026/00006554N
+                    source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
+                    external_id: 2026/00006554N
+                    title: Servicio de limpieza (Tias, ejemplo curado)
+                    contracting_body: Ayuntamiento de Tias
+                    cpv_codes:
+                    - '79411000'
+                    status_raw: ADJ
+                    source_updated_at: '2026-01-01T00:00:00Z'
+                    deadline_literal: null
+                    deadline_at: null
+                    pbl_net: '118336.00'
+                    pbl_gross: '126619.52'
+                    estimated_value: '295840.00'
+                    scopes: []
+                    quality_flags: []
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - tenders
       parameters:
       - name: tender_id
         in: path
         required: true
-        schema: &id001
-          type: string
-          pattern: ^[A-Za-z0-9_-]{1,80}$
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias
   /api/v1/tenders/{tender_id}/workspace:
     get:
-      operationId: getWorkspace
+      operationId: get_workspace
+      summary: Get workspace
+      description: 'Full working set: tender, interpretation revision, documents,
+        claims, requirements, citations and pricing rules.'
       responses:
         '200':
           description: Successful response
@@ -503,182 +381,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workspace'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - tenders
       parameters:
       - name: tender_id
         in: path
-        required: true
-        schema: *id001
-  /api/v1/tenders/{tender_id}/documents:
-    post:
-      operationId: uploadDocument
-      responses:
-        '201':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Document'
-        '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      description: 'Unimplemented by design in P0: documents come from the curated
-        seed; local upload is out of scope.'
-      parameters:
-      - name: tender_id
-        in: path
-        required: true
-        schema: *id001
-      - name: X-BidLab-Client
-        in: header
         required: true
         schema:
-          type: string
-          enum:
-          - local-ui
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                kind:
-                  type: string
-                  enum:
-                  - pcap
-                  - ppt
-                  - other
-                source_url:
-                  anyOf:
-                  - type: string
-                    maxLength: 3000
-                  - type: 'null'
-              required:
-              - file
-              - kind
-              additionalProperties: false
+          $ref: '#/components/schemas/EntityId'
+        example: tias
   /api/v1/documents/{document_id}/pages/{page_number}:
     get:
-      operationId: getPage
+      operationId: get_page
+      summary: Get page text
+      description: 'Curated page extract: raw and normalized text, hash and extractor
+        version.'
       responses:
         '200':
           description: Successful response
@@ -686,80 +424,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageText'
+              examples:
+                example:
+                  summary: get_page example
+                  value:
+                    document_id: doc-tias-pcap
+                    page_number: 6
+                    printed_label: '6'
+                    raw_text: Precio neto 207.088,00 euros
+                    normalized_text: Precio neto 207.088,00 euros
+                    text_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                    extractor_version: bidlab-pdf-1
+                    quality_flags: []
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - documents
       parameters:
       - name: document_id
         in: path
         required: true
-        schema: *id001
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: doc-tias-pcap
       - name: page_number
         in: path
         required: true
-        schema: &id003
+        schema:
           type: integer
           minimum: 1
+        example: 6
   /api/v1/documents/{document_id}/content:
     get:
-      operationId: getDocumentContent
+      operationId: get_document_content
+      summary: Get document bytes
+      description: Original PDF when redistribution is allowed; otherwise 404 document_bytes_unavailable
+        (use source_url and curated excerpts).
       responses:
         '200':
           description: Successful response
@@ -769,73 +489,42 @@ paths:
                 type: string
                 format: binary
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - documents
       parameters:
       - name: document_id
         in: path
         required: true
-        schema: *id001
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: doc-tias-pcap
   /api/v1/tenders/{tender_id}/analysis:
     post:
-      operationId: startAnalysis
+      operationId: start_analysis
+      summary: Start analysis job
+      description: Queue extraction over curated pages; poll with get_job. The Location
+        header points at the job resource.
       responses:
         '202':
           description: Successful response
@@ -843,6 +532,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Job'
+              examples:
+                example:
+                  summary: start_analysis example
+                  value:
+                    id: job-20261026-001
+                    tender_id: tias
+                    status: succeeded
+                    stage: done
+                    processed_pages: 6
+                    total_pages: 6
+                    result_revision: 2
+                    error_code: null
+                    warnings: []
           headers:
             Location:
               schema:
@@ -850,92 +552,58 @@ paths:
                 maxLength: 300
               description: Local job resource URL
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - jobs
       parameters:
       - name: tender_id
         in: path
         required: true
-        schema: *id001
-      - name: X-BidLab-Client
-        in: header
-        required: true
         schema:
-          type: string
-          enum:
-          - local-ui
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema:
-          type: string
-          maxLength: 100
+          $ref: '#/components/schemas/EntityId'
+        example: tias
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AnalysisRequest'
+            examples:
+              example:
+                summary: start_analysis example
+                value:
+                  document_ids:
+                  - doc-tias-pcap
+                  mode: live
+                  allow_remote_processing: false
+                  expected_interpretation_revision: 1
   /api/v1/jobs/{job_id}:
     get:
-      operationId: getJob
+      operationId: get_job
+      summary: Get job
+      description: Poll analysis job state and outcome.
       responses:
         '200':
           description: Successful response
@@ -943,74 +611,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Job'
+              examples:
+                example:
+                  summary: get_job example
+                  value:
+                    id: job-20261026-001
+                    tender_id: tias
+                    status: succeeded
+                    stage: done
+                    processed_pages: 6
+                    total_pages: 6
+                    result_revision: 2
+                    error_code: null
+                    warnings: []
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - jobs
       parameters:
       - name: job_id
         in: path
         required: true
-        schema: *id001
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: job-20261026-001
   /api/v1/tenders/{tender_id}/reviews:
     post:
-      operationId: reviewInterpretation
+      operationId: review_interpretation
+      summary: Review interpretation
+      description: Approve claim keys and requirement trees (or submit a corrected
+        proposal); returns the new Workspace revision. Idempotency-Key is optional
+        here.
       responses:
         '200':
           description: Successful response
@@ -1019,86 +670,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/Workspace'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - review
       parameters:
       - name: tender_id
         in: path
         required: true
-        schema: *id001
-      - name: X-BidLab-Client
-        in: header
-        required: true
         schema:
-          type: string
-          enum:
-          - local-ui
+          $ref: '#/components/schemas/EntityId'
+        example: tias
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReviewRequest'
+            examples:
+              example:
+                summary: review_interpretation example
+                value:
+                  expected_revision: 1
+                  approved_claim_keys:
+                  - pbl_net
+                  requirement_trees: []
+                  scope_basis: null
+                  pricing_rule: null
+                  corrected_proposal: null
+                  actor: reviewer-1
+                  reason: Verified against the PCAP extracts.
   /api/v1/companies:
     post:
-      operationId: createCompany
+      operationId: create_company
+      summary: Create company
+      description: 'Company profile revision 1: synthetic demo costs or user attestation
+        with evidence.'
       responses:
         '201':
           description: Successful response
@@ -1106,83 +734,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+              examples:
+                example:
+                  summary: create_company example
+                  value:
+                    id: company-demo
+                    revision: 1
+                    name: ACME S.L.
+                    synthetic: true
+                    scope_id: tias-whole
+                    period_months: 24
+                    direct_cost_net: '80000.00'
+                    overhead_net: '10000.00'
+                    target_margin_rate: '0.1000'
+                    evidence: []
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - companies
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
+      - $ref: '#/components/parameters/XBidLabClient'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CompanyWrite'
+            examples:
+              example:
+                summary: create_company example
+                value:
+                  name: ACME S.L.
+                  synthetic: true
+                  scope_id: tias-whole
+                  period_months: 24
+                  direct_cost_net: '80000.00'
+                  overhead_net: '10000.00'
+                  target_margin_rate: '0.1000'
+                  evidence: []
   /api/v1/companies/{company_id}:
     get:
-      operationId: getCompany
+      operationId: get_company
+      summary: Get company
+      description: Latest revision of a company profile.
       responses:
         '200':
           description: Successful response
@@ -1190,161 +804,134 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+              examples:
+                example:
+                  summary: get_company example
+                  value:
+                    id: company-demo
+                    revision: 1
+                    name: ACME S.L.
+                    synthetic: true
+                    scope_id: tias-whole
+                    period_months: 24
+                    direct_cost_net: '80000.00'
+                    overhead_net: '10000.00'
+                    target_margin_rate: '0.1000'
+                    evidence: []
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - companies
       parameters:
       - name: company_id
         in: path
-        required: true
-        schema: *id001
-    put:
-      operationId: updateCompany
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Company'
-        '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: company_id
-        in: path
-        required: true
-        schema: *id001
-      - name: X-BidLab-Client
-        in: header
         required: true
         schema:
-          type: string
-          enum:
-          - local-ui
+          $ref: '#/components/schemas/EntityId'
+        example: company-demo
+    put:
+      operationId: update_company
+      summary: Update company
+      description: Appends a revision when expected_revision matches latest; 409 stale_revision
+        otherwise.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+              examples:
+                example:
+                  summary: update_company example
+                  value:
+                    id: company-demo
+                    revision: 1
+                    name: ACME S.L.
+                    synthetic: true
+                    scope_id: tias-whole
+                    period_months: 24
+                    direct_cost_net: '80000.00'
+                    overhead_net: '10000.00'
+                    target_margin_rate: '0.1000'
+                    evidence: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - companies
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: company-demo
+      - $ref: '#/components/parameters/XBidLabClient'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CompanyUpdate'
+            examples:
+              example:
+                summary: update_company example
+                value:
+                  expected_revision: 1
+                  name: ACME S.L.
+                  synthetic: true
+                  scope_id: tias-whole
+                  period_months: 24
+                  direct_cost_net: '80000.00'
+                  overhead_net: '10000.00'
+                  target_margin_rate: '0.1000'
+                  evidence: []
   /api/v1/eligibility/check:
     post:
-      operationId: checkEligibility
+      operationId: check_eligibility
+      summary: Check eligibility
+      description: Pure three-valued evaluation of the requirements tree against one
+        pinned company revision; nothing is persisted.
       responses:
         '200':
           description: Successful response
@@ -1352,83 +939,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EligibilityResult'
+              examples:
+                example:
+                  summary: check_eligibility example
+                  value:
+                    verdict: unknown
+                    items:
+                    - requirement_id: req-fin-1
+                      verdict: unknown
+                      reason_codes:
+                      - missing_company_evidence
+                      evidence_refs: []
+                    assessed_count: 0
+                    unassessed_count: 1
+                    hypothetical_company: true
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - companies
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
+      - $ref: '#/components/parameters/XBidLabClient'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EligibilityRequest'
+            examples:
+              example:
+                summary: check_eligibility example
+                value:
+                  tender_id: tias
+                  scope_id: tias-whole
+                  company_id: company-demo
+                  company_revision: 1
+                  interpretation_revision: 1
   /api/v1/scenarios/evaluate:
     post:
-      operationId: evaluateScenario
+      operationId: evaluate_scenario
+      summary: Evaluate scenario
+      description: 'Pure pricing computation: price, profit, score, anomaly, trace
+        and optional curve. Nothing is persisted.'
       responses:
         '200':
           description: Successful response
@@ -1437,82 +1008,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/EvaluationResult'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - scenarios
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
+      - $ref: '#/components/parameters/XBidLabClient'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EvaluationRequest'
+            examples:
+              example:
+                summary: evaluate_scenario example
+                value:
+                  scope_id: tias-whole
+                  pricing_rule_id: tias-price-r1
+                  pricing_rule_revision: 1
+                  company_id: company-demo
+                  company_revision: 1
+                  discount_rate: '0.05'
+                  rivals:
+                    state: assumed
+                    complete: true
+                    group_membership_confirmed: true
+                    own_group_id: null
+                    offers:
+                    - label: Rival A
+                      price_net: '115000.00'
+                      group_id: null
+                  curve: null
   /api/v1/scenarios:
     post:
-      operationId: saveScenario
+      operationId: save_scenario
+      summary: Save scenario
+      description: Replays the input through the pure evaluator and persists an integrity-hashed
+        snapshot with frozen context.
       responses:
         '201':
           description: Successful response
@@ -1521,88 +1073,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - scenarios
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema:
-          type: string
-          maxLength: 100
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ScenarioCreate'
+            examples:
+              example:
+                summary: save_scenario example
+                value:
+                  name: Base 5%
+                  input:
+                    scope_id: tias-whole
+                    pricing_rule_id: tias-price-r1
+                    pricing_rule_revision: 1
+                    company_id: company-demo
+                    company_revision: 1
+                    discount_rate: '0.05'
+                    rivals:
+                      state: assumed
+                      complete: true
+                      group_membership_confirmed: true
+                      own_group_id: null
+                      offers:
+                      - label: Rival A
+                        price_net: '115000.00'
+                        group_id: null
+                    curve: null
   /api/v1/scenarios/{scenario_id}:
     get:
-      operationId: getScenario
+      operationId: get_scenario
+      summary: Get scenario
+      description: Saved snapshot with input, result and frozen context.
       responses:
         '200':
           description: Successful response
@@ -1611,73 +1140,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - scenarios
       parameters:
       - name: scenario_id
         in: path
         required: true
-        schema: *id001
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
   /api/v1/reports:
     post:
-      operationId: createReport
+      operationId: create_report
+      summary: Create report
+      description: Decision record over an immutable scenario, plus printable HTML
+        with sources.
       responses:
         '201':
           description: Successful response
@@ -1686,88 +1184,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/Report'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - reports
       parameters:
-      - name: X-BidLab-Client
-        in: header
-        required: true
-        schema:
-          type: string
-          enum:
-          - local-ui
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema:
-          type: string
-          maxLength: 100
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReportCreate'
+            examples:
+              example:
+                summary: create_report example
+                value:
+                  scenario_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+                  decision: study
+                  note: Numbers hold at 5%; confirm team capacity before preparing
+                    the bid.
   /api/v1/reports/{report_id}:
     get:
-      operationId: getReport
+      operationId: get_report
+      summary: Get report
+      description: Decision record with its scenario snapshot and pending items.
       responses:
         '200':
           description: Successful response
@@ -1776,73 +1237,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/Report'
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - reports
       parameters:
       - name: report_id
         in: path
         required: true
-        schema: *id001
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
   /api/v1/reports/{report_id}/html:
     get:
-      operationId: getReportHtml
+      operationId: get_report_html
+      summary: Get report HTML
+      description: Printable decision record (text/html served with CSP and nosniff).
       responses:
         '200':
           description: Successful response
@@ -1851,169 +1280,159 @@ paths:
               schema:
                 type: string
         '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Conflict'
         '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/PayloadTooLarge'
         '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnsupportedMedia'
         '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
         '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/BadGateway'
         '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - reports
       parameters:
       - name: report_id
         in: path
         required: true
-        schema: *id001
-  /api/v1/historical-awards:
-    get:
-      operationId: getHistory
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HistoryResult'
-        '400':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '413':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '415':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '502':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: See Error.code for exact failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      description: 'Unimplemented by design in P0: historical awards stay disabled
-        (history_enabled=false); no comparable-awards dataset.'
-      parameters:
-      - name: cpv
-        in: query
-        required: false
         schema:
-          type: string
-          maxLength: 12
-      - name: before
-        in: query
-        required: false
-        schema: &id006
-          type: string
-          format: date
-      - name: nuts
-        in: query
-        required: false
-        schema:
-          type: string
-          maxLength: 20
+          $ref: '#/components/schemas/EntityId'
+        example: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
 components:
   schemas:
+    EntityId:
+      type: string
+      pattern: ^[A-Za-z0-9_-]{1,80}$
+      description: Opaque entity identifier (tender, scope, document, company, scenario,
+        report, job).
+    Decimal:
+      type: string
+      pattern: ^-?\d{1,12}(\.\d{1,12})?$
+      description: Base-10 decimal string; no locale separators, NaN or Infinity.
+    Money:
+      type: string
+      pattern: ^\d{1,12}\.\d{2}$
+      description: Nonnegative EUR net amount with two decimal places; positivity
+        is a domain precondition.
+    ErrorCode:
+      type: string
+      enum:
+      - arity
+      - ast_template_mismatch
+      - awarded_negative
+      - bad_format
+      - bad_kind
+      - bad_node
+      - bad_request
+      - bad_shape
+      - bad_type
+      - base_not_positive
+      - basis_not_approved
+      - bool_forbidden
+      - budget_exhausted
+      - budget_not_positive
+      - ceiling_exceeded
+      - company_not_found
+      - company_profile_corrupt
+      - company_scope_mismatch
+      - company_without_revision
+      - conflict
+      - const_bad_type
+      - const_float_forbidden
+      - const_non_finite
+      - const_too_large
+      - cost_negative
+      - curve_out_of_scope
+      - cycle
+      - demo_seed_incomplete
+      - discount_out_of_range
+      - discount_out_of_scope
+      - document_bytes_unavailable
+      - document_not_found
+      - document_wrong_tender
+      - domain_non_finite
+      - domain_validation
+      - eligibility_unserializable
+      - empty_offer_set
+      - extra_forbidden
+      - float_forbidden
+      - forbidden
+      - idempotency_conflict
+      - internal
+      - interpretation_not_found
+      - job_not_found
+      - job_running
+      - log_non_positive
+      - margin_out_of_range
+      - max_depth
+      - max_points_not_positive
+      - method_not_allowed
+      - missing_variable
+      - money_unparseable
+      - non_finite
+      - not_found
+      - not_positive
+      - nothing_to_review
+      - offer_not_positive
+      - page_not_found
+      - pdf_no_pages
+      - pdf_page_unreadable
+      - pdf_too_large
+      - pdf_too_many_pages
+      - pdf_unreadable
+      - price_not_positive
+      - provider_failure
+      - provider_not_configured
+      - rate_limited
+      - reference_not_positive
+      - remote_processing_not_allowed
+      - report_corrupt
+      - report_html_missing
+      - report_not_found
+      - requirements_tree_corrupt
+      - requirements_tree_too_deep
+      - revision_conflict
+      - rule_malformed
+      - rule_not_approved
+      - rule_not_found
+      - scenario_not_found
+      - scenario_snapshot_incomplete
+      - scope_not_found
+      - scope_tender_mismatch
+      - scope_without_budget
+      - snapshot_corrupt
+      - stale_revision
+      - tender_not_found
+      - too_many_nodes
+      - too_many_ops
+      - too_many_rivals
+      - unknown_claim_key
+      - unknown_op
+      - unknown_template
+      - unknown_variable
+      - unknown_variant
+      - unsupported_media
+      - upload_too_large
+      - validation_error
+      description: Machine-readable failure code; the frontend maps known codes to
+        Spanish copy.
     Error:
       type: object
       properties:
         code:
-          type: string
-          maxLength: 80
+          $ref: '#/components/schemas/ErrorCode'
         message:
           type: string
           maxLength: 2000
@@ -2051,6 +1470,21 @@ components:
       - engine_version
       - schema_version
       additionalProperties: false
+    Ready:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - ready
+          - degraded
+        db_quick_check:
+          type: string
+          maxLength: 80
+      required:
+      - status
+      - db_quick_check
+      additionalProperties: false
     Capabilities:
       type: object
       properties:
@@ -2060,18 +1494,25 @@ components:
           - demo
           - live
           - manual
-        meta_configured: &id002
+        meta_configured:
           type: boolean
         meta_model:
           type: string
           maxLength: 80
-        history_enabled: *id002
+        history_enabled:
+          type: boolean
         limits:
           type: object
           properties:
-            pdf_bytes: *id003
-            pdf_pages: *id003
-            curve_points: *id003
+            pdf_bytes:
+              type: integer
+              minimum: 1
+            pdf_pages:
+              type: integer
+              minimum: 1
+            curve_points:
+              type: integer
+              minimum: 1
           required:
           - pdf_bytes
           - pdf_pages
@@ -2124,22 +1565,19 @@ components:
     PriceBasis:
       type: object
       properties:
-        scope_id: *id001
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
         budget_net:
           anyOf:
-          - &id004
-            type: string
-            pattern: ^\d{1,12}\.\d{2}$
-            description: Nonnegative EUR net amount with two decimal places; positivity
-              is a domain precondition.
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         ceiling_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         scoring_reference_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         reference_kind:
           type: string
@@ -2162,7 +1600,8 @@ components:
           - unknown
         period_months:
           anyOf:
-          - *id003
+          - type: integer
+            minimum: 1
           - type: 'null'
         tax_kind:
           type: string
@@ -2179,7 +1618,8 @@ components:
           - blocked
         evidence_ids:
           type: array
-          items: *id001
+          items:
+            $ref: '#/components/schemas/EntityId'
           minItems: 0
           maxItems: 20
         metadata_evidence:
@@ -2205,8 +1645,10 @@ components:
     Scope:
       type: object
       properties:
-        id: *id001
-        tender_id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
         lot_id:
           anyOf:
           - type: string
@@ -2236,7 +1678,8 @@ components:
             $ref: '#/components/schemas/MetadataEvidence'
           minItems: 0
           maxItems: 30
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         source_id:
           type: string
           maxLength: 1000
@@ -2277,15 +1720,15 @@ components:
           - type: 'null'
         pbl_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         pbl_gross:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         estimated_value:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         scopes:
           type: array
@@ -2320,29 +1763,6 @@ components:
       - scopes
       - quality_flags
       additionalProperties: false
-    TenderCreate:
-      type: object
-      properties:
-        title:
-          type: string
-          maxLength: 2000
-        external_id:
-          type: string
-          maxLength: 200
-        source_url:
-          anyOf:
-          - type: string
-            maxLength: 3000
-          - type: 'null'
-        contracting_body:
-          type: string
-          maxLength: 1000
-      required:
-      - title
-      - external_id
-      - source_url
-      - contracting_body
-      additionalProperties: false
     TenderList:
       type: object
       properties:
@@ -2352,8 +1772,12 @@ components:
             $ref: '#/components/schemas/Tender'
           minItems: 0
           maxItems: 100
-        page: *id003
-        page_size: *id003
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
         total:
           type: integer
           minimum: 0
@@ -2366,8 +1790,10 @@ components:
     Document:
       type: object
       properties:
-        id: *id001
-        tender_id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
         kind:
           type: string
           enum:
@@ -2380,7 +1806,9 @@ components:
         sha256:
           type: string
           pattern: ^[a-f0-9]{64}$
-        pages_count: *id003
+        pages_count:
+          type: integer
+          minimum: 1
         source_url:
           anyOf:
           - type: string
@@ -2414,8 +1842,11 @@ components:
     PageText:
       type: object
       properties:
-        document_id: *id001
-        page_number: *id003
+        document_id:
+          $ref: '#/components/schemas/EntityId'
+        page_number:
+          type: integer
+          minimum: 1
         printed_label:
           anyOf:
           - type: string
@@ -2453,8 +1884,11 @@ components:
     CitationProposal:
       type: object
       properties:
-        document_id: *id001
-        page_number: *id003
+        document_id:
+          $ref: '#/components/schemas/EntityId'
+        page_number:
+          type: integer
+          minimum: 1
         verbatim_excerpt:
           type: string
           maxLength: 600
@@ -2466,12 +1900,16 @@ components:
     Citation:
       type: object
       properties:
-        id: *id001
-        document_id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
+        document_id:
+          $ref: '#/components/schemas/EntityId'
         document_sha256:
           type: string
           maxLength: 64
-        page_number: *id003
+        page_number:
+          type: integer
+          minimum: 1
         printed_label:
           anyOf:
           - type: string
@@ -2642,10 +2080,7 @@ components:
           - unsupported
         max_points:
           anyOf:
-          - &id005
-            type: string
-            pattern: ^-?\d{1,12}(\.\d{1,12})?$
-            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         variables:
           type: array
@@ -2709,7 +2144,9 @@ components:
           maxItems: 5
         unread_pages:
           type: array
-          items: *id003
+          items:
+            type: integer
+            minimum: 1
           minItems: 0
           maxItems: 120
         warnings:
@@ -2736,7 +2173,8 @@ components:
           type: string
           enum:
           - leaf
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         label:
           type: string
           maxLength: 1000
@@ -2775,7 +2213,8 @@ components:
           - blocked
         evidence_ids:
           type: array
-          items: *id001
+          items:
+            $ref: '#/components/schemas/EntityId'
           minItems: 0
           maxItems: 20
       required:
@@ -2796,7 +2235,8 @@ components:
           type: string
           enum:
           - group
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         label:
           type: string
           maxLength: 1000
@@ -2822,67 +2262,86 @@ components:
       oneOf:
       - $ref: '#/components/schemas/RequirementLeaf'
       - $ref: '#/components/schemas/RequirementGroup'
+      discriminator:
+        propertyName: kind
+        mapping:
+          leaf: '#/components/schemas/RequirementLeaf'
+          group: '#/components/schemas/RequirementGroup'
+    ExprConst:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - const
+        value:
+          $ref: '#/components/schemas/Decimal'
+      required:
+      - kind
+      - value
+      additionalProperties: false
+    ExprVar:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - var
+        name:
+          type: string
+          enum:
+          - own_price
+          - best_price
+          - reference_price
+          - max_points
+      required:
+      - kind
+      - name
+      additionalProperties: false
+    ExprCall:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - call
+        op:
+          type: string
+          enum:
+          - add
+          - sub
+          - mul
+          - div
+          - min
+          - max
+          - log10
+        args:
+          type: array
+          items:
+            $ref: '#/components/schemas/Expr'
+          minItems: 1
+          maxItems: 8
+      required:
+      - kind
+      - op
+      - args
+      additionalProperties: false
     Expr:
       oneOf:
-      - type: object
-        properties:
-          kind:
-            type: string
-            enum:
-            - const
-          value: *id005
-        required:
-        - kind
-        - value
-        additionalProperties: false
-      - type: object
-        properties:
-          kind:
-            type: string
-            enum:
-            - var
-          name:
-            type: string
-            enum:
-            - own_price
-            - best_price
-            - reference_price
-            - max_points
-        required:
-        - kind
-        - name
-        additionalProperties: false
-      - type: object
-        properties:
-          kind:
-            type: string
-            enum:
-            - call
-          op:
-            type: string
-            enum:
-            - add
-            - sub
-            - mul
-            - div
-            - min
-            - max
-            - log10
-          args:
-            type: array
-            items:
-              $ref: '#/components/schemas/Expr'
-            minItems: 1
-            maxItems: 8
-        required:
-        - kind
-        - op
-        - args
-        additionalProperties: false
+      - $ref: '#/components/schemas/ExprConst'
+      - $ref: '#/components/schemas/ExprVar'
+      - $ref: '#/components/schemas/ExprCall'
+      discriminator:
+        propertyName: kind
+        mapping:
+          const: '#/components/schemas/ExprConst'
+          var: '#/components/schemas/ExprVar'
+          call: '#/components/schemas/ExprCall'
     AnomalyPolicy:
       type: object
       properties:
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         source_kind:
           type: string
           enum:
@@ -2902,11 +2361,14 @@ components:
           - pending
           - approved
           - blocked
-        three_bidder_absolute_25: *id002
-        percentage_reduction_one_third: *id002
+        three_bidder_absolute_25:
+          type: boolean
+        percentage_reduction_one_third:
+          type: boolean
         evidence_ids:
           type: array
-          items: *id001
+          items:
+            $ref: '#/components/schemas/EntityId'
           minItems: 0
           maxItems: 20
       required:
@@ -2921,9 +2383,13 @@ components:
     PricingRule:
       type: object
       properties:
-        id: *id001
-        revision: *id003
-        scope_id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
+        revision:
+          type: integer
+          minimum: 1
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
         template_id:
           type: string
           enum:
@@ -2931,7 +2397,8 @@ components:
           - linear_discount
           - log_ratio
           - unsupported
-        max_points: *id005
+        max_points:
+          $ref: '#/components/schemas/Decimal'
         expression:
           anyOf:
           - $ref: '#/components/schemas/Expr'
@@ -2948,7 +2415,8 @@ components:
           - unknown
         evidence_ids:
           type: array
-          items: *id001
+          items:
+            $ref: '#/components/schemas/EntityId'
           minItems: 0
           maxItems: 20
         anomaly_policy:
@@ -3032,7 +2500,8 @@ components:
       properties:
         document_ids:
           type: array
-          items: *id001
+          items:
+            $ref: '#/components/schemas/EntityId'
           minItems: 1
           maxItems: 10
         mode:
@@ -3040,7 +2509,8 @@ components:
           enum:
           - live
           - curated_demo
-        allow_remote_processing: *id002
+        allow_remote_processing:
+          type: boolean
         expected_interpretation_revision:
           type: integer
           minimum: 0
@@ -3050,11 +2520,18 @@ components:
       - allow_remote_processing
       - expected_interpretation_revision
       additionalProperties: false
+    JobErrorCode:
+      type: string
+      maxLength: 80
+      description: 'Terminal job failure code (free string: job outcomes predate the
+        Error envelope).'
     Job:
       type: object
       properties:
-        id: *id001
-        tender_id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
         status:
           type: string
           enum:
@@ -3075,12 +2552,12 @@ components:
           minimum: 0
         result_revision:
           anyOf:
-          - *id003
+          - type: integer
+            minimum: 1
           - type: 'null'
         error_code:
           anyOf:
-          - type: string
-            maxLength: 80
+          - $ref: '#/components/schemas/JobErrorCode'
           - type: 'null'
         warnings:
           type: array
@@ -3161,11 +2638,13 @@ components:
           maxLength: 80
         period_from:
           anyOf:
-          - *id006
+          - type: string
+            format: date
           - type: 'null'
         period_to:
           anyOf:
-          - *id006
+          - type: string
+            format: date
           - type: 'null'
         source_type:
           type: string
@@ -3176,7 +2655,8 @@ components:
         reference:
           type: string
           maxLength: 1000
-        reviewed: *id002
+        reviewed:
+          type: boolean
       required:
       - field_key
       - value
@@ -3193,20 +2673,24 @@ components:
         name:
           type: string
           maxLength: 200
-        synthetic: *id002
-        scope_id: *id001
-        period_months: *id003
+        synthetic:
+          type: boolean
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        period_months:
+          type: integer
+          minimum: 1
         direct_cost_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         overhead_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         target_margin_rate:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         evidence:
           type: array
@@ -3227,36 +2711,32 @@ components:
     Company:
       type: object
       properties:
-        id: *id001
-        revision: *id003
+        id:
+          $ref: '#/components/schemas/EntityId'
+        revision:
+          type: integer
+          minimum: 1
         name:
           type: string
           maxLength: 200
         synthetic:
           type: boolean
         scope_id:
-          type: string
-          pattern: ^[A-Za-z0-9_-]{1,80}$
+          $ref: '#/components/schemas/EntityId'
         period_months:
           type: integer
           minimum: 1
         direct_cost_net:
           anyOf:
-          - &id007
-            type: string
-            pattern: ^\d{1,12}\.\d{2}$
-            description: Nonnegative EUR net amount with two decimal places; positivity
-              is a domain precondition.
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         overhead_net:
           anyOf:
-          - *id007
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         target_margin_rate:
           anyOf:
-          - type: string
-            pattern: ^-?\d{1,12}(\.\d{1,12})?$
-            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         evidence:
           type: array
@@ -3279,35 +2759,30 @@ components:
     CompanyUpdate:
       type: object
       properties:
-        expected_revision: *id003
+        expected_revision:
+          type: integer
+          minimum: 1
         name:
           type: string
           maxLength: 200
         synthetic:
           type: boolean
         scope_id:
-          type: string
-          pattern: ^[A-Za-z0-9_-]{1,80}$
+          $ref: '#/components/schemas/EntityId'
         period_months:
           type: integer
           minimum: 1
         direct_cost_net:
           anyOf:
-          - &id008
-            type: string
-            pattern: ^\d{1,12}\.\d{2}$
-            description: Nonnegative EUR net amount with two decimal places; positivity
-              is a domain precondition.
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         overhead_net:
           anyOf:
-          - *id008
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         target_margin_rate:
           anyOf:
-          - type: string
-            pattern: ^-?\d{1,12}(\.\d{1,12})?$
-            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         evidence:
           type: array
@@ -3329,11 +2804,18 @@ components:
     EligibilityRequest:
       type: object
       properties:
-        tender_id: *id001
-        scope_id: *id001
-        company_id: *id001
-        company_revision: *id003
-        interpretation_revision: *id003
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        company_id:
+          $ref: '#/components/schemas/EntityId'
+        company_revision:
+          type: integer
+          minimum: 1
+        interpretation_revision:
+          type: integer
+          minimum: 1
       required:
       - tender_id
       - scope_id
@@ -3344,7 +2826,8 @@ components:
     EligibilityItem:
       type: object
       properties:
-        requirement_id: *id001
+        requirement_id:
+          $ref: '#/components/schemas/EntityId'
         verdict:
           type: string
           enum:
@@ -3392,7 +2875,8 @@ components:
         unassessed_count:
           type: integer
           minimum: 0
-        hypothetical_company: *id002
+        hypothetical_company:
+          type: boolean
       required:
       - verdict
       - items
@@ -3406,7 +2890,8 @@ components:
         label:
           type: string
           maxLength: 100
-        price_net: *id004
+        price_net:
+          $ref: '#/components/schemas/Money'
         group_id:
           anyOf:
           - type: string
@@ -3425,8 +2910,10 @@ components:
           enum:
           - assumed
           - unspecified
-        complete: *id002
-        group_membership_confirmed: *id002
+        complete:
+          type: boolean
+        group_membership_confirmed:
+          type: boolean
         own_group_id:
           anyOf:
           - type: string
@@ -3448,8 +2935,10 @@ components:
     CurveRequest:
       type: object
       properties:
-        from_discount_rate: *id005
-        to_discount_rate: *id005
+        from_discount_rate:
+          $ref: '#/components/schemas/Decimal'
+        to_discount_rate:
+          $ref: '#/components/schemas/Decimal'
         points:
           type: integer
           minimum: 2
@@ -3462,12 +2951,20 @@ components:
     EvaluationRequest:
       type: object
       properties:
-        scope_id: *id001
-        pricing_rule_id: *id001
-        pricing_rule_revision: *id003
-        company_id: *id001
-        company_revision: *id003
-        discount_rate: *id005
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_rule_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_rule_revision:
+          type: integer
+          minimum: 1
+        company_id:
+          $ref: '#/components/schemas/EntityId'
+        company_revision:
+          type: integer
+          minimum: 1
+        discount_rate:
+          $ref: '#/components/schemas/Decimal'
         rivals:
           $ref: '#/components/schemas/RivalScenario'
         curve:
@@ -3495,9 +2992,10 @@ components:
           - unsupported
         value:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
-        max_points: *id005
+        max_points:
+          $ref: '#/components/schemas/Decimal'
         unknown_variables:
           type: array
           items:
@@ -3529,7 +3027,8 @@ components:
           - not_applicable
           - possible_justification_required
           - not_flagged_under_assumptions
-        policy_id: *id001
+        policy_id:
+          $ref: '#/components/schemas/EntityId'
         branch:
           anyOf:
           - type: string
@@ -3537,11 +3036,11 @@ components:
           - type: 'null'
         reference_mean_net:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         threshold_net:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         reference_offer_count:
           type: integer
@@ -3573,7 +3072,7 @@ components:
           maxLength: 1000
         value:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
       required:
       - label
@@ -3583,15 +3082,17 @@ components:
     CurvePoint:
       type: object
       properties:
-        discount_rate: *id005
-        price_net: *id004
+        discount_rate:
+          $ref: '#/components/schemas/Decimal'
+        price_net:
+          $ref: '#/components/schemas/Money'
         profit_net:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         margin_rate:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         score:
           $ref: '#/components/schemas/ScoreResult'
@@ -3616,22 +3117,29 @@ components:
         engine_version:
           type: string
           maxLength: 40
-        scope_id: *id001
-        pricing_rule_id: *id001
-        pricing_rule_revision: *id003
-        company_revision: *id003
-        price_net: *id004
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_rule_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_rule_revision:
+          type: integer
+          minimum: 1
+        company_revision:
+          type: integer
+          minimum: 1
+        price_net:
+          $ref: '#/components/schemas/Money'
         cost_net:
           anyOf:
-          - *id004
+          - $ref: '#/components/schemas/Money'
           - type: 'null'
         profit_net:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         margin_rate:
           anyOf:
-          - *id005
+          - $ref: '#/components/schemas/Decimal'
           - type: 'null'
         score:
           $ref: '#/components/schemas/ScoreResult'
@@ -3746,7 +3254,8 @@ components:
       properties:
         context:
           $ref: '#/components/schemas/ScenarioContext'
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         name:
           type: string
           maxLength: 200
@@ -3772,7 +3281,8 @@ components:
     ReportCreate:
       type: object
       properties:
-        scenario_id: *id001
+        scenario_id:
+          $ref: '#/components/schemas/EntityId'
         decision:
           type: string
           enum:
@@ -3790,7 +3300,8 @@ components:
     Report:
       type: object
       properties:
-        id: *id001
+        id:
+          $ref: '#/components/schemas/EntityId'
         scenario:
           $ref: '#/components/schemas/Scenario'
         decision:
@@ -3824,120 +3335,15 @@ components:
       - html_path
       - created_at
       additionalProperties: false
-    HistoricalAward:
-      type: object
-      properties:
-        source_id:
-          type: string
-          maxLength: 1000
-        source_url:
-          type: string
-          maxLength: 3000
-        lot_id:
-          anyOf:
-          - type: string
-            maxLength: 80
-          - type: 'null'
-        pbl_net: *id004
-        award_net: *id004
-        discount_rate: *id005
-        award_date: *id006
-        cpv:
-          type: string
-          maxLength: 12
-        comparability:
-          type: string
-          enum:
-          - comparable
-        basis_note:
-          type: string
-          maxLength: 2000
-      required:
-      - source_id
-      - source_url
-      - lot_id
-      - pbl_net
-      - award_net
-      - discount_rate
-      - award_date
-      - cpv
-      - comparability
-      - basis_note
-      additionalProperties: false
-    HistoryResult:
-      type: object
-      properties:
-        availability:
-          type: string
-          enum:
-          - disabled
-          - insufficient
-          - descriptive
-        n:
-          type: integer
-          minimum: 0
-        n_tenders:
-          type: integer
-          minimum: 0
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/HistoricalAward'
-          minItems: 0
-          maxItems: 200
-        median:
-          anyOf:
-          - *id005
-          - type: 'null'
-        q1:
-          anyOf:
-          - *id005
-          - type: 'null'
-        q3:
-          anyOf:
-          - *id005
-          - type: 'null'
-        exclusion_counts:
-          type: array
-          items:
-            type: object
-            properties:
-              flag:
-                type: string
-                maxLength: 80
-              count:
-                type: integer
-                minimum: 0
-            required:
-            - flag
-            - count
-            additionalProperties: false
-          minItems: 0
-          maxItems: 40
-        warnings:
-          type: array
-          items:
-            type: string
-            maxLength: 2000
-          minItems: 0
-          maxItems: 30
-      required:
-      - availability
-      - n
-      - n_tenders
-      - items
-      - median
-      - q1
-      - q3
-      - exclusion_counts
-      - warnings
-      additionalProperties: false
     DemoSession:
       type: object
       properties:
-        tender_id: *id001
-        scope_id: *id001
-        company_id: *id001
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        company_id:
+          $ref: '#/components/schemas/EntityId'
         mode:
           type: string
           enum:
@@ -3948,3 +3354,102 @@ components:
       - company_id
       - mode
       additionalProperties: false
+  parameters:
+    XBidLabClient:
+      name: X-BidLab-Client
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - local-ui
+      description: Loopback client marker; every mutation requires local-ui plus a
+        loopback Origin.
+      example: local-ui
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 100
+      description: 'Caller-generated key (24h): same key+body replays the stored response,
+        another body is 409.'
+      example: 550e8400-e29b-41d4-a716-446655440000
+    IdempotencyKeyOptional:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 100
+      description: 'Optional on reviews: when sent, replays deduplicate like other
+        mutations.'
+      example: 550e8400-e29b-41d4-a716-446655440000
+  responses:
+    BadRequest:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    PayloadTooLarge:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnsupportedMedia:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadGateway:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: See Error.code for exact failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

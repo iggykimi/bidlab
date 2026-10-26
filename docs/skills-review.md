@@ -92,6 +92,11 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 ## Imagen (2)
 - [ ] imagegen-frontend-web, imagegen-frontend-mobile
 
+## React (3 nuevas; resto dup)
+- [R] tailwind-design-system — leída propia (refuerza F2 @theme/tokens)
+- [R] shadcn — leída propia (reglas estilos/composición como checklist review; sin adopción full)
+- [R] typescript-advanced-types — leída propia (disciplina TS; ver FE10)
+
 ## Plan wave (9)
 - [R] writing-openapi-specs — auditada 26-oct (O1-O10)
 - [R] extract-openapi-from-code — auditada 26-oct (O1-O10)

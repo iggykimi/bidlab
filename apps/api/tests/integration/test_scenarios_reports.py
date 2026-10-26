@@ -35,6 +35,7 @@ def test_save_get_roundtrip(seeded_client: TestClient) -> None:
     assert plain["context"]["rule"]["id"] == "tias-price-r1"
     assert len(plain["snapshot_sha256"]) == 64
     assert plain["context"]["pending_items"], "expected pending items (manual leaves)"
+    assert any("Pendiente de revisión manual" in item for item in plain["context"]["pending_items"])
 
     fetched = seeded_client.get(f"/api/v1/scenarios/{plain['id']}")
     assert fetched.status_code == 200
@@ -97,11 +98,18 @@ def test_report_with_html_sources(seeded_client: TestClient) -> None:
 
     html = seeded_client.get(f"/api/v1/reports/{report['id']}/html")
     assert html.status_code == 200
+    assert html.headers["Content-Security-Policy"] == (
+        "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
+    )
+    assert html.headers["X-Content-Type-Options"] == "nosniff"
     assert "112419.20" in html.text
     assert report["scenario"]["snapshot_sha256"] in html.text
     assert "207.088" in html.text
     assert "<b>esc</b>" not in html.text  # user note is escaped
     assert "Demo curada" in html.text
+    assert "Detalle del cálculo" in html.text
+    assert "Instantánea (snapshot)" in html.text
+    assert "Traza de cálculo" not in html.text
 
 
 def test_report_html_path_rejects_malformed_id(seeded_client: TestClient) -> None:
@@ -114,6 +122,103 @@ def test_report_html_path_rejects_malformed_id(seeded_client: TestClient) -> Non
     http = seeded_client.get("/api/v1/reports/not-a-uuid/html")
     assert http.status_code == 404
     assert http.json()["code"] == "report_not_found"
+
+
+def test_pending_items_spanish_copy(seeded_client: TestClient) -> None:
+    """Copy A7/A9/A10/A11/A12: pending items read as Spanish action items."""
+    incomplete = _input()
+    incomplete["rivals"] = {
+        "state": "assumed",
+        "complete": False,
+        "group_membership_confirmed": False,
+        "own_group_id": None,
+        "offers": [],
+    }
+    res = seeded_client.post(
+        "/api/v1/scenarios", json={"name": "partial", "input": incomplete}, headers=HEADERS
+    )
+    assert res.status_code == 201, res.text
+    pending = g.Scenario.model_validate(res.json()).model_dump(mode="json")["context"][
+        "pending_items"
+    ]
+    assert any("Puntuación sin determinar" in item for item in pending)
+    assert any("Anormalidad sin determinar" in item for item in pending)
+    assert any("verificado solo por extractos" in item for item in pending)
+    assert any("sustituir por el coste real" in item for item in pending)
+
+    flagged = _input()
+    flagged["discount_rate"] = "0.2600"
+    flagged["rivals"] = {
+        "state": "assumed",
+        "complete": True,
+        "group_membership_confirmed": True,
+        "own_group_id": "own",
+        "offers": [
+            {"label": "R1", "price_net": "88000.00", "group_id": "g1"},
+            {"label": "R2", "price_net": "88500.00", "group_id": "g2"},
+        ],
+    }
+    res = seeded_client.post(
+        "/api/v1/scenarios",
+        json={"name": "flagged", "input": flagged},
+        headers={"X-BidLab-Client": "local-ui", "Idempotency-Key": "scn-2"},
+    )
+    assert res.status_code == 201, res.text
+    pending = g.Scenario.model_validate(res.json()).model_dump(mode="json")["context"][
+        "pending_items"
+    ]
+    assert "Posible anormalidad: preparar justificación de costes" in pending
+
+
+def _unfinished_report(score_status: str) -> dict:
+    return {
+        "scenario": {
+            "name": "N",
+            "context": {
+                "tender_title": "T",
+                "citations": [
+                    {
+                        "verbatim_excerpt": "q",
+                        "document_id": "d",
+                        "page_number": 1,
+                        "match_status": "missing",
+                    }
+                ],
+            },
+            "result": {
+                "price_net": "1.00",
+                "cost_net": None,
+                "profit_net": None,
+                "margin_rate": None,
+                "score": {"value": None, "status": score_status},
+                "anomaly": {"status": "unknown"},
+                "trace": [{"label": "L", "expression": "E", "value": None}],
+                "assumptions": [],
+                "engine_version": "1.0.0",
+            },
+            "snapshot_sha256": "ab" * 32,
+        },
+        "decision": "study",
+        "note": "n",
+        "pending_items": [],
+        "created_at": "2026-10-26T00:00:00Z",
+    }
+
+
+@pytest.mark.parametrize(
+    ("score_status", "expected"),
+    [("unknown", "sin determinar"), ("unsupported", "no soportada")],
+)
+def test_report_template_translates_statuses(score_status: str, expected: str) -> None:
+    """Copy B1/B3/B4: no raw unknown/unsupported/missing leaks into the HTML."""
+    html = reports_service.render_html(_unfinished_report(score_status), "demo")
+    assert expected in html
+    assert "no localizada" in html
+    assert "Detalle del cálculo" in html
+    assert "Instantánea (snapshot)" in html
+    assert "unknown" not in html
+    assert "unsupported" not in html
+    assert "missing" not in html
 
 
 def test_report_html_path_roundtrip(seeded_client: TestClient) -> None:

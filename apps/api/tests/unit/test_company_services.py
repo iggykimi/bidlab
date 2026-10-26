@@ -161,7 +161,7 @@ def test_create_get_roundtrip(session: Session) -> None:
     assert company.revision == 1
     assert company.direct_cost_net is not None and company.direct_cost_net.root == "80000.00"
     assert len(company.evidence) == 1
-    fetched = companies_service.get_company(session, company.id)
+    fetched = companies_service.get_company(session, company.id.root)
     assert fetched == created
 
 

@@ -18,6 +18,8 @@
 </style>
 </head>
 <body>
+{% set ES = {"unknown": "sin determinar", "unsupported": "no soportada", "not_applicable": "no aplicable"} %}
+{% set MATCH_ES = {"exact": "literal", "normalized_match": "coincidencia normalizada", "missing": "no localizada", "manual_visual": "verificación visual"} %}
 {% if mode == "demo" %}<p><span class="badge demo">Demo curada: cifras de semilla revisada, no extracción en vivo</span></p>{% endif %}
 <h1>Informe de decisión — {{ report.scenario.context.tender_title }}</h1>
 <p><span class="badge decision">{{ report.decision }}</span></p>
@@ -30,18 +32,18 @@
 <tr><td>Coste neto</td><td class="num">{{ report.scenario.result.cost_net or "—" }} €</td></tr>
 <tr><td>Beneficio</td><td class="num">{{ report.scenario.result.profit_net or "—" }} €</td></tr>
 <tr><td>Margen</td><td class="num">{{ report.scenario.result.margin_rate or "—" }}</td></tr>
-<tr><td>Puntuación</td><td class="num">{{ report.scenario.result.score.value or report.scenario.result.score.status }}</td></tr>
-<tr><td>Anormalidad</td><td class="num">{{ report.scenario.result.anomaly.status }}</td></tr>
+<tr><td>Puntuación</td><td class="num">{{ report.scenario.result.score.value or ES.get(report.scenario.result.score.status, report.scenario.result.score.status) }}</td></tr>
+<tr><td>Anormalidad</td><td class="num">{{ ES.get(report.scenario.result.anomaly.status, report.scenario.result.anomaly.status) }}</td></tr>
 </table>
 
 <h2>Nota de decisión</h2>
 <p>{{ report.note }}</p>
 
-<h2>Traza de cálculo</h2>
+<h2>Detalle del cálculo</h2>
 <table>
 <tr><th>Paso</th><th>Expresión</th><th class="num">Valor</th></tr>
 {% for step in report.scenario.result.trace %}
-<tr><td>{{ step.label }}</td><td><code>{{ step.expression }}</code></td><td class="num">{{ step.value or "unknown" }}</td></tr>
+<tr><td>{{ step.label }}</td><td><code>{{ step.expression }}</code></td><td class="num">{{ step.value or "sin determinar" }}</td></tr>
 {% endfor %}
 </table>
 
@@ -65,13 +67,13 @@
 {% for cit in report.scenario.context.citations %}
 <blockquote>
 <p>{{ cit.verbatim_excerpt }}</p>
-<footer>Documento {{ cit.document_id }}, página {{ cit.page_number }} · {{ cit.match_status }}</footer>
+<footer>Documento {{ cit.document_id }}, página {{ cit.page_number }} · {{ MATCH_ES.get(cit.match_status, cit.match_status) }}</footer>
 </blockquote>
 {% else %}
 <p>Sin citas vinculadas.</p>
 {% endfor %}
 
 <h2>Integridad</h2>
-<p>snapshot <code>{{ report.scenario.snapshot_sha256 }}</code> · motor {{ report.scenario.result.engine_version }} · generado {{ generated_at }}</p>
+<p>Instantánea (snapshot) <code>{{ report.scenario.snapshot_sha256 }}</code> · motor {{ report.scenario.result.engine_version }} · generado {{ generated_at }}</p>
 </body>
 </html>

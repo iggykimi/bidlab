@@ -19,6 +19,19 @@ def test_ready_reports_quick_check(fresh_client: TestClient) -> None:
     assert res.json() == {"status": "ready", "db_quick_check": "ok"}
 
 
+def test_cors_preflight_allows_put(fresh_client: TestClient) -> None:
+    """O7/S1: the Vite dev origin may PUT (company updates) across origins."""
+    res = fresh_client.options(
+        "/api/v1/companies/x",
+        headers={
+            "Origin": "http://127.0.0.1:5173",
+            "Access-Control-Request-Method": "PUT",
+        },
+    )
+    assert res.status_code == 200
+    assert "PUT" in res.headers["access-control-allow-methods"]
+
+
 def test_capabilities_demo_shape() -> None:
     res = client.get("/api/v1/capabilities")
     assert res.status_code == 200

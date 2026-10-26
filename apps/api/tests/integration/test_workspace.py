@@ -1,7 +1,11 @@
 """I02: Tías workspace — Money strings, schema-valid, p.6 citation, p.10/20 rules."""
 
+from bidlab.db import models
+from bidlab.db.session import get_engine
 from bidlab.schemas import generated as g
+from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 
 def test_workspace_shape(seeded_client: TestClient) -> None:
@@ -64,3 +68,36 @@ def test_document_page_and_missing_bytes(seeded_client: TestClient) -> None:
     assert res.json()["code"] == "document_bytes_unavailable"
     res = seeded_client.get("/api/v1/documents/doc-tias-pcap/pages/7")
     assert res.status_code == 404
+
+
+def test_document_content_jail(seeded_client: TestClient) -> None:
+    """S3: escapes, absolute paths and missing files answer the same 404."""
+    storage = get_settings().storage_path
+    outside = storage.parent / "outside-jail.pdf"
+    outside.write_bytes(b"%PDF-outside")
+    try:
+        cases = [
+            "../" * 10 + "escape.pdf",
+            str(outside),  # absolute, exists, but outside storage
+            "blobs/missing.pdf",  # inside storage but absent
+        ]
+        with Session(get_engine()) as session:
+            doc = session.get(models.Document, "doc-tias-pcap")
+            assert doc is not None
+            for blob_path in cases:
+                doc.blob_path = blob_path
+                session.commit()
+                res = seeded_client.get("/api/v1/documents/doc-tias-pcap/content")
+                assert res.status_code == 404, blob_path
+                assert res.json()["code"] == "document_bytes_unavailable", blob_path
+            served = storage / "blobs" / "inside.pdf"
+            served.parent.mkdir(parents=True, exist_ok=True)
+            served.write_bytes(b"%PDF-inside")
+            doc.blob_path = "blobs/inside.pdf"
+            session.commit()
+            ok = seeded_client.get("/api/v1/documents/doc-tias-pcap/content")
+            assert ok.status_code == 200
+            assert ok.headers["content-type"] == "application/pdf"
+            assert ok.content == b"%PDF-inside"
+    finally:
+        outside.unlink(missing_ok=True)

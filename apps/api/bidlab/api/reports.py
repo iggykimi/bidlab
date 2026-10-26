@@ -12,12 +12,12 @@ from bidlab.schemas import generated as g
 from bidlab.services import idempotency
 from bidlab.services import reports as reports_service
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["reports"])
 
 CREATE_ROUTE = "POST /api/v1/reports"
 
 
-@router.post("/reports", response_model=g.Report, status_code=201)
+@router.post("/reports", response_model=g.Report, status_code=201, operation_id="create_report")
 async def create_report(
     payload: g.ReportCreate,
     request: Request,
@@ -32,7 +32,9 @@ async def create_report(
         response.status_code = 200
         return g.Report.model_validate(stored)
     created: dict[str, Any] = dict(
-        reports_service.create_report(db, payload.scenario_id, str(payload.decision), payload.note)
+        reports_service.create_report(
+            db, payload.scenario_id.root, str(payload.decision), payload.note
+        )
     )
     winner = idempotency.store(db, CREATE_ROUTE, idempotency_key, body, created)
     if winner is not None:
@@ -41,13 +43,24 @@ async def create_report(
     return g.Report.model_validate(created)
 
 
-@router.get("/reports/{report_id}", response_model=g.Report)
+@router.get("/reports/{report_id}", response_model=g.Report, operation_id="get_report")
 def get_report(report_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Report:
     return g.Report.model_validate(reports_service.get_report(db, report_id))
 
 
-@router.get("/reports/{report_id}/html")
+@router.get("/reports/{report_id}/html", operation_id="get_report_html")
 def get_report_html(report_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> Response:
     reports_service.get_report(db, report_id)  # 404 envelope when missing
     path = reports_service.html_path(report_id)
-    return FileResponse(path, media_type="text/html")
+    # S4: the template is static markup + inline <style> only (no scripts,
+    # images or external refs), so the policy can deny everything else.
+    return FileResponse(
+        path,
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": (
+                "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
+            ),
+            "X-Content-Type-Options": "nosniff",
+        },
+    )

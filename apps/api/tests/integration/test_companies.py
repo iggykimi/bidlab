@@ -56,14 +56,14 @@ def test_company_crud_roundtrip(seeded_client: TestClient) -> None:
     assert company.revision == 1
     assert company.direct_cost_net is not None and company.direct_cost_net.root == "80000.00"
 
-    fetched = seeded_client.get(f"/api/v1/companies/{company.id}")
+    fetched = seeded_client.get(f"/api/v1/companies/{company.id.root}")
     assert fetched.status_code == 200
     assert fetched.json() == created.json()
 
     update_body = _write(name="Pyme API 2")
     update_body["expected_revision"] = 1
     updated = seeded_client.put(
-        f"/api/v1/companies/{company.id}", json=update_body, headers=HEADERS
+        f"/api/v1/companies/{company.id.root}", json=update_body, headers=HEADERS
     )
     assert updated.status_code == 200, updated.text
     assert updated.json()["revision"] == 2

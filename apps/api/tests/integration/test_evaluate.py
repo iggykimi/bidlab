@@ -36,6 +36,27 @@ def test_evaluate_tias_5_percent(seeded_client: TestClient) -> None:
     assert plain["engine_version"] == "1.0.0"
     assert len(plain["trace"]) >= 2
     assert len(plain["source_hashes"]) == 2
+    trace_text = " ".join(f"{step['label']} {step['expression']}" for step in plain["trace"])
+    assert "plantilla proportional_inverse sobre 112419.20" in trace_text
+    assert "política tias-18-5, rama n3_no_trim" in trace_text
+
+
+def test_evaluate_incomplete_assumptions_spanish_copy(seeded_client: TestClient) -> None:
+    """Copy A1/A2: undetermined score/anomaly read without raw unknown."""
+    payload = _request()
+    payload["rivals"] = {
+        "state": "assumed",
+        "complete": False,
+        "group_membership_confirmed": False,
+        "own_group_id": None,
+        "offers": [],
+    }
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    assert res.status_code == 200, res.text
+    plain = g.EvaluationResult.model_validate(res.json()).model_dump(mode="json")
+    assumptions = plain["assumptions"]
+    assert "Conjunto incompleto: puntuación sin determinar" in assumptions
+    assert "Pertenencia a grupos sin confirmar: anormalidad sin determinar" in assumptions
 
 
 def test_evaluate_single_bidder(seeded_client: TestClient) -> None:

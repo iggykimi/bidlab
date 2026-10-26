@@ -7,14 +7,14 @@ from fastapi import APIRouter, Depends
 from bidlab.schemas import generated as g
 from bidlab.settings import Settings, get_settings
 
-router = APIRouter()
+router = APIRouter(tags=["capabilities"])
 
 PDF_MAX_BYTES = 20 * 1024 * 1024
 PDF_MAX_PAGES = 120
 CURVE_MAX_POINTS = 201
 
 
-@router.get("/capabilities", response_model=g.Capabilities)
+@router.get("/capabilities", response_model=g.Capabilities, operation_id="capabilities")
 def get_capabilities(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> g.Capabilities:

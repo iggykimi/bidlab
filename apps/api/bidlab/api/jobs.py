@@ -11,10 +11,15 @@ from bidlab.schemas import generated as g
 from bidlab.services import idempotency
 from bidlab.services import jobs as jobs_service
 
-router = APIRouter(responses=ERROR_RESPONSES)
+router = APIRouter(responses=ERROR_RESPONSES, tags=["jobs"])
 
 
-@router.post("/tenders/{tender_id}/analysis", response_model=g.Job, status_code=202)
+@router.post(
+    "/tenders/{tender_id}/analysis",
+    response_model=g.Job,
+    status_code=202,
+    operation_id="start_analysis",
+)
 async def start_analysis(
     payload: g.AnalysisRequest,
     request: Request,
@@ -42,6 +47,6 @@ async def start_analysis(
     return g.Job.model_validate(created)
 
 
-@router.get("/jobs/{job_id}", response_model=g.Job)
+@router.get("/jobs/{job_id}", response_model=g.Job, operation_id="get_job")
 def get_job(job_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Job:
     return g.Job.model_validate(jobs_service.job_to_dict(jobs_service.get_job_or_404(db, job_id)))

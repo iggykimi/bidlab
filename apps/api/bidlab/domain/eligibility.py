@@ -13,6 +13,7 @@ from enum import StrEnum
 from typing import assert_never
 
 __all__ = [
+    "MAX_TREE_DEPTH",
     "And",
     "Leaf",
     "Node",
@@ -23,6 +24,12 @@ __all__ = [
     "leaf_from_review",
     "leaf_missing_document",
 ]
+
+# S2: shared bound for requirements-tree walkers (eligibility evaluation and
+# scenario pending-items). Trees nest groups shallowly in practice; anything
+# deeper than this is a corrupt or hostile payload, rejected with 422 before
+# recursion can grow unbounded.
+MAX_TREE_DEPTH = 32
 
 
 class Verdict(StrEnum):

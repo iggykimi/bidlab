@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
+from bidlab.domain.eligibility import MAX_TREE_DEPTH
 from bidlab.schemas import generated as g
 from bidlab.services import evaluation as evaluation_service
 from bidlab.services import workspace as workspace_service
@@ -39,18 +40,24 @@ def _latest_company_revision(session: Session, company_id: str) -> int | None:
     )
 
 
-def _manual_leaves(tree: Any, out: list[str]) -> None:
+def _manual_leaves(tree: Any, out: list[str], depth: int = 0) -> None:
+    if depth > MAX_TREE_DEPTH:
+        raise ApiError(
+            422,
+            "requirements_tree_too_deep",
+            f"requirements tree exceeds depth {MAX_TREE_DEPTH}",
+        )
     if not isinstance(tree, dict):
         return
     if tree.get("kind") == "leaf":
         if tree.get("company_field") == "manual" or tree.get("operator") == "manual":
             label = tree.get("label", tree.get("id", "leaf"))
-            out.append(f"Requisito manual pendiente: {label}")
+            out.append(f"Pendiente de revisión manual: {label}")
         return
     children = tree.get("children", [])
     if isinstance(children, list):
         for child in children:
-            _manual_leaves(child, out)
+            _manual_leaves(child, out, depth + 1)
 
 
 def _pending_items(
@@ -64,16 +71,16 @@ def _pending_items(
     if isinstance(score, dict):
         if score.get("status") == "unknown":
             reasons = ",".join(score.get("reason_codes", []))
-            pending.append(f"Puntuación unknown ({reasons}): no usar para decidir")
+            pending.append(f"Puntuación sin determinar ({reasons}): no usar para decidir")
         elif score.get("status") == "unsupported":
-            pending.append("Puntuación unsupported: plantilla fuera de rango autorizado")
+            pending.append("Puntuación no soportada: plantilla fuera del rango autorizado")
     anomaly = result.get("anomaly", {})
     if isinstance(anomaly, dict):
         if anomaly.get("status") == "unknown":
             reasons = ",".join(anomaly.get("reason_codes", []))
-            pending.append(f"Anormalidad unknown ({reasons}): conjunto insuficiente")
+            pending.append(f"Anormalidad sin determinar ({reasons}): conjunto insuficiente")
         elif anomaly.get("status") == "possible_justification_required":
-            pending.append("Anormalidad posible: preparar justificación de costes")
+            pending.append("Posible anormalidad: preparar justificación de costes")
     rivals = input_data.get("rivals", {})
     if isinstance(rivals, dict):
         if not rivals.get("complete", True):
@@ -91,7 +98,7 @@ def _pending_items(
         select(models.Document).where(models.Document.tender_id == scope.tender_id)
     ).all()
     if any(not doc.blob_path for doc in docs):
-        pending.append("PDF original no redistribuido: verificado por extractos")
+        pending.append("PDF original no redistribuido: verificado solo por extractos")
     return [item[:1000] for item in pending[:100]]
 
 
@@ -170,7 +177,7 @@ def save_scenario(session: Session, name: str, req: g.EvaluationRequest) -> dict
             ordered.append(cid)
     ordered = ordered[:100]
     if profile.get("synthetic"):
-        pending_seed = ["Coste de empresa sintética: sustituir por real"]
+        pending_seed = ["Coste de empresa sintética: sustituir por el coste real"]
     else:
         pending_seed = []
     context = {

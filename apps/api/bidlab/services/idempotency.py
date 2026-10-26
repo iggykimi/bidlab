@@ -2,6 +2,7 @@
 
 import datetime as dt
 import hashlib
+import hmac
 import json
 from typing import Any
 
@@ -29,7 +30,7 @@ def check(session: Session, route: str, key: str, body: bytes) -> dict[str, Any]
         session.delete(record)
         session.flush()
         return None
-    if record.body_sha256 != body_hash(body):
+    if not hmac.compare_digest(record.body_sha256, body_hash(body)):
         raise ApiError(409, "idempotency_conflict", "Idempotency-Key reused with a different body")
     return _stored_response(record)
 
@@ -67,7 +68,7 @@ def store(
         winner = session.get(models.IdempotencyRecord, (route, key))
         if winner is None:
             raise
-        if winner.body_sha256 != body_hash(body):
+        if not hmac.compare_digest(winner.body_sha256, body_hash(body)):
             raise ApiError(
                 409,
                 "idempotency_conflict",

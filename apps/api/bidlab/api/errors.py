@@ -15,6 +15,7 @@ from bidlab.domain.groups import GroupsError
 from bidlab.domain.money import MoneyError
 from bidlab.domain.scoring import ScoringError
 from bidlab.schemas import generated as g
+from bidlab.services.pdf import PdfError
 
 DOMAIN_ERRORS = (MoneyError, ScoringError, ExprError, AnomalyError, GroupsError)
 
@@ -77,6 +78,7 @@ def _from_http(request: Request, exc: Exception) -> JSONResponse:
         400: "bad_request",
         403: "forbidden",
         404: "not_found",
+        405: "method_not_allowed",
         409: "conflict",
         413: "upload_too_large",
         415: "unsupported_media",
@@ -84,6 +86,8 @@ def _from_http(request: Request, exc: Exception) -> JSONResponse:
         502: "provider_failure",
         503: "provider_not_configured",
     }
+    # Defensive fallback for unreachable statuses (Starlette only raises
+    # 404/405 here); every reachable code above is in the ErrorCode enum.
     code = codes.get(error.status_code, f"http_{error.status_code}")
     message = error.detail if isinstance(error.detail, str) else code
     return JSONResponse(
@@ -110,6 +114,20 @@ def _from_domain(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
+# S3: oversized input is 413; unreadable/over-limit content is 422. Media-type
+# mismatches stay on the generic 415 path (_from_http, unsupported_media).
+PDF_STATUS = {"pdf_too_large": 413}
+
+
+def _from_pdf_error(request: Request, exc: Exception) -> JSONResponse:
+    error = cast("PdfError", exc)
+    status = PDF_STATUS.get(error.code, 422)
+    return JSONResponse(
+        status_code=status,
+        content=envelope(error.code, error.message, _request_id(request)),
+    )
+
+
 def _from_unhandled(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("unhandled exception for %s %s", request.method, request.url.path)
     return JSONResponse(
@@ -124,4 +142,5 @@ def register_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RequestValidationError, _from_validation)
     for cls in DOMAIN_ERRORS:
         app.add_exception_handler(cls, _from_domain)
+    app.add_exception_handler(PdfError, _from_pdf_error)
     app.add_exception_handler(Exception, _from_unhandled)
