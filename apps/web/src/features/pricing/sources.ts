@@ -3,6 +3,7 @@
 // protocol codes to Spanish labels. It never computes money, points or ratios.
 
 import type { Citation, MetadataEvidence, Tender, Workspace } from "../../api/client";
+import { formatEUR, formatSignedEUR } from "../../lib/format";
 
 /** Resolve evidence_ids against the workspace citations, keeping order. */
 export function citationsByIds(workspace: Workspace, ids: string[]): Citation[] {
@@ -17,6 +18,23 @@ export function citationsByIds(workspace: Workspace, ids: string[]): Citation[] 
 /** Tender Atom metadata for one key (pbl_net, pbl_gross, estimated_value). */
 export function metadataForKey(tender: Tender, key: string): MetadataEvidence | null {
   return tender.metadata_evidence.find((m) => m.key === key) ?? null;
+}
+
+/** Citation page numbers for "Fuente … (p. 10, 20)"; empty when no citations. */
+export function citationPages(citations: Citation[]): string {
+  const pages = [...new Set(citations.map((c) => c.page_number))].sort((a, b) => a - b);
+  return pages.length > 0 ? ` (p. ${pages.join(", ")})` : "";
+}
+
+/** Protocol decimal -> es-ES display. Money gets €, long decimals get comma separators. */
+export function formatProtocol(value: string): string {
+  if (/^\d{1,12}\.\d{2}$/.test(value)) return formatEUR(value);
+  if (/^-?\d{1,12}\.\d{2}$/.test(value)) return formatSignedEUR(value);
+  const n = Number(value);
+  if (Number.isFinite(n)) {
+    return n.toLocaleString("es-ES", { maximumFractionDigits: 12 });
+  }
+  return value;
 }
 
 const REASON_ES: Record<string, string> = {

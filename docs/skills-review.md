@@ -12,7 +12,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] apple-design — leída completa propia + auditada 26-oct (contraste, reduced-motion, system-ui OK)
 - [R] pick-ui-library — leída completa propia + auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
 - [R] prototype — APPLY solo bajo invocación explícita (variantes contested)
-- [R] mobile-native — APPLY polish bajo (snippet baseline + safe-area; verificar en hardware)
+- [R] mobile-native — leída completa propia + APPLY polish bajo (snippet baseline + safe-area; verificar en hardware)
 - [R] ask-sonner — leída completa propia + APPLY (ref autoridad F7 sonner)
 - [R] animate — leída completa propia + auditada por subagente
 - [R] animate-expo — leída completa propia (N/A funcional: sin app Expo/RN)
