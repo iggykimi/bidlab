@@ -4,7 +4,17 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from bidlab.api import capabilities, documents, health, reports, scenarios, tenders
+from bidlab.api import (
+    capabilities,
+    companies,
+    documents,
+    health,
+    jobs,
+    reports,
+    review,
+    scenarios,
+    tenders,
+)
 from bidlab.api.errors import new_request_id, register_handlers
 
 app = FastAPI(title="BidLab", version="0.1.0")
@@ -39,5 +49,8 @@ app.include_router(tenders.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(scenarios.router, prefix="/api/v1")
 app.include_router(reports.router, prefix="/api/v1")
+app.include_router(jobs.router, prefix="/api/v1")
+app.include_router(review.router, prefix="/api/v1")
+app.include_router(companies.router, prefix="/api/v1")
 
 # TODO(T19): serve apps/web/dist from / when built.

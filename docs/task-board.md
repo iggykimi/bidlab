@@ -27,22 +27,22 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T11 | 28oct | 3 | T10 | done | Tías policy 18.5 + abnormality edges |
 | T12 | 28oct | 1 | T11 | done | grouping, hypotheses, non-computable cases |
 | T13 | 28oct | 2 | T06 | in_progress | AND/OR requirements tree + evidence |
-| T14 | 29oct | 2 | T06 | pending | safe PDF, page extraction, limits |
-| T15 | 29oct | 2 | T14 | pending | citation/text/page verification + gold |
-| T16 | 29oct | 2.5 | T03 T15 | pending | Meta adapter, JSON schema, retry/cost/cache |
-| T17 | 30oct | 2 | T16 | pending | persisted jobs/restart/idempotence |
-| T18 | 30oct | 2 | T13 T15 | pending | semantic review + review audit |
-| T19 | 30oct | 2 | T08 | pending | UI layout, states, navigation |
-| T20 | 30oct | 1.5 | T19 | pending | library/summary + honest demo badge |
-| T21 | 31oct | 2 | T18 T19 | pending | requirements matrix / PDF drawer with sources |
+| T14 | 29oct | 2 | T06 | in_progress | safe PDF, page extraction, limits |
+| T15 | 29oct | 2 | T14 | in_progress | citation/text/page verification + gold |
+| T16 | 29oct | 2.5 | T03 T15 | in_progress | Meta adapter, JSON schema, retry/cost/cache |
+| T17 | 30oct | 2 | T16 | in_progress | persisted jobs/restart/idempotence |
+| T18 | 30oct | 2 | T13 T15 | in_progress | semantic review + review audit |
+| T19 | 30oct | 2 | T08 | in_progress | UI layout, states, navigation |
+| T20 | 30oct | 1.5 | T19 | in_progress | library/summary + honest demo badge |
+| T21 | 31oct | 2 | T18 T19 | in_progress | requirements matrix / PDF drawer with sources |
 | T22 | 31oct | 2.5 | T10 T19 | in_progress | Pricing Lab, slider/KPI, backend curve |
 | T23 | 31oct | 1.5 | T12 T22 | pending | rival panel + complete fields/groups |
 | T24 | 31oct | 1.5 | T21 T22 | pending | calc trace + source links |
-| T25 | 1nov | 2 | T24 | pending | HTML/print report + pendings |
-| T26 | 1nov | 1.5 | T25 | pending | scenarios/snapshots/persistence + reload |
+| T25 | 1nov | 2 | T24 | done | HTML/print report + pendings |
+| T26 | 1nov | 1.5 | T25 | done | scenarios/snapshots/persistence + reload |
 | T27 | 1nov | 2 | T14 T17 T25 | pending | security controls, origin, secrets, PDF |
 | T28 | 2nov | 2 | T17 T26 | pending | integration/contracts + fixes |
-| T29 | 2nov | 3 | T28 | pending | Playwright Chromium E01–E12 + offline |
+| T29 | 2nov | 3 | T28 | in_progress | Playwright Chromium E01–E12 + offline |
 | T30 | 2nov | 2 | T29 | pending | visual QA desktop/mobile + a11y |
 | T31 | 3nov | 1.5 | T30 | pending | clean install rehearsal, perf, freeze |
 | T32 | 3nov | 1.5 | T31 | pending | reproducible README, licenses, verification |

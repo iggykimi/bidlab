@@ -156,3 +156,42 @@ traza 4–5 pasos, assumptions, source_hashes, warnings de documentos, curva
 - Ramas del dominio tal cual ('n1', no 'n1_single'): el contrato admite
   string ≤80; no se toca código verificado del helper por estética.
 - T22 sigue in_progress: falta el UI del Pricing Lab.
+
+## Producto T26+T25 — escenarios persistidos + informes (Windows)
+
+Fecha: 2026-10-26. Commits 96be9fe (feature) + e930c6f (limpieza).
+POST /scenarios: replay determinista del input contra el servicio puro,
+stale_revision 409 (regla/compañía no vigentes), contexto congelado
+(evidencias + resto de citas ordenadas, cap 100), idempotencia 24h con
+409 ante body distinto. GET scenario devuelve input+result+contexto.
+POST /reports + GET /reports/{id}[/html]: Jinja con autoescape, Money
+como string, fuentes = citas ordenadas (se verifica la cita 207.088).
+- `pytest integration+unit` → 106 passed. `ruff` limpio, `mypy` limpio
+  (39 ficheros).
+- Incidencias: colisión de nombre `_env` (var/función) rompía el HTML;
+  `set.add` en comprensión rechazado por mypy (bucle explícito);
+  el contexto solo traía evidencias y el test exigía la cita técnica →
+  se incluyen todas las citas del tender (cap 100), documentado.
+- Limpieza honesta: el commit 96be9fe arrastró por `git add -A` la
+  carpeta local bidlab_blueprint/ (10 MB), el ZIP (7 MB) y la auditoría
+  suelta; ninguno pertenece al repo (el blueprint ya estaba importado
+  en docs/). Se des-rastrearon en e930c6f (ficheros intactos en local,
+  .gitignore ampliado). Verificado: `.env` nunca rastreado, sin venv/
+  node_modules/cachés en el índice.
+
+## Producto T13/T21 — companies + elegibilidad (Windows)
+
+Fecha: 2026-10-26. Helper acotado (sin commit); lead releyó servicios y
+re-ejecutó gates. POST/GET/PUT /companies (revisiones versionadas,
+expected_revision 409, Money string↔céntimos), POST /eligibility/check
+(puro, sin persistencia): árbol AND/OR con veredictos met/not_met/
+unknown por hoja, reason codes, evidence_refs (citas + refs empresa),
+unknown preservado (regla no aprobada, falta evidencia, sin revisar,
+unidades, periodo 3y, umbral ausente/ilegible). Rutas en contrato
+(/api/v1/companies, /companies/{id}, /eligibility/check).
+- `pytest unit+integration+contracts` → 141 passed. `mypy` limpio
+  (44 ficheros). `ruff` limpio en ficheros T13 (2 avisos pendientes
+  son del T14 aún en curso, no se tocan).
+- Nota: `pytest apps/api/tests` entero colisiona por dos
+  test_placeholder.py (unit + live, mismo basename sin __init__);
+  los live se excluyen como en verify.py. No es fallo de producto.
