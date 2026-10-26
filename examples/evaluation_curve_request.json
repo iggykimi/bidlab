@@ -1,0 +1,31 @@
+{
+  "scope_id": "tias-whole",
+  "pricing_rule_id": "tias-price",
+  "pricing_rule_revision": 1,
+  "company_id": "company-demo",
+  "company_revision": 1,
+  "discount_rate": "0.0500",
+  "rivals": {
+    "state": "assumed",
+    "complete": true,
+    "group_membership_confirmed": true,
+    "own_group_id": "own",
+    "offers": [
+      {
+        "label": "Hipótesis A",
+        "price_net": "106502.40",
+        "group_id": "a"
+      },
+      {
+        "label": "Hipótesis B",
+        "price_net": "110052.48",
+        "group_id": "b"
+      }
+    ]
+  },
+  "curve": {
+    "from_discount_rate": "0.0000",
+    "to_discount_rate": "0.4000",
+    "points": 101
+  }
+}

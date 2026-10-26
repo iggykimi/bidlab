@@ -1,0 +1,3944 @@
+openapi: 3.1.0
+info:
+  title: BidLab local API
+  version: 1.0.0
+  description: Design contract, not a deployed API. Decimal values are strings. Rules
+    must be reviewed. Loopback only; mutations require same-origin validation and
+    X-BidLab-Client.
+servers:
+- url: http://127.0.0.1:8000
+paths:
+  /api/v1/health:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/capabilities:
+    get:
+      operationId: capabilities
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capabilities'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/demo/sessions:
+    post:
+      operationId: createDemoSession
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoSession'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+  /api/v1/tenders:
+    get:
+      operationId: listTenders
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderList'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+      - name: cpv
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 12
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    post:
+      operationId: createTender
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tender'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenderCreate'
+  /api/v1/tenders/{tender_id}:
+    get:
+      operationId: getTender
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tender'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema: &id001
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,80}$
+  /api/v1/tenders/{tender_id}/workspace:
+    get:
+      operationId: getWorkspace
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/tenders/{tender_id}/documents:
+    post:
+      operationId: uploadDocument
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema: *id001
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                kind:
+                  type: string
+                  enum:
+                  - pcap
+                  - ppt
+                  - other
+                source_url:
+                  anyOf:
+                  - type: string
+                    maxLength: 3000
+                  - type: 'null'
+              required:
+              - file
+              - kind
+              additionalProperties: false
+  /api/v1/documents/{document_id}/pages/{page_number}:
+    get:
+      operationId: getPage
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageText'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema: *id001
+      - name: page_number
+        in: path
+        required: true
+        schema: &id003
+          type: integer
+          minimum: 1
+  /api/v1/documents/{document_id}/content:
+    get:
+      operationId: getDocumentContent
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/tenders/{tender_id}/analysis:
+    post:
+      operationId: startAnalysis
+      responses:
+        '202':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          headers:
+            Location:
+              schema:
+                type: string
+                maxLength: 300
+              description: Local job resource URL
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema: *id001
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+  /api/v1/jobs/{job_id}:
+    get:
+      operationId: getJob
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/tenders/{tender_id}/reviews:
+    post:
+      operationId: reviewInterpretation
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema: *id001
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+  /api/v1/companies:
+    post:
+      operationId: createCompany
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyWrite'
+  /api/v1/companies/{company_id}:
+    get:
+      operationId: getCompany
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema: *id001
+    put:
+      operationId: updateCompany
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema: *id001
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyUpdate'
+  /api/v1/eligibility/check:
+    post:
+      operationId: checkEligibility
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibilityResult'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EligibilityRequest'
+  /api/v1/scenarios/evaluate:
+    post:
+      operationId: evaluateScenario
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRequest'
+  /api/v1/scenarios:
+    post:
+      operationId: saveScenario
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioCreate'
+  /api/v1/scenarios/{scenario_id}:
+    get:
+      operationId: getScenario
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/reports:
+    post:
+      operationId: createReport
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: X-BidLab-Client
+        in: header
+        required: true
+        schema:
+          type: string
+          enum:
+          - local-ui
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreate'
+  /api/v1/reports/{report_id}:
+    get:
+      operationId: getReport
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/reports/{report_id}/html:
+    get:
+      operationId: getReportHtml
+      responses:
+        '200':
+          description: Successful response
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema: *id001
+  /api/v1/historical-awards:
+    get:
+      operationId: getHistory
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResult'
+        '400':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: See Error.code for exact failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: cpv
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 12
+      - name: before
+        in: query
+        required: false
+        schema: &id006
+          type: string
+          format: date
+      - name: nuts
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 20
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 80
+        message:
+          type: string
+          maxLength: 2000
+        request_id:
+          type: string
+          maxLength: 80
+        details:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 30
+      required:
+      - code
+      - message
+      - request_id
+      - details
+      additionalProperties: false
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+        engine_version:
+          type: string
+          maxLength: 80
+        schema_version:
+          type: string
+          maxLength: 40
+      required:
+      - status
+      - engine_version
+      - schema_version
+      additionalProperties: false
+    Capabilities:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+          - demo
+          - live
+          - manual
+        meta_configured: &id002
+          type: boolean
+        meta_model:
+          type: string
+          maxLength: 80
+        history_enabled: *id002
+        limits:
+          type: object
+          properties:
+            pdf_bytes: *id003
+            pdf_pages: *id003
+            curve_points: *id003
+          required:
+          - pdf_bytes
+          - pdf_pages
+          - curve_points
+          additionalProperties: false
+        limitations:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 20
+      required:
+      - mode
+      - meta_configured
+      - meta_model
+      - history_enabled
+      - limits
+      - limitations
+      additionalProperties: false
+    MetadataEvidence:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 80
+        source_url:
+          type: string
+          maxLength: 3000
+        snapshot_sha256:
+          type: string
+          maxLength: 64
+        field_path:
+          type: string
+          maxLength: 1000
+        raw_value:
+          type: string
+          maxLength: 2000
+        source_updated_at:
+          type: string
+          maxLength: 80
+      required:
+      - key
+      - source_url
+      - snapshot_sha256
+      - field_path
+      - raw_value
+      - source_updated_at
+      additionalProperties: false
+    PriceBasis:
+      type: object
+      properties:
+        scope_id: *id001
+        budget_net:
+          anyOf:
+          - &id004
+            type: string
+            pattern: ^\d{1,12}\.\d{2}$
+            description: Nonnegative EUR net amount with two decimal places; positivity
+              is a domain precondition.
+          - type: 'null'
+        ceiling_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        scoring_reference_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        reference_kind:
+          type: string
+          enum:
+          - pbl
+          - vec
+          - custom
+          - unknown
+        currency:
+          type: string
+          enum:
+          - EUR
+        unit:
+          type: string
+          enum:
+          - lump_sum
+          - unit_price
+          - percentage
+          - framework_cap
+          - unknown
+        period_months:
+          anyOf:
+          - *id003
+          - type: 'null'
+        tax_kind:
+          type: string
+          enum:
+          - VAT
+          - IGIC
+          - other
+          - unknown
+        review_status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - blocked
+        evidence_ids:
+          type: array
+          items: *id001
+          minItems: 0
+          maxItems: 20
+        metadata_evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataEvidence'
+          minItems: 0
+          maxItems: 20
+      required:
+      - scope_id
+      - budget_net
+      - ceiling_net
+      - scoring_reference_net
+      - reference_kind
+      - currency
+      - unit
+      - period_months
+      - tax_kind
+      - review_status
+      - evidence_ids
+      - metadata_evidence
+      additionalProperties: false
+    Scope:
+      type: object
+      properties:
+        id: *id001
+        tender_id: *id001
+        lot_id:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        label:
+          type: string
+          maxLength: 300
+        basis:
+          $ref: '#/components/schemas/PriceBasis'
+      required:
+      - id
+      - tender_id
+      - lot_id
+      - label
+      - basis
+      additionalProperties: false
+    Tender:
+      type: object
+      properties:
+        raw_snapshot_sha256:
+          type: string
+          maxLength: 64
+        metadata_evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetadataEvidence'
+          minItems: 0
+          maxItems: 30
+        id: *id001
+        source_id:
+          type: string
+          maxLength: 1000
+        source_url:
+          type: string
+          maxLength: 3000
+        external_id:
+          type: string
+          maxLength: 200
+        title:
+          type: string
+          maxLength: 2000
+        contracting_body:
+          type: string
+          maxLength: 1000
+        cpv_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 12
+          minItems: 0
+          maxItems: 30
+        status_raw:
+          type: string
+          maxLength: 40
+        source_updated_at:
+          type: string
+          maxLength: 80
+        deadline_literal:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+        deadline_at:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        pbl_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        pbl_gross:
+          anyOf:
+          - *id004
+          - type: 'null'
+        estimated_value:
+          anyOf:
+          - *id004
+          - type: 'null'
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scope'
+          minItems: 0
+          maxItems: 100
+        quality_flags:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 100
+      required:
+      - raw_snapshot_sha256
+      - metadata_evidence
+      - id
+      - source_id
+      - source_url
+      - external_id
+      - title
+      - contracting_body
+      - cpv_codes
+      - status_raw
+      - source_updated_at
+      - deadline_literal
+      - deadline_at
+      - pbl_net
+      - pbl_gross
+      - estimated_value
+      - scopes
+      - quality_flags
+      additionalProperties: false
+    TenderCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 2000
+        external_id:
+          type: string
+          maxLength: 200
+        source_url:
+          anyOf:
+          - type: string
+            maxLength: 3000
+          - type: 'null'
+        contracting_body:
+          type: string
+          maxLength: 1000
+      required:
+      - title
+      - external_id
+      - source_url
+      - contracting_body
+      additionalProperties: false
+    TenderList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tender'
+          minItems: 0
+          maxItems: 100
+        page: *id003
+        page_size: *id003
+        total:
+          type: integer
+          minimum: 0
+      required:
+      - items
+      - page
+      - page_size
+      - total
+      additionalProperties: false
+    Document:
+      type: object
+      properties:
+        id: *id001
+        tender_id: *id001
+        kind:
+          type: string
+          enum:
+          - pcap
+          - ppt
+          - other
+        display_name:
+          type: string
+          maxLength: 200
+        sha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        pages_count: *id003
+        source_url:
+          anyOf:
+          - type: string
+            maxLength: 3000
+          - type: 'null'
+        rights_status:
+          type: string
+          enum:
+          - research_only
+          - reviewed_for_demo
+          - redistribution_allowed
+          - unknown
+        parse_status:
+          type: string
+          enum:
+          - queued
+          - ready
+          - needs_review
+          - failed
+      required:
+      - id
+      - tender_id
+      - kind
+      - display_name
+      - sha256
+      - pages_count
+      - source_url
+      - rights_status
+      - parse_status
+      additionalProperties: false
+    PageText:
+      type: object
+      properties:
+        document_id: *id001
+        page_number: *id003
+        printed_label:
+          anyOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+        raw_text:
+          type: string
+          maxLength: 100000
+        normalized_text:
+          type: string
+          maxLength: 100000
+        text_sha256:
+          type: string
+          maxLength: 64
+        extractor_version:
+          type: string
+          maxLength: 100
+        quality_flags:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 20
+      required:
+      - document_id
+      - page_number
+      - printed_label
+      - raw_text
+      - normalized_text
+      - text_sha256
+      - extractor_version
+      - quality_flags
+      additionalProperties: false
+    CitationProposal:
+      type: object
+      properties:
+        document_id: *id001
+        page_number: *id003
+        verbatim_excerpt:
+          type: string
+          maxLength: 600
+      required:
+      - document_id
+      - page_number
+      - verbatim_excerpt
+      additionalProperties: false
+    Citation:
+      type: object
+      properties:
+        id: *id001
+        document_id: *id001
+        document_sha256:
+          type: string
+          maxLength: 64
+        page_number: *id003
+        printed_label:
+          anyOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+        verbatim_excerpt:
+          type: string
+          maxLength: 600
+        match_status:
+          type: string
+          enum:
+          - exact
+          - normalized_match
+          - missing
+          - manual_visual
+        normalized_start:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        normalized_end:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        normalization_version:
+          type: string
+          maxLength: 40
+      required:
+      - id
+      - document_id
+      - document_sha256
+      - page_number
+      - printed_label
+      - verbatim_excerpt
+      - match_status
+      - normalized_start
+      - normalized_end
+      - normalization_version
+      additionalProperties: false
+    ClaimProposal:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 80
+        raw_value:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        normalized_value:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        unit:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitationProposal'
+          minItems: 0
+          maxItems: 3
+        confidence:
+          type: string
+          enum:
+          - high
+          - medium
+          - low
+        status:
+          type: string
+          enum:
+          - proposed
+          - not_found
+          - ambiguous
+          - unsupported
+        notes:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 10
+      required:
+      - key
+      - raw_value
+      - normalized_value
+      - unit
+      - citations
+      - confidence
+      - status
+      - notes
+      additionalProperties: false
+    RequirementProposal:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 80
+        label:
+          type: string
+          maxLength: 1000
+        category:
+          type: string
+          enum:
+          - financial
+          - technical
+          - team
+          - legal
+          - submission
+          - other
+        logic_hint:
+          type: string
+          enum:
+          - AND
+          - OR
+          - LEAF
+          - unknown
+        group_key:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        condition_text:
+          type: string
+          maxLength: 2000
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitationProposal'
+          minItems: 0
+          maxItems: 3
+        ambiguities:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 10
+      required:
+      - key
+      - label
+      - category
+      - logic_hint
+      - group_key
+      - condition_text
+      - citations
+      - ambiguities
+      additionalProperties: false
+    FormulaProposal:
+      type: object
+      properties:
+        formula_literal:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        template_hint:
+          type: string
+          enum:
+          - proportional_inverse
+          - linear_discount
+          - log_ratio
+          - unsupported
+        max_points:
+          anyOf:
+          - &id005
+            type: string
+            pattern: ^-?\d{1,12}(\.\d{1,12})?$
+            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - type: 'null'
+        variables:
+          type: array
+          items:
+            type: string
+            maxLength: 300
+          minItems: 0
+          maxItems: 20
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitationProposal'
+          minItems: 0
+          maxItems: 3
+        ambiguities:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 20
+      required:
+      - formula_literal
+      - template_hint
+      - max_points
+      - variables
+      - citations
+      - ambiguities
+      additionalProperties: false
+    ExtractionProposal:
+      type: object
+      properties:
+        schema_version:
+          type: string
+          enum:
+          - '1.0'
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimProposal'
+          minItems: 0
+          maxItems: 80
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementProposal'
+          minItems: 0
+          maxItems: 80
+        pricing_formula:
+          $ref: '#/components/schemas/FormulaProposal'
+        anomaly_text:
+          anyOf:
+          - type: string
+            maxLength: 4000
+          - type: 'null'
+        anomaly_citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitationProposal'
+          minItems: 0
+          maxItems: 5
+        unread_pages:
+          type: array
+          items: *id003
+          minItems: 0
+          maxItems: 120
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 30
+      required:
+      - schema_version
+      - claims
+      - requirements
+      - pricing_formula
+      - anomaly_text
+      - anomaly_citations
+      - unread_pages
+      - warnings
+      additionalProperties: false
+    RequirementLeaf:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - leaf
+        id: *id001
+        label:
+          type: string
+          maxLength: 1000
+        company_field:
+          type: string
+          enum:
+          - annual_turnover_best_3y_net
+          - professional_insurance_net
+          - net_worth_net
+          - annual_similar_services_best_3y_net
+          - team_feder_years
+          - manual
+        operator:
+          type: string
+          enum:
+          - gte
+          - lte
+          - eq
+          - contains
+          - manual
+        threshold:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+        unit:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        review_status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - blocked
+        evidence_ids:
+          type: array
+          items: *id001
+          minItems: 0
+          maxItems: 20
+      required:
+      - kind
+      - id
+      - label
+      - company_field
+      - operator
+      - threshold
+      - unit
+      - review_status
+      - evidence_ids
+      additionalProperties: false
+    RequirementGroup:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - group
+        id: *id001
+        label:
+          type: string
+          maxLength: 1000
+        operator:
+          type: string
+          enum:
+          - AND
+          - OR
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementNode'
+          minItems: 1
+          maxItems: 20
+      required:
+      - kind
+      - id
+      - label
+      - operator
+      - children
+      additionalProperties: false
+    RequirementNode:
+      oneOf:
+      - $ref: '#/components/schemas/RequirementLeaf'
+      - $ref: '#/components/schemas/RequirementGroup'
+    Expr:
+      oneOf:
+      - type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - const
+          value: *id005
+        required:
+        - kind
+        - value
+        additionalProperties: false
+      - type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - var
+          name:
+            type: string
+            enum:
+            - own_price
+            - best_price
+            - reference_price
+            - max_points
+        required:
+        - kind
+        - name
+        additionalProperties: false
+      - type: object
+        properties:
+          kind:
+            type: string
+            enum:
+            - call
+          op:
+            type: string
+            enum:
+            - add
+            - sub
+            - mul
+            - div
+            - min
+            - max
+            - log10
+          args:
+            type: array
+            items:
+              $ref: '#/components/schemas/Expr'
+            minItems: 1
+            maxItems: 8
+        required:
+        - kind
+        - op
+        - args
+        additionalProperties: false
+    AnomalyPolicy:
+      type: object
+      properties:
+        id: *id001
+        source_kind:
+          type: string
+          enum:
+          - explicit_pcap
+          - verified_supplementary
+          - unknown
+        variant:
+          type: string
+          enum:
+          - tias_18_5
+          - alfresco_18_5
+          - rglcap85_standard
+          - unsupported
+        review_status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - blocked
+        three_bidder_absolute_25: *id002
+        percentage_reduction_one_third: *id002
+        evidence_ids:
+          type: array
+          items: *id001
+          minItems: 0
+          maxItems: 20
+      required:
+      - id
+      - source_kind
+      - variant
+      - review_status
+      - three_bidder_absolute_25
+      - percentage_reduction_one_third
+      - evidence_ids
+      additionalProperties: false
+    PricingRule:
+      type: object
+      properties:
+        id: *id001
+        revision: *id003
+        scope_id: *id001
+        template_id:
+          type: string
+          enum:
+          - proportional_inverse
+          - linear_discount
+          - log_ratio
+          - unsupported
+        max_points: *id005
+        expression:
+          anyOf:
+          - $ref: '#/components/schemas/Expr'
+          - type: 'null'
+        review_status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - blocked
+        zero_denominator_policy:
+          type: string
+          enum:
+          - unknown
+        evidence_ids:
+          type: array
+          items: *id001
+          minItems: 0
+          maxItems: 20
+        anomaly_policy:
+          $ref: '#/components/schemas/AnomalyPolicy'
+      required:
+      - id
+      - revision
+      - scope_id
+      - template_id
+      - max_points
+      - expression
+      - review_status
+      - zero_denominator_policy
+      - evidence_ids
+      - anomaly_policy
+      additionalProperties: false
+    Workspace:
+      type: object
+      properties:
+        tender:
+          $ref: '#/components/schemas/Tender'
+        interpretation_revision:
+          type: integer
+          minimum: 0
+        mode:
+          type: string
+          enum:
+          - demo
+          - live
+          - manual
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+          minItems: 0
+          maxItems: 20
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimProposal'
+          minItems: 0
+          maxItems: 80
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementNode'
+          minItems: 0
+          maxItems: 80
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          minItems: 0
+          maxItems: 400
+        pricing_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/PricingRule'
+          minItems: 0
+          maxItems: 100
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 50
+      required:
+      - tender
+      - interpretation_revision
+      - mode
+      - documents
+      - claims
+      - requirements
+      - citations
+      - pricing_rules
+      - warnings
+      additionalProperties: false
+    AnalysisRequest:
+      type: object
+      properties:
+        document_ids:
+          type: array
+          items: *id001
+          minItems: 1
+          maxItems: 10
+        mode:
+          type: string
+          enum:
+          - live
+          - curated_demo
+        allow_remote_processing: *id002
+        expected_interpretation_revision:
+          type: integer
+          minimum: 0
+      required:
+      - document_ids
+      - mode
+      - allow_remote_processing
+      - expected_interpretation_revision
+      additionalProperties: false
+    Job:
+      type: object
+      properties:
+        id: *id001
+        tender_id: *id001
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - needs_review
+          - failed
+          - cancelled
+        stage:
+          type: string
+          maxLength: 80
+        processed_pages:
+          type: integer
+          minimum: 0
+        total_pages:
+          type: integer
+          minimum: 0
+        result_revision:
+          anyOf:
+          - *id003
+          - type: 'null'
+        error_code:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 30
+      required:
+      - id
+      - tender_id
+      - status
+      - stage
+      - processed_pages
+      - total_pages
+      - result_revision
+      - error_code
+      - warnings
+      additionalProperties: false
+    ReviewRequest:
+      type: object
+      properties:
+        expected_revision:
+          type: integer
+          minimum: 0
+        approved_claim_keys:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 80
+        requirement_trees:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementNode'
+          minItems: 0
+          maxItems: 80
+        scope_basis:
+          anyOf:
+          - $ref: '#/components/schemas/PriceBasis'
+          - type: 'null'
+        pricing_rule:
+          anyOf:
+          - $ref: '#/components/schemas/PricingRule'
+          - type: 'null'
+        corrected_proposal:
+          anyOf:
+          - $ref: '#/components/schemas/ExtractionProposal'
+          - type: 'null'
+        actor:
+          type: string
+          maxLength: 100
+        reason:
+          type: string
+          maxLength: 2000
+      required:
+      - expected_revision
+      - approved_claim_keys
+      - requirement_trees
+      - scope_basis
+      - pricing_rule
+      - corrected_proposal
+      - actor
+      - reason
+      additionalProperties: false
+    CompanyEvidence:
+      type: object
+      properties:
+        field_key:
+          type: string
+          maxLength: 80
+        value:
+          type: string
+          maxLength: 300
+        unit:
+          type: string
+          maxLength: 80
+        period_from:
+          anyOf:
+          - *id006
+          - type: 'null'
+        period_to:
+          anyOf:
+          - *id006
+          - type: 'null'
+        source_type:
+          type: string
+          enum:
+          - synthetic
+          - user_attestation
+          - document_reference
+        reference:
+          type: string
+          maxLength: 1000
+        reviewed: *id002
+      required:
+      - field_key
+      - value
+      - unit
+      - period_from
+      - period_to
+      - source_type
+      - reference
+      - reviewed
+      additionalProperties: false
+    CompanyWrite:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        synthetic: *id002
+        scope_id: *id001
+        period_months: *id003
+        direct_cost_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        overhead_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        target_margin_rate:
+          anyOf:
+          - *id005
+          - type: 'null'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyEvidence'
+          minItems: 0
+          maxItems: 100
+      required:
+      - name
+      - synthetic
+      - scope_id
+      - period_months
+      - direct_cost_net
+      - overhead_net
+      - target_margin_rate
+      - evidence
+      additionalProperties: false
+    Company:
+      type: object
+      properties:
+        id: *id001
+        revision: *id003
+        name:
+          type: string
+          maxLength: 200
+        synthetic:
+          type: boolean
+        scope_id:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,80}$
+        period_months:
+          type: integer
+          minimum: 1
+        direct_cost_net:
+          anyOf:
+          - &id007
+            type: string
+            pattern: ^\d{1,12}\.\d{2}$
+            description: Nonnegative EUR net amount with two decimal places; positivity
+              is a domain precondition.
+          - type: 'null'
+        overhead_net:
+          anyOf:
+          - *id007
+          - type: 'null'
+        target_margin_rate:
+          anyOf:
+          - type: string
+            pattern: ^-?\d{1,12}(\.\d{1,12})?$
+            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - type: 'null'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyEvidence'
+          minItems: 0
+          maxItems: 100
+      required:
+      - id
+      - revision
+      - name
+      - synthetic
+      - scope_id
+      - period_months
+      - direct_cost_net
+      - overhead_net
+      - target_margin_rate
+      - evidence
+      additionalProperties: false
+    CompanyUpdate:
+      type: object
+      properties:
+        expected_revision: *id003
+        name:
+          type: string
+          maxLength: 200
+        synthetic:
+          type: boolean
+        scope_id:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,80}$
+        period_months:
+          type: integer
+          minimum: 1
+        direct_cost_net:
+          anyOf:
+          - &id008
+            type: string
+            pattern: ^\d{1,12}\.\d{2}$
+            description: Nonnegative EUR net amount with two decimal places; positivity
+              is a domain precondition.
+          - type: 'null'
+        overhead_net:
+          anyOf:
+          - *id008
+          - type: 'null'
+        target_margin_rate:
+          anyOf:
+          - type: string
+            pattern: ^-?\d{1,12}(\.\d{1,12})?$
+            description: Base-10 decimal string; no locale separators, NaN or Infinity.
+          - type: 'null'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyEvidence'
+          minItems: 0
+          maxItems: 100
+      required:
+      - expected_revision
+      - name
+      - synthetic
+      - scope_id
+      - period_months
+      - direct_cost_net
+      - overhead_net
+      - target_margin_rate
+      - evidence
+      additionalProperties: false
+    EligibilityRequest:
+      type: object
+      properties:
+        tender_id: *id001
+        scope_id: *id001
+        company_id: *id001
+        company_revision: *id003
+        interpretation_revision: *id003
+      required:
+      - tender_id
+      - scope_id
+      - company_id
+      - company_revision
+      - interpretation_revision
+      additionalProperties: false
+    EligibilityItem:
+      type: object
+      properties:
+        requirement_id: *id001
+        verdict:
+          type: string
+          enum:
+          - met
+          - not_met
+          - unknown
+        reason_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 20
+        evidence_refs:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 20
+      required:
+      - requirement_id
+      - verdict
+      - reason_codes
+      - evidence_refs
+      additionalProperties: false
+    EligibilityResult:
+      type: object
+      properties:
+        verdict:
+          type: string
+          enum:
+          - met
+          - not_met
+          - unknown
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EligibilityItem'
+          minItems: 0
+          maxItems: 100
+        assessed_count:
+          type: integer
+          minimum: 0
+        unassessed_count:
+          type: integer
+          minimum: 0
+        hypothetical_company: *id002
+      required:
+      - verdict
+      - items
+      - assessed_count
+      - unassessed_count
+      - hypothetical_company
+      additionalProperties: false
+    RivalOffer:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+        price_net: *id004
+        group_id:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+      required:
+      - label
+      - price_net
+      - group_id
+      additionalProperties: false
+    RivalScenario:
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+          - assumed
+          - unspecified
+        complete: *id002
+        group_membership_confirmed: *id002
+        own_group_id:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        offers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RivalOffer'
+          minItems: 0
+          maxItems: 20
+      required:
+      - state
+      - complete
+      - group_membership_confirmed
+      - own_group_id
+      - offers
+      additionalProperties: false
+    CurveRequest:
+      type: object
+      properties:
+        from_discount_rate: *id005
+        to_discount_rate: *id005
+        points:
+          type: integer
+          minimum: 2
+          maximum: 201
+      required:
+      - from_discount_rate
+      - to_discount_rate
+      - points
+      additionalProperties: false
+    EvaluationRequest:
+      type: object
+      properties:
+        scope_id: *id001
+        pricing_rule_id: *id001
+        pricing_rule_revision: *id003
+        company_id: *id001
+        company_revision: *id003
+        discount_rate: *id005
+        rivals:
+          $ref: '#/components/schemas/RivalScenario'
+        curve:
+          anyOf:
+          - $ref: '#/components/schemas/CurveRequest'
+          - type: 'null'
+      required:
+      - scope_id
+      - pricing_rule_id
+      - pricing_rule_revision
+      - company_id
+      - company_revision
+      - discount_rate
+      - rivals
+      - curve
+      additionalProperties: false
+    ScoreResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - defined
+          - unknown
+          - unsupported
+        value:
+          anyOf:
+          - *id005
+          - type: 'null'
+        max_points: *id005
+        unknown_variables:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 30
+        reason_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 30
+      required:
+      - status
+      - value
+      - max_points
+      - unknown_variables
+      - reason_codes
+      additionalProperties: false
+    AnomalyResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - unknown
+          - not_applicable
+          - possible_justification_required
+          - not_flagged_under_assumptions
+        policy_id: *id001
+        branch:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        reference_mean_net:
+          anyOf:
+          - *id005
+          - type: 'null'
+        threshold_net:
+          anyOf:
+          - *id005
+          - type: 'null'
+        reference_offer_count:
+          type: integer
+          minimum: 0
+        reason_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          minItems: 0
+          maxItems: 30
+      required:
+      - status
+      - policy_id
+      - branch
+      - reference_mean_net
+      - threshold_net
+      - reference_offer_count
+      - reason_codes
+      additionalProperties: false
+    TraceStep:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 200
+        expression:
+          type: string
+          maxLength: 1000
+        value:
+          anyOf:
+          - *id005
+          - type: 'null'
+      required:
+      - label
+      - expression
+      - value
+      additionalProperties: false
+    CurvePoint:
+      type: object
+      properties:
+        discount_rate: *id005
+        price_net: *id004
+        profit_net:
+          anyOf:
+          - *id005
+          - type: 'null'
+        margin_rate:
+          anyOf:
+          - *id005
+          - type: 'null'
+        score:
+          $ref: '#/components/schemas/ScoreResult'
+        anomaly_status:
+          type: string
+          enum:
+          - unknown
+          - not_applicable
+          - possible_justification_required
+          - not_flagged_under_assumptions
+      required:
+      - discount_rate
+      - price_net
+      - profit_net
+      - margin_rate
+      - score
+      - anomaly_status
+      additionalProperties: false
+    EvaluationResult:
+      type: object
+      properties:
+        engine_version:
+          type: string
+          maxLength: 40
+        scope_id: *id001
+        pricing_rule_id: *id001
+        pricing_rule_revision: *id003
+        company_revision: *id003
+        price_net: *id004
+        cost_net:
+          anyOf:
+          - *id004
+          - type: 'null'
+        profit_net:
+          anyOf:
+          - *id005
+          - type: 'null'
+        margin_rate:
+          anyOf:
+          - *id005
+          - type: 'null'
+        score:
+          $ref: '#/components/schemas/ScoreResult'
+        anomaly:
+          $ref: '#/components/schemas/AnomalyResult'
+        assumptions:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 40
+        trace:
+          type: array
+          items:
+            $ref: '#/components/schemas/TraceStep'
+          minItems: 0
+          maxItems: 100
+        curve:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurvePoint'
+          minItems: 0
+          maxItems: 201
+        source_hashes:
+          type: array
+          items:
+            type: string
+            maxLength: 64
+          minItems: 0
+          maxItems: 20
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 30
+      required:
+      - engine_version
+      - scope_id
+      - pricing_rule_id
+      - pricing_rule_revision
+      - company_revision
+      - price_net
+      - cost_net
+      - profit_net
+      - margin_rate
+      - score
+      - anomaly
+      - assumptions
+      - trace
+      - curve
+      - source_hashes
+      - warnings
+      additionalProperties: false
+    ScenarioCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        input:
+          $ref: '#/components/schemas/EvaluationRequest'
+      required:
+      - name
+      - input
+      additionalProperties: false
+    ScenarioContext:
+      type: object
+      properties:
+        basis:
+          $ref: '#/components/schemas/PriceBasis'
+        rule:
+          $ref: '#/components/schemas/PricingRule'
+        company:
+          $ref: '#/components/schemas/Company'
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          minItems: 0
+          maxItems: 100
+        tender_title:
+          type: string
+          maxLength: 2000
+        source_url:
+          type: string
+          maxLength: 3000
+        source_updated_at:
+          type: string
+          maxLength: 80
+        pending_items:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 100
+      required:
+      - basis
+      - rule
+      - company
+      - citations
+      - tender_title
+      - source_url
+      - source_updated_at
+      - pending_items
+      additionalProperties: false
+    Scenario:
+      type: object
+      properties:
+        context:
+          $ref: '#/components/schemas/ScenarioContext'
+        id: *id001
+        name:
+          type: string
+          maxLength: 200
+        input:
+          $ref: '#/components/schemas/EvaluationRequest'
+        result:
+          $ref: '#/components/schemas/EvaluationResult'
+        snapshot_sha256:
+          type: string
+          maxLength: 64
+        created_at:
+          type: string
+          maxLength: 80
+      required:
+      - context
+      - id
+      - name
+      - input
+      - result
+      - snapshot_sha256
+      - created_at
+      additionalProperties: false
+    ReportCreate:
+      type: object
+      properties:
+        scenario_id: *id001
+        decision:
+          type: string
+          enum:
+          - study
+          - prepare
+          - discard
+        note:
+          type: string
+          maxLength: 4000
+      required:
+      - scenario_id
+      - decision
+      - note
+      additionalProperties: false
+    Report:
+      type: object
+      properties:
+        id: *id001
+        scenario:
+          $ref: '#/components/schemas/Scenario'
+        decision:
+          type: string
+          enum:
+          - study
+          - prepare
+          - discard
+        note:
+          type: string
+          maxLength: 4000
+        pending_items:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 100
+        html_path:
+          type: string
+          maxLength: 300
+        created_at:
+          type: string
+          maxLength: 80
+      required:
+      - id
+      - scenario
+      - decision
+      - note
+      - pending_items
+      - html_path
+      - created_at
+      additionalProperties: false
+    HistoricalAward:
+      type: object
+      properties:
+        source_id:
+          type: string
+          maxLength: 1000
+        source_url:
+          type: string
+          maxLength: 3000
+        lot_id:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        pbl_net: *id004
+        award_net: *id004
+        discount_rate: *id005
+        award_date: *id006
+        cpv:
+          type: string
+          maxLength: 12
+        comparability:
+          type: string
+          enum:
+          - comparable
+        basis_note:
+          type: string
+          maxLength: 2000
+      required:
+      - source_id
+      - source_url
+      - lot_id
+      - pbl_net
+      - award_net
+      - discount_rate
+      - award_date
+      - cpv
+      - comparability
+      - basis_note
+      additionalProperties: false
+    HistoryResult:
+      type: object
+      properties:
+        availability:
+          type: string
+          enum:
+          - disabled
+          - insufficient
+          - descriptive
+        n:
+          type: integer
+          minimum: 0
+        n_tenders:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoricalAward'
+          minItems: 0
+          maxItems: 200
+        median:
+          anyOf:
+          - *id005
+          - type: 'null'
+        q1:
+          anyOf:
+          - *id005
+          - type: 'null'
+        q3:
+          anyOf:
+          - *id005
+          - type: 'null'
+        exclusion_counts:
+          type: array
+          items:
+            type: object
+            properties:
+              flag:
+                type: string
+                maxLength: 80
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - flag
+            - count
+            additionalProperties: false
+          minItems: 0
+          maxItems: 40
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          minItems: 0
+          maxItems: 30
+      required:
+      - availability
+      - n
+      - n_tenders
+      - items
+      - median
+      - q1
+      - q3
+      - exclusion_counts
+      - warnings
+      additionalProperties: false
+    DemoSession:
+      type: object
+      properties:
+        tender_id: *id001
+        scope_id: *id001
+        company_id: *id001
+        mode:
+          type: string
+          enum:
+          - demo
+      required:
+      - tender_id
+      - scope_id
+      - company_id
+      - mode
+      additionalProperties: false
