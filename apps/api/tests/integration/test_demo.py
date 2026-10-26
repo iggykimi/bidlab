@@ -1,45 +1,9 @@
 """Demo sessions: guard, create 201 (auto-seed on empty DB), idempotent replay."""
 
-from collections.abc import Iterator
-from pathlib import Path
-
-import pytest
-from bidlab.api import deps
-from bidlab.db.session import get_engine
-from bidlab.main import app
 from bidlab.schemas import generated as g
-from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
-client = TestClient(app)
 HEADERS = {"X-BidLab-Client": "local-ui", "Idempotency-Key": "e2e-demo-1"}
-
-
-@pytest.fixture()
-def fresh_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    monkeypatch.setenv("BIDLAB_STORAGE_DIR", str(tmp_path))
-    get_settings.cache_clear()
-    get_engine.cache_clear()
-
-    def override_db() -> Iterator[Session]:
-        session = Session(get_engine())
-        try:
-            yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
-    app.dependency_overrides[deps.get_db] = override_db
-    try:
-        yield client
-    finally:
-        app.dependency_overrides.clear()
-        get_settings.cache_clear()
-        get_engine.cache_clear()
 
 
 def test_demo_requires_client_header(fresh_client: TestClient) -> None:

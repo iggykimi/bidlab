@@ -381,6 +381,9 @@ def run_job(
             attempt=attempt,
             input_hash=input_hash,
         )
+        # The request scope rolls back on 429: commit the failed job and its
+        # invocation first so the 429 keeps an auditable trace.
+        session.commit()
         raise
     except meta_adapter.AdapterError as exc:
         return _fail_job(

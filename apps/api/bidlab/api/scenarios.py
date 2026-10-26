@@ -41,7 +41,10 @@ async def save_scenario(
         response.status_code = 200
         return stored
     saved = scenarios_service.save_scenario(db, payload.name, payload.input)
-    idempotency.store(db, SAVE_ROUTE, idempotency_key, body, saved)
+    winner = idempotency.store(db, SAVE_ROUTE, idempotency_key, body, saved)
+    if winner is not None:
+        response.status_code = 200
+        return winner
     return saved
 
 

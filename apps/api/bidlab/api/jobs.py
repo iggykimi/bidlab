@@ -32,7 +32,11 @@ async def start_analysis(
         return stored
     job = jobs_service.start_analysis(db, tender_id, payload)
     created = jobs_service.job_to_dict(job)
-    idempotency.store(db, route, idempotency_key, body, created)
+    winner = idempotency.store(db, route, idempotency_key, body, created)
+    if winner is not None:
+        response.status_code = 202
+        response.headers["Location"] = f"/api/v1/jobs/{winner['id']}"
+        return winner
     response.headers["Location"] = f"/api/v1/jobs/{job.id}"
     return created
 

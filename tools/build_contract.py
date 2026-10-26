@@ -66,7 +66,7 @@ S['DemoSession']=obj({'tender_id':ID,'scope_id':ID,'company_id':ID,'mode':en('de
 
 paths={}
 def param(name,where,schema,required=False):return {'name':name,'in':where,'required':required,'schema':schema}
-def add(path,method,operation,response,body=None,status='200',params=None,content='application/json'):
+def add(path,method,operation,response,body=None,status='200',params=None,content='application/json',description=None):
     parameters=[]
     for piece in path.split('/'):
         if piece.startswith('{'):parameters.append(param(piece[1:-1],'path',INT if piece=='{page_number}' else ID,True))
@@ -80,6 +80,7 @@ def add(path,method,operation,response,body=None,status='200',params=None,conten
     for code in ['400','403','404','409','413','415','422','429','502','503']:
         responses[code]={'description':'See Error.code for exact failure','content':{'application/json':{'schema':ref('Error')}}}
     op={'operationId':operation,'responses':responses}
+    if description:op['description']=description
     if parameters:op['parameters']=parameters
     if body:op['requestBody']={'required':True,'content':{'application/json':{'schema':ref(body)}}}
     paths.setdefault(path,{})[method]=op
@@ -87,10 +88,10 @@ add('/api/v1/health','get','health','Health')
 add('/api/v1/capabilities','get','capabilities','Capabilities')
 add('/api/v1/demo/sessions','post','createDemoSession','DemoSession',status='201')
 add('/api/v1/tenders','get','listTenders','TenderList',params=[param('q','query',st(200)),param('cpv','query',st(12)),param('page','query',{'type':'integer','minimum':1,'default':1}),param('page_size','query',{'type':'integer','minimum':1,'maximum':100,'default':20})])
-add('/api/v1/tenders','post','createTender','Tender','TenderCreate',status='201')
+add('/api/v1/tenders','post','createTender','Tender','TenderCreate',status='201',description='Unimplemented by design in P0: tenders come from the curated seed; no arbitrary tender creation.')
 add('/api/v1/tenders/{tender_id}','get','getTender','Tender')
 add('/api/v1/tenders/{tender_id}/workspace','get','getWorkspace','Workspace')
-add('/api/v1/tenders/{tender_id}/documents','post','uploadDocument','Document',status='201')
+add('/api/v1/tenders/{tender_id}/documents','post','uploadDocument','Document',status='201',description='Unimplemented by design in P0: documents come from the curated seed; local upload is out of scope.')
 paths['/api/v1/tenders/{tender_id}/documents']['post']['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':{'type':'string','format':'binary'},'kind':en('pcap','ppt','other'),'source_url':nul(st(3000))},['file','kind'])}}}
 add('/api/v1/documents/{document_id}/pages/{page_number}','get','getPage','PageText')
 add('/api/v1/documents/{document_id}/content','get','getDocumentContent','binary',content='application/pdf')
@@ -107,7 +108,7 @@ add('/api/v1/scenarios/{scenario_id}','get','getScenario','Scenario')
 add('/api/v1/reports','post','createReport','Report','ReportCreate',status='201')
 add('/api/v1/reports/{report_id}','get','getReport','Report')
 add('/api/v1/reports/{report_id}/html','get','getReportHtml','html',content='text/html')
-add('/api/v1/historical-awards','get','getHistory','HistoryResult',params=[param('cpv','query',st(12)),param('before','query',DATE),param('nuts','query',st(20))])
+add('/api/v1/historical-awards','get','getHistory','HistoryResult',params=[param('cpv','query',st(12)),param('before','query',DATE),param('nuts','query',st(20))],description='Unimplemented by design in P0: historical awards stay disabled (history_enabled=false); no comparable-awards dataset.')
 spec={'openapi':'3.1.0','info':{'title':'BidLab local API','version':'1.0.0','description':'Design contract, not a deployed API. Decimal values are strings. Rules must be reviewed. Loopback only; mutations require same-origin validation and X-BidLab-Client.'},'servers':[{'url':'http://127.0.0.1:8000'}],'paths':paths,'components':{'schemas':S}}
 (ROOT/'docs/API_CONTRACT.yaml').write_text(yaml.safe_dump(spec,sort_keys=False,allow_unicode=True))
 # Standalone extraction schema, refs resolved into definitions for offline validation.

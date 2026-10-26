@@ -126,7 +126,8 @@ def test_variants_and_reduction() -> None:
     rglcap = evaluate_anomaly(
         "rglcap85_standard", "74", ["74", "75", "76"], "100", policy_id="rglcap-85"
     )
-    assert rglcap.status == "possible_justification_required"
+    assert rglcap.status == "not_flagged_under_assumptions"
+    assert "absolute_25_close" not in rglcap.reason_codes
     reduced = evaluate_tias("40", ["40", "41", "100", "100"], "100",
                             percentage_reduction_one_third=True)
     assert reduced.status == "unknown"
@@ -135,9 +136,32 @@ def test_variants_and_reduction() -> None:
     unsupported = evaluate_anomaly(
         "unsupported", "40", ["40", "41"], "100", policy_id="mixed"
     )
-    assert unsupported.status == "unknown"
+    assert unsupported.status == "not_applicable"
+    assert unsupported.reason_codes == ("unsupported_variant",)
     with pytest.raises(AnomalyError):
         evaluate_anomaly("made_up", "40", ["40"], "100", policy_id="x")
+
+
+def test_close_override_beats_variant_default() -> None:
+    tias_off = evaluate_anomaly(
+        "tias_18_5",
+        "74",
+        ["74", "75", "76"],
+        "100",
+        policy_id="tias-18-5",
+        three_bidder_absolute_25=False,
+    )
+    assert tias_off.status == "not_flagged_under_assumptions"
+    rglcap_on = evaluate_anomaly(
+        "rglcap85_standard",
+        "74",
+        ["74", "75", "76"],
+        "100",
+        policy_id="rglcap-85",
+        three_bidder_absolute_25=True,
+    )
+    assert rglcap_on.status == "possible_justification_required"
+    assert "absolute_25_close" in rglcap_on.reason_codes
 
 
 def test_invalid_inputs_rejected() -> None:

@@ -1,6 +1,7 @@
 """Reports: decision record over an immutable scenario + printable HTML."""
 
 import datetime as dt
+import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,10 @@ from bidlab.services import scenarios as scenarios_service
 from bidlab.settings import get_settings
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+
+# create_report() ids are uuid4().hex; anything else never matches a file and
+# must not reach the filesystem (path traversal shape).
+_REPORT_ID_RE = re.compile(r"[0-9a-f]{32}")
 
 _jinja: Environment | None = None
 
@@ -78,6 +83,8 @@ def get_report(session: Session, report_id: str) -> dict[str, Any]:
 
 
 def html_path(report_id: str) -> Path:
+    if _REPORT_ID_RE.fullmatch(report_id) is None:
+        raise ApiError(404, "report_not_found", f"unknown report {report_id}")
     settings = get_settings()
     row_path = settings.storage_path / f"reports/{report_id}.html"
     if not row_path.exists():

@@ -18,7 +18,6 @@ from bidlab.domain.money import (
     parse_decimal,
     quantize_money,
     serialize_12dp,
-    serialize_exact,
 )
 
 MAX_RIVALS = 20
@@ -47,15 +46,6 @@ class ScoreResult:
         if self.value is None:
             return None
         return serialize_12dp(self.value)
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "status": self.status,
-            "value": self.value_serialized,
-            "max_points": serialize_exact(self.max_points),
-            "unknown_variables": list(self.unknown_variables),
-            "reason_codes": list(self.reason_codes),
-        }
 
 
 def best_price(own_price: Decimal, rivals: Sequence[Decimal]) -> Decimal:

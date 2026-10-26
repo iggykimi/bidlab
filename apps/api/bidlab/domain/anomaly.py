@@ -61,17 +61,6 @@ class AnomalyResult:
             return None
         return serialize_12dp(self.threshold)
 
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "status": self.status,
-            "policy_id": self.policy_id,
-            "branch": self.branch,
-            "reference_mean_net": self.reference_mean_serialized,
-            "threshold_net": self.threshold_serialized,
-            "reference_offer_count": self.reference_offer_count,
-            "reason_codes": list(self.reason_codes),
-        }
-
 
 def _mean(values: Sequence[Decimal]) -> Decimal:
     with arithmetic():
@@ -283,38 +272,47 @@ def evaluate_anomaly(
     *,
     policy_id: str,
     percentage_reduction_one_third: bool = False,
+    three_bidder_absolute_25: bool | None = None,
 ) -> AnomalyResult:
-    """Dispatch a reviewed variant; unknown variants are programmer errors (raise)."""
+    """Dispatch a reviewed variant; unknown variants are programmer errors (raise).
+
+    Variant defaults for the n=3 absolute-25 close: Tías on; Alfresco and
+    RGLCAP85 off (P0: RGLCAP85 applicability unverified, T22). An explicit
+    three_bidder_absolute_25 overrides the default (reviewed policy decision).
+    """
     if variant == "tias_18_5":
+        close = True if three_bidder_absolute_25 is None else three_bidder_absolute_25
         return evaluate_tias(
             own_price,
             offers,
             base,
             policy_id=policy_id,
-            three_bidder_absolute_25=True,
+            three_bidder_absolute_25=close,
             percentage_reduction_one_third=percentage_reduction_one_third,
         )
     if variant == "rglcap85_standard":
+        close = False if three_bidder_absolute_25 is None else three_bidder_absolute_25
         return evaluate_tias(
             own_price,
             offers,
             base,
             policy_id=policy_id,
-            three_bidder_absolute_25=True,
+            three_bidder_absolute_25=close,
             percentage_reduction_one_third=percentage_reduction_one_third,
         )
     if variant == "alfresco_18_5":
+        close = False if three_bidder_absolute_25 is None else three_bidder_absolute_25
         return evaluate_tias(
             own_price,
             offers,
             base,
             policy_id=policy_id,
-            three_bidder_absolute_25=False,
+            three_bidder_absolute_25=close,
             percentage_reduction_one_third=percentage_reduction_one_third,
         )
     if variant == "unsupported":
         return AnomalyResult(
-            status="unknown",
+            status="not_applicable",
             policy_id=policy_id,
             branch=None,
             reference_mean=None,

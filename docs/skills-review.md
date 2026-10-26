@@ -15,9 +15,9 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] mobile-native — auditada 26-oct (F3 targets, F4 16px, viewport-fit, safe-area)
 - [R] ask-sonner — auditada 26-oct (F7: Toaster + toast.success en export)
 - [R] animate — leída completa propia + auditada por subagente
-- [R] animate-expo — auditada por subagente (lectura propia pendiente)
-- [R] animation-performance — auditada por subagente (lectura propia pendiente)
-- [R] animation-vocabulary — auditada por subagente (lectura propia pendiente)
+- [R] animate-expo — leída completa propia (N/A funcional: sin app Expo/RN)
+- [R] animation-performance — leída completa propia
+- [R] animation-vocabulary — leída completa propia
 - [ ] apple-design
 - [ ] ask-sonner
 - [ ] break-ui

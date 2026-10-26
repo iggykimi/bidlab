@@ -399,6 +399,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      description: 'Unimplemented by design in P0: tenders come from the curated seed;
+        no arbitrary tender creation.'
       parameters:
       - name: X-BidLab-Client
         in: header
@@ -635,6 +637,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      description: 'Unimplemented by design in P0: documents come from the curated
+        seed; local upload is out of scope.'
       parameters:
       - name: tender_id
         in: path
@@ -1981,6 +1985,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      description: 'Unimplemented by design in P0: historical awards stay disabled
+        (history_enabled=false); no comparable-awards dataset.'
       parameters:
       - name: cpv
         in: query

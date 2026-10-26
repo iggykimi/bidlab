@@ -9,7 +9,7 @@ with the domain AND/OR logic. Deterministic: same revisions, same result.
 """
 
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any
 
 from pydantic import ValidationError
@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from bidlab.api.errors import ApiError
 from bidlab.db import models
 from bidlab.domain import eligibility as EL
+from bidlab.domain.money import MoneyError, parse_decimal
 from bidlab.schemas import generated as g
 from bidlab.services import companies as companies_service
 
@@ -53,11 +54,12 @@ def _span_days(evidence: dict[str, Any]) -> int | None:
 
 
 def _decimal(raw: Any) -> Decimal | None:
+    """Strict decimal parse; non-finite/exponent/locale text is unparseable."""
     if not isinstance(raw, str):
         return None
     try:
-        return Decimal(raw)
-    except InvalidOperation:
+        return parse_decimal(raw, field="decimal")
+    except MoneyError:
         return None
 
 

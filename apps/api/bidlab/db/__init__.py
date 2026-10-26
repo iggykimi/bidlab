@@ -1,1 +1,1 @@
-"""Persistence layer: engine/session factory, models, repositories."""
+"""Persistence layer: engine/session factory and models."""

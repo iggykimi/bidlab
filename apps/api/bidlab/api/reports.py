@@ -33,7 +33,10 @@ async def create_report(
     created: dict[str, Any] = dict(
         reports_service.create_report(db, payload.scenario_id, str(payload.decision), payload.note)
     )
-    idempotency.store(db, CREATE_ROUTE, idempotency_key, body, created)
+    winner = idempotency.store(db, CREATE_ROUTE, idempotency_key, body, created)
+    if winner is not None:
+        response.status_code = 200
+        return winner
     return created
 
 

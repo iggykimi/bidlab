@@ -1,50 +1,17 @@
 """I03/I04/I11: evaluate Tías 5%, single bidder, curve, invalid inputs."""
 
 import json
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-from bidlab.api import deps
+from bidlab.db import models
 from bidlab.db.session import get_engine
-from bidlab.main import app
 from bidlab.schemas import generated as g
-from bidlab.services import seed as seed_service
-from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 ROOT = Path(__file__).resolve().parents[4]
-client = TestClient(app)
 HEADERS = {"X-BidLab-Client": "local-ui"}
-
-
-@pytest.fixture()
-def eval_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    monkeypatch.setenv("BIDLAB_STORAGE_DIR", str(tmp_path))
-    get_settings.cache_clear()
-    get_engine.cache_clear()
-    seed_service.seed()
-
-    def override_db() -> Iterator[Session]:
-        session = Session(get_engine())
-        try:
-            yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
-    app.dependency_overrides[deps.get_db] = override_db
-    try:
-        yield client
-    finally:
-        app.dependency_overrides.clear()
-        get_settings.cache_clear()
-        get_engine.cache_clear()
 
 
 def _request() -> dict:
@@ -54,8 +21,8 @@ def _request() -> dict:
     return payload
 
 
-def test_evaluate_tias_5_percent(eval_client: TestClient) -> None:
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=_request(), headers=HEADERS)
+def test_evaluate_tias_5_percent(seeded_client: TestClient) -> None:
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=_request(), headers=HEADERS)
     assert res.status_code == 200, res.text
     result = g.EvaluationResult.model_validate(res.json())
     plain = result.model_dump(mode="json")
@@ -71,7 +38,7 @@ def test_evaluate_tias_5_percent(eval_client: TestClient) -> None:
     assert len(plain["source_hashes"]) == 2
 
 
-def test_evaluate_single_bidder(eval_client: TestClient) -> None:
+def test_evaluate_single_bidder(seeded_client: TestClient) -> None:
     payload = _request()
     payload["rivals"] = {
         "state": "unspecified",
@@ -80,7 +47,7 @@ def test_evaluate_single_bidder(eval_client: TestClient) -> None:
         "own_group_id": "own",
         "offers": [],
     }
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert res.status_code == 200, res.text
     plain = g.EvaluationResult.model_validate(res.json()).model_dump(mode="json")
     assert plain["score"]["status"] == "defined"
@@ -88,10 +55,10 @@ def test_evaluate_single_bidder(eval_client: TestClient) -> None:
     assert plain["anomaly"]["branch"] == "n1"
 
 
-def test_evaluate_curve(eval_client: TestClient) -> None:
+def test_evaluate_curve(seeded_client: TestClient) -> None:
     payload = _request()
     payload["curve"] = {"from_discount_rate": "0.0000", "to_discount_rate": "0.4000", "points": 11}
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert res.status_code == 200, res.text
     plain = g.EvaluationResult.model_validate(res.json()).model_dump(mode="json")
     assert len(plain["curve"]) == 11
@@ -101,19 +68,67 @@ def test_evaluate_curve(eval_client: TestClient) -> None:
     assert prices == sorted(prices, key=Decimal, reverse=True)
 
 
-def test_evaluate_rejects_invalid(eval_client: TestClient) -> None:
+def test_evaluate_rglcap_has_no_absolute_close(seeded_client: TestClient) -> None:
+    """C1: Tías flags the absolute-25 close; RGLCAP85 (same flag=true) does not."""
+    payload = _request()
+    payload["discount_rate"] = "0.2600"  # price 87568.64 < 0.75 * base (88752.00)
+    payload["rivals"] = {
+        "state": "assumed",
+        "complete": True,
+        "group_membership_confirmed": True,
+        "own_group_id": "own",
+        "offers": [
+            {"label": "R1", "price_net": "88000.00", "group_id": "g1"},
+            {"label": "R2", "price_net": "88500.00", "group_id": "g2"},
+        ],
+    }
+    tias = seeded_client.post(
+        "/api/v1/scenarios/evaluate", json=payload, headers=HEADERS
+    )
+    assert tias.status_code == 200, tias.text
+    tias_anomaly = g.EvaluationResult.model_validate(tias.json()).model_dump(mode="json")[
+        "anomaly"
+    ]
+    assert tias_anomaly["status"] == "possible_justification_required"
+    assert tias_anomaly["branch"] == "n3_no_trim"
+    assert "absolute_25_close" in tias_anomaly["reason_codes"]
+
+    with Session(get_engine()) as session:
+        rule = session.get(models.RuleRevision, ("tias-price-r1", 1))
+        assert rule is not None
+        rule_json = dict(rule.rule_json) if isinstance(rule.rule_json, dict) else {}
+        policy = dict(rule_json.get("anomaly_policy", {}))
+        assert policy.get("three_bidder_absolute_25") is True
+        policy["variant"] = "rglcap85_standard"
+        rule_json["anomaly_policy"] = policy
+        rule.rule_json = rule_json
+        session.commit()
+
+    rglcap = seeded_client.post(
+        "/api/v1/scenarios/evaluate", json=payload, headers=HEADERS
+    )
+    assert rglcap.status_code == 200, rglcap.text
+    rglcap_anomaly = g.EvaluationResult.model_validate(rglcap.json()).model_dump(
+        mode="json"
+    )["anomaly"]
+    assert rglcap_anomaly["status"] == "not_flagged_under_assumptions"
+    assert rglcap_anomaly["branch"] == "n3_no_trim"
+    assert "absolute_25_close" not in rglcap_anomaly["reason_codes"]
+
+
+def test_evaluate_rejects_invalid(seeded_client: TestClient) -> None:
     payload = _request()
     payload["discount_rate"] = "0.5000"
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert res.status_code == 422
 
     payload = _request()
     payload["rivals"]["offers"][0]["price_net"] = 106502.40
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert res.status_code == 422
 
     payload = _request()
     payload["unknown_field"] = "x"
-    res = eval_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
+    res = seeded_client.post("/api/v1/scenarios/evaluate", json=payload, headers=HEADERS)
     assert res.status_code == 422
     assert res.json()["code"] == "extra_forbidden"

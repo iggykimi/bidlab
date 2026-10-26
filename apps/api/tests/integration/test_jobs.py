@@ -1,55 +1,32 @@
 """I06 + T17: analysis run endpoint (202), job polling, stub honesty."""
 
 import socket
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
-from bidlab.api import deps
 from bidlab.db import models
 from bidlab.db.session import get_engine
-from bidlab.main import app
 from bidlab.schemas import generated as g
 from bidlab.services import meta_adapter
-from bidlab.services import seed as seed_service
 from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-client = TestClient(app)
 CLIENT_HEADERS = {"X-BidLab-Client": "local-ui"}
 
 
 @pytest.fixture()
-def demo_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    monkeypatch.setenv("BIDLAB_STORAGE_DIR", str(tmp_path))
+def demo_client(
+    seeded_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> TestClient:
+    # Offline by default: live selection needs an explicit key + endpoint.
+    # (Seeded first: seed/demo data never read these variables.)
     monkeypatch.delenv("MODEL_API_KEY", raising=False)
     monkeypatch.delenv(meta_adapter.META_API_URL_ENV, raising=False)
     get_settings.cache_clear()
-    get_engine.cache_clear()
-    seed_service.seed()
-
-    def override_db() -> Iterator[Session]:
-        session = Session(get_engine())
-        try:
-            yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
-    app.dependency_overrides[deps.get_db] = override_db
-    try:
-        yield client
-    finally:
-        app.dependency_overrides.clear()
-        get_settings.cache_clear()
-        get_engine.cache_clear()
+    return seeded_client
 
 
 def _body(**overrides: Any) -> dict[str, Any]:
@@ -245,3 +222,48 @@ def test_offline_stub_makes_no_network_calls(
         "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k11")
     )
     assert res.status_code == 202
+
+
+def test_budget_exhaust_persists_failed_job(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """C6: the 429 keeps an auditable failed job + invocation (committed pre-raise)."""
+
+    def _blocked(*args: object, **kwargs: object) -> object:
+        raise AssertionError("exhausted budget must fail before any model call")
+
+    monkeypatch.setattr(socket, "create_connection", _blocked)
+    monkeypatch.setattr(httpx, "post", _blocked)
+    monkeypatch.setenv("MODEL_API_KEY", "test-key")
+    monkeypatch.setenv(meta_adapter.META_API_URL_ENV, "https://meta.test/v1")
+    monkeypatch.setenv("BIDLAB_META_BUDGET_USD", "0.00")
+    get_settings.cache_clear()
+    try:
+        res = demo_client.post(
+            "/api/v1/tenders/tias/analysis",
+            json=_body(mode="live", allow_remote_processing=True),
+            headers=_headers("k-budget"),
+        )
+    finally:
+        get_settings.cache_clear()
+    assert res.status_code == 429
+    assert res.json()["code"] == "budget_exhausted"
+    with _db() as session:
+        jobs = session.scalars(
+            select(models.Job).where(models.Job.tender_id == "tias")
+        ).all()
+        assert len(jobs) == 1
+        assert jobs[0].status == "failed"
+        assert jobs[0].error_code == "budget_exhausted"
+        invocations = session.scalars(
+            select(models.ModelInvocation).where(
+                models.ModelInvocation.job_id == jobs[0].id
+            )
+        ).all()
+        assert len(invocations) == 1
+        assert invocations[0].status == "failed"
+        assert invocations[0].mode == "live"
+        job_id = jobs[0].id
+    poll = demo_client.get(f"/api/v1/jobs/{job_id}")
+    assert poll.status_code == 200
+    assert poll.json()["status"] == "failed"

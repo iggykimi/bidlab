@@ -34,5 +34,7 @@ async def review_interpretation(
             return stored
     reviewed = review_service.apply_review(db, tender_id, payload)
     if idempotency_key is not None:
-        idempotency.store(db, route, idempotency_key, body, reviewed)
+        winner = idempotency.store(db, route, idempotency_key, body, reviewed)
+        if winner is not None:
+            return winner
     return reviewed

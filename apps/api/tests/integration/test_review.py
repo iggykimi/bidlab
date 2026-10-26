@@ -1,50 +1,15 @@
 """T18: semantic review — approve/correct proposals with audit."""
 
-from collections.abc import Iterator
-from pathlib import Path
 from typing import Any
 
-import pytest
-from bidlab.api import deps
 from bidlab.db import models
 from bidlab.db.session import get_engine
-from bidlab.main import app
 from bidlab.schemas import generated as g
-from bidlab.services import seed as seed_service
-from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-client = TestClient(app)
 CLIENT_HEADERS = {"X-BidLab-Client": "local-ui"}
-
-
-@pytest.fixture()
-def demo_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    monkeypatch.setenv("BIDLAB_STORAGE_DIR", str(tmp_path))
-    get_settings.cache_clear()
-    get_engine.cache_clear()
-    seed_service.seed()
-
-    def override_db() -> Iterator[Session]:
-        session = Session(get_engine())
-        try:
-            yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
-    app.dependency_overrides[deps.get_db] = override_db
-    try:
-        yield client
-    finally:
-        app.dependency_overrides.clear()
-        get_settings.cache_clear()
-        get_engine.cache_clear()
 
 
 def _review_body(**overrides: Any) -> dict[str, Any]:
@@ -62,8 +27,8 @@ def _review_body(**overrides: Any) -> dict[str, Any]:
     return body
 
 
-def _claim_keys(demo_client: TestClient) -> list[str]:
-    res = demo_client.get("/api/v1/tenders/tias/workspace")
+def _claim_keys(seeded_client: TestClient) -> list[str]:
+    res = seeded_client.get("/api/v1/tenders/tias/workspace")
     assert res.status_code == 200
     return [claim["key"] for claim in res.json()["claims"]]
 
@@ -80,10 +45,10 @@ def _current_revision() -> int:
         )
 
 
-def test_approve_claims_creates_manual_revision(demo_client: TestClient) -> None:
-    keys = _claim_keys(demo_client)
+def test_approve_claims_creates_manual_revision(seeded_client: TestClient) -> None:
+    keys = _claim_keys(seeded_client)
     assert len(keys) >= 2
-    res = demo_client.post(
+    res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(approved_claim_keys=keys[:2]),
         headers=CLIENT_HEADERS,
@@ -104,8 +69,8 @@ def test_approve_claims_creates_manual_revision(demo_client: TestClient) -> None
         assert audit.entity_type == "interpretation"
 
 
-def test_unknown_claim_key_rejected(demo_client: TestClient) -> None:
-    res = demo_client.post(
+def test_unknown_claim_key_rejected(seeded_client: TestClient) -> None:
+    res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(approved_claim_keys=["no-such-claim"]),
         headers=CLIENT_HEADERS,
@@ -114,8 +79,8 @@ def test_unknown_claim_key_rejected(demo_client: TestClient) -> None:
     assert res.json()["code"] == "unknown_claim_key"
 
 
-def test_revision_conflict(demo_client: TestClient) -> None:
-    res = demo_client.post(
+def test_revision_conflict(seeded_client: TestClient) -> None:
+    res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(expected_revision=0),
         headers=CLIENT_HEADERS,
@@ -124,14 +89,14 @@ def test_revision_conflict(demo_client: TestClient) -> None:
     assert res.json()["code"] == "revision_conflict"
 
 
-def test_unknown_tender_and_missing_header(demo_client: TestClient) -> None:
-    res = demo_client.post(
+def test_unknown_tender_and_missing_header(seeded_client: TestClient) -> None:
+    res = seeded_client.post(
         "/api/v1/tenders/nope/reviews",
         json=_review_body(),
         headers=CLIENT_HEADERS,
     )
     assert res.status_code == 404
-    res = demo_client.post("/api/v1/tenders/tias/reviews", json=_review_body())
+    res = seeded_client.post("/api/v1/tenders/tias/reviews", json=_review_body())
     assert res.status_code == 403
 
 
@@ -184,9 +149,9 @@ def _corrected_with_real_quote() -> dict[str, Any]:
     }
 
 
-def test_corrected_proposal_citation_located(demo_client: TestClient) -> None:
+def test_corrected_proposal_citation_located(seeded_client: TestClient) -> None:
     corrected = _corrected_with_real_quote()
-    res = demo_client.post(
+    res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(
             corrected_proposal=corrected, approved_claim_keys=["pbl_check"]
@@ -228,19 +193,19 @@ def _tree() -> dict[str, Any]:
     }
 
 
-def test_tree_stored_and_idempotency_optional(demo_client: TestClient) -> None:
-    keys = _claim_keys(demo_client)
+def test_tree_stored_and_idempotency_optional(seeded_client: TestClient) -> None:
+    keys = _claim_keys(seeded_client)
     payload = _review_body(approved_claim_keys=keys[:1], requirement_trees=[_tree()])
     headers = {**CLIENT_HEADERS, "Idempotency-Key": "r1"}
-    first = demo_client.post("/api/v1/tenders/tias/reviews", json=payload, headers=headers)
+    first = seeded_client.post("/api/v1/tenders/tias/reviews", json=payload, headers=headers)
     assert first.status_code == 200
     assert first.json()["requirements"][0]["operator"] == "AND"
-    replay = demo_client.post(
+    replay = seeded_client.post(
         "/api/v1/tenders/tias/reviews", json=payload, headers=headers
     )
     assert replay.status_code == 200
     assert _current_revision() == 2
-    without_key = demo_client.post(
+    without_key = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(
             expected_revision=2,
@@ -253,8 +218,8 @@ def test_tree_stored_and_idempotency_optional(demo_client: TestClient) -> None:
     assert _current_revision() == 3
 
 
-def test_scope_basis_recorded(demo_client: TestClient) -> None:
-    keys = _claim_keys(demo_client)
+def test_scope_basis_recorded(seeded_client: TestClient) -> None:
+    keys = _claim_keys(seeded_client)
     basis: dict[str, Any] = {
         "scope_id": "tias-whole",
         "budget_net": "118336.00",
@@ -269,7 +234,7 @@ def test_scope_basis_recorded(demo_client: TestClient) -> None:
         "evidence_ids": [],
         "metadata_evidence": [],
     }
-    res = demo_client.post(
+    res = seeded_client.post(
         "/api/v1/tenders/tias/reviews",
         json=_review_body(approved_claim_keys=keys[:1], scope_basis=basis),
         headers=CLIENT_HEADERS,

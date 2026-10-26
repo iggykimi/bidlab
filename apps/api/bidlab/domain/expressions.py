@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
 
 from bidlab.domain.money import DecimalInput, MoneyError, arithmetic, parse_decimal
 
@@ -24,8 +23,6 @@ ALLOWED_VARS = frozenset({"own_price", "best_price", "reference_price", "max_poi
 BINARY_OPS = frozenset({"add", "sub", "mul", "div"})
 VARIADIC_OPS = frozenset({"min", "max"})
 ALLOWED_OPS = BINARY_OPS | VARIADIC_OPS | {"log10"}
-
-OpName = Literal["add", "sub", "mul", "div", "min", "max", "log10"]
 
 
 class ExprError(ValueError):
@@ -377,7 +374,6 @@ __all__: list[str] = [
     "EvalValue",
     "Expr",
     "ExprError",
-    "OpName",
     "Var",
     "evaluate",
     "inverse_template",

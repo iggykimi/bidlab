@@ -5,6 +5,7 @@ import hashlib
 import json
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
@@ -30,13 +31,26 @@ def check(session: Session, route: str, key: str, body: bytes) -> dict[str, Any]
         return None
     if record.body_sha256 != body_hash(body):
         raise ApiError(409, "idempotency_conflict", "Idempotency-Key reused with a different body")
+    return _stored_response(record)
+
+
+def _stored_response(record: models.IdempotencyRecord) -> dict[str, Any]:
     stored = record.response_json
     if isinstance(stored, str):
         stored = json.loads(stored)
     return stored if isinstance(stored, dict) else {"value": stored}
 
 
-def store(session: Session, route: str, key: str, body: bytes, response: dict[str, Any]) -> None:
+def store(
+    session: Session, route: str, key: str, body: bytes, response: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Persist the response; on a lost insert race return the winner's response.
+
+    Returns None when this call won (response stored). When a concurrent
+    request stored the same key first, the loser's own work is rolled back
+    here and the winner's stored response is returned instead; the caller
+    must return it to the client. A stored key with a different body is 409.
+    """
     session.add(
         models.IdempotencyRecord(
             route=route,
@@ -46,4 +60,18 @@ def store(session: Session, route: str, key: str, body: bytes, response: dict[st
             expires_at=(_now() + dt.timedelta(hours=24)).isoformat(),
         )
     )
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        winner = session.get(models.IdempotencyRecord, (route, key))
+        if winner is None:
+            raise
+        if winner.body_sha256 != body_hash(body):
+            raise ApiError(
+                409,
+                "idempotency_conflict",
+                "Idempotency-Key reused with a different body",
+            ) from None
+        return _stored_response(winner)
+    return None

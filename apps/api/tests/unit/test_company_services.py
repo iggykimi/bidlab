@@ -404,6 +404,48 @@ def test_missing_tree_is_unknown(session: Session) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    "value",
+    ["Infinity", "-Infinity", "NaN", "1e3", "1E-3", "  ", "12,5", "sNaN"],
+)
+def test_non_finite_or_exponent_values_are_unknown(session: Session, value: str) -> None:
+    """C2: Infinity must not read as met, NaN must not read as not_met."""
+    created = companies_service.create_company(
+        session, _write(evidence=[_evidence("team_feder_years", value, unit="years")])
+    )
+    _interp(
+        session,
+        _leaf(field="team_feder_years", operator="gte", threshold="3", unit="years"),
+    )
+    result = eligibility_service.check(session, _check(str(created["id"])))
+    assert result["verdict"] == "unknown"
+    item = _item(result, "req-1")
+    assert item["verdict"] == "unknown"
+    assert item["reason_codes"] == ["value_unparseable"]
+
+
+@pytest.mark.parametrize("threshold", ["Infinity", "-Infinity", "NaN", "1e2"])
+def test_non_finite_or_exponent_threshold_is_unknown(
+    session: Session, threshold: str
+) -> None:
+    created = companies_service.create_company(
+        session, _write(evidence=[_evidence("team_feder_years", "5", unit="years")])
+    )
+    _interp(
+        session,
+        _leaf(
+            field="team_feder_years",
+            operator="gte",
+            threshold=threshold,
+            unit="years",
+        ),
+    )
+    result = eligibility_service.check(session, _check(str(created["id"])))
+    item = _item(result, "req-1")
+    assert item["verdict"] == "unknown"
+    assert item["reason_codes"] == ["threshold_unparseable"]
+
+
 def test_scope_guards(session: Session) -> None:
     session.add(
         models.Tender(

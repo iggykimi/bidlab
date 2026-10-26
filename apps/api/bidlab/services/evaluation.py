@@ -191,17 +191,15 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     else:
         assumptions.append("Pertenencia a grupos sin confirmar: anormalidad unknown")
 
+    # T22-verified production mapping: the reviewed flag decides the n=3
+    # absolute-25 close, except RGLCAP85 which never applies it in P0.
+    close_override = bool(policy.get("three_bidder_absolute_25", True))
+    close_override = close_override and variant != "rglcap85_standard"
     anomaly: dict[str, Any]
     if variant == "unsupported":
-        anomaly = {
-            "status": "not_applicable",
-            "policy_id": policy_id,
-            "branch": None,
-            "reference_mean_net": None,
-            "threshold_net": None,
-            "reference_offer_count": 0,
-            "reason_codes": ["unsupported_variant"],
-        }
+        anomaly = _anomaly_dict(
+            AD.evaluate_anomaly(variant, price, [], budget, policy_id=policy_id)
+        )
     elif bool(policy.get("percentage_reduction_one_third")):
         anomaly = _anomaly_unknown(policy_id, ["percentage_reduction_unsupported"])
     elif not complete:
@@ -219,14 +217,13 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
         if resolved.status == "unknown":
             anomaly = _anomaly_unknown(policy_id, list(resolved.reason_codes))
         else:
-            verdict = AD.evaluate_tias(
+            verdict = AD.evaluate_anomaly(
+                variant,
                 price,
                 list(resolved.reference_offers),
                 budget,
                 policy_id=policy_id,
-                three_bidder_absolute_25=bool(policy.get("three_bidder_absolute_25", True))
-                and variant != "rglcap85_standard",
-                percentage_reduction_one_third=False,
+                three_bidder_absolute_25=close_override,
             )
             anomaly = _anomaly_dict(verdict)
 
@@ -343,10 +340,12 @@ def _curve(
     direct = _money(company.direct_cost_cents)
     overhead = _money(company.overhead_cents)
     cost = direct + overhead if direct is not None and overhead is not None else None
-    step = (end - start) / (points - 1) if points > 1 else Decimal(0)
+    with MO.arithmetic():
+        step = (end - start) / (points - 1) if points > 1 else Decimal(0)
     out: list[dict[str, Any]] = []
     for index in range(points):
-        discount = start + step * index
+        with MO.arithmetic():
+            discount = start + step * index
         price = MO.derive_price(budget, discount)
         rival_prices = [MO.serialize_money(offer.price) for offer in rival_offers]
         scored = SC.evaluate_score(
@@ -387,7 +386,11 @@ def _curve_anomaly(
     policy_id: str,
     variant: str,
 ) -> str:
-    if variant == "unsupported" or bool(policy.get("percentage_reduction_one_third")):
+    # Same dispatch order as evaluate(): unsupported short-circuits first with
+    # the production not_applicable status (never curve-only unknown).
+    if variant == "unsupported":
+        return "not_applicable"
+    if bool(policy.get("percentage_reduction_one_third")):
         return "unknown"
     if not bool(rivals["complete"]):
         return "unknown"
@@ -399,13 +402,14 @@ def _curve_anomaly(
     )
     if resolved.status == "unknown":
         return "unknown"
-    verdict = AD.evaluate_tias(
+    close_override = bool(policy.get("three_bidder_absolute_25", True))
+    close_override = close_override and variant != "rglcap85_standard"
+    verdict = AD.evaluate_anomaly(
+        variant,
         price,
         list(resolved.reference_offers),
         budget,
         policy_id=policy_id,
-        three_bidder_absolute_25=bool(policy.get("three_bidder_absolute_25", True))
-        and variant != "rglcap85_standard",
-        percentage_reduction_one_third=False,
+        three_bidder_absolute_25=close_override,
     )
     return str(verdict.status)

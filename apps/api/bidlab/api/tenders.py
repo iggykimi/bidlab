@@ -76,5 +76,8 @@ async def create_demo_session(
     if stored is not None:
         response.status_code = 200
         return stored
-    idempotency.store(db, DEMO_ROUTE, idempotency_key, body, payload)
+    winner = idempotency.store(db, DEMO_ROUTE, idempotency_key, body, payload)
+    if winner is not None:
+        response.status_code = 200
+        return winner
     return payload
