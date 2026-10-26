@@ -124,3 +124,19 @@ lead revisó los 6 módulos línea a línea y re-ejecutó gates por su cuenta.
   follow-up los está reconectando a math_vectors/demo_expected (mismo owner).
   T13 sigue en progreso: el fold AND/OR/NOT está, el cómputo de veredictos de
   hoja desde evidencias llega con servicios (T21).
+
+## Producto T08 — biblioteca, workspace, documentos, demo (Windows)
+
+Fecha: 2026-10-26. Rutas: GET /tenders (q/cpv/paginación), GET tender,
+GET workspace, POST /demo/sessions (auto-seed en DB vacía), GET page/content.
+Infra reutilizable: envelope Error + request_id (middleware+header),
+guard X-BidLab-Client/Origin, idempotencia 24h con 409, response_model
+generados (validación runtime contra contrato).
+- `pytest integration` → 9 passed (I02 workspace: Money strings, p.6 cita
+  207.088, regla 49/inversa/tias_18_5, árbol AND; demo: 201 auto-seed,
+  replay 200, body-distinto 409, sin header 403; I01 intacto).
+- `ruff`, `mypy` limpios (34 ficheros).
+- Semilla movida a bidlab/services/seed.py (git mv); scripts/ queda fino.
+- Incidencias: replay devolvía 201 porque el override de test no hacía
+  commit (se replica semántica get_session); DB vacía exigió migrar antes
+  de leer idempotencia; asertos sobre RootModel generados vía model_dump.

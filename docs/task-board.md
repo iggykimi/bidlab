@@ -21,7 +21,7 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T05 | 26oct | 2 | T01 | done | monorepo bootstrap, locks, scripts, empty lint/build |
 | T06 | 27oct | 1.5 | T05 | done | models, SQLite/migration, API contract |
 | T07 | 27oct | 1.5 | T06 | done | Tías/company/curated-evidence seed + idempotence |
-| T08 | 27oct | 1.5 | T07 | pending | library/workspace/document routes |
+| T08 | 27oct | 1.5 | T07 | done | library/workspace/document routes |
 | T09 | 27oct | 2 | T05 | done | money, scope, numeric oracles |
 | T10 | 28oct | 1.5 | T09 | done | inverse proportion, safe AST, unknown |
 | T11 | 28oct | 3 | T10 | done | Tías policy 18.5 + abnormality edges |

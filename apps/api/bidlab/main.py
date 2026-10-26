@@ -1,12 +1,23 @@
 """BidLab API entrypoint. Loopback only; no multi-user auth (see ARCHITECTURE)."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from bidlab.api import capabilities, health
+from bidlab.api import capabilities, documents, health, tenders
+from bidlab.api.errors import new_request_id, register_handlers
 
 app = FastAPI(title="BidLab", version="0.1.0")
+
+register_handlers(app)
+
+
+@app.middleware("http")
+async def _request_id(request: Request, call_next):  # type: ignore[no-untyped-def]
+    request.state.request_id = new_request_id()
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request.state.request_id
+    return response
 
 app.add_middleware(
     TrustedHostMiddleware,
@@ -24,5 +35,7 @@ app.add_middleware(
 
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(capabilities.router, prefix="/api/v1")
+app.include_router(tenders.router, prefix="/api/v1")
+app.include_router(documents.router, prefix="/api/v1")
 
 # TODO(T19): serve apps/web/dist from / when built.

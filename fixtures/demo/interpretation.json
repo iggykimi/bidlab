@@ -16,7 +16,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g01"
+        "notes": ["gold g01"]
       },
       {
         "key": "estimated_value",
@@ -32,7 +32,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g02"
+        "notes": ["gold g02"]
       },
       {
         "key": "initial_duration_months",
@@ -48,7 +48,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g03"
+        "notes": ["gold g03"]
       },
       {
         "key": "price_points",
@@ -64,7 +64,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g05"
+        "notes": ["gold g05"]
       },
       {
         "key": "turnover_threshold",
@@ -80,7 +80,7 @@
         ],
         "confidence": "medium",
         "status": "proposed",
-        "notes": "gold g09"
+        "notes": ["gold g09"]
       },
       {
         "key": "insurance_threshold",
@@ -96,7 +96,7 @@
         ],
         "confidence": "medium",
         "status": "proposed",
-        "notes": "gold g10"
+        "notes": ["gold g10"]
       },
       {
         "key": "technical_services_threshold",
@@ -112,7 +112,7 @@
         ],
         "confidence": "medium",
         "status": "proposed",
-        "notes": "gold g11"
+        "notes": ["gold g11"]
       },
       {
         "key": "anomaly_single_discount_gt",
@@ -128,7 +128,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g13"
+        "notes": ["gold g13"]
       },
       {
         "key": "anomaly_two_discount_gt",
@@ -144,7 +144,7 @@
         ],
         "confidence": "high",
         "status": "proposed",
-        "notes": "gold g14"
+        "notes": ["gold g14"]
       }
     ],
     "requirements": [

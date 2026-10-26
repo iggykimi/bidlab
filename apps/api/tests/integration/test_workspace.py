@@ -1,0 +1,105 @@
+"""I02: Tías workspace — Money strings, schema-valid, p.6 citation, p.10/20 rules."""
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+from bidlab.api import deps
+from bidlab.db.session import get_engine
+from bidlab.main import app
+from bidlab.schemas import generated as g
+from bidlab.services import seed as seed_service
+from bidlab.settings import get_settings
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+client = TestClient(app)
+
+
+@pytest.fixture()
+def demo_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    monkeypatch.setenv("BIDLAB_STORAGE_DIR", str(tmp_path))
+    get_settings.cache_clear()
+    get_engine.cache_clear()
+    seed_service.seed()
+
+    def override_db() -> Iterator[Session]:
+        session = Session(get_engine())
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    app.dependency_overrides[deps.get_db] = override_db
+    try:
+        yield client
+    finally:
+        app.dependency_overrides.clear()
+        get_settings.cache_clear()
+        get_engine.cache_clear()
+
+
+def test_workspace_shape(demo_client: TestClient) -> None:
+    res = demo_client.get("/api/v1/tenders/tias/workspace")
+    assert res.status_code == 200
+    assert res.headers.get("X-Request-ID")
+    body = res.json()
+    workspace = g.Workspace.model_validate(body)
+    plain = workspace.model_dump(mode="json")
+    assert plain["tender"]["pbl_net"] == "118336.00"
+    assert plain["tender"]["pbl_gross"] == "126619.52"
+    assert plain["tender"]["estimated_value"] == "295840.00"
+    assert plain["interpretation_revision"] == 1
+    assert plain["mode"] == "demo"
+    page6 = [c for c in plain["citations"] if c["page_number"] == 6]
+    assert page6, "expected p.6 citations"
+    assert any("207.088" in c["verbatim_excerpt"] for c in page6)
+    assert plain["pricing_rules"], "expected at least one pricing rule"
+    rule = plain["pricing_rules"][0]
+    assert rule["max_points"] == "49"
+    assert rule["template_id"] == "proportional_inverse"
+    assert rule["anomaly_policy"]["variant"] == "tias_18_5"
+    assert plain["requirements"], "expected requirements tree"
+    assert plain["requirements"][0]["operator"] == "AND"
+
+
+def test_tender_detail_and_list(demo_client: TestClient) -> None:
+    res = demo_client.get("/api/v1/tenders/tias")
+    assert res.status_code == 200
+    tender = g.Tender.model_validate(res.json())
+    assert tender.external_id == "2026/00006554N"
+    assert len(tender.scopes) == 1
+    res = demo_client.get("/api/v1/tenders", params={"q": "Tías"})
+    assert res.status_code == 200
+    listing = g.TenderList.model_validate(res.json())
+    assert listing.total == 1
+    res = demo_client.get("/api/v1/tenders", params={"cpv": "79411000"})
+    assert g.TenderList.model_validate(res.json()).total == 1
+    res = demo_client.get("/api/v1/tenders", params={"q": "inexistente-zzz"})
+    assert g.TenderList.model_validate(res.json()).total == 0
+
+
+def test_unknown_tender_404_envelope(demo_client: TestClient) -> None:
+    res = demo_client.get("/api/v1/tenders/nope/workspace")
+    assert res.status_code == 404
+    body = res.json()
+    assert body["code"] == "tender_not_found"
+    assert body["request_id"]
+    assert isinstance(body["details"], list)
+
+
+def test_document_page_and_missing_bytes(demo_client: TestClient) -> None:
+    res = demo_client.get("/api/v1/documents/doc-tias-pcap/pages/6")
+    assert res.status_code == 200
+    page = g.PageText.model_validate(res.json())
+    assert page.page_number == 6
+    assert "207.088" in page.raw_text
+    res = demo_client.get("/api/v1/documents/doc-tias-pcap/content")
+    assert res.status_code == 404
+    assert res.json()["code"] == "document_bytes_unavailable"
+    res = demo_client.get("/api/v1/documents/doc-tias-pcap/pages/7")
+    assert res.status_code == 404

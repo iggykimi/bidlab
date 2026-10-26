@@ -1,15 +1,11 @@
 """I01: migration + double seed on temp DB → same counts, clean FKs."""
 
 import sqlite3
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "scripts"))
-
-import seed_demo  # noqa: E402
-from bidlab.db.session import get_engine  # noqa: E402
-from bidlab.settings import get_settings  # noqa: E402
+from bidlab.db.session import get_engine
+from bidlab.services import seed as seed_demo
+from bidlab.settings import get_settings
 
 
 def test_seed_twice_same_counts(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]

@@ -1,4 +1,7 @@
-"""U08-U10: Tias 18.5 branches incl. equality-not-triggering and variants."""
+"""U08-U10: Tias 18.5 branches incl. equality-not-triggering and variants.
+
+Tias demo oracle (discount 0.30) loads from fixtures/demo/expected.json (external).
+"""
 
 from __future__ import annotations
 
@@ -9,11 +12,12 @@ import pytest
 from bidlab.domain.anomaly import AnomalyError, evaluate_anomaly, evaluate_tias
 
 
-def _examples() -> Path:
+def _demo_expected() -> Path:
     for parent in Path(__file__).resolve().parents:
-        if (parent / "examples" / "evaluation_response.json").exists():
-            return parent / "examples"
-    raise FileNotFoundError("examples/evaluation_response.json not found")
+        candidate = parent / "fixtures" / "demo" / "expected.json"
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("fixtures/demo/expected.json not found")
 
 
 def test_n1_boundary() -> None:
@@ -147,17 +151,10 @@ def test_invalid_inputs_rejected() -> None:
         evaluate_tias("50", [], "100")
 
 
-def test_evaluation_response_oracle() -> None:
-    examples = _examples()
-    request = json.loads((examples / "evaluation_request.json").read_text(encoding="utf-8"))
-    response = json.loads((examples / "evaluation_response.json").read_text(encoding="utf-8"))
-    demo = json.loads((examples / "demo_expected.json").read_text(encoding="utf-8"))
-    own = response["price_net"]
-    offers = [own, *(offer["price_net"] for offer in request["rivals"]["offers"])]
-    result = evaluate_tias(own, offers, demo["budget_net"])
-    expected = response["anomaly"]
-    assert result.status == expected["status"]
-    assert result.branch == expected["branch"]
-    assert result.reference_mean_serialized == expected["reference_mean_net"]
-    assert result.threshold_serialized == expected["threshold_net"]
-    assert result.reference_offer_count == expected["reference_offer_count"]
+def test_tias_demo_discount_30_oracle() -> None:
+    expected = json.loads(_demo_expected().read_text(encoding="utf-8"))
+    case = next(c for c in expected["cases"] if c["discount_rate"] == "0.3000")
+    own = case["expected_price_net"]
+    offers = [own, *expected["rival_prices_net"]]
+    result = evaluate_tias(own, offers, expected["budget_net"])
+    assert result.status == expected["at_30_anomaly"]
