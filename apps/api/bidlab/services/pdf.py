@@ -1,0 +1,120 @@
+"""Deterministic PDF page-text extraction (T14) + citation locating (T15).
+
+Pure functions: the same bytes always produce the same pages. No network,
+no model calls, no wall-clock input. Normalization matches the demo seed
+(``nfkc-noshyphen-collapse-1``) so curated excerpts and fresh extractions
+locate quotes identically.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import unicodedata
+from dataclasses import dataclass
+from io import BytesIO
+
+from pypdf import PdfReader
+
+EXTRACTOR_VERSION = "bidlab-pdf-1"
+NORMALIZATION_VERSION = "nfkc-noshyphen-collapse-1"
+MAX_PAGES = 120
+MAX_CHARS_PER_PAGE = 100_000
+MAX_PDF_BYTES = 64 * 1024 * 1024
+
+
+class PdfError(ValueError):
+    """Unreadable or out-of-limits PDF input. Carries a contract-style code."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+@dataclass(frozen=True)
+class PageExtraction:
+    page_number: int
+    raw_text: str
+    normalized_text: str
+    text_sha256: str
+    extractor_version: str
+    quality_flags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CitationMatch:
+    match_status: str  # exact | normalized_match | missing
+    normalized_start: int | None
+    normalized_end: int | None
+
+
+def normalize_text(raw: str) -> str:
+    """NFKC, drop soft hyphens, collapse all whitespace to single spaces."""
+    text = unicodedata.normalize("NFKC", raw).replace(chr(0xAD), "")
+    return " ".join(text.split())
+
+
+def page_sha256(normalized_text: str) -> str:
+    return hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
+
+
+def extract_pages(pdf_bytes: bytes) -> list[PageExtraction]:
+    """Extract ordered page texts from PDF bytes. Raises PdfError on failure."""
+    if len(pdf_bytes) > MAX_PDF_BYTES:
+        raise PdfError(
+            "pdf_too_large",
+            f"PDF is {len(pdf_bytes)} bytes; limit is {MAX_PDF_BYTES}",
+        )
+    try:
+        reader = PdfReader(BytesIO(pdf_bytes))
+        raw_pages = list(reader.pages)
+    except Exception as exc:
+        raise PdfError("pdf_unreadable", f"cannot parse PDF: {exc}") from exc
+    if not raw_pages:
+        raise PdfError("pdf_no_pages", "PDF contains no pages")
+    if len(raw_pages) > MAX_PAGES:
+        raise PdfError(
+            "pdf_too_many_pages",
+            f"PDF has {len(raw_pages)} pages; limit is {MAX_PAGES}",
+        )
+    out: list[PageExtraction] = []
+    for index, page in enumerate(raw_pages, start=1):
+        try:
+            raw = page.extract_text() or ""
+        except Exception as exc:
+            raise PdfError("pdf_page_unreadable", f"page {index} unreadable: {exc}") from exc
+        flags: list[str] = []
+        if len(raw) > MAX_CHARS_PER_PAGE:
+            raw = raw[:MAX_CHARS_PER_PAGE]
+            flags.append("text_truncated")
+        normalized = normalize_text(raw)
+        if not normalized:
+            flags.append("no_extractable_text")
+        out.append(
+            PageExtraction(
+                page_number=index,
+                raw_text=raw,
+                normalized_text=normalized,
+                text_sha256=page_sha256(normalized),
+                extractor_version=EXTRACTOR_VERSION,
+                quality_flags=tuple(flags),
+            )
+        )
+    return out
+
+
+def locate_citation(normalized_page_text: str, verbatim_excerpt: str) -> CitationMatch:
+    """Locate a quote inside already-normalized page text.
+
+    ``exact``: excerpt appears verbatim. ``normalized_match``: excerpt matches
+    after normalization (whitespace/soft-hyphen differences). ``missing``:
+    no match; the citation is unverified, never silently dropped.
+    """
+    if verbatim_excerpt and verbatim_excerpt in normalized_page_text:
+        start = normalized_page_text.index(verbatim_excerpt)
+        return CitationMatch("exact", start, start + len(verbatim_excerpt))
+    folded = normalize_text(verbatim_excerpt)
+    if folded and folded in normalized_page_text:
+        start = normalized_page_text.index(folded)
+        return CitationMatch("normalized_match", start, start + len(folded))
+    return CitationMatch("missing", None, None)

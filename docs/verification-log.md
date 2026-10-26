@@ -195,3 +195,26 @@ unidades, periodo 3y, umbral ausente/ilegible). Rutas en contrato
 - Nota: `pytest apps/api/tests` entero colisiona por dos
   test_placeholder.py (unit + live, mismo basename sin __init__);
   los live se excluyen como en verify.py. No es fallo de producto.
+
+## Producto T14–T18 — PDF, Meta, jobs, revisión (Windows)
+
+Fecha: 2026-10-26. Helper acotado (sin commit); lead releyó servicios,
+rutas y gates. PDF determinista (pypdf, límites 120p/100kch/64MB,
+normalización nfkc-noshyphen-collapse-1 como la semilla, localización
+exact/normalized_match/missing con offsets). Adaptador Meta honesto:
+stub offline etiquetado fixture_stub (escenarios ok/refusal/truncated/
+invalid_json), live solo con MODEL_API_KEY + META_API_URL explícita,
+si no 503 provider_not_configured (nunca fixture-como-live), una sola
+tentativa, validación ExtractionProposal, presupuesto que falla
+cerrado. Jobs: POST analysis 202 + Location, idempotencia, ejecución
+inline restart-safe (lease 10min, 409 si running), citas verificadas y
+persistidas con match_status real, needs_review ante warnings/páginas
+sin leer/claims débiles. Review: aprueba claim keys, corrected_proposal
+opcional con citas relocalizadas (missing incluido), nueva revisión
+manual + audit event, devuelve Workspace. Live test opt-in
+(BIDLAB_RUN_LIVE=1) sustituye al placeholder live (fin de la colisión).
+Rutas en contrato (analysis, jobs/{id}, reviews).
+- `pytest unit+integration+contracts` → 187 passed. `ruff` limpio,
+  `mypy` limpio (48 ficheros).
+- Nota: los routers jobs/review quedaron registrados en main.py por el
+  helper T14 antes del commit T13; verificado presente, sin duplicar.
