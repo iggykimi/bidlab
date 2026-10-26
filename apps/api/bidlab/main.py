@@ -1,7 +1,7 @@
 """BidLab API entrypoint. Loopback only; no multi-user auth (see ARCHITECTURE)."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

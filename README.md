@@ -1,45 +1,197 @@
-# BidLab — paquete de investigación y especificación
-**Corte de investigación: 26 de octubre de 2026.** Destino: repositorio nuevo para Muse Code. Este paquete contiene diseño, muestras y sondas de investigación; **no contiene una aplicación implementada**, un vídeo grabado ni una extracción ejecutada con Meta.
+# BidLab — licitación real, revisión trazable, Pricing Lab determinista
 
-## Dictamen
-**Viable con alcance acotado.** Construir primero una licitación real, revisión documental trazable y Pricing Lab determinista. La muestra oficial permite metadatos y algunos resultados, pero no identifica una distribución completa de ofertas rivales. No desarrollar predicción de adjudicación. Mantener el histórico descriptivo como P1 condicionado a comparabilidad y tamaño.
+BidLab ayuda a una pyme a decidir si pujar: biblioteca de licitaciones,
+matriz de requisitos con citas localizadas en página, y Pricing Lab con
+puntos, anomalía y curva calculados por un motor determinista en Python.
+El LLM propone estructura y citas; la aritmética, la elegibilidad y la
+anormalidad viven en dominio puro. Dinero y puntos en `Decimal`, API con
+strings, sin fórmulas autoritativas en el frontend.
 
-Caso P0 elegido: **2026/00006554N**, asistencia técnica del PAI de Tías, fuente PLACSP 20777838. PBL neto 118.336 EUR; PBL con IGIC 126.619,52 EUR; duración inicial dos años; VEC 295.840 EUR; precio 49 puntos. Regla proporcional inversa en PCAP página PDF 10 y regla de anormalidad en página PDF 20. Véase docs/RULE_ENGINE.md.
+Caso P0: **2026/00006554N** (asistencia técnica del PAI de Tías),
+PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
+(PCAP p.10) y anormalidad (PCAP p.20). Estado: P0 en curso según
+[task-board](docs/task-board.md); este README describe la instalación
+limpia rehearseada en T31/T32.
 
-## Cómo utilizarlo
-1. Leer docs/SOURCE_AUDIT.md y docs/DATA_FEASIBILITY.md: contienen resultados ejecutados y límites.
-2. Copiar este árbol en la raíz de un repositorio nuevo. AGENTS.md ya existe: no sobrescribirlo con muse init.
-3. Leer docs/MUSE_GOAL.md y resolver admisión/bases aceptadas y acceso API en el entorno del participante. La implementación offline puede avanzar mientras se resuelven.
-4. Usar los doce entregables normativos de la tabla. El primer agente implementador genera el lockfile y el esqueleto, no reinventa los contratos.
-5. Mantener evidence/originals fuera del repositorio público hasta completar la revisión por documento descrita en docs/DEMO_SUBMISSION.md. Son copias de investigación, no una licencia concedida por BidLab.
+## Requisitos previos
 
-| Entregable | Propósito |
-|---|---|
-| docs/SOURCE_AUDIT.md | Fuentes, correcciones y gates |
-| docs/DATA_FEASIBILITY.md | Descargas reales, estructura y calidad |
-| docs/PRD.md | Alcance, UX e historias con aceptación |
-| docs/ARCHITECTURE.md | Stack, módulos, seguridad y flujos |
-| docs/API_CONTRACT.yaml | OpenAPI 3.1 canónica |
-| docs/DATA_MODELS.md | Persistencia, estados y contratos |
-| docs/RULE_ENGINE.md | Matemáticas, reglas y DSL |
-| docs/TEST_STRATEGY.md | Pruebas y métricas |
-| docs/MILESTONES.md | Tareas, presupuesto y recortes |
-| docs/DEMO_SUBMISSION.md | Ensayo, vídeo y entrega |
-| AGENTS.md | Reglas del agente de programación |
-| docs/MUSE_GOAL.md | /goal y coordinación de agentes |
+| Herramienta | Mínimo | Verificado (Windows, 26-oct-2026) |
+|---|---|---|
+| Python | >= 3.12 (`pyproject.toml`) | 3.14.7 |
+| uv | reciente con workspaces | 0.12.5 |
+| Node | >= 20.19 (Vite 6) | v26.3.0 |
+| npm | cualquiera con `package-lock` | 12.0.2 |
+| Chromium Playwright | solo para E2E | 1.64.1 (`npx playwright install chromium`) |
 
-## Evidencia entregada
-- Feed Atom real: snapshot original privado y 68 expedientes en CSV/JSON de metadatos, resultados y documentos en evidence/feed_probe/.
-- ZIP oficial 2012: 16.008.909 bytes; 38 miembros Atom; 19.000 entradas, 11.262 IDs distintos y 7.738 versiones adicionales. Se incluye resumen, no el ZIP completo ni sus 246 MB descomprimidos.
-- Cinco PCAP y un PPT descargados; hashes y URLs exactas en evidence/download_manifest.json; los tres casos de fórmula fueron inspeccionados también visualmente.
-- examples/: vectores numéricos, contratos de ejemplo, gold documental inicial y XML minimizado.
-- schemas/: SQL y esquemas auxiliares. tools/: sondas y verificaciones del diseño.
-- docs/verification-log.md distingue verificaciones hechas ahora de pruebas de producto pendientes.
+Sin claves ni red para la demo offline. La extracción live con Meta es
+opt-in y necesita `MODEL_API_KEY` (ver [Configuración](#configuración)).
 
-La muestra reciente es de conveniencia y el ZIP es histórico; **ninguna constituye un conjunto validado para entrenar un predictor**. Las ofertas de los escenarios y los costes de empresa son sintéticos y deben rotularse siempre.
+## Instalación (limpia)
 
-## Comprobación del paquete
-Python 3.12. Dependencias de investigación: lxml, pypdf; para validar contratos: PyYAML, jsonschema, openapi-spec-validator 0.7.2. Consultar tools/requirements-validation.txt. Ejecutar python tools/validate_blueprint.py desde esta raíz. Es una comprobación del diseño; pytest y Playwright del futuro producto son otra fase.
+Desde la raíz del repo:
 
-No hay acceso a claves Meta en esta sesión. No se ha instalado/ejecutado Muse Code. Las capacidades del CLI son comprobación documental, no prueba en el ordenador del participante.
+```sh
+uv sync --all-packages
+npm install
+npx playwright install chromium   # solo para test:e2e / verify.py completo
+```
 
+Notas exactas del ensayo limpio (T31):
+
+- `uv sync` necesita `--all-packages` para instalar el miembro
+  `apps/api`; sin ese flag el API no queda instalado.
+- `npm install` no necesita aprobación manual de esbuild: los
+  `allowScripts` de esbuild ya están fijados en `package.json`.
+  Ensayo: `up to date, audited 279 packages, found 0 vulnerabilities`.
+- Los locks (`uv.lock`, `package-lock.json`) fijan las versiones; no
+  usar `latest`.
+
+## Arranque
+
+Tres terminales (o dos, si se usa `demo.py`):
+
+```sh
+# 1. API (migra al arrancar sobre storage vacío; sin seed automático)
+python scripts/dev.py
+# equivale a: uv run uvicorn bidlab.main:app --host 127.0.0.1 --port 8000
+
+# 2. Semilla demo (idempotente; --reset solo en modo demo)
+uv run python scripts/seed_demo.py
+
+# 3. Web
+npm run dev -w apps/web
+```
+
+Atajo demo: `python scripts/demo.py --reset-demo` resetea la DB demo,
+siembra y arranca el API en un solo paso.
+
+URLs:
+
+- Web: <http://127.0.0.1:5173/> (botón demo → workspace `/tenders/tias`)
+- API: <http://127.0.0.1:8000/api/v1/health> →
+  `{"status":"ok","engine_version":"1.0.0","schema_version":"1.0.0"}`
+- Capacidades y límites: `/api/v1/capabilities`
+
+Storage por defecto `./storage` (SQLite WAL, gitignored). Para un
+storage fresco aislado:
+
+```powershell
+$env:BIDLAB_STORAGE_DIR = "C:\ruta\fresca"   # PowerShell
+```
+
+```sh
+export BIDLAB_STORAGE_DIR=/ruta/fresca       # bash
+```
+
+Comprobado en T31: arrancar con storage vacío crea 18 tablas
+(alembic `0001_initial`), la primera petición responde 200 (sin 500),
+y `GET /tenders` devuelve `total: 0` hasta sembrar. Tras
+`seed_demo.py`: 1 tender (`tias`), 6 páginas, 9 citas, 1 regla, 1
+empresa + revisión; `POST /demo/sessions` → 201
+`{"tender_id":"tias","scope_id":"tias-whole","company_id":"company-demo","mode":"demo"}`.
+
+Mutaciones API (demo incluida) exigen cabeceras:
+
+```sh
+curl -X POST http://127.0.0.1:8000/api/v1/demo/sessions \
+  -H "Content-Type: application/json" \
+  -H "X-BidLab-Client: local-ui" -H "Idempotency-Key: <uuid>" -d "{}"
+```
+
+Sin `X-BidLab-Client: local-ui` → 403; sin `Idempotency-Key` → 422.
+El bind solo acepta loopback (`127.0.0.1`, `localhost`, `::1`).
+
+## Verificación
+
+```sh
+python scripts/verify.py            # todas las puertas; exit 0 = verde
+python scripts/verify.py --skip-e2e # sin Playwright
+```
+
+`verify.py` para en el primer fallo y devuelve su exit code. Puertas,
+en orden: `uv sync --frozen --all-packages`, pytest unit (144),
+pytest integration+contracts (43), `npm run lint`, `npm run typecheck`,
+`npm run build`, `npm run test:unit`, `ruff check .`,
+`mypy apps/api/bidlab`, Playwright E2E (14, Chromium, API+web reales).
+
+Estado a 26-oct-2026 (T31/T32, verificado por ejecución propia; detalle
+y comandos en [verification-log](docs/verification-log.md)):
+
+- PASS: deps, pytest 187/187, web unit 14/14, mypy 48 ficheros.
+- FAIL fuera de alcance T31/T32, pendiente del owner: `npm run
+  lint/typecheck/build` por trabajo sin commitear en
+  `apps/web/src/features/pricing/` (T23/T24 en curso); `ruff` por
+  `UP035` en la línea 4 de `apps/api/bidlab/main.py` (commiteado).
+- BLOCKED con causa: E2E, porque su `webServer` construye la web y el
+  build falla (último verde: 14 passed en T29).
+- `verify.py` funciona correctamente (detecta fallos reales); no se
+  tocó `apps/` ni `tests/`.
+
+## Configuración
+
+Sin `.env`, el arranque usa: modo `demo`, bind `127.0.0.1:8000`,
+storage `./storage`, historial desactivado. Para live con Meta, copiar
+[.env.example](.env.example) a `.env` (gitignored, nunca commitear) y
+definir `BIDLAB_MODE=live` + `MODEL_API_KEY`. Clave presente en modo
+demo no activa live (`live_ready` exige ambas). `META_API_KEY`
+pertenece al entorno del CLI de Muse, no a la app.
+
+| Variable | Defecto | Efecto |
+|---|---|---|
+| `BIDLAB_MODE` | `demo` | `demo`/`live`/`manual` |
+| `BIDLAB_BIND_HOST` / `BIDLAB_PORT` | `127.0.0.1` / `8000` | bind API (loopback only) |
+| `BIDLAB_STORAGE_DIR` | `./storage` | SQLite + uploads |
+| `BIDLAB_HISTORY_ENABLED` | `false` | histórico P1 desactivado |
+| `BIDLAB_META_BUDGET_USD` | `20.00` | techo de gasto Meta |
+| `META_MODEL` | `muse-spark-1.3` | modelo de extracción |
+| `MODEL_API_KEY` | vacío | live solo si modo=live y clave |
+
+## Límites
+
+- Un proceso Uvicorn + SQLite WAL; sin auth multiusuario (loopback +
+  cabecera no es auth; despliegue público la exigiría).
+- PDF: 20 MB, 120 páginas, 100.000 caracteres; curva limitada a 201
+  puntos (ver `/api/v1/capabilities`).
+- Sin todas las ofertas reales, los escenarios son hipótesis
+  declaradas; no hay predictor de adjudicación ni distribución rival.
+- `unknown` se representa con `null`, nunca cero; regla o scope
+  pendientes bloquean puntos; la anormalidad es presunción, no
+  exclusión automática.
+- Histórico descriptivo P1 aparcado salvo P0 sólido + tiempo.
+
+## Notas honestas de la demo
+
+- La insignia **Demo curada** significa: cifras de la semilla manual
+  revisada (`fixtures/demo/`), no de extracción live. Tokens `null`.
+- Offline total: los E2E abortan cualquier petición no-loopback.
+- Ofertas de escenarios y costes de empresa sintéticos, siempre
+  rotulados. Sin animaciones ni registros ficticios de API.
+- Documentos originales de investigación bajo
+  [publication-manifest](docs/publication-manifest.json): copias con
+  publicación desactivada hasta revisión por fichero (T04 pendiente).
+
+## Documentación
+
+Contrato y diseño en `docs/`: [PRD](docs/PRD.md),
+[ARCHITECTURE](docs/ARCHITECTURE.md),
+[API_CONTRACT](docs/API_CONTRACT.yaml),
+[DATA_MODELS](docs/DATA_MODELS.md), [RULE_ENGINE](docs/RULE_ENGINE.md),
+[TEST_STRATEGY](docs/TEST_STRATEGY.md), [MILESTONES](docs/MILESTONES.md),
+[DEMO_SUBMISSION](docs/DEMO_SUBMISSION.md),
+[SOURCE_AUDIT](docs/SOURCE_AUDIT.md),
+[DATA_FEASIBILITY](docs/DATA_FEASIBILITY.md). Reglas de agente en
+[AGENTS.md](AGENTS.md). Puertas y entorno en
+[task-board](docs/task-board.md), [environment](docs/environment.md),
+[blockers](docs/blockers.md) y
+[verification-log](docs/verification-log.md).
+
+## Licencias y derechos
+
+- Este repo aún no incluye fichero `LICENSE`; no asumir licencia de
+  uso hasta que el autor la añada (T32 deja constancia, no la inventa).
+- `evidence/originals/` excluido del repo público (ver
+  `publication-manifest.json` y `.gitignore`): son copias de
+  investigación, no una licencia concedida.
+- `tools/` conserva sondas de investigación congeladas (excluidas del
+  lint); `bidlab_blueprint/` y el ZIP son drops locales del autor,
+  fuera del índice git.

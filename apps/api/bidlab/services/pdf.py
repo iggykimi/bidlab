@@ -19,7 +19,7 @@ EXTRACTOR_VERSION = "bidlab-pdf-1"
 NORMALIZATION_VERSION = "nfkc-noshyphen-collapse-1"
 MAX_PAGES = 120
 MAX_CHARS_PER_PAGE = 100_000
-MAX_PDF_BYTES = 64 * 1024 * 1024
+MAX_PDF_BYTES = 20 * 1024 * 1024
 
 
 class PdfError(ValueError):

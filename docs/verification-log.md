@@ -238,3 +238,55 @@ responsive + seguridad.
   `seed.migrate()` al arrancar (tablas sí, semilla no: la demo sigue
   explícita). Re-ejecución E2E con storage borrado: 14 passed, cero
   OperationalError en el log.
+
+## Producto T31/T32 — ensayo limpio + README reproducible (Windows)
+
+Fecha: 2026-10-26. Commit: 8c70751 + trabajo sin commitear ajeno (ver
+fallos). Entorno: Windows, Python 3.14.7, Node v26.3.0, npm 12.0.2,
+uv 0.12.5, Playwright 1.64.1. Alcance: solo README.md + este apéndice;
+`apps/`, `tests/` y `scripts/verify.py` intactos (verify.py funciona
+bien: detecta fallos reales). Sin commit.
+
+Ensayo limpio con storage fresco (`test-results/bidlab-t31-fresh`,
+vacío al inicio; servidores propios detenidos tras el ensayo):
+- `uv sync --all-packages` → exit 0 (62 resueltos, 60 verificados).
+- `npm install` → exit 0, 279 paquetes, 0 vulnerabilidades; sin
+  approve de esbuild (allowScripts ya fijado en package.json).
+- API sobre storage vacío: primera petición `GET /api/v1/health` →
+  200 `{"status":"ok","engine_version":"1.0.0","schema_version":"1.0.0"}`;
+  18 tablas, alembic `0001_initial`, `GET /tenders` → `total: 0`
+  (migra al arrancar, no auto-siembra). Cero 500.
+- `uv run python scripts/seed_demo.py` → exit 0: tender 1, notice 1,
+  scope 1, document 1, pages 6, citations 9, interpretation 1,
+  rule 1, company 1+rev1, audit 2.
+- `GET /tenders` → total 1 (id `tias`, ext. 2026/00006554N);
+  `GET /tenders/tias/workspace` → 200; `POST /demo/sessions`
+  (X-BidLab-Client + Idempotency-Key) → 201
+  `{"tender_id":"tias","scope_id":"tias-whole",
+  "company_id":"company-demo","mode":"demo"}`.
+- Web dev: `GET /` → 200 (Vite 6.4.5); proxy `/api/v1/health` → ok;
+  `/api/v1/capabilities` → mode demo, meta_configured false,
+  history disabled, límites pdf 20MB/120p, curva 201.
+- Tropiezos propios del ensayo (relevantes para README, no bugs): el
+  id del tender es `tias`, no `1` (`/tenders/1` → 404 honesto);
+  `POST /demo/sessions` exige `Idempotency-Key` además de
+  `X-BidLab-Client` (sin ella → 422 honesto).
+
+`python scripts/verify.py` → exit 1, para en `npm-lint` (diseño:
+para en el primer fallo). Puertas re-ejecutadas una a una:
+- PASS: deps-python, pytest-unit (144), pytest-integration-contracts
+  (43; warnings deprecation alembic path_separator preexistentes),
+  npm test:unit (14, incl. 6 nuevos de sources.test.ts), mypy
+  (48 ficheros limpios).
+- FAIL fuera de alcance (owner T23/T24, ficheros sin commitear):
+  npm-lint (3 unused en PricingLab.tsx:34/38/115), npm-typecheck
+  (+`sources.ts:5` importa `MetadataEvidence` inexistente en
+  api/client), npm-build (falla en su paso tsc, vite no corre).
+- FAIL fuera de alcance (commiteado, preexistente): ruff UP035
+  `apps/api/bidlab/main.py:4` (`typing.AsyncIterator` → collections.abc).
+- BLOCKED con causa: playwright-e2e (su webServer ejecuta
+  `npm run build`; último verde 14 passed en T29). No re-ejecutado a
+  ciegas: fallaría en el arranque por la causa ya establecida.
+- README.md reescrito como guía reproducible (prereqs con versiones,
+  install, run, verify, config, límites, notas honestas, licencias);
+  estado de puertas fechado incluido con remisión a este log.
