@@ -109,7 +109,7 @@ class Citation(Base):
         ),
     )
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
-    document_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    document_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     page_number: Mapped[int] = mapped_column(Integer, nullable=False)
     document_sha256: Mapped[str] = mapped_column(String, nullable=False)
     quote: Mapped[str] = mapped_column(Text, nullable=False)
@@ -136,7 +136,9 @@ class RuleRevision(Base):
     __tablename__ = "rule_revision"
     rule_id: Mapped[str] = mapped_column(String(80), primary_key=True)
     revision: Mapped[int] = mapped_column(Integer, primary_key=True)
-    scope_id: Mapped[str] = mapped_column(String(80), ForeignKey("scope.id"), nullable=False)
+    scope_id: Mapped[str] = mapped_column(
+        String(80), ForeignKey("scope.id"), nullable=False, index=True
+    )
     interpretation_revision: Mapped[int] = mapped_column(Integer, nullable=False)
     rule_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     review_status: Mapped[str] = mapped_column(String, nullable=False)
