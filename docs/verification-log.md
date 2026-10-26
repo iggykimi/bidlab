@@ -290,3 +290,7 @@ para en el primer fallo). Puertas re-ejecutadas una a una:
 - README.md reescrito como guía reproducible (prereqs con versiones,
   install, run, verify, config, límites, notas honestas, licencias);
   estado de puertas fechado incluido con remisión a este log.
+
+## Secrets scan (26-oct)
+
+Helper read-only + corroborado por lead: 0 secretos en historial (git log -p, 29+ commits), .env sin rastrear, .gitignore cubre .env/storage/caches. PASS 4/4.
