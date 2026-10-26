@@ -8,8 +8,8 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 
 ## Emil Kowalski (15)
 - [R] review-animations — auditada 26-oct: BLOCK a CurveChart (line-draw 1500ms por tick → borrar)
-- [R] break-ui — auditada 26-oct (F8 NaN, F10 overflow, F14 empty states)
-- [R] apple-design — auditada 26-oct (contraste, reduced-motion, system-ui OK)
+- [R] break-ui — leída completa propia + auditada 26-oct (F8 NaN, F10 overflow, F14 empty states)
+- [R] apple-design — leída completa propia + auditada 26-oct (contraste, reduced-motion, system-ui OK)
 - [R] pick-ui-library — auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
 - [R] prototype — auditada 26-oct
 - [R] mobile-native — auditada 26-oct (F3 targets, F4 16px, viewport-fit, safe-area)

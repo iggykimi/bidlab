@@ -103,6 +103,12 @@
       "skillPath": "skills/churn-prevention/SKILL.md",
       "computedHash": "166c79d5db1210c85ba78d097ef9faa1aba739c990a295dd73de0ced6ec0c4e4"
     },
+    "code-review": {
+      "source": "coderabbitai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-review/SKILL.md",
+      "computedHash": "3e9e785ab5b98285e195b7d0ead9bd60617791b3b898b87e98c20d713cf6b5c5"
+    },
     "cold-email": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
@@ -210,6 +216,18 @@
       "sourceType": "github",
       "skillPath": "skills/extract-design-system/SKILL.md",
       "computedHash": "c66852c6bc6e0267dbcc9651fa698701387fc11c5058104bc33e67f495936f7e"
+    },
+    "extract-openapi-from-code": {
+      "source": "speakeasy-api/sdk-generation-skills",
+      "sourceType": "github",
+      "skillPath": "skills/extract-openapi-from-code/SKILL.md",
+      "computedHash": "a0e6d9f476d50d4c5af9576599226dbf33ab1809ed508a8e4195c6d3680ea75f"
+    },
+    "fastapi": {
+      "source": "fastapi/fastapi",
+      "sourceType": "github",
+      "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
+      "computedHash": "ff680b56037089d5f4cb399af70b0f9efd3d332887be464db11864b14eb3ad93"
     },
     "find-animation-opportunities": {
       "source": "emilkowalski/skills",
@@ -409,6 +427,12 @@
       "skillPath": "skills/ralph-wiggum/SKILL.md",
       "computedHash": "746608fdcf30a1451422bdc6936ea9de84c5e4439e0eaca232ac325663d55a5f"
     },
+    "receiving-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/receiving-code-review/SKILL.md",
+      "computedHash": "59361179fc9225173e0c145ffd9bafbf9fdbf8b43ce3dc308497a0b4f83a6063"
+    },
     "requesting-code-review": {
       "source": "obra/superpowers",
       "sourceType": "github",
@@ -426,6 +450,12 @@
       "sourceType": "github",
       "skillPath": "skills/schema/SKILL.md",
       "computedHash": "486ebabc2bca9b371ff6394a86c5af650e588556a34b23f053525b4ebfb234e7"
+    },
+    "security-audit": {
+      "source": "cloudflare/security-audit-skill",
+      "sourceType": "github",
+      "skillPath": "skills/security-audit/SKILL.md",
+      "computedHash": "e6b2e317de75da97e9de18d842982994803f3a67a4a6d8154a82323dc3de8528"
     },
     "seo-audit": {
       "source": "coreyhaines31/marketingskills",
@@ -505,6 +535,12 @@
       "skillPath": "skills/using-git-worktrees/SKILL.md",
       "computedHash": "48c8a1040e378e0cb7208107294e3afa9067b9370c3f33b49a443eb6b7528b0d"
     },
+    "validate-evaluator": {
+      "source": "ai-evals-course/evals-skills",
+      "sourceType": "github",
+      "skillPath": "skills/validate-evaluator/SKILL.md",
+      "computedHash": "007d12ff191dfd567190be6c3f6b9b950170888bdf66f17fe00b41969bcffb7a"
+    },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
@@ -535,11 +571,23 @@
       "skillPath": "skills/webapp-testing/SKILL.md",
       "computedHash": "3f14af7f5690695209c22fbf8c8d133769a86d64892602c09bb13f135e14e857"
     },
+    "write-judge-prompt": {
+      "source": "ai-evals-course/evals-skills",
+      "sourceType": "github",
+      "skillPath": "skills/write-judge-prompt/SKILL.md",
+      "computedHash": "e6c76923e8c22c2b46f64fa1d076a8ed2c4acd8276be0e3a295e35b76e942190"
+    },
     "write-swift": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/write-swift/SKILL.md",
       "computedHash": "3c4854221f2c654172c3532e71dcb4ece25ef62057d97bec1c26c3ab17eca191"
+    },
+    "writing-openapi-specs": {
+      "source": "speakeasy-api/sdk-generation-skills",
+      "sourceType": "github",
+      "skillPath": "skills/writing-openapi-specs/SKILL.md",
+      "computedHash": "4fa232bf8821a1f089a2a916d143b81ee5c2da4d3d59b1569195842792f0bfa6"
     },
     "writing-plans": {
       "source": "obra/superpowers",
