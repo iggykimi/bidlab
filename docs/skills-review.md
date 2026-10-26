@@ -118,6 +118,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - F14 empty states en 2 tablas. F15 PricingLab 832 líneas (descomponer al tocar). F16 menores a11y/URL.
 - NO tocar: dark mode/restyle, recharts/react-query, motion libs, toasts de error, copy honesta, user-scalable=no.
 ### Código/tests (26-oct, auditor solo-lectura, 7 skills)
+APLICADO backend 26-oct (commit 87f2ea6, 205 tests, ruff/mypy verde): C1+C2+C3+C5+C6+C7+C15+C16+C17 + dead (repositories, shims, to_dict, OpName). Verificado por lead incl. oráculo RULE_ENGINE:110 (rglcap fail-closed). Pendiente: C4/C8-C14 (frontend/E2E, tras agente UI).
 - C1 DIVERGENCIA: producción (`evaluation.py:227`) vs dispatch muerto (`evaluate_anomaly`, 0 callers) en rglcap85 cierre-25 y unsupported. DECISIÓN LEAD: gana producción (RULE_ENGINE/T22 verificado: rglcap SIN cierre25, unsupported→not_applicable); unificar dispatch a producción, corregir test_anomaly:126-129, añadir integración rglcap por POST /scenarios/evaluate.
 - C2 `eligibility._decimal` acepta Infinity→met / NaN→not_met engañoso → reutilizar `money.parse_decimal` + regresión.
 - C3 idempotencia check→store con carrera → capturar conflicto en store, devolver respuesta ganadora + test concurrencia.
