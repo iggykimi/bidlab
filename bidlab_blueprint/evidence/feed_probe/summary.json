@@ -1,0 +1,38 @@
+{
+  "input_sha256": "c15cf7144811345e9f547cc9b4a86e9054831bdc8c84481bdb830ca81ddb0da4",
+  "entries": 68,
+  "unique_tenders": 68,
+  "duplicate_versions": 0,
+  "result_records": 33,
+  "zip_members": 0,
+  "tender_nonnull": {
+    "pbl_net": 68,
+    "pbl_gross": 68,
+    "estimated_value": 68,
+    "cpv": 68,
+    "nuts": 68
+  },
+  "tenders_with_lots": 20,
+  "tenders_with_results": 22,
+  "tenders_with_legal_document": 56,
+  "result_nonnull": {
+    "award_net": 27,
+    "received_count": 33,
+    "lower_amount": 13,
+    "higher_amount": 13
+  },
+  "structural_candidates": 22,
+  "quality_flag_counts": {
+    "missing_award_net": 6,
+    "no_winner": 6,
+    "unresolved_multiple_awards": 4,
+    "award_above_budget": 1
+  },
+  "status_counts": {
+    "PUB": 40,
+    "RES": 19,
+    "EV": 3,
+    "ADJ": 3,
+    "PRE": 3
+  }
+}

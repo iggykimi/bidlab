@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "claims": [
+    {
+      "key": "pbl_gross",
+      "raw_value": "126.619,52 €",
+      "normalized_value": "126619.52",
+      "unit": "EUR",
+      "citations": [
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 8,
+          "verbatim_excerpt": "eve euros con cincuenta y dos céntimos (126.619,52 €), incluido IGIC, conforme a las siguientes anualidades: 6.- EXISTENCIA DE CRÉDITO PRESUPUESTARIO Existe el crédito presupuestario 2026 el crédito preciso para atender a las obligaciones económicas que se deriven de la"
+        }
+      ],
+      "confidence": "high",
+      "status": "proposed",
+      "notes": [
+        "IGIC incluido; no usar como base neta."
+      ]
+    },
+    {
+      "key": "estimated_value",
+      "raw_value": "295.840,00 €",
+      "normalized_value": "295840.00",
+      "unit": "EUR",
+      "citations": [
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 8,
+          "verbatim_excerpt": "Y CINCO MIL OCHOCIENTOS CUARENTA EUROS (295.840,00 €), sin IGIC."
+        }
+      ],
+      "confidence": "high",
+      "status": "proposed",
+      "notes": [
+        "VEC distinto de PBL."
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "key": "technical_services",
+      "label": "Servicios similares acreditados",
+      "category": "technical",
+      "logic_hint": "LEAF",
+      "group_key": null,
+      "condition_text": "Importe anual acumulado en el mejor año de los tres últimos >=207088 EUR, con acreditación y similitud revisadas.",
+      "citations": [
+        {
+          "document_id": "doc-tias-pcap",
+          "page_number": 6,
+          "verbatim_excerpt": "cientos siete mil ochenta y ocho euros (207.088,00€). A estos efectos, se considerarán servicios de igual o similar naturaleza los relacionados con relacionadas con el objeto del presente contrato y pertenecer al mismo tipo o naturaleza a la que corresponde el mismo. Lo"
+        }
+      ],
+      "ambiguities": []
+    }
+  ],
+  "pricing_formula": {
+    "formula_literal": "P=(pm*mo)/O",
+    "template_hint": "proportional_inverse",
+    "max_points": "49",
+    "variables": [
+      "pm=puntuación máxima",
+      "mo=mejor oferta",
+      "O=oferta valorada"
+    ],
+    "citations": [
+      {
+        "document_id": "doc-tias-pcap",
+        "page_number": 10,
+        "verbatim_excerpt": "a, de acuerdo con la siguiente fórmula: P=(pm*mo)/O, o bien P=(pm*O)/mo, según se trate, respectivamente, de proporción inversa o proporción directa con la mejor oferta, (donde \"P\" es la puntuación, \"pm\" es la puntuación máxima, \"mo\" es la mejor oferta y \"O\" es el valor"
+      }
+    ],
+    "ambiguities": []
+  },
+  "anomaly_text": "Política explícita de la cláusula 18.5; revisar todas las ramas en la página 20 antes de aprobar.",
+  "anomaly_citations": [
+    {
+      "document_id": "doc-tias-pcap",
+      "page_number": 20,
+      "verbatim_excerpt": "ión del referido criterio preferencial. 18.5.- El órgano de contratación podrá estimar, por sí o a propuesta de la Mesa de contratación, que las proposiciones presentadas son inviables por anormalmente bajas cuando en las mismas concurran las siguientes circunstancias: "
+    }
+  ],
+  "unread_pages": [],
+  "warnings": [
+    "Ejemplo manual de contrato: no es una respuesta real de Meta. Campos no incluidos todavía requieren cobertura/revisión."
+  ]
+}

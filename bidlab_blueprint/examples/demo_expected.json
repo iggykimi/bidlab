@@ -1,0 +1,31 @@
+{
+  "tender": "2026/00006554N",
+  "budget_net": "118336.00",
+  "synthetic_cost_net": "90000.00",
+  "rival_prices_net": [
+    "106502.40",
+    "110052.48"
+  ],
+  "cases": [
+    {
+      "discount_rate": "0.0500",
+      "expected_price_net": "112419.20",
+      "expected_profit_net": "22419.20",
+      "expected_margin_rate": "0.199425009251"
+    },
+    {
+      "discount_rate": "0.1500",
+      "expected_price_net": "100585.60",
+      "expected_profit_net": "10585.60",
+      "expected_margin_rate": "0.105239716222"
+    },
+    {
+      "discount_rate": "0.3000",
+      "expected_price_net": "82835.20",
+      "expected_profit_net": "-7164.80",
+      "expected_margin_rate": "-0.086494630302"
+    }
+  ],
+  "at_30_anomaly": "possible_justification_required",
+  "mode": "curated_demo"
+}

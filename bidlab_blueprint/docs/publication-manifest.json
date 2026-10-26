@@ -1,0 +1,58 @@
+[
+  {
+    "file": "evidence/originals/20010571_pcap.pdf",
+    "sha256": "77a2bba337cc5c1e52245c60f5b7d77cb4c460051a882239a734e9f91c119c3d",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/20777832_ppt.pdf",
+    "sha256": "fdbd2a6418733543e1e28e8bde7e95ef218cfe32eb97edc878abaf2a400756da",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/20777832_pcap.pdf",
+    "sha256": "78ef640e8bd83e95e23d0682dcf47dbd0dd3798e29efdf375ca793084e5d0dbd",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/20777838_pcap.pdf",
+    "sha256": "c74d063237b012df89543da73390d76d8996a558a85b0202890182bcee289677",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/17907789_pcap.pdf",
+    "sha256": "0b3f252bb957fa3207bce5c1e25b182524be5e014af07135d1650bfe4aacedc7",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/20706136_pcap.pdf",
+    "sha256": "a06f874f1308f840387b4096723b1e4090cada9f28db17e1993fbaa87ccae1a8",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_pending_publication_review",
+    "reviewer": null
+  },
+  {
+    "file": "evidence/originals/placsp.atom",
+    "sha256": "c15cf7144811345e9f547cc9b4a86e9054831bdc8c84481bdb830ca81ddb0da4",
+    "source_manifest": "evidence/download_manifest.json",
+    "allowed_in_public_repo": false,
+    "rights_status": "research_copy_contains_unnecessary_public_contact_data",
+    "reviewer": null
+  }
+]
