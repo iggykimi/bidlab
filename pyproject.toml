@@ -1,0 +1,40 @@
+[project]
+name = "bidlab-dev"
+version = "0.1.0"
+description = "BidLab dev tooling (uv workspace root)"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "hypothesis>=6",
+  "httpx>=0.27",
+  "ruff>=0.9",
+  "mypy>=1.13",
+  "jsonschema>=4.23",
+]
+
+[tool.uv.workspace]
+members = ["apps/api"]
+
+[tool.pytest.ini_options]
+testpaths = ["apps/api/tests"]
+addopts = "-q"
+markers = ["live: tests requiring real Meta API access"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# tools/ holds frozen research probes from the blueprint import; style fixes there
+# would churn evidence, so lint covers only product code.
+exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git", "apps/web", "tools"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+explicit_package_bases = true
+mypy_path = "apps/api"

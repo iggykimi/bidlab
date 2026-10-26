@@ -14,11 +14,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
 | ID | Day | h | Deps | Status | Acceptance |
 |----|-----|---|------|--------|------------|
-| T01 | 26oct | 1 | — | in_progress | environment.md + board + blockers |
+| T01 | 26oct | 1 | — | done | environment.md + board + blockers |
 | T02 | 26oct | 0.5 | — | pending | admission/bases check; G0 partial/external |
 | T03 | 26oct | 0.5 | T01 | pending | real minimal Meta smoke + balance; G3 |
 | T04 | 26oct | 0.5 | — | pending | Tías rights/attribution review + manifest |
-| T05 | 26oct | 2 | T01 | pending | monorepo bootstrap, locks, scripts, empty lint/build |
+| T05 | 26oct | 2 | T01 | done | monorepo bootstrap, locks, scripts, empty lint/build |
 | T06 | 27oct | 1.5 | T05 | pending | models, SQLite/migration, API contract |
 | T07 | 27oct | 1.5 | T06 | pending | Tías/company/curated-evidence seed + idempotence |
 | T08 | 27oct | 1.5 | T07 | pending | library/workspace/document routes |

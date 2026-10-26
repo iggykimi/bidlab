@@ -1,0 +1,28 @@
+"""BidLab API entrypoint. Loopback only; no multi-user auth (see ARCHITECTURE)."""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+from bidlab.api import capabilities, health
+
+app = FastAPI(title="BidLab", version="0.1.0")
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["127.0.0.1", "localhost", "::1", "testserver"],
+)
+
+# Same-origin in production; exact Vite dev origin otherwise. No wildcard.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-BidLab-Client", "Idempotency-Key"],
+    allow_credentials=False,
+)
+
+app.include_router(health.router, prefix="/api/v1")
+app.include_router(capabilities.router, prefix="/api/v1")
+
+# TODO(T19): serve apps/web/dist from / when built.
