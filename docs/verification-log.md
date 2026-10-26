@@ -68,3 +68,21 @@ Incidencia honesta: la clave del autor venía como `MUSE_API` (48 chars), no
 contenido por manejo de arrays/saltos de línea. Se verificó por longitudes y
 mitades idénticas, y se reescribió el fichero byte-exacto con Python: dos
 líneas de 48 chars. La clave original quedó intacta (smoke PASS con ella).
+
+## Producto T06 — modelos, migración y contrato API (Windows)
+
+Fecha: 2026-10-26. Entorno: mismo que T05.
+- `alembic upgrade head` en DB vacía (storage temporal) → exit 0, 18 tablas
+  (17 + alembic_version), version 0001_initial. DDL equivalente a
+  schemas/schema.sql (FKs, UQs, CHECKs json_valid/enums, 3 índices).
+- Modelos Pydantic generados desde docs/API_CONTRACT.yaml
+  (datamodel-code-generator 0.86.0, base StrictModel extra=forbid+strict,
+  enums como Literal para no romper strict con input JSON).
+  Los 5 ejemplos tipados validan: EvaluationRequest/Result, Tender,
+  Company, ExtractionProposal.
+- Tipos TS generados (openapi-typescript 7.13.0, 118 KB). `npm run lint`
+  verde incl. generado.
+- `pytest apps/api/tests/contracts` → 5 passed.
+  `ruff check .` y `mypy apps/api/bidlab apps/api/migrations` → limpios.
+- Módulos finos schemas/{tender,extraction,company,scenario,report}.py
+  re-exportan el contrato; db/{session,models,repositories}.py según árbol.

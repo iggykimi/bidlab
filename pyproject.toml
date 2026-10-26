@@ -33,6 +33,9 @@ exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+"apps/api/bidlab/schemas/generated.py" = ["E501", "I001"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
