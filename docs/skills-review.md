@@ -11,9 +11,9 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] break-ui — leída completa propia + auditada 26-oct (F8 NaN, F10 overflow, F14 empty states)
 - [R] apple-design — leída completa propia + auditada 26-oct (contraste, reduced-motion, system-ui OK)
 - [R] pick-ui-library — leída completa propia + auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
-- [R] prototype — auditada 26-oct
-- [R] mobile-native — auditada 26-oct (F3 targets, F4 16px, viewport-fit, safe-area)
-- [R] ask-sonner — auditada 26-oct (F7: Toaster + toast.success en export)
+- [R] prototype — APPLY solo bajo invocación explícita (variantes contested)
+- [R] mobile-native — APPLY polish bajo (snippet baseline + safe-area; verificar en hardware)
+- [R] ask-sonner — APPLY (ref autoridad F7 sonner)
 - [R] animate — leída completa propia + auditada por subagente
 - [R] animate-expo — leída completa propia (N/A funcional: sin app Expo/RN)
 - [R] animation-performance — leída completa propia
@@ -32,21 +32,21 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 ## Diseño (repo-local)
 - [R] vercel-composition-patterns — auditada 26-oct (F15: variant components, no boolean props)
 - [R] ui-ux-pro-max — auditada 26-oct (F3 44px, F5 listas indistinguibles, F6 tabs APG)
-- [R] sleek-design-mobile-apps — auditada 26-oct
-- [R] canvas-design — auditada 26-oct (N/A funcional: charts son SVG/recharts, no canvas)
-- [R] extract-design-system — auditada 26-oct (F2: 164 hexos raw, tokens sin usar)
-- [ ] frontend-design (vercel-labs/agent-eval)
-- [R] frontend-ui-engineering (addyosmani) — auditada 26-oct
-- [R] premium-frontend-ui — auditada 26-oct (veredicto: NO aplicar restyle inmersivo)
+- [R] sleek-design-mobile-apps — N/A (API móvil ajena)
+- [R] canvas-design — N/A (arte .png, opuesto a UI densa)
+- [R] extract-design-system — auditada + N/A on-demand (solo si seed desde referencia)
+- [R] frontend-design (vercel-labs/agent-eval) — APPLY subset (tokens/type/restraint; no maximalismo)
+- [R] frontend-ui-engineering (addyosmani) — APPLY como build gate (mejor encaje BidLab)
+- [R] premium-frontend-ui — APPLY subset perf (transform/opacity, reduced-motion, clamp)
 - [ ] design-taste-frontend-v1 — N/A pendiente confirmar (slug inexistente, cubierto por user)
 - [ ] design-taste-frontend-v2-experimental — N/A pendiente confirmar (slug inexistente)
 
 ## Diseño (user-level, ya disponibles)
 - [R] frontend-design (anthropics) — leída completa 26-oct
-- [ ] design-taste-frontend
-- [ ] high-end-visual-design
-- [ ] web-design-guidelines
-- [ ] impeccable (cubre polish/critique/bolder/delight/distill/quieter)
+- [R] design-taste-frontend — N/A bulk (landing-only, exige dark) / APPLY subset a11y (contraste, labels, skeletons, active)
+- [R] high-end-visual-design — N/A estilos / APPLY subset perf (transform/opacity, dvh, blur solo fixed)
+- [R] web-design-guidelines — APPLY como review gate (fetch reglas frescas)
+- [R] impeccable — APPLY modo Operate (scanability, harden errores/i18n, audit acotado)
 - [ ] copywriting
 
 ## Workflows (19)
@@ -67,7 +67,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 ## Testing (3)
 - [R] webapp-testing — auditada 26-oct (suite: behavior sí, oráculos independientes sí)
 - [R] playwright-best-practices — auditada 26-oct (selectores/wait OK; falta console-error fail, E10 anotar)
-- [ ] playwright-cli
+- [R] playwright-cli — APPLY (debug loop interactivo + locators + repros grabadas)
 
 ## Next.js (5)
 - [R] vercel-react-best-practices — FIT parcial (subset React genérico para SPA; ya auditada)
@@ -84,11 +84,15 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 ## Marketing (20)
 - [R] launch, social, content-strategy, page-cro(cro), analytics, competitors — aplicadas 26-oct (docs/launch-plan.md + docs/social-kit.md)
 - [R] copywriting (marketingskills) — aplicada 26-oct (docs/copy-style-es.md)
-- [ ] seo-audit, marketing-psychology, programmatic-seo, pricing, schema, emails
-- [ ] ads, paywalls, popups, ai-seo, cold-email, ad-creative, churn-prevention, lead-magnets
+- [R] seo-audit — APPLY light (title/meta/H1 en demo+README)
+- [R] marketing-psychology — APPLY (pitch JTBD+contraste+peak-end)
+- [R] programmatic-seo, pricing, emails, ads, paywalls, popups, cold-email, ad-creative, churn-prevention, lead-magnets — N/A (robos: no-AI-tells, PAS/BAB, peer-voice, feedback-form, one-pager)
+- [R] schema — APPLY light (JSON-LD SoftwareApplication @graph)
+- [R] ai-seo — APPLY (llms.txt + extractabilidad docs)
 
 ## Imagen (2)
-- [ ] imagegen-frontend-web, imagegen-frontend-mobile
+- [R] imagegen-frontend-web — N/A producto (prohíbe single-image); póster vía image-gen plano + prompt tight
+- [R] imagegen-frontend-mobile — N/A (solo apps móvil)
 
 ## React (3 nuevas; resto dup)
 - [R] tailwind-design-system — leída propia (refuerza F2 @theme/tokens)
