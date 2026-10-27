@@ -324,3 +324,7 @@ Alcance: la oleada UX solo toca presentacion + 1 literal backend. Verificacion r
 - Sin prediccion ni historico: sin cambios de alcance en motor (H02 sigue aparcado); graficas solo describen la simulacion actual.
 - README reproducible + guion 180s + candidatura draft: T32/T33/T34 done; envio pendiente del autor.
 - T02/T04 siguen pending (externos del autor: admission check, rights review). T13 -> done (arbol AND/OR + evidencia verificado).
+
+## Fix CI typecheck TS2591 (27-oct)
+
+CI rojo en 5 pushes seguidos (runs 40460541795..40486470916): `tsc --noEmit -p apps/web` -> TS2591 `process` en vite.config.ts:6. Causa raiz: `vite/dist/node/index.d.ts:1` trae un triple-slash reference a types node y el repo no declaraba `@types/node`; en local resolvia por accidente via `C:/Users/zrano/node_modules/@types/node` (fuera del repo) -> el verde local de typecheck en verify.py era falso. Fix determinista: `@types/node` en devDependencies de apps/web (lock +18) + `"types": ["vite/client", "node"]` en tsconfig. Verificado: typecheck hermetico (`--typeRoots ./node_modules/@types`, simula runner limpio) exit 0, lint 0, build 0, unit web 109/109. CI hara el resto de gates por primera vez (nunca paso de typecheck).
