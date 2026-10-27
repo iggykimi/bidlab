@@ -279,3 +279,25 @@ Prioridad: contenido (margen, IGIC) + fases 1-2, luego 3-4.
 - INFLESZ ≥65. (Orientativo; sin gate automático.)
 - axe/Lighthouse, teclado solo, lector en slider, zoom 200 %. (Gates E2E.)
 
+### 10. Protocolo de jueces (lead, obligatorio hasta cierre)
+
+Cada entrega de escritor pasa por 4 jueces independientes (contexto fresco,
+solo lectura) antes de commitear. Cada juez puntúa 0-10 SU dimensión + lista
+issues con file:line. Listón: **≥9,5 en las 4 dimensiones**. Si alguna baja,
+el escritor itera (mismo u otro agente) hasta pasarlo. BoN donde el juicio
+bifurque de verdad.
+
+- J1 Comprensión senior: persona de 70 años, primera licitación online. ¿Entiende
+  cada pantalla sin ayuda? ¿Responde "¿cuánto oferto?", "¿hasta cuándo?",
+  "¿es sospechosa?" leyendo solo titulares?
+- J2 Voz y copy: conformidad con docs/voice-guide-es.md (tú único, ≤20 palabras,
+  preguntas como títulos, glosario, cero jerga/IDs/inglés visibles).
+- J3 Accesibilidad: contraste, tamaños, targets, foco, estados de carga, lector,
+  teclado completo, zoom 200 %. axe como suelo, no como techo.
+- J4 Corrección factual: cada cifra/afirmación visible trazada a evidencia
+  (fixtures/citas/RULE_ENGINE). Tasas derivadas rotuladas como derivadas;
+  zonas horarias no probadas prohibidas; fechas dinámicas correctas.
+
+Evidencia: capturas qa-* regeneradas por entrega + E2E verde + veredictos
+archivados en docs/verification-log.md.
+
