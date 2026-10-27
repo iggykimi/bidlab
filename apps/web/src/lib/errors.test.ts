@@ -37,8 +37,8 @@ describe("errors", () => {
   });
 
   it("falls back to Spanish for unknown codes and values", () => {
-    expect(errorEs(new ApiError(400, "future_code", "future"))).toContain("API local");
-    expect(errorEs(new Error("nope"))).toContain("API local");
+    expect(errorEs(new ApiError(400, "future_code", "future"))).toContain("No pudimos completar");
+    expect(errorEs(new Error("nope"))).toContain("Vuelve a intentarlo");
     expect(errorEs("nope", "A medida")).toBe("A medida");
     expect(errorCode(new Error("nope"))).toBeNull();
   });

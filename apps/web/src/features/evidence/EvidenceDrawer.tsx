@@ -9,8 +9,9 @@ import {
   type Citation,
   type Workspace,
 } from "../../api/client";
+import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
-import { matchStatusEs } from "../pricing/sources";
+import { textoEs } from "../../lib/citationNames";
 
 export interface EvidenceTarget {
   citation: Citation;
@@ -39,11 +40,22 @@ function focusables(root: HTMLElement): HTMLElement[] {
   );
 }
 
+/** Lowercase first letter: "Copiado tal cual" -> "copiado tal cual". */
+function minuscula(s: string): string {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/** Whitespace-insensitive comparison for the quote/page-text dedupe. */
+function normalizado(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
+}
+
 /**
  * Accessible evidence drawer. Page text comes from the API; when the original
  * bytes are not redistributed it says so instead of rendering a fake preview.
  * True modal: scrim, focus trap and body scroll lock; page resyncs when the
- * citation changes (callers also key by citation id).
+ * citation changes (callers also key by citation id). The panel is fully
+ * opaque (bg-white, no translucency) with an always-visible close button.
  */
 export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const { citation } = target;
@@ -119,6 +131,14 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   });
 
   const total = doc?.pages_count ?? null;
+  const pageText = pageQuery.data?.raw_text ?? null;
+  const duplicate = pageText !== null && normalizado(pageText) === normalizado(citation.verbatim_excerpt);
+  const nombreDocumento =
+    doc === null
+      ? "Documento del pliego"
+      : doc.kind === "pcap"
+        ? "Pliego de condiciones (PCAP)"
+        : "Documento de la licitación";
 
   return (
     <div className="fixed inset-0 z-50">
@@ -133,7 +153,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         data-testid="evidence-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={`Evidencia ${citation.id}`}
+        aria-label={`Cita del pliego, página ${citation.page_number}`}
         className={clsx(
           "drawer-enter absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl",
           closing && "drawer-exit"
@@ -141,12 +161,12 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
       >
       <div className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div>
-          <h2 className="text-lg font-semibold">Evidencia documental</h2>
+          <h2 className="text-lg font-semibold">Lo que dice el pliego</h2>
           <p data-testid="evidence-page" className="tnum mt-1 text-sm text-muted">
             Página {page} de {total ?? "—"}
           </p>
         </div>
-        <Button ref={closeRef} variant="subtle" onClick={requestClose}>
+        <Button ref={closeRef} variant="subtle" onClick={requestClose} className="min-h-[48px]">
           Cerrar
         </Button>
       </div>
@@ -155,34 +175,54 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         <dl className="grid gap-2 text-sm">
           <div>
             <dt className="font-medium text-muted">Documento</dt>
-            <dd>{doc?.display_name ?? citation.document_id}</dd>
+            <dd>
+              <p>{nombreDocumento}</p>
+              <p className="mt-1">Documento de consulta revisado para la demo.</p>
+            </dd>
           </div>
           <div>
-            <dt className="font-medium text-muted">Cita ({matchStatusEs(citation.match_status)})</dt>
+            <dt className="font-medium text-muted">
+              {duplicate
+                ? "Cita y texto de la página (el mismo texto)"
+                : `Cita (${minuscula(textoEs(citation.match_status))})`}
+            </dt>
             <dd className="mt-1 rounded-lg bg-surface p-3" data-testid="evidence-quote">
               {citation.verbatim_excerpt}
             </dd>
           </div>
-          <div>
-            <dt className="font-medium text-muted">SHA-256 del documento</dt>
-            <dd className="tnum break-all text-xs">{citation.document_sha256}</dd>
-          </div>
         </dl>
+
+        <TechnicalDetails
+          className="mt-3"
+          items={[
+            { label: "SHA-256 del documento", value: citation.document_sha256 },
+            { label: "Identificador de cita", value: citation.id },
+            { label: "Identificador de documento", value: citation.document_id },
+            ...(pageQuery.data
+              ? [{ label: "Extractor", value: pageQuery.data.extractor_version }]
+              : []),
+            ...(pageQuery.data && pageQuery.data.quality_flags.length > 0
+              ? [{ label: "Calidad del texto", value: pageQuery.data.quality_flags.join(", ") }]
+              : []),
+          ]}
+        />
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Button
             variant="subtle"
+            className="min-h-[48px]"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
           >
-            ← Anterior
+            Página anterior
           </Button>
           <Button
             variant="subtle"
+            className="min-h-[48px]"
             onClick={() => setPage((p) => (total ? Math.min(total, p + 1) : p + 1))}
             disabled={total !== null && page >= total}
           >
-            Siguiente →
+            Página siguiente
           </Button>
           {page !== citation.page_number && (
             <Button variant="secondary" onClick={() => setPage(citation.page_number)}>
@@ -192,24 +232,21 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         </div>
 
         <section aria-label="Texto de la página" className="mt-4">
-          <h3 className="font-semibold">Texto de la página (extracto curado)</h3>
+          <h3 className="font-semibold">Texto de la página</h3>
           {pageQuery.isPending && <p className="mt-2 text-sm">Cargando página…</p>}
           {pageQuery.isError && (
             <p role="alert" className="mt-2 text-sm text-error">
               {pageQuery.error instanceof ApiError && pageQuery.error.status === 404
-                ? `Página ${page} no disponible en los extractos curados.`
-                : "No se pudo cargar la página."}
+                ? `La página ${page} no está en la copia revisada.`
+                : "No pudimos cargar la página. Prueba con otra página."}
             </p>
           )}
-          {pageQuery.data && (
-            <>
+          {pageQuery.data &&
+            (duplicate ? (
+              <p className="mt-2 text-sm">Es el mismo texto que la cita de arriba.</p>
+            ) : (
               <p className="mt-2 whitespace-pre-wrap text-sm">{pageQuery.data.raw_text}</p>
-              <p className="tnum mt-2 text-xs text-muted">
-                Extractor {pageQuery.data.extractor_version}
-                {pageQuery.data.quality_flags.length > 0 && ` · ${pageQuery.data.quality_flags.join(", ")}`}
-              </p>
-            </>
-          )}
+            ))}
         </section>
 
         <section aria-label="Documento original" className="mt-4">
@@ -228,7 +265,8 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
           )}
           {contentQuery.data && !contentQuery.data.ok && (
             <p role="status" className="mt-2 text-sm">
-              El PDF original no se redistribuye; usa la fuente oficial y los extractos curados.{" "}
+              No puedes descargar el PDF original desde aquí. Consúltalo en la web oficial o usa
+              el texto de esta página.{" "}
               {doc?.source_url && (
                 <a href={doc.source_url} target="_blank" rel="noreferrer" className="text-primary underline hover:text-primary-ink">
                   Ver fuente oficial

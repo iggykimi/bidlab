@@ -53,6 +53,14 @@ const maxPointsShort = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 1,
 });
 
+const eurCompact = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+  notation: "compact",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 1,
+});
+
 const fechaNormalDate = new Intl.DateTimeFormat("es-ES", {
   day: "numeric",
   month: "long",
@@ -123,6 +131,30 @@ export function formatPercent(rate: string): string {
   return n === null ? "—" : percent1.format(n);
 }
 
+/** Canonical compact euros: "115000.00" -> "115 mil €". Chart ticks only. */
+export function formatEurosCompact(amount: string): string {
+  const n = finiteOrNull(amount);
+  return n === null ? "—" : eurCompact.format(n);
+}
+
+/** Canonical short points: "46.4211" -> "46,4". Callers add "puntos"/"de max". */
+export function formatPoints1(points: string): string {
+  const n = finiteOrNull(points);
+  return n === null ? "—" : points1.format(n);
+}
+
+/** Canonical max points: "49.0000" -> "49". */
+export function formatMaxPoints(max: string): string {
+  const m = finiteOrNull(max);
+  return m === null ? "—" : maxPointsShort.format(m);
+}
+
+/** Canonical signed exact euros: "22419.20" -> "+22.419,20 €". */
+export function formatSignedEurosExact(amount: string): string {
+  const n = finiteOrNull(amount);
+  return n === null ? "—" : signedEur.format(n);
+}
+
 /**
  * Canonical date: ISO -> "25 de noviembre de 2026, 23:59".
  * Same local-timezone semantics as formatDateTime; invalid input echoes back.
@@ -137,6 +169,38 @@ export function formatFechaNormal(iso: string): string {
 
 /** Mobile keyboard hint for price inputs: `<input inputMode={PRECIO_INPUT_MODE} />`. */
 export const PRECIO_INPUT_MODE = "decimal" as const;
+
+const MESES_ES = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+
+/**
+ * Canonical short date: ISO -> "25 de octubre de 2026".
+ * Parses the YYYY-MM-DD part directly; no Date/timezone dependence.
+ * Invalid input echoes back.
+ */
+export function formatFechaCorta(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (match === null) return iso;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return iso;
+  const mes = MESES_ES[month - 1];
+  if (mes === undefined) return iso;
+  return `${day} de ${mes} de ${year}`;
+}
 
 const PROTOCOL_MONEY = /^\d{1,12}\.\d{2}$/;
 

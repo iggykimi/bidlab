@@ -3,7 +3,10 @@
 
 import { Link } from "react-router-dom";
 import type { Workspace } from "../../api/client";
-import { Button } from "../../components/ui";
+import { Button, Card } from "../../components/ui";
+import { TechnicalDetails } from "../../components/TechnicalDetails";
+import { assumptionEs } from "../../lib/assumptions";
+import { errorCodeOnly } from "./sources";
 import type { PricingRule, PricingScope, PricingState } from "./usePricingState";
 
 interface StateOnly {
@@ -21,27 +24,45 @@ interface IdProps {
   state: PricingState;
 }
 
+/** Backend warning -> plain line. Debug-only shapes return null (-> Detalles técnicos). */
+function warningEs(warning: string): string | null {
+  if (warning.includes("original bytes not redistributed")) {
+    return "El PDF no se comparte; aquí solo verás las citas.";
+  }
+  return null;
+}
+
 export function AssumptionsSection({ state }: StateOnly) {
-  const { result } = state;
+  const { h, result } = state;
+  const warnings = result?.warnings ?? [];
+  const plainWarnings = warnings.map(warningEs).filter((w): w is string => w !== null);
+  const internalWarnings = warnings.filter((w) => warningEs(w) === null);
   return (
-    <section aria-label="Supuestos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+    <Card aria-label="Supuestos">
       <h2 className="text-lg font-semibold">Supuestos declarados</h2>
-      {!result && <p className="mt-2 text-sm">Pendiente de cálculo.</p>}
+      {!result && <p className="mt-2 text-sm">Calculando tu resultado…</p>}
       {result && (
         <ul data-testid="assumptions" className="mt-2 list-disc space-y-1 pl-5 text-sm">
           {result.assumptions.map((a) => (
-            <li key={a}>{a}</li>
+            <li key={a}>{assumptionEs(a, result.cost_net, h.noRivals)}</li>
           ))}
         </ul>
       )}
-      {result && result.warnings.length > 0 && (
+      {plainWarnings.length > 0 && (
         <ul className="mt-2 space-y-1 text-xs text-alert">
-          {result.warnings.map((w) => (
+          {plainWarnings.map((w) => (
             <li key={w}>Aviso: {w}</li>
           ))}
         </ul>
       )}
-    </section>
+      {internalWarnings.length > 0 && (
+        <TechnicalDetails
+          title="Avisos internos"
+          items={internalWarnings.map((w, i) => ({ label: `Aviso ${i + 1}`, value: w }))}
+          className="mt-2"
+        />
+      )}
+    </Card>
   );
 }
 
@@ -56,11 +77,12 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
     saveRawError,
     saveState,
   } = state;
+  const rawCode = errorCodeOnly(saveRawError);
   return (
-    <section aria-label="Guardar escenario" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Comparar escenarios</h2>
+    <Card aria-label="¿Guardas esta prueba?">
+      <h2 className="text-lg font-semibold">¿Guardas esta prueba?</h2>
       <label className="mt-2 block text-sm">
-        <span className="font-medium">Nombre del escenario</span>
+        <span className="font-medium">Nombre de tu prueba</span>
         <input
           type="text"
           data-testid="scenario-name"
@@ -76,77 +98,55 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
         disabled={saving || !inputsValid}
         className="mt-3"
       >
-        {saving ? "Guardando…" : "Guardar escenario"}
+        {saving ? "Guardando…" : "Guardar esta prueba"}
       </Button>
       {saveError && (
-        <p role="alert" title={saveRawError ?? undefined} className="mt-2 text-sm text-error">
+        <p role="alert" className="mt-2 text-sm text-error">
           {saveError}
+          {rawCode ? ` (código: ${rawCode})` : ""}
         </p>
       )}
       {saveState && (
-        <p role="status" className="tnum mt-2 break-all text-sm">
-          Guardado: <code>{saveState.hash.slice(0, 16)}…</code>{" "}
+        <p role="status" className="mt-2 text-sm">
+          Prueba «{saveState.name}» guardada.{" "}
           <Link
             to={`/tenders/${workspace.tender.id}?tab=informe&scenario=${saveState.id}`}
             className="text-primary underline"
           >
-            Abrir en Informe
+            Verla en el informe
           </Link>
         </p>
       )}
-    </section>
+    </Card>
   );
 }
 
 export function IdentifiersDetails({ scope, rule, state }: IdProps) {
   const { companyId, companyRevision, companySynthetic, result } = state;
   return (
-    <details className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-      <summary className="cursor-pointer font-semibold">Identificadores y códigos</summary>
-      <div className="mt-2">
-        <div>
-      <dl className="tnum grid gap-1 text-xs">
-        <div className="flex justify-between gap-2">
-          <dt>Ámbito</dt>
-          <dd>{scope.id}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt>Regla</dt>
-          <dd>
-            {rule.id} rev. {rule.revision} ({rule.review_status})
-          </dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt>Empresa</dt>
-          <dd>
-            {companyId} rev. {companyRevision ?? "…"}
-            {companySynthetic ? " (sintética)" : ""}
-          </dd>
-        </div>
-      </dl>
-      {result && (
-        <dl className="tnum mt-2 grid gap-1 border-t border-line pt-2 text-xs">
-          <div className="flex justify-between gap-2">
-            <dt>Puntos (código)</dt>
-            <dd>
-              {result.score.status}
-              {result.score.reason_codes.length > 0 &&
-                ` · ${result.score.reason_codes.join(", ")}`}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-2">
-            <dt>Anormalidad (código)</dt>
-            <dd>
-              {result.anomaly.status}
-              {result.anomaly.branch ? ` · ${result.anomaly.branch}` : ""}
-              {result.anomaly.reason_codes.length > 0 &&
-                ` · ${result.anomaly.reason_codes.join(", ")}`}
-            </dd>
-          </div>
-        </dl>
-      )}
-        </div>
-      </div>
-    </details>
+    <TechnicalDetails
+      title="Identificadores y códigos"
+      items={[
+        { label: "Ámbito", value: scope.id },
+        { label: "Fórmula de puntos (regla)", value: `${rule.id} rev. ${rule.revision} (${rule.review_status})` },
+        {
+          label: "Empresa",
+          value: `${companyId} rev. ${companyRevision ?? "…"}`,
+        },
+        ...(companySynthetic ? [{ label: "Empresa de ejemplo", value: "synthetic: true" }] : []),
+        ...(result
+          ? [
+              {
+                label: "Puntos (código)",
+                value: `${result.score.status}${result.score.reason_codes.length > 0 ? ` · ${result.score.reason_codes.join(", ")}` : ""}`,
+              },
+              {
+                label: "Oferta sospechosa (código)",
+                value: `${result.anomaly.status}${result.anomaly.branch ? ` · ${result.anomaly.branch}` : ""}${result.anomaly.reason_codes.length > 0 ? ` · ${result.anomaly.reason_codes.join(", ")}` : ""}`,
+              },
+            ]
+          : []),
+      ]}
+    />
   );
 }

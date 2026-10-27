@@ -105,7 +105,7 @@ export function TechnicalDetails({ items, title = "Detalles técnicos", classNam
                         aria-label={`Copiar ${item.label}`}
                         className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-primary px-3 py-1 text-sm font-medium text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       >
-                        {copied ? "¡Copiado!" : failed ? "No se pudo copiar" : "Copiar"}
+                        {copied ? "Copiado" : failed ? "No pudimos copiar" : "Copiar"}
                       </button>
                     )}
                   </dd>

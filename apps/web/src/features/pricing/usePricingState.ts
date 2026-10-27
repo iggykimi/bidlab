@@ -16,7 +16,7 @@ import {
 } from "../../api/client";
 import type { EvidenceTarget } from "../evidence/EvidenceDrawer";
 import { errorCode, errorEs } from "../../lib/errors";
-import { discountPercentToRate } from "../../lib/format";
+import { discountPercentToRate, parsePrecioInput } from "../../lib/format";
 import { LatestOnly } from "../../lib/requestSequence";
 import { loadSession, rememberScenario, type StoredSession } from "../../lib/session";
 import {
@@ -45,7 +45,7 @@ export const DEFAULTS: Hypotheses = {
   rivalAGroup: "a",
   rivalBPrice: "110052.48",
   rivalBGroup: "b",
-  ownGroup: "own",
+  ownGroup: "c",
   complete: true,
   groupsConfirmed: true,
   noRivals: false,
@@ -84,7 +84,7 @@ export interface PricingState {
   closeEvidence: () => void;
   scenarioName: string;
   setScenarioName: (name: string) => void;
-  saveState: { id: string; hash: string } | null;
+  saveState: { id: string; hash: string; name: string } | null;
   saveError: string | null;
   saveRawError: string | null;
   saving: boolean;
@@ -104,7 +104,7 @@ export function usePricingState(workspace: Workspace): PricingState {
   const [pending, setPending] = useState(false);
   const [requestCount, setRequestCount] = useState(0);
   const [scenarioName, setScenarioName] = useState("Base 5 %");
-  const [saveState, setSaveState] = useState<{ id: string; hash: string } | null>(null);
+  const [saveState, setSaveState] = useState<{ id: string; hash: string; name: string } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveRawError, setSaveRawError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -132,18 +132,23 @@ export function usePricingState(workspace: Workspace): PricingState {
   });
   const companyRevision = companyQuery.data?.revision;
 
+  // Spanish users write "106502,40"; the protocol wants "106502.40".
+  // Normalize once here so validation and the request share the same value.
+  const rivalANorm = h.noRivals ? "0.00" : parsePrecioInput(h.rivalAPrice);
+  const rivalBNorm = h.noRivals ? "0.00" : parsePrecioInput(h.rivalBPrice);
+
   const fieldErrors = useMemo(() => {
     const errors: Record<string, string> = {};
     const discount = discountPercentSchema.safeParse(h.discountPct);
-    if (!discount.success) errors.discount = discount.error.issues[0]?.message ?? "Baja no válida";
+    if (!discount.success) errors.discount = "La rebaja va de 0 % a 40 %.";
     if (!h.noRivals) {
-      const a = rivalPriceSchema.safeParse(h.rivalAPrice);
-      if (!a.success) errors.rivalA = a.error.issues[0]?.message ?? "Precio A no válido";
-      const b = rivalPriceSchema.safeParse(h.rivalBPrice);
-      if (!b.success) errors.rivalB = b.error.issues[0]?.message ?? "Precio B no válido";
+      const a = rivalANorm === null ? null : rivalPriceSchema.safeParse(rivalANorm);
+      if (!a?.success) errors.rivalA = "Escribe el precio con dos decimales (como 1234,56).";
+      const b = rivalBNorm === null ? null : rivalPriceSchema.safeParse(rivalBNorm);
+      if (!b?.success) errors.rivalB = "Escribe el precio con dos decimales (como 1234,56).";
     }
     return errors;
-  }, [h]);
+  }, [h, rivalANorm, rivalBNorm]);
   const inputsValid = Object.keys(fieldErrors).length === 0;
 
   const requestInput: EvaluationRequest | null =
@@ -163,8 +168,8 @@ export function usePricingState(workspace: Workspace): PricingState {
                 group_membership_confirmed: h.groupsConfirmed,
                 own_group_id: h.ownGroup || null,
                 offers: [
-                  { label: "Hipótesis A", price_net: h.rivalAPrice, group_id: h.rivalAGroup || null },
-                  { label: "Hipótesis B", price_net: h.rivalBPrice, group_id: h.rivalBGroup || null },
+                  { label: "Rival A", price_net: rivalANorm ?? h.rivalAPrice, group_id: h.rivalAGroup || null },
+                  { label: "Rival B", price_net: rivalBNorm ?? h.rivalBPrice, group_id: h.rivalBGroup || null },
                 ],
               },
           curve: { from_discount_rate: "0.0000", to_discount_rate: "0.4000", points: CURVE_POINTS },
@@ -196,7 +201,7 @@ export function usePricingState(workspace: Workspace): PricingState {
           if (isAbort(err)) return;
           if (seqRef.current !== seq) return;
           setFetched(null);
-          setError(errorEs(err, "No se pudo evaluar. Reintenta cuando la API local responda."));
+          setError(errorEs(err, "No pudimos evaluar tu oferta. Vuelve a intentarlo en unos segundos."));
           setRawError(errorCode(err));
         })
         .finally(() => {
@@ -219,16 +224,16 @@ export function usePricingState(workspace: Workspace): PricingState {
       return;
     }
     if (!requestInput) {
-      setSaveError("Faltan identificadores para guardar (sesión, regla o empresa).");
+      setSaveError("Te faltan datos para guardar (sesión, regla o empresa).");
       return;
     }
     setSaving(true);
     try {
       const saved = await saveScenario(name.data, requestInput);
       rememberScenario(saved.id, name.data);
-      setSaveState({ id: saved.id, hash: saved.snapshot_sha256 });
+      setSaveState({ id: saved.id, hash: saved.snapshot_sha256, name: name.data });
     } catch (err) {
-      setSaveError(errorEs(err, "No se pudo guardar. Reintenta cuando la API local responda."));
+      setSaveError(errorEs(err, "No pudimos guardar tu prueba. Vuelve a intentarlo en unos segundos."));
       setSaveRawError(errorCode(err));
     } finally {
       setSaving(false);

@@ -2,11 +2,11 @@ import { useRef, useTransition } from "react";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { getCapabilities, getWorkspace } from "../../api/client";
+import { getWorkspace } from "../../api/client";
 import { DemoBadge } from "../../components/DemoBadge";
 import { Skeleton } from "../../components/Skeleton";
 import { Alert } from "../../components/ui";
-import { formatEUR } from "../../lib/format";
+import { formatEurosExact, formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
 import { loadSession } from "../../lib/session";
 import { SummaryTab } from "./SummaryTab";
@@ -19,7 +19,7 @@ const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "requisitos", label: "Requisitos" },
   { id: "pricing", label: "Precio" },
-  { id: "evidencia", label: "Evidencia" },
+  { id: "evidencia", label: "Citas" },
   { id: "informe", label: "Informe" },
 ] as const;
 
@@ -27,6 +27,21 @@ export type TabId = (typeof TABS)[number]["id"];
 
 function parseTab(raw: string | null): TabId {
   return TABS.some((t) => t.id === raw) ? (raw as TabId) : "resumen";
+}
+
+/**
+ * One-line budget for the header. Backend strings, display only: the net
+ * figure is a headline, the gross figure is exact, and the tax is named
+ * without a rate (the 7 % derivation lives in Detalles técnicos).
+ */
+function lineaPresupuesto(pblNet: string | null, pblGross: string | null, taxKind: string): string {
+  const impuesto = taxKind === "IGIC" ? "IGIC" : taxKind === "VAT" ? "IVA" : "impuestos";
+  const net = pblNet ? formatEurosHeadline(pblNet) : null;
+  const gross = pblGross ? formatEurosExact(pblGross) : null;
+  if (net && gross) return `Presupuesto de salida: ${net} sin ${impuesto} (${gross} con ${impuesto})`;
+  if (net) return `Presupuesto de salida: ${net} sin ${impuesto}`;
+  if (gross) return `Presupuesto de salida: ${gross} con ${impuesto}`;
+  return "Presupuesto de salida: sin determinar";
 }
 
 export function WorkspacePage() {
@@ -39,10 +54,6 @@ export function WorkspacePage() {
   const workspaceQuery = useQuery({
     queryKey: ["workspace", tenderId],
     queryFn: ({ signal }) => getWorkspace(tenderId, signal),
-  });
-  const capabilitiesQuery = useQuery({
-    queryKey: ["capabilities"],
-    queryFn: ({ signal }) => getCapabilities(signal),
   });
 
   function selectTab(id: TabId) {
@@ -71,8 +82,8 @@ export function WorkspacePage() {
   if (workspaceQuery.isPending) {
     return (
       <main className="mx-auto max-w-6xl p-4 sm:p-8" aria-busy="true">
-        <p>Cargando la licitación…</p>
-        <Skeleton lines={6} className="mt-4" label="Cargando la licitación…" />
+        <p>Cargando tu licitación…</p>
+        <Skeleton lines={6} className="mt-4" label="Cargando tu licitación…" />
       </main>
     );
   }
@@ -83,11 +94,11 @@ export function WorkspacePage() {
       <main className="mx-auto max-w-6xl p-4 sm:p-8">
         <p>
           <Link to="/" className="text-primary underline hover:text-primary-ink">
-            ← Biblioteca
+            ← Volver a mis licitaciones
           </Link>
         </p>
         <Alert className="mt-4" title={errorCode(error) ?? undefined}>
-          {errorEs(error, "No se pudo cargar la licitación. Reintenta cuando la API local responda.")}
+          {errorEs(error, "No pudimos cargar la licitación. Vuelve a intentarlo en unos segundos.")}
         </Alert>
       </main>
     );
@@ -106,7 +117,7 @@ export function WorkspacePage() {
       </a>
       <p>
         <Link to="/" className="text-primary underline hover:text-primary-ink">
-          ← Biblioteca
+          ← Volver a mis licitaciones
         </Link>
       </p>
       <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -115,21 +126,19 @@ export function WorkspacePage() {
             {tender.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Exp. {tender.external_id} · {tender.contracting_body}
+            Expediente {tender.external_id} · {tender.contracting_body}
             {scope ? ` · ${scope.label}` : ""}
           </p>
           <p className="tnum mt-1 text-sm">
-            PBL neto {tender.pbl_net ? formatEUR(tender.pbl_net) : "No localizado"}
-            {tender.pbl_gross ? ` · bruto ${formatEUR(tender.pbl_gross)}` : ""}
+            {lineaPresupuesto(tender.pbl_net, tender.pbl_gross, scope?.basis.tax_kind ?? "unknown")}
           </p>
         </div>
         <DemoBadge mode={mode} />
       </header>
 
       {mode === "demo" && (
-        <p className="mt-3 rounded-lg border border-alert bg-warn-bg p-3 text-sm">
-          Demo curada: cifras de semilla revisada del 25/10/2026, no extracción en vivo. Las hipótesis de
-          rivales y el coste de empresa son sintéticos.
+        <p data-testid="demo-banner" className="mt-3 rounded-lg border border-alert bg-warn-bg p-3 text-sm">
+          Datos de ejemplo. Los precios de los rivales y tu coste son inventados para que puedas probar.
         </p>
       )}
 
@@ -170,9 +179,7 @@ export function WorkspacePage() {
         aria-labelledby={`tab-${tab}`}
         tabIndex={0}
       >
-        {tab === "resumen" && (
-          <SummaryTab workspace={workspace} capabilities={capabilitiesQuery.data ?? null} />
-        )}
+        {tab === "resumen" && <SummaryTab workspace={workspace} />}
         {tab === "requisitos" && <RequirementsTab workspace={workspace} />}
         {tab === "pricing" && <PricingLab workspace={workspace} />}
         {tab === "evidencia" && <EvidenceTab workspace={workspace} />}

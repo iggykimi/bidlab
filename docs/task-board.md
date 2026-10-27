@@ -26,7 +26,7 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T10 | 28oct | 1.5 | T09 | done | inverse proportion, safe AST, unknown |
 | T11 | 28oct | 3 | T10 | done | Tías policy 18.5 + abnormality edges |
 | T12 | 28oct | 1 | T11 | done | grouping, hypotheses, non-computable cases |
-| T13 | 28oct | 2 | T06 | in_progress | AND/OR requirements tree + evidence |
+| T13 | 28oct | 2 | T06 | done | AND/OR requirements tree + evidence (verif. 27oct: E02/T23/motivo/leafCitations) |
 | T14 | 29oct | 2 | T06 | done | safe PDF, page extraction, limits |
 | T15 | 29oct | 2 | T14 | done | citation/text/page verification + gold |
 | T16 | 29oct | 2.5 | T03 T15 | done | Meta adapter, JSON schema, retry/cost/cache |

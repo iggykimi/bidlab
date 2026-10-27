@@ -1,0 +1,59 @@
+/* Print stylesheet for the Informe tab (UX phase 3). Clean black-on-white
+ * report: no navigation, tabs, buttons or previews; disclosures expanded
+ * (see also the beforeprint hook in ReportTab.tsx); no scroll containers. */
+
+@page {
+  margin: 2cm;
+}
+
+@media print {
+  nav,
+  button,
+  [role="tablist"],
+  [data-sonner-toaster],
+  [data-testid="evidence-drawer"],
+  [data-testid="evidence-scrim"],
+  iframe {
+    display: none !important;
+  }
+
+  details:not([open]) > *:not(summary) {
+    display: block !important;
+  }
+
+  .table-scroll {
+    overflow: visible !important;
+  }
+
+  table {
+    min-width: 0 !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body {
+    color: #000 !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  * {
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a {
+    text-decoration: underline !important;
+  }
+}

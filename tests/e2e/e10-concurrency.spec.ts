@@ -28,7 +28,7 @@ test("E10 rapid changes paint only the latest response", async ({ page }) => {
   await page.getByTestId("discount-input").fill("20");
   await expect(page.getByTestId("price-net")).toContainText("94.668,80");
   await expect(page.getByTestId("profit-net")).toContainText("4668,80");
-  await expect(page.getByTestId("economic-score")).toContainText("49,0000");
+  await expect(page.getByTestId("economic-score")).toContainText("49,0 de 49");
   // C11 intencional: ventana para que una respuesta obsoleta repintase si el
   // guard latest-wins fallara; el aserto posterior la delataría.
   await page.waitForTimeout(1000); // stale delayed response must not repaint

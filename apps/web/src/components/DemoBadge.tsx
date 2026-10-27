@@ -4,12 +4,12 @@ interface Props {
   mode: string | null | undefined;
 }
 
-/** Honest origin badge. "Demo curada" renders only for demo-mode sessions. */
+/** Honest origin badge. Example-data sessions say so in plain words. */
 export function DemoBadge({ mode }: Props) {
   if (mode === "demo") {
     return (
       <Badge tone="demo" data-testid="demo-badge">
-        Demo curada
+        Datos de ejemplo
       </Badge>
     );
   }

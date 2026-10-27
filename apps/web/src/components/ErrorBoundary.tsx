@@ -26,13 +26,12 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <main className="mx-auto max-w-4xl p-4 sm:p-8">
           <Card>
-            <h1 className="text-xl font-bold">Algo no se pudo mostrar</h1>
+            <h1 className="text-xl font-bold">No pudimos mostrar esta página</h1>
             <Alert
               className="mt-3"
               title={this.state.error.message}
             >
-              La vista se interrumpió por un error inesperado. Ningún dato se ha enviado a
-              ninguna parte: todo sigue en tu equipo.
+              Algo falló en esta página. Tus datos siguen en tu equipo.
             </Alert>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button onClick={() => window.location.reload()}>Recargar</Button>

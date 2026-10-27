@@ -298,3 +298,29 @@ Helper read-only + corroborado por lead: 0 secretos en historial (git log -p, 29
 ## Cierre P0 + super-review (26-oct)
 
 verify.py final: ALL CHECKS PASSED (exit 0), 10/10 pasos verdes: deps-python, pytest-unit, pytest-integration-contracts (229 passed backend total), npm-lint, npm-typecheck, npm-build, npm-test-unit (25), ruff, mypy, playwright-e2e (23 passed, incl. 2 axe). Extras fuera de verify.py: ruff format --check limpio, npm audit 0 vulns. Nota honesta: una ejecucion previa de verify.py dio exit 1 por flake E2E en arranque en frio; dos runs completos posteriores en verde (23+23). Tablero T01-T34 all done. Candidatura NO enviada (pendiente autor).
+
+## Oleada UX + 4 jueces (27-oct)
+
+Reescritura UX tras revision externa (voz senior, redondeo canonico, lenguaje claro, a11y): 3 escritores (carcasa+Resumen, Precio+curva, Evidencia/Informe/Requisitos) + 7 rondas de jueces hasta PASS >=9.5 en las 4 dimensiones: J1 9.6 senior (live, 5 tareas respondidas desde titulares), J2 9.6 voz/copy, J3 10.0 a11y (live: axe + ratios medidos + teclado + zoom), J4 10.0 factual (trazado a fixtures/citas/RULE_ENGINE). ~125 issues cerradas en total (listas completas en sesiones hijas 54/55/58-71).
+
+Bugs reales corregidos: etiqueta backend "Margen sobre coste" -> "Margen sobre ventas" en origen (services/evaluation.py:275); requisitos Volumen/Seguro enlazaban p.8 erronea por coincidencia numerica (295840.00 compartido) -> vinculo por claim key + leafCitations.test.ts; "mas barata" acotado con conjunto incompleto (Conclusion + trace); "Pendiente de calculo" residuales -> "Calculando tu resultado..."; max_points Decimal crudo -> formatMaxPoints; assumptions/pendings backend traducidos (lib/assumptions.ts, ASSUMPTION_ES completa, pendienteEs cabezas+colas); warnings ingleses (bytes/debug) a Detalles tecnicos; axe serious label-mismatch en Citas/Requisitos (aria empieza por texto visible) + cobertura axe ampliada a 5 pestanas x2 viewports; contraste primary 5.90 -> 7.76 (#2748B8, hover #1e3fa0); foco 3px; summaries 44px; etiquetas de curva solapadas escalonadas; ownGroup "own" -> "c"; tab Evidencia -> Citas (glosario); print honesto ("Imprimir / guardar en PDF" + pasos 1/2/3).
+
+E2E: base 10 fallos por renombrado -> reparados spec a spec sin debilitar (18/18 por archivo); full final 27/27 verde (55.8s, servidores propios hermeticos). Hallazgo infra: `test-results/` bloqueado por sqlite-wal retenido por servidores huerfanos de la sesion (uvicorn 26-oct + preview 8:18) colgaba `playwright test` en arranque sin output; limpiados tras verificar orfandad (supervisor primero, puertos 8000/5173 libres verificados). Nota honesta: runs intermedios reutilizaron preview sirviendo dist vigente (rebuild en cada puerta) + API equivalente (backend identico salvo 1 literal no afirmado en E2E); veredictos validos; el full final es hermetico.
+
+verify.py final: ALL CHECKS PASSED (exit 0), 10/10: deps, pytest-unit (164), pytest-integration-contracts (65), lint, typecheck, build, unit web (109), ruff, mypy (42 ficheros), E2E (27). Backend total 229. Sin dead code nuevo (barrido de helpers UX: todos en uso). Candidatura NO enviada (pendiente autor).
+
+## Auditoria P0 diferencial post-UX (27-oct)
+
+Alcance: la oleada UX solo toca presentacion + 1 literal backend. Verificacion requisito por requisito sobre el arbol final, todo verde hoy:
+
+- Licitacion real Tias: E01 + seed idempotente (I01) en verde.
+- Extraccion Meta estructurada con citas revisables: jobs/review/tests backend (65 integ+contracts) + E02/E12/drawer en verde.
+- Requisitos con unknown: eligibility + E02/T23 + motivo/leafCitations (109 unit) en verde.
+- Motor determinista precio + presuncion 18.5: oraculos math + 229 backend + E03-E06/E10/T23 en verde; el unico cambio backend es el literal del label (formula intacta).
+- Pricing Lab hipotesis explicitas: E04/E06 + assumptions visibles (E04 afirma texto nuevo) en verde.
+- Escenarios persistidos + reload: E07 + idempotencia en verde.
+- Informe con fuentes + pendientes: E08 (sin secretos) + pendienteEs testeado en verde.
+- Demo offline honesta: guard offline 0 llamadas (todos los specs) + badge + E09 (0 analysis) en verde.
+- Sin prediccion ni historico: sin cambios de alcance en motor (H02 sigue aparcado); graficas solo describen la simulacion actual.
+- README reproducible + guion 180s + candidatura draft: T32/T33/T34 done; envio pendiente del autor.
+- T02/T04 siguen pending (externos del autor: admission check, rights review). T13 -> done (arbol AND/OR + evidencia verificado).

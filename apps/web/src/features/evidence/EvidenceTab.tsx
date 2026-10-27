@@ -1,11 +1,23 @@
 import { useState } from "react";
 import type { Workspace } from "../../api/client";
+import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
+import { citationName, textoEs } from "../../lib/citationNames";
+import { formatFechaNormal } from "../../lib/format";
 import { EvidenceDrawer, type EvidenceTarget } from "./EvidenceDrawer";
-import { matchStatusEs, parseStatusEs, rightsStatusEs } from "../pricing/sources";
 
 interface Props {
   workspace: Workspace;
+}
+
+/** Plain document title; the raw display_name stays in Detalles técnicos. */
+function tituloDocumento(kind: string): string {
+  return kind === "pcap" ? "Pliego de condiciones (PCAP)" : "Documento de la licitación";
+}
+
+function lineaDocumento(kind: string, pages: number): string {
+  const que = kind === "pcap" ? "Pliego de condiciones" : "Documento";
+  return `${pages} páginas · ${que}`;
 }
 
 export function EvidenceTab({ workspace }: Props) {
@@ -15,65 +27,117 @@ export function EvidenceTab({ workspace }: Props) {
     <div className="grid gap-4 [&>*]:min-w-0">
       <section aria-label="Documentos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Documentos</h2>
-        {workspace.documents.length === 0 && <p className="mt-2 text-sm">Sin documentos.</p>}
+        {workspace.documents.length === 0 && (
+          <p className="mt-2 text-sm">Aún no hay documentos en esta licitación.</p>
+        )}
         <ul className="mt-2 space-y-2 text-sm">
           {workspace.documents.map((d) => (
             <li key={d.id} className="rounded-lg border border-line p-3">
-              <p className="font-semibold">{d.display_name}</p>
-              <p className="tnum mt-1 text-xs text-muted">
-                {d.pages_count} páginas · {d.kind} · derechos: {rightsStatusEs(d.rights_status)} ·
-                lectura: {parseStatusEs(d.parse_status)}
-              </p>
-              <p className="tnum break-all text-xs text-muted">SHA {d.sha256}</p>
+              <p className="font-semibold">{tituloDocumento(d.kind)}</p>
+              <p className="tnum mt-1">{lineaDocumento(d.kind, d.pages_count)}</p>
+              <p className="mt-1">Mostramos solo las citas, no el PDF completo.</p>
               {d.source_url && (
-                <a href={d.source_url} target="_blank" rel="noreferrer" className="text-primary underline">
-                  Ver fuente oficial
+                <a
+                  href={d.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline"
+                >
+                  Ver en la web oficial
                 </a>
               )}
+              <TechnicalDetails
+                className="mt-2"
+                items={[
+                  { label: "Tipo de documento", value: d.kind },
+                  { label: "Derechos", value: d.rights_status },
+                  { label: "Lectura", value: d.parse_status },
+                  { label: "SHA-256", value: d.sha256 },
+                  { label: "Identificador", value: d.id },
+                ]}
+              />
             </li>
           ))}
         </ul>
       </section>
 
-      <section aria-label="Citas" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Citas verificadas ({workspace.citations.length})</h2>
+      <section
+        aria-label="Dónde lo dice el pliego"
+        className="rounded-xl bg-white p-4 shadow-sm sm:p-6"
+      >
+        <h2 className="text-lg font-semibold">Dónde lo dice el pliego</h2>
+        <p className="mt-1 text-sm text-muted">
+          Cada cifra respaldada enlaza con la página del pliego donde aparece. «Copiado tal
+          cual» quiere decir que la cita reproduce el pliego palabra por palabra.
+        </p>
+        <p className="mt-2 text-sm">Desliza a la derecha para ver más →</p>
         <div className="table-scroll mt-2 overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
               <tr className="text-left">
-                <th scope="col" className="border-b border-border p-2">Cita</th>
-                <th scope="col" className="border-b border-border p-2">Página</th>
-                <th scope="col" className="border-b border-border p-2">Coincidencia</th>
-                <th scope="col" className="border-b border-border p-2">Abrir</th>
+                <th scope="col" className="border-b border-border p-2">
+                  Dato respaldado
+                </th>
+                <th scope="col" className="border-b border-border p-2">
+                  <span className="sr-only">Ver cita</span>
+                </th>
+                <th scope="col" className="border-b border-border p-2">
+                  Página
+                </th>
+                <th scope="col" className="border-b border-border p-2">
+                  Texto
+                </th>
               </tr>
             </thead>
             <tbody>
               {workspace.citations.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-4 text-center text-muted">
-                    Sin citas verificadas en esta licitación.
+                    Aún no hay citas del pliego vinculadas a las cifras.
                   </td>
                 </tr>
               )}
               {workspace.citations.map((c) => (
                 <tr key={c.id}>
-                  <td className="max-w-md border-b border-line p-2">{c.id}</td>
-                  <td className="tnum border-b border-line p-2">{c.page_number}</td>
-                  <td className="border-b border-line p-2">{matchStatusEs(c.match_status)}</td>
+                  <td className="max-w-md border-b border-line p-2">{citationName(c.id)}</td>
                   <td className="border-b border-line p-2">
                     <Button
                       variant="chip"
+                      className="min-h-[48px]"
                       onClick={() => setEvidence({ citation: c })}
-                      aria-label={`Abrir evidencia ${c.id}, página ${c.page_number}`}
+                      aria-label={`Ver página ${c.page_number} de la cita del pliego`}
                     >
-                      Abrir
+                      Ver página {c.page_number}
                     </Button>
                   </td>
+                  <td className="tnum border-b border-line p-2">{c.page_number}</td>
+                  <td className="border-b border-line p-2">{textoEs(c.match_status)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {workspace.citations.length > 0 && (
+          <TechnicalDetails
+            className="mt-3"
+            items={workspace.citations.map((c) => ({ label: citationName(c.id), value: c.id }))}
+          />
+        )}
+        {workspace.tender.deadline_at && (
+          <p className="mt-3 text-sm">
+            El plazo ({formatFechaNormal(workspace.tender.deadline_at)}) no está en el pliego:
+            viene del{" "}
+            <a
+              href={workspace.tender.source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline"
+            >
+              anuncio oficial
+            </a>
+            .
+          </p>
+        )}
       </section>
 
       {evidence && (

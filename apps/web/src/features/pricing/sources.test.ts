@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { Workspace } from "../../api/client";
 import {
   anomalyEs,
+  anomalyVerdictEs,
   branchEs,
   citationsByIds,
+  errorCodeOnly,
   hashOrigin,
   matchStatusEs,
   metadataForKey,
@@ -83,18 +85,32 @@ describe("sources", () => {
   it("translates anomaly branches to Spanish", () => {
     expect(branchEs("n3_no_trim")).toContain("tres");
     expect(branchEs("n1")).toContain("75 %");
-    expect(branchEs(null)).toBe("sin rama aplicable");
+    expect(branchEs(null)).toBe("sin caso aplicable");
     expect(branchEs("n9")).toBe("n9");
   });
 
   it("translates formula variables to Spanish", () => {
-    expect(variableEs("best_price")).toBe("mejor oferta");
-    expect(variableEs("own_price")).toBe("precio propio");
+    expect(variableEs("best_price")).toBe("la oferta más barata");
+    expect(variableEs("own_price")).toBe("tu oferta");
+  });
+
+  it("answers the suspicious-offer question with Sí/No text", () => {
+    expect(anomalyVerdictEs("possible_justification_required")).toBe("Sí");
+    expect(anomalyVerdictEs("not_flagged_under_assumptions")).toBe("No");
+    expect(anomalyVerdictEs("not_applicable")).toBe("No aplicable");
+    expect(anomalyVerdictEs("unknown")).toBe("Sin determinar");
+    expect(anomalyVerdictEs("future_status")).toBe("Sin determinar");
+  });
+
+  it("keeps only the code for the (código: …) suffix", () => {
+    expect(errorCodeOnly("basis_not_approved: base not approved")).toBe("basis_not_approved");
+    expect(errorCodeOnly("http_500")).toBe("http_500");
+    expect(errorCodeOnly(null)).toBeNull();
   });
 
   it("translates anomaly statuses to Spanish", () => {
     expect(anomalyEs("possible_justification_required")).toBe("Posible necesidad de justificación");
-    expect(anomalyEs("not_flagged_under_assumptions")).toBe("Sin presunción bajo estos supuestos");
+    expect(anomalyEs("not_flagged_under_assumptions")).toBe("No parece sospechosa con estos datos");
     expect(anomalyEs("not_applicable")).toBe("No aplicable");
     expect(anomalyEs("unknown")).toBe("Sin determinar");
   });

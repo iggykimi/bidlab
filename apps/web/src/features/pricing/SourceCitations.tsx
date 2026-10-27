@@ -3,7 +3,7 @@
 
 import type { Citation } from "../../api/client";
 import { Button } from "../../components/ui";
-import { matchStatusEs } from "./sources";
+import { fuenteEs } from "../../lib/citationNames";
 
 interface Props {
   citations: Citation[];
@@ -24,8 +24,8 @@ export function SourceCitations({ citations, onSelect, emptyText }: Props) {
           key={c.id}
           variant="chip"
           onClick={() => onSelect(c)}
-          aria-label={`p. ${c.page_number}: ver evidencia ${c.id}`}
-          title={`${c.id} · p. ${c.page_number} (${matchStatusEs(c.match_status)})`}
+          aria-label={`p. ${c.page_number}: ver cita`}
+          title={`Página ${c.page_number} (${fuenteEs(c.match_status)})`}
         >
           p. {c.page_number}
         </Button>

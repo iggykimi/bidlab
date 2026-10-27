@@ -6,26 +6,27 @@ import { ApiError } from "../api/client";
 
 /** Protocol code -> Spanish message with an action. Unknown codes fall through. */
 export const ERROR_ES: Record<string, string> = {
-  basis_not_approved: "La base de precio aún no está revisada. Pide su revisión antes de simular.",
-  rule_not_approved: "La regla de precio aún no está revisada. No se puede simular hasta su revisión.",
+  basis_not_approved:
+    "El presupuesto de salida aún no está revisado. Pide que lo revisen antes de simular.",
+  rule_not_approved: "La fórmula de puntos aún no está revisada. No puedes simular hasta su revisión.",
   stale_revision: "Los datos cambiaron mientras trabajabas. Recarga la licitación e inténtalo de nuevo.",
   revision_conflict: "Los datos cambiaron mientras trabajabas. Recarga la licitación e inténtalo de nuevo.",
-  discount_out_of_scope: "La baja está fuera del rango simulable (0–40 %). Ajusta el valor.",
+  discount_out_of_scope: "La rebaja está fuera del rango simulable (0–40 %). Ajusta el valor.",
   curve_out_of_scope: "La curva pedida está fuera del rango simulable. Ajusta los valores.",
-  scope_not_found: "No se encontró el ámbito de esta licitación. Recarga la página.",
-  company_not_found: "No se encontró la empresa demo. Vuelve a cargar el ejemplo desde la biblioteca.",
+  scope_not_found: "No encontramos el ámbito de esta licitación. Recarga la página.",
+  company_not_found: "No encontramos la empresa de ejemplo. Vuelve a cargar el ejemplo desde la biblioteca.",
   document_bytes_unavailable:
-    "El PDF original no se redistribuye; usa la fuente oficial y los extractos curados.",
-  budget_exhausted: "Se agotó el presupuesto de análisis. No se ha enviado ningún documento.",
-  job_not_found: "No se encontró el trabajo de análisis. Inténtalo de nuevo.",
-  unknown_claim_key: "Hay un dato sin localizar en la interpretación. Pide una revisión.",
-  requirements_tree_corrupt: "El árbol de requisitos está dañado. Pide una revisión.",
-  money_unparseable: "Un importe no tiene el formato 1234.56. Corrige el valor.",
+    "No puedes descargar el PDF original desde aquí. Usa la fuente oficial.",
+  budget_exhausted: "Se agotó el presupuesto de análisis. No hemos enviado ningún documento.",
+  job_not_found: "No encontramos ese análisis. Inténtalo de nuevo.",
+  unknown_claim_key: "Hay un dato sin localizar en esta licitación. Pide que lo revisen.",
+  requirements_tree_corrupt: "La lista de requisitos está dañada. Pide que la revisen.",
+  money_unparseable: "Tu importe no es válido (usa coma o punto, como 1234,56). Corrige el valor.",
   forbidden: "No tienes permiso para esta acción.",
-  invalid_response: "La API devolvió una respuesta inesperada. Reintenta cuando la API local responda.",
+  invalid_response: "La aplicación devolvió una respuesta inesperada. Vuelve a intentarlo en unos segundos.",
 };
 
-const GENERIC_ES = "No se pudo completar la acción. Reintenta cuando la API local responda.";
+const GENERIC_ES = "No pudimos completar la acción. Vuelve a intentarlo en unos segundos.";
 
 /** Main Spanish message for any thrown value. Never leaks protocol English. */
 export function errorEs(error: unknown, fallback: string = GENERIC_ES): string {
@@ -33,7 +34,7 @@ export function errorEs(error: unknown, fallback: string = GENERIC_ES): string {
     const mapped = ERROR_ES[error.code];
     if (mapped) return mapped;
     const http = /^http_(\d+)$/.exec(error.code);
-    if (http) return `La API devolvió un error (código ${http[1]}). ${fallback}`;
+    if (http) return `La aplicación devolvió un error (código ${http[1]}). ${fallback}`;
     return fallback;
   }
   return fallback;

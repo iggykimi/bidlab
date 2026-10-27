@@ -15,8 +15,8 @@ test("E07 saved scenario survives reload with identical values", async ({ page }
   await openPricing(page);
   await page.getByTestId("scenario-name").fill("E07 base");
   await page.getByTestId("save-scenario").click();
-  await expect(page.getByRole("link", { name: /Abrir en Informe/ })).toBeVisible();
-  await page.getByRole("link", { name: /Abrir en Informe/ }).click();
+  await expect(page.getByRole("link", { name: "Verla en el informe" })).toBeVisible();
+  await page.getByRole("link", { name: "Verla en el informe" }).click();
   await expect(page.getByTestId("scenario-detail")).toContainText("112.419,20");
   const hash = await page.getByTestId("scenario-hash").textContent();
   expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -38,7 +38,7 @@ test("E08 report export downloads HTML with sources and no secrets", async ({ pa
   await openPricing(page);
   await page.getByTestId("scenario-name").fill("E08 base");
   await page.getByTestId("save-scenario").click();
-  await page.getByRole("link", { name: /Abrir en Informe/ }).click();
+  await page.getByRole("link", { name: "Verla en el informe" }).click();
 
   await page.getByRole("radio", { name: "Preparar oferta" }).check();
   await page.getByTestId("report-note-input").fill("Margen OK <b>esc</b>");

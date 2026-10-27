@@ -47,7 +47,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] high-end-visual-design — N/A estilos / APPLY subset perf (transform/opacity, dvh, blur solo fixed)
 - [R] web-design-guidelines — APPLY como review gate (fetch reglas frescas)
 - [R] impeccable — APPLY modo Operate (scanability, harden errores/i18n, audit acotado)
-- [ ] copywriting
+- [R] copywriting (user) — leída completa propia (no-AI-tells → checklist J2)
 
 ## Workflows (19)
 - [R] agent-browser, skill-creator, browser-use — SKIP (tool/meta, sin cambio workflow)

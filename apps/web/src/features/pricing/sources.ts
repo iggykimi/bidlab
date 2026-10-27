@@ -3,7 +3,6 @@
 // module resolves citations/metadata and translates protocol codes to Spanish labels.
 
 import type { Citation, MetadataEvidence, Tender, Workspace } from "../../api/client";
-import { formatEUR, formatSignedEUR } from "../../lib/format";
 
 /** Resolve evidence_ids against the workspace citations, keeping order. */
 export function citationsByIds(workspace: Workspace, ids: string[]): Citation[] {
@@ -26,29 +25,18 @@ export function citationPages(citations: Citation[]): string {
   return pages.length > 0 ? ` (p. ${pages.join(", ")})` : "";
 }
 
-/** Protocol decimal -> es-ES display. Money gets €, long decimals get comma separators. */
-export function formatProtocol(value: string): string {
-  if (/^\d{1,12}\.\d{2}$/.test(value)) return formatEUR(value);
-  if (/^-?\d{1,12}\.\d{2}$/.test(value)) return formatSignedEUR(value);
-  const n = Number(value);
-  if (Number.isFinite(n)) {
-    return n.toLocaleString("es-ES", { maximumFractionDigits: 12 });
-  }
-  return value;
-}
-
 const REASON_ES: Record<string, string> = {
   incomplete_scenario: "escenario incompleto: falta el conjunto completo de ofertas",
-  incomplete_rival_set: "conjunto rival incompleto: puntuación y anormalidad sin determinar",
+  incomplete_rival_set: "conjunto rival incompleto: puntos y oferta sospechosa sin determinar",
   missing_variable: "falta una variable de la fórmula",
-  out_of_range: "resultado fuera del rango 0..máximo (sin clamp autorizado)",
+  out_of_range: "resultado fuera del rango 0..máximo (sin límite autorizado)",
   zero_denominator: "división por cero en la fórmula (denominador nulo)",
-  below_threshold: "oferta propia bajo el umbral de la rama",
-  below_relative_threshold: "oferta propia bajo el umbral relativo (90 % de la media)",
-  absolute_25_close: "cierre absoluto: baja superior al 25 % sobre la base (rama n=3)",
-  group_membership_unconfirmed: "pertenencia a grupos sin confirmar: anormalidad sin determinar",
-  incomplete_group_data: "faltan grupos en alguna oferta: anormalidad sin determinar",
-  unsupported_variant: "variante de anormalidad sin política implementada",
+  below_threshold: "tu oferta bajo el umbral del caso",
+  below_relative_threshold: "tu oferta bajo el umbral relativo (90 % de la media)",
+  absolute_25_close: "cierre absoluto: rebaja superior al 25 % sobre la base",
+  group_membership_unconfirmed: "pertenencia a grupos sin confirmar: oferta sospechosa sin determinar",
+  incomplete_group_data: "faltan grupos en alguna oferta: oferta sospechosa sin determinar",
+  unsupported_variant: "caso de oferta sospechosa sin regla implementada",
   unsupported_percentage_reduction: "reducción de un tercio no implementada",
   percentage_reduction_unsupported: "reducción de un tercio no implementada",
 };
@@ -70,13 +58,13 @@ const BRANCH_ES: Record<string, string> = {
 
 /** Anomaly branch id -> Spanish label. Unknown branches pass through. */
 export function branchEs(branch: string | null): string {
-  if (branch === null) return "sin rama aplicable";
+  if (branch === null) return "sin caso aplicable";
   return BRANCH_ES[branch] ?? branch;
 }
 
 const VARIABLE_ES: Record<string, string> = {
-  best_price: "mejor oferta",
-  own_price: "precio propio",
+  best_price: "la oferta más barata",
+  own_price: "tu oferta",
   reference_price: "precio de referencia",
   max_points: "puntos máximos",
 };
@@ -86,13 +74,34 @@ export function variableEs(name: string): string {
   return VARIABLE_ES[name] ?? name;
 }
 
+/** Anomaly status -> Sí/No answer for "¿Oferta sospechosamente baja?". Text, never color alone. */
+export function anomalyVerdictEs(status: string): string {
+  switch (status) {
+    case "possible_justification_required":
+      return "Sí";
+    case "not_flagged_under_assumptions":
+      return "No";
+    case "not_applicable":
+      return "No aplicable";
+    default:
+      return "Sin determinar";
+  }
+}
+
+/** "code: english message" -> "code" for the "(código: …)" suffix. */
+export function errorCodeOnly(raw: string | null): string | null {
+  if (raw === null) return null;
+  const cut = raw.indexOf(": ");
+  return cut === -1 ? raw : raw.slice(0, cut);
+}
+
 /** Anomaly status -> Spanish label. Unknown codes stay "Sin determinar". */
 export function anomalyEs(status: string): string {
   switch (status) {
     case "possible_justification_required":
       return "Posible necesidad de justificación";
     case "not_flagged_under_assumptions":
-      return "Sin presunción bajo estos supuestos";
+      return "No parece sospechosa con estos datos";
     case "not_applicable":
       return "No aplicable";
     default:
@@ -142,7 +151,7 @@ export function hashOrigin(
   hash: string
 ): { kind: "snapshot" | "document" | "unknown"; label: string } {
   if (workspace.tender.raw_snapshot_sha256 === hash) {
-    return { kind: "snapshot", label: "snapshot Atom del anuncio" };
+    return { kind: "snapshot", label: "copia del anuncio oficial" };
   }
   const doc = workspace.documents.find((d) => d.sha256 === hash);
   if (doc) return { kind: "document", label: doc.display_name };

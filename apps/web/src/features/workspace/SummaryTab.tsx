@@ -1,178 +1,261 @@
-import { useState } from "react";
-import type { Capabilities, Workspace } from "../../api/client";
-import { Button } from "../../components/ui";
-import { formatDateTime, formatEUR } from "../../lib/format";
+// Resumen UX phase 1: "Lo esencial" up top (deadline, budget, duration,
+// what scores), three guided steps, plain-ES facts, and every internal
+// code behind TechnicalDetails. Display only: backend strings pass through
+// the canonical format.ts/dates formatters, never recomputed here.
+
+import { Link } from "react-router-dom";
+import type { PricingRule, Workspace } from "../../api/client";
+import { TechnicalDetails, type TechnicalDetailItem } from "../../components/TechnicalDetails";
+import { Card } from "../../components/ui";
+import { diasRestantes } from "../../lib/dates";
+import {
+  formatEurosExact,
+  formatEurosHeadline,
+  formatFechaCorta,
+  formatFechaNormal,
+  formatMaxPoints,
+} from "../../lib/format";
+import { nombreImpuesto } from "../../lib/taxKind";
 
 interface Props {
   workspace: Workspace;
-  capabilities: Capabilities | null;
 }
 
-const LIMITATION_ES: Record<string, string> = {
-  curated_demo: "Demo curada: las cifras proceden de la semilla revisada, no de extracción en vivo.",
-  meta_live_unavailable: "Análisis en vivo no disponible: requiere modo live y clave de modelo configurada.",
-  history_disabled: "Histórico desactivado.",
-};
-
-function limitationText(code: string): string {
-  const key = code.split(":")[0] ?? code;
-  return LIMITATION_ES[key] ?? code;
+/** Published status: PUB means the tender is published. Unknown codes pass through. */
+function estadoPublicacion(statusRaw: string): string {
+  if (statusRaw === "") return "Sin determinar";
+  if (statusRaw === "PUB") return "Publicada";
+  return statusRaw;
 }
 
-export function SummaryTab({ workspace, capabilities }: Props) {
-  const [liveMessage, setLiveMessage] = useState<string | null>(null);
+function textoPresupuesto(pblNet: string | null, pblGross: string | null, taxKind: string): string {
+  const impuesto = nombreImpuesto(taxKind);
+  const net = pblNet ? formatEurosHeadline(pblNet) : null;
+  const gross = pblGross ? formatEurosExact(pblGross) : null;
+  if (net && gross) return `${net} sin ${impuesto} (${gross} con ${impuesto})`;
+  if (net) return `${net} sin ${impuesto}`;
+  if (gross) return `${gross} con ${impuesto}`;
+  return "Sin determinar";
+}
+
+function textoDuracion(periodMonths: number | null): string {
+  if (periodMonths === null) return "Sin determinar";
+  if (periodMonths === 1) return "1 mes";
+  return `${periodMonths} meses`;
+}
+
+/** Official CPV nomenclature descriptions for the demo codes; others stay bare. */
+function descripcionCPV(code: string): string | null {
+  if (code === "79411000") return "Servicios generales de consultoría en gestión";
+  if (code === "71356200") return "Servicios de asistencia técnica";
+  return null;
+}
+
+function lineaCPV(codes: string[]): string {
+  if (codes.length === 0) return "Sin determinar";
+  return codes.map((c) => (descripcionCPV(c) ? `${c} · ${descripcionCPV(c)}` : c)).join(", ");
+}
+
+/** Plain sentence for the points formula; the raw identifier goes to Detalles técnicos. */
+function frasePuntos(rule: PricingRule): string {
+  if (rule.template_id === "unsupported") return "Fórmula no soportada.";
+  if (rule.template_id === "proportional_inverse") {
+    return `Cuanto más barata tu oferta, más puntos (hasta ${formatMaxPoints(rule.max_points)}).`;
+  }
+  return `Tu oferta compite por precio (hasta ${formatMaxPoints(rule.max_points)} puntos).`;
+}
+
+function avisoRevision(rule: PricingRule): string | null {
+  if (rule.review_status === "approved") return null;
+  if (rule.review_status === "blocked") return "La fórmula está bloqueada. No uses estos puntos.";
+  return "La fórmula aún no está revisada. Los puntos pueden cambiar.";
+}
+
+/**
+ * Deadline countdown. The backend literal once carried an unproven zone
+ * claim ("Hora peninsular"), so unknown deadlines show "sin determinar"
+ * and the literal only survives zone-stripped in Detalles técnicos.
+ */
+function textoPlazo(deadlineAt: string | null): string {
+  if (deadlineAt === null) return "Sin determinar";
+  const cuenta = diasRestantes(deadlineAt);
+  const fecha = `Hasta el ${formatFechaNormal(deadlineAt)}.`;
+  return cuenta === "—" ? fecha : `${fecha} ${cuenta}.`;
+}
+
+function literalSinZona(deadlineLiteral: string | null): string | null {
+  if (deadlineLiteral === null) return null;
+  const limpio = deadlineLiteral.replace(/Hora peninsular/g, "").replace(/\s*;\s*$/, "").trim();
+  return limpio === "" ? null : limpio;
+}
+
+export function SummaryTab({ workspace }: Props) {
   const tender = workspace.tender;
-  const liveReady = capabilities?.meta_configured === true;
+  const basis = tender.scopes[0]?.basis ?? null;
+  const taxKind = basis?.tax_kind ?? "unknown";
+  const periodMonths = basis?.period_months ?? null;
+  const rule = workspace.pricing_rules[0] ?? null;
 
-  function handleLiveAttempt() {
-    if (!liveReady) {
-      setLiveMessage(
-        "Meta no está configurado en este equipo (falta modo live o clave de modelo). " +
-          "Puedes seguir con la demo curada o preparar una revisión manual del PCAP. " +
-          "No se ha enviado ningún documento ni se ha simulado un análisis."
-      );
-      return;
-    }
-    setLiveMessage(
-      "El análisis en vivo aún no está disponible en esta versión del frontal. " +
-        "No se ha enviado ningún documento."
-    );
+  const detalles: TechnicalDetailItem[] = [
+    { label: "Copia del anuncio oficial (SHA-256)", value: tender.raw_snapshot_sha256 },
+  ];
+  for (const flag of tender.quality_flags) {
+    detalles.push({ label: "Código de calidad", value: flag });
+  }
+  for (const warning of workspace.warnings) {
+    detalles.push({ label: "Aviso interno", value: warning });
+  }
+  if (tender.status_raw !== "") {
+    detalles.push({ label: "Estado publicado (código)", value: tender.status_raw });
+  }
+  const literal = literalSinZona(tender.deadline_literal);
+  if (literal !== null) {
+    detalles.push({ label: "Plazo publicado (literal)", value: literal });
+  }
+  for (const r of workspace.pricing_rules) {
+    detalles.push({ label: "Fórmula de puntos (identificador)", value: r.template_id });
+    detalles.push({ label: "Revisión de la fórmula", value: String(r.revision) });
+    detalles.push({ label: "Regla de oferta sospechosa (variante)", value: r.anomaly_policy.variant });
+  }
+  if (tender.pbl_net && tender.pbl_gross && taxKind === "IGIC") {
+    detalles.push({ label: "Tipo de IGIC", value: "7 % calculado a partir de ambas cifras oficiales" });
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <section aria-label="Hechos de la licitación" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Hechos</h2>
+    <div className="grid gap-4">
+      <Card aria-label="Lo esencial" data-testid="lo-esencial">
+        <h2 className="text-lg font-semibold">Lo esencial</h2>
         <dl className="mt-3 grid gap-2 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Presupuesto neto</dt>
-            <dd className="tnum font-semibold">{tender.pbl_net ? formatEUR(tender.pbl_net) : "No localizado"}</dd>
+            <dt className="text-muted">Plazo</dt>
+            <dd className="text-right font-semibold">{textoPlazo(tender.deadline_at)}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Presupuesto bruto</dt>
-            <dd className="tnum font-semibold">{tender.pbl_gross ? formatEUR(tender.pbl_gross) : "No localizado"}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Valor estimado</dt>
-            <dd className="tnum font-semibold">
-              {tender.estimated_value ? formatEUR(tender.estimated_value) : "No localizado"}
+            <dt className="text-muted">Presupuesto de salida</dt>
+            <dd className="tnum text-right font-semibold">
+              {textoPresupuesto(tender.pbl_net, tender.pbl_gross, taxKind)}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Puntos de precio</dt>
-            <dd className="tnum font-semibold">
-              {workspace.pricing_rules[0] ? `${workspace.pricing_rules[0].max_points} puntos` : "No localizado"}
-              <span className="font-normal text-muted"> (los demás puntos no se calculan en esta versión)</span>
+            <dt className="text-muted">Duración</dt>
+            <dd className="text-right font-semibold">{textoDuracion(periodMonths)}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted">Qué puntúa</dt>
+            <dd className="max-w-md text-right font-semibold">
+              {rule ? (
+                <>
+                  El precio da hasta {formatMaxPoints(rule.max_points)} puntos. Aquí solo calculas los puntos del precio.
+                  Revisa los demás criterios en el pliego de condiciones (PCAP).
+                </>
+              ) : (
+                "Los puntos de precio aún no están revisados."
+              )}
             </dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Fecha de la instantánea</dt>
-            <dd className="font-semibold">{formatDateTime(tender.source_updated_at)}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Estado observado</dt>
-            <dd className="font-semibold">{tender.status_raw || "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">CPV</dt>
-            <dd className="font-semibold">{tender.cpv_codes.join(", ") || "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Límite (literal)</dt>
-            <dd className="font-semibold">{tender.deadline_literal ?? "—"}</dd>
           </div>
         </dl>
-        <p className="mt-4 text-sm">
-          <span className="font-medium">Fuente oficial: </span>
-          <a href={tender.source_url} target="_blank" rel="noreferrer" className="break-all text-primary underline">
-            Ver publicación en Contratación del Estado
-          </a>
-        </p>
-        <p className="tnum mt-2 break-all text-xs text-muted">Snapshot {tender.raw_snapshot_sha256}</p>
-        {tender.quality_flags.length > 0 && (
-          <ul className="mt-2 text-xs text-muted">
-            {tender.quality_flags.map((f) => (
-              <li key={f}>Calidad: {f}</li>
-            ))}
-          </ul>
-        )}
-        {workspace.warnings.length > 0 && (
-          <ul className="mt-2 text-xs text-alert">
-            {workspace.warnings.map((w) => (
-              <li key={w}>Aviso: {w}</li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <h3 className="mt-4 font-semibold">Sigue estos tres pasos</h3>
+        <ol className="mt-2 list-decimal space-y-2 pl-6 text-sm">
+          <li>
+            <Link to="?tab=requisitos" className="font-semibold text-primary underline hover:text-primary-ink">
+              Revisa los requisitos
+            </Link>{" "}
+            y comprueba si puedes presentarte.
+          </li>
+          <li>
+            <Link to="?tab=pricing" className="font-semibold text-primary underline hover:text-primary-ink">
+              Prueba precios
+            </Link>{" "}
+            y mira cuántos puntos consigues.
+          </li>
+          <li>
+            <Link to="?tab=informe" className="font-semibold text-primary underline hover:text-primary-ink">
+              Guarda tu decisión
+            </Link>{" "}
+            en el informe, con tus notas.
+          </li>
+        </ol>
+      </Card>
 
-      <div className="grid gap-4">
-        <section aria-label="Reglas de precio" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Reglas de precio</h2>
-          {workspace.pricing_rules.length === 0 && <p className="mt-2 text-sm">Sin reglas revisadas.</p>}
-          <ul className="mt-2 space-y-2 text-sm">
-            {workspace.pricing_rules.map((rule) => (
-              <li key={`${rule.id}:${rule.revision}`} className="rounded-lg border border-line p-3">
-                <p className="font-semibold">
-                  {rule.template_id} · {rule.max_points} puntos · revisión {rule.revision}
-                </p>
-                <p className="mt-1">
-                  Estado de revisión:{" "}
-                  <strong>
-                    {rule.review_status === "approved"
-                      ? "Revisado"
-                      : rule.review_status === "blocked"
-                        ? "Bloqueado"
-                        : "Pendiente"}
-                  </strong>
-                </p>
-                <p className="mt-1">
-                  Anormalidad: {rule.anomaly_policy.variant} ({rule.anomaly_policy.review_status === "approved" ? "revisada" : "pendiente"})
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card aria-label="Hechos de la licitación">
+          <h2 className="text-lg font-semibold">Hechos</h2>
+          <dl className="mt-3 grid gap-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Presupuesto de salida</dt>
+              <dd className="tnum text-right font-semibold">
+                {textoPresupuesto(tender.pbl_net, tender.pbl_gross, taxKind)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Valor estimado del contrato</dt>
+              <dd className="text-right">
+                <span className="tnum font-semibold">
+                  {tender.estimated_value ? formatEurosHeadline(tender.estimated_value) : "Sin determinar"}
+                </span>
+                {tender.estimated_value && (
+                  <span className="mt-1 block text-xs font-normal text-muted">
+                    {periodMonths === null
+                      ? "Incluye todo el periodo posible."
+                      : `Incluye todo el periodo posible, no solo ${periodMonths} meses.`}
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Estado</dt>
+              <dd className="text-right font-semibold">{estadoPublicacion(tender.status_raw)}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Tipo de servicio (código CPV)</dt>
+              <dd className="max-w-md text-right font-semibold">{lineaCPV(tender.cpv_codes)}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Plazo para presentar ofertas</dt>
+              <dd className="text-right font-semibold">
+                {tender.deadline_at ? formatFechaNormal(tender.deadline_at) : "Sin determinar"}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-sm">Datos del {formatFechaCorta(tender.source_updated_at)}.</p>
+          <p className="mt-2 text-sm">
+            <span className="font-medium">Fuente oficial: </span>
+            <a
+              href={tender.source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="break-all text-primary underline"
+            >
+              Ver publicación en Contratación del Estado
+            </a>
+          </p>
+          <TechnicalDetails items={detalles} className="mt-4" />
+        </Card>
 
-        <section aria-label="Análisis en vivo" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Análisis en vivo (Meta)</h2>
-          {!capabilities && <p className="mt-2 text-sm">Cargando capacidades…</p>}
-          {capabilities && (
-            <dl className="mt-2 grid gap-1 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Modo</dt>
-                <dd className="font-semibold">{capabilities.mode}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Meta configurado</dt>
-                <dd className="font-semibold">{capabilities.meta_configured ? "Sí" : "No"}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Modelo</dt>
-                <dd className="font-semibold">{capabilities.meta_model}</dd>
-              </div>
-            </dl>
-          )}
-          {capabilities && capabilities.limitations.length > 0 && (
-            <ul className="mt-2 text-sm text-muted">
-              {capabilities.limitations.map((l) => (
-                <li key={l}>· {limitationText(l)}</li>
-              ))}
-            </ul>
-          )}
-          <Button
-            variant="secondary"
-            data-testid="live-attempt"
-            onClick={handleLiveAttempt}
-            className="mt-3"
-          >
-            Intentar análisis en vivo
-          </Button>
-          {liveMessage && (
-            <p data-testid="live-message" role="status" className="mt-3 rounded-lg bg-surface p-3 text-sm">
-              {liveMessage}
+        <div className="grid content-start gap-4">
+          <Card aria-label="¿Cómo suma puntos tu oferta?">
+            <h2 className="text-lg font-semibold">¿Cómo suma puntos tu oferta?</h2>
+            {workspace.pricing_rules.length === 0 ? (
+              <p className="mt-2 text-sm">Aún no hay fórmula de puntos revisada.</p>
+            ) : (
+              <ul className="mt-2 space-y-2 text-sm">
+                {workspace.pricing_rules.map((r) => (
+                  <li key={`${r.id}:${r.revision}`}>
+                    <p>{frasePuntos(r)}</p>
+                    {avisoRevision(r) && <p className="mt-1">{avisoRevision(r)}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <section aria-label="Asistente de IA">
+            <p data-testid="live-unavailable" className="text-sm">
+              El asistente de IA no está disponible en esta demo: aquí los datos ya vienen
+              revisados.
             </p>
-          )}
-        </section>
+          </section>
+        </div>
       </div>
     </div>
   );

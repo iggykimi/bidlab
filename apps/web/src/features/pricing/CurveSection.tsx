@@ -1,10 +1,20 @@
-// Visualizaciones del resultado: curva precio-puntos y traza de cálculo.
+// Visualizaciones del resultado: curva precio-puntos y cálculo en frases.
 // La curva llega del backend con rivales fijos; recharts queda fuera del bundle inicial.
 
 import { Suspense, lazy } from "react";
 import type { Workspace } from "../../api/client";
+import { Card } from "../../components/ui";
+import { TechnicalDetails } from "../../components/TechnicalDetails";
+import {
+  discountPercentToRate,
+  formatEurosExact,
+  formatEurosHeadline,
+  formatMaxPoints,
+  formatPercent,
+  formatPoints1,
+} from "../../lib/format";
 import { SourceCitations } from "./SourceCitations";
-import { formatProtocol, hashOrigin } from "./sources";
+import { hashOrigin } from "./sources";
 import type { PricingState } from "./usePricingState";
 
 // recharts stays out of the initial bundle; the curve loads with its section.
@@ -20,89 +30,109 @@ interface CalcProps {
 }
 
 export function CurveSection({ state }: CurveProps) {
-  const { result, ruleCitations, openEvidence } = state;
+  const { result, ruleCitations, openEvidence, h, pending, error, inputsValid, requestCount } = state;
   return (
-    <section aria-label="Curva precio-puntos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+    <Card aria-label="Curva precio-puntos">
       <h2 className="text-lg font-semibold">Curva precio-puntos</h2>
-      {!result && <p className="mt-2 text-sm">Pendiente de cálculo.</p>}
+      {!result && (
+        <p className="mt-2 text-sm">
+          {inputsValid ? "Calculando tu resultado…" : "Corrige los valores marcados para ver la curva."}
+        </p>
+      )}
       {result && (
         <Suspense fallback={<p className="mt-2 text-sm">Cargando la curva…</p>}>
-          <CurveChart curve={result.curve} />
+          <CurveChart
+            curve={result.curve}
+            ownPrice={result.price_net}
+            ownScore={result.score.value}
+            ownMax={result.score.max_points}
+            ownProfit={result.profit_net}
+            ownCost={result.cost_net}
+            discountRate={discountPercentToRate(h.discountPct)}
+            rivals={
+              h.noRivals
+                ? []
+                : [
+                    { label: "Rival A", price: h.rivalAPrice },
+                    { label: "Rival B", price: h.rivalBPrice },
+                  ]
+            }
+            pending={pending}
+            error={inputsValid ? error : null}
+            requestCount={requestCount}
+          />
         </Suspense>
       )}
       {result && (
         <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted">
           <span>
-            Curva del backend con rivales fijos ({result.curve.length} puntos); la propia
-            oferta entra en cada punto. Fuente de la fórmula:{" "}
+            Curva calculada con los rivales que supones ({result.curve.length} precios distintos);
+            tu oferta entra en cada punto. Fuente de la fórmula:{" "}
           </span>
           <SourceCitations citations={ruleCitations} onSelect={openEvidence} />
         </p>
       )}
-    </section>
+    </Card>
   );
 }
 
 export function CalculationSection({ workspace, state }: CalcProps) {
-  const { result, ruleCitations, anomalyCitations, openEvidence } = state;
+  const { result, rule, ruleCitations, anomalyCitations, openEvidence, h, inputsValid } = state;
+  const best = result?.trace.find((s) => s.label === "Mejor oferta incluyendo propia")?.value ?? null;
+  const scoreDefined =
+    result?.score.status === "defined" && result.score.value !== null && best !== null;
   return (
-    <section aria-label="Cálculo" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Ver cálculo</h2>
-      {!result && <p className="mt-2 text-sm">Pendiente de cálculo.</p>}
+    <Card aria-label="¿Cómo sale tu resultado?">
+      <h2 className="text-lg font-semibold">¿Cómo sale tu resultado?</h2>
+      {!result && (
+        <p className="mt-2 text-sm">
+          {inputsValid ? "Calculando tu resultado…" : "Corrige los valores marcados para ver el cálculo."}
+        </p>
+      )}
       {result && (
-        <div data-testid="calculation-trace" className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
-            <caption className="sr-only">
-              Pasos de cálculo devueltos por el backend: precio, mejor oferta, puntuación,
-              anormalidad y margen
-            </caption>
-            <thead>
-              <tr className="text-left">
-                <th scope="col" className="border-b border-border p-2">Paso</th>
-                <th scope="col" className="border-b border-border p-2">Expresión</th>
-                <th scope="col" className="border-b border-border p-2">Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.trace.map((step) => (
-                <tr key={step.label}>
-                  <td className="border-b border-line p-2 font-medium">{step.label}</td>
-                  <td className="border-b border-line p-2">
-                    <code className="tnum break-all text-xs">{step.expression}</code>
-                  </td>
-                  <td className="tnum border-b border-line p-2">
-                    {step.value === null ? "sin determinar" : formatProtocol(step.value)}{" "}
-                    {step.value !== null && (
-                      <code className="block text-xs text-muted">{step.value}</code>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="tnum mt-2 text-xs text-muted">
-            Regla {result.pricing_rule_id} rev. {result.pricing_rule_revision} · motor{" "}
-            {result.engine_version} · empresa rev. {result.company_revision}
-          </p>
+        <div>
+          <ol data-testid="calculation-trace" className="mt-2 list-decimal space-y-2 pl-5 text-sm">
+            <li>
+              {workspace.tender.pbl_net !== null
+                ? `Tu precio: ${formatEurosHeadline(workspace.tender.pbl_net)} menos un ${formatPercent(discountPercentToRate(h.discountPct))} = ${formatEurosExact(result.price_net)}.`
+                : `Tu precio es ${formatEurosExact(result.price_net)}.`}
+            </li>
+            <li>
+              {best !== null
+                ? h.complete && !h.noRivals
+                  ? `La oferta más barata es ${formatEurosExact(best)}.`
+                  : `De las ofertas supuestas, la más barata es ${formatEurosExact(best)}.`
+                : "La oferta más barata está sin determinar."}
+            </li>
+            <li>
+              {scoreDefined
+                ? rule?.template_id === "proportional_inverse"
+                  ? `Tus puntos: ${formatMaxPoints(result.score.max_points)} × ${formatEurosExact(best as string)} ÷ ${formatEurosExact(result.price_net)} = ${formatPoints1(result.score.value as string)}.`
+                  : "Tus puntos dependen de la fórmula del pliego."
+                : "Tus puntos están sin determinar."}
+            </li>
+          </ol>
           <div data-testid="source-hashes" className="mt-3">
-            <h3 className="text-sm font-semibold">
-              Huellas de fuente ({result.source_hashes.length})
-            </h3>
-            {result.source_hashes.length === 0 && (
-              <p className="mt-1 text-xs text-muted">
-                El backend no devolvió huellas de fuente.
-              </p>
-            )}
-            <ul className="mt-1 space-y-1 text-xs">
-              {result.source_hashes.map((hash) => (
-                <li key={hash} className="tnum break-all">
-                  <code title={hash}>{hash.slice(0, 16)}…</code>{" "}
-                  <span className="text-muted">· {hashOrigin(workspace, hash).label}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
-              <span>Fuentes de la regla y la política: </span>
+            <TechnicalDetails
+              items={[
+                ...result.trace.map((step) => ({ label: step.label, value: step.expression })),
+                {
+                  label: "Fórmula de puntos (regla)",
+                  value: `${result.pricing_rule_id} rev. ${result.pricing_rule_revision}`,
+                },
+                ...(rule
+                  ? [{ label: "Fórmula de puntos (identificador)", value: rule.template_id }]
+                  : []),
+                { label: "Motor de cálculo", value: result.engine_version },
+                { label: "Empresa", value: `rev. ${result.company_revision}` },
+                ...result.source_hashes.map((hash) => ({
+                  label: hashOrigin(workspace, hash).label,
+                  value: hash,
+                })),
+              ]}
+            />
+            <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted">
+              <span>Fuentes de la fórmula y la regla de oferta sospechosa: </span>
               <SourceCitations
                 citations={[...ruleCitations, ...anomalyCitations]}
                 onSelect={openEvidence}
@@ -111,6 +141,6 @@ export function CalculationSection({ workspace, state }: CalcProps) {
           </div>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

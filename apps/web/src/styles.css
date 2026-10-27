@@ -4,9 +4,9 @@
   --color-surface: #f6f7fb;
   --color-ink: #172033;
   --color-muted: #3a4560;
-  --color-primary: #3159d9;
-  --color-primary-hover: #2748b8;
-  --color-primary-ink: #1e3fa0;
+  --color-primary: #2748b8;
+  --color-primary-hover: #1e3fa0;
+  --color-primary-ink: #162d75;
   --color-primary-soft: #e8efff;
   --color-line: #e5e9f2;
   --color-border: #c9d2e8;
@@ -29,7 +29,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 

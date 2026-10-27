@@ -272,7 +272,7 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     if margin_s is not None and cost is not None:
         trace.append(
             {
-                "label": "Margen sobre coste",
+                "label": "Margen sobre ventas",
                 "expression": (
                     f"({MO.serialize_money(price)}-{MO.serialize_money(cost)})"
                     f"/{MO.serialize_money(price)}"

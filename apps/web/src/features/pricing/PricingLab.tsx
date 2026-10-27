@@ -3,6 +3,7 @@
 
 import type { Workspace } from "../../api/client";
 import { EvidenceDrawer } from "../evidence/EvidenceDrawer";
+import { ConclusionSection } from "./ConclusionSection";
 import { CalculationSection, CurveSection } from "./CurveSection";
 import { DiscountSection, GroupReferencesSection, HypothesesForm } from "./HypothesesForm";
 import { KpiSection } from "./KpiSection";
@@ -22,29 +23,31 @@ export function PricingLab({ workspace }: Props) {
   if (!session || !companyId) {
     return (
       <p role="status" className="rounded-xl bg-white p-4 shadow-sm">
-        Carga el ejemplo desde la biblioteca para simular con la empresa demo.
+        Carga el ejemplo desde la biblioteca para simular con la empresa de ejemplo.
       </p>
     );
   }
   if (!scope || !rule) {
     return (
       <p role="alert" className="rounded-xl bg-white p-4 shadow-sm">
-        Esta licitación no tiene ámbito ni regla de precio. No hay nada que simular.
+        Esta licitación no tiene ámbito ni fórmula de puntos. No puedes simular nada.
       </p>
     );
   }
   if (rule.review_status !== "approved") {
-    const statusEs = rule.review_status === "blocked" ? "Bloqueado" : "Pendiente";
     return (
       <p role="alert" className="rounded-xl bg-white p-4 shadow-sm">
-        Regla {rule.id} en estado {statusEs}. No se puede simular hasta su revisión.
+        {rule.review_status === "blocked"
+          ? "La fórmula de puntos está bloqueada. No puedes simular hasta su revisión."
+          : "La fórmula de puntos aún no está revisada. No puedes simular hasta su revisión."}
       </p>
     );
   }
 
   return (
     <div className="grid gap-4">
-      <KpiSection workspace={workspace} rule={rule} state={state} />
+      <ConclusionSection state={state} />
+      <KpiSection workspace={workspace} state={state} />
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="grid min-w-0 gap-4 lg:col-span-8 [&>*]:min-w-0">
           <DiscountSection state={state} />

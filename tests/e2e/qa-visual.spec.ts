@@ -23,7 +23,7 @@ async function noHorizontalOverflow(page: Page, label: string): Promise<void> {
 // axe: zero serious/critical violations on the current tab. Minor/moderate
 // findings are reported by the run (see the failure message) but do not fail
 // the suite: axe minor impact covers best-practice polish, not blockers.
-// No rule exclusions: the Resumen+Precio tabs currently pass the full
+// No rule exclusions: all five tabs currently pass the full
 // default ruleset at serious+ on both viewports.
 async function expectNoSeriousViolations(page: Page, label: string): Promise<void> {
   const results = await new AxeBuilder({ page }).analyze();
@@ -63,12 +63,14 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     await curve.screenshot({ path: "test-results/qa-desktop-curve.png" });
     await noHorizontalOverflow(page, "pricing escritorio");
 
-    await openTab(page, "Evidencia");
+    await openTab(page, "Citas");
     await page.screenshot({ path: "test-results/qa-desktop-evidencia.png" });
     await noHorizontalOverflow(page, "evidencia escritorio");
 
     await openTab(page, "Informe");
-    await expect(page.getByTestId("report-note-input")).toHaveAccessibleName(/Comentario/);
+    await expect(page.getByTestId("report-note-input")).toHaveAccessibleName(
+      "Tus notas (saldrán tal cual en el informe)"
+    );
     await page.screenshot({ path: "test-results/qa-desktop-informe.png" });
     await noHorizontalOverflow(page, "informe escritorio");
     expect(guard.blocked()).toBe(0);
@@ -82,7 +84,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
 
     const opener = page
       .locator("section[aria-label='Indicadores']")
-      .getByRole("button", { name: /p\. 10: ver evidencia/ })
+      .getByRole("button", { name: /p\. 10: ver cita/ })
       .first();
     await opener.click();
     const drawer = page.getByTestId("evidence-drawer");
@@ -108,10 +110,12 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     );
 
     await openTab(page, "Precio");
-    await expect(page.getByTestId("discount-input")).toHaveAccessibleName(/Baja/);
-    await expect(page.getByTestId("discount-slider")).toHaveAccessibleName(/Deslizador/);
-    await expect(page.getByTestId("rival-a-price")).toHaveAccessibleName(/Hipótesis A/);
-    await expect(page.getByTestId("scenario-name")).toHaveAccessibleName(/Nombre del escenario/);
+    await expect(page.getByTestId("discount-input")).toHaveAccessibleName("Escribe tu rebaja (%)");
+    await expect(page.getByTestId("discount-slider")).toHaveAccessibleName("Rebaja en tanto por ciento");
+    await expect(page.getByTestId("rival-a-price")).toHaveAccessibleName(
+      "Rival A · precio sin IGIC en € (coma o punto)"
+    );
+    await expect(page.getByTestId("scenario-name")).toHaveAccessibleName(/Nombre de tu prueba/);
     await expect(
       page.getByRole("img", { name: /Curva precio-puntos/ })
     ).toBeVisible();
@@ -121,16 +125,34 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     expect(guard.blocked()).toBe(0);
   });
 
-  test("axe: Resumen+Precio sin violaciones serious+ en escritorio", async ({ page }) => {
+  test("axe: todas las pestañas sin violaciones serious+ en escritorio", async ({ page }) => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
 
     await expect(page.locator("h1")).toHaveCount(1);
     await expectNoSeriousViolations(page, "resumen escritorio");
 
+    // La transición pressable (120 ms) mezcla colores a mitad de camino:
+    // axe debe probar la UI estable, no el fotograma intermedio.
+    await openTab(page, "Requisitos");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "requisitos escritorio");
+
     await openPricing(page);
     await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "precio escritorio");
+
+    await openTab(page, "Citas");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "citas escritorio");
+
+    await openTab(page, "Informe");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "informe escritorio");
     expect(guard.blocked()).toBe(0);
   });
 });
@@ -158,14 +180,14 @@ test.describe("T30 visual QA mobile 390x844", () => {
     // El cajón ocupa todo el ancho en móvil y sigue siendo usable.
     const opener = page
       .locator("section[aria-label='Indicadores']")
-      .getByRole("button", { name: /p\. 10: ver evidencia/ })
+      .getByRole("button", { name: /p\. 10: ver cita/ })
       .first();
     await opener.click();
     await expect(page.getByTestId("evidence-drawer")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-mobile-drawer.png" });
     await page.keyboard.press("Escape");
 
-    await openTab(page, "Evidencia");
+    await openTab(page, "Citas");
     await page.screenshot({ path: "test-results/qa-mobile-evidencia.png" });
     await noHorizontalOverflow(page, "evidencia móvil");
 
@@ -175,16 +197,33 @@ test.describe("T30 visual QA mobile 390x844", () => {
     expect(guard.blocked()).toBe(0);
   });
 
-  test("axe: Resumen+Precio sin violaciones serious+ en móvil", async ({ page }) => {
+  test("axe: todas las pestañas sin violaciones serious+ en móvil", async ({ page }) => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
 
     await expect(page.locator("h1")).toHaveCount(1);
     await expectNoSeriousViolations(page, "resumen móvil");
 
+    // Ver escritorio: dejar que la transición pressable asiente antes de axe.
+    await openTab(page, "Requisitos");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "requisitos móvil");
+
     await openPricing(page);
     await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "precio móvil");
+
+    await openTab(page, "Citas");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "citas móvil");
+
+    await openTab(page, "Informe");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await page.waitForTimeout(250);
+    await expectNoSeriousViolations(page, "informe móvil");
     expect(guard.blocked()).toBe(0);
   });
 });

@@ -16,7 +16,7 @@ test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page })
 
   await page.getByTestId("scenario-name").fill('<img src=x onerror="window.__e12pwned=1">');
   await page.getByTestId("save-scenario").click();
-  await page.getByRole("link", { name: /Abrir en Informe/ }).click();
+  await page.getByRole("link", { name: "Verla en el informe" }).click();
   await expect(page.getByTestId("scenario-detail")).toContainText('<img src=x onerror="window.__e12pwned=1">');
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__e12pwned)).toBeUndefined();
 
@@ -35,8 +35,10 @@ test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page })
   expect(html).toContain("&lt;script&gt;");
 
   await openTab(page, "Requisitos");
-  await page.getByTestId("requirement-tech-services").getByRole("button", { name: /p\. 6: ver evidencia/ }).click();
-  await expect(page.getByTestId("evidence-drawer")).toContainText("PDF original no se redistribuye");
+  await page.getByTestId("requirement-tech-services").getByRole("button", { name: /Ver página 6 en el pliego/ }).click();
+  await expect(page.getByTestId("evidence-drawer")).toContainText(
+    "No puedes descargar el PDF original desde aquí. Consúltalo en la web oficial o usa el texto de esta página."
+  );
   await expect(page.getByRole("link", { name: /Ver fuente oficial/ }).first()).toBeVisible();
   expect(guard.blocked()).toBe(0);
 });

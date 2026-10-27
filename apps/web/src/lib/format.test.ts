@@ -5,6 +5,7 @@ import {
   formatEUR,
   formatEurosExact,
   formatEurosHeadline,
+  formatFechaCorta,
   formatFechaNormal,
   formatPercent,
   formatPoints,
@@ -70,6 +71,17 @@ describe("format (canonical, voice guide v1)", () => {
 
   it("echoes invalid ISO input back", () => {
     expect(formatFechaNormal("no-fecha")).toBe("no-fecha");
+  });
+
+  it("formats the ISO date part as day de month de year, no timezone", () => {
+    expect(formatFechaCorta("2026-10-25T14:12:11.227+01:00")).toBe("25 de octubre de 2026");
+    expect(formatFechaCorta("2026-11-25T22:59:00Z")).toBe("25 de noviembre de 2026");
+    expect(formatFechaCorta("2026-01-05")).toBe("5 de enero de 2026");
+  });
+
+  it("echoes invalid short-date input back", () => {
+    expect(formatFechaCorta("no-fecha")).toBe("no-fecha");
+    expect(formatFechaCorta("2026-13-40T00:00:00Z")).toBe("2026-13-40T00:00:00Z");
   });
 
   it("renders non-finite canonical values as an em dash", () => {
