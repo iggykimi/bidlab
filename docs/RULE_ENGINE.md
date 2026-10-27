@@ -4,7 +4,7 @@ El modelo interpreta documentos; este motor calcula. Las siguientes fórmulas se
 ## Precondiciones y representación
 Entrada aprobada: scope/horizonte/moneda/unidad, regla y revisión, precio propio derivado de descuento, coste coherente y escenario rival. P0 solo EUR, precio global neto y duración inicial explícita.
 
-Decimal con precision=34 y contexto local. Dinero derivado del slider se cuantiza a 0.01, ROUND_HALF_UP, antes de puntuar; no redondear cada operación de puntos. Serializar score/ratio a máximo 12 decimales (ROUND_HALF_UP), mostrar puntos a 4 y margen en % a 2. Informe indica que la precisión mostrada es teórica salvo que el PCAP establezca un redondeo; si lo establece, versionar regla con ese redondeo exacto.
+Decimal con precision=34 y contexto local. Dinero derivado del slider se cuantiza a 0.01, ROUND_HALF_UP, antes de puntuar; no redondear cada operación de puntos. Serializar score/ratio a máximo 12 decimales (ROUND_HALF_UP). Display (enmienda 26-oct, revisión UX): titulares redondeados para lectura — puntos a 1 decimal ("46,4 de 49"), margen en % a 1 decimal ("19,9 %"), euros en titulares sin decimales, euros exactos con 2; backend intacto (strings exactos) y exactos visibles en "Detalles técnicos". Informe indica que la precisión mostrada es teórica salvo que el PCAP establezca un redondeo; si lo establece, versionar regla con ese redondeo exacto. Margen mostrado es sobre ventas ((P-K)/P); etiquetarlo así, nunca "sobre coste".
 
 P=B×(1-d), 0≤d≤0.40 en UI P0, B=budget_net aprobado para ese ámbito. B>0, P>0; techo aprobado C exige P≤C. API rechaza descuentos fuera del alcance P0, no confundir ese alcance con un límite legal. B y C pueden diferir en un caso complejo; no habilitar sin revisión.
 
