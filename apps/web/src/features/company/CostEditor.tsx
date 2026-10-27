@@ -21,7 +21,7 @@ import {
   keyForEvidenceSlug,
   labelForEvidenceKey,
 } from "../../lib/evidenceFields";
-import { parsePrecioInput, PRECIO_INPUT_MODE } from "../../lib/format";
+import { formatEurosExact, parsePrecioInput, PRECIO_INPUT_MODE } from "../../lib/format";
 import { rivalPriceSchema } from "../../lib/validation";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 
@@ -75,14 +75,40 @@ export interface CostDraft {
   addedEvidence: CompanyEvidence[];
 }
 
+/** Campos del borrador que ya no coinciden con la revisión actual (R02). */
+export function describeCostDrift(company: Company, draft: CostDraft): string[] {
+  const out: string[] = [];
+  const name = draft.name.trim();
+  if (name !== "" && name !== company.name) {
+    out.push(`Nombre: ahora «${company.name}», tu borrador «${name}».`);
+  }
+  const direct = moneyFieldToProtocol(draft.direct);
+  if (direct.ok && direct.value !== company.direct_cost_net) {
+    out.push(
+      `Costes directos: ahora ${displayMoney(company.direct_cost_net) || "vacío"}, tu borrador ${draft.direct || "vacío"}.`
+    );
+  }
+  const overhead = moneyFieldToProtocol(draft.overhead);
+  if (overhead.ok && overhead.value !== company.overhead_net) {
+    out.push(
+      `Costes indirectos: ahora ${displayMoney(company.overhead_net) || "vacío"}, tu borrador ${draft.overhead || "vacío"}.`
+    );
+  }
+  return out;
+}
+
 /** Cuerpo completo del PUT desde la revisión cargada y tu borrador. */
-export function buildCompanyUpdate(company: Company, draft: CostDraft): CompanyUpdate | null {
+export function buildCompanyUpdate(
+  company: Company,
+  draft: CostDraft,
+  expectedRevision: number
+): CompanyUpdate | null {
   const direct = moneyFieldToProtocol(draft.direct);
   const overhead = moneyFieldToProtocol(draft.overhead);
   const name = draft.name.trim();
   if (!direct.ok || !overhead.ok || name === "") return null;
   return {
-    expected_revision: company.revision,
+    expected_revision: expectedRevision,
     name,
     synthetic: false,
     scope_id: company.scope_id,
@@ -147,11 +173,13 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
       ? ""
       : (keyForEvidenceSlug(requestedField) ??
         (isKnownEvidenceKey(requestedField) ? requestedField : ""));
+  // R06: summary first, wide editor on demand. Arrivals from Requisitos
+  // (#tu-coste) mount with the editor open; no effect, no extra render.
+  const [open, setOpen] = useState(() => window.location.hash === "#tu-coste");
   const [row, setRow] = useState({ ...EMPTY_ROW, field_key: preselectedField });
   const [rowError, setRowError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [conflict, setConflict] = useState<string | null>(null);
 
   const company = companyQuery.data ?? null;
   const stored = drafts.company;
@@ -165,6 +193,11 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
   const draft: CostDraft | null =
     company === null ? null : stored.baseRevision === null ? seedFromCompany(company) : stored;
   const setDraft = (next: CostDraft) => patchCompanyDraft({ ...next });
+  // R02: a draft based on an older revision never overwrites the newer one
+  // silently. Saving requires the explicit confirm button below.
+  const stale =
+    company !== null && draft !== null && stored.baseRevision !== null && stored.baseRevision < company.revision;
+  const drift = stale && company && draft ? describeCostDrift(company, draft) : [];
 
   // The card renders once the company loads: retry then, not just on mount.
   useEffect(() => {
@@ -214,22 +247,29 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
 
   async function handleSave() {
     if (!company || !draft) return;
-    const body = buildCompanyUpdate(company, draft);
+    // Fresh seed (no base yet) or current base: send our base. Stale draft:
+    // the user pressed the explicit confirm button, so rebase onto current.
+    const expected = stored.baseRevision === null || stale ? company.revision : stored.baseRevision;
+    const body = buildCompanyUpdate(company, draft, expected);
     if (!body) return;
     setSaving(true);
     setSaveError(null);
     try {
       await updateCompany(companyId, body);
-      setConflict(null);
       setDraft({ ...draft, addedEvidence: [] });
       await queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      const fresh = await companyQuery.refetch();
+      patchCompanyDraft({ baseRevision: fresh.data?.revision ?? company.revision + 1 });
       toast.success("Ya guardamos tus costes.");
     } catch (err) {
       if (err instanceof ApiError && (err.status === 409 || err.code === "stale_revision")) {
-        setConflict(
-          "Tus datos cambiaron en otro lugar. Trajimos los valores actuales y guardamos lo que escribiste. Revísalos y guarda de nuevo.",
-        );
-        await companyQuery.refetch();
+        // Race lost: keep every keystroke, show current values beside the
+        // draft (banner below) and require the explicit confirm to resend.
+        try {
+          await companyQuery.refetch();
+        } catch {
+          setSaveError("No pudimos traer los valores actuales. Vuelve a intentarlo en unos segundos.");
+        }
       } else {
         setSaveError(
           errorEs(err, "No pudimos guardar tus costes. Vuelve a intentarlo en unos segundos."),
@@ -259,8 +299,30 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
           </Button>
         </div>
       )}
-      {company && draft && (
-        <div className="mt-3 grid gap-3">
+      {company && (
+        <div className="mt-2">
+          <Button
+            variant="secondary"
+            data-testid="cost-toggle"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? "Ocultar el editor" : "Editar tus costes"}
+          </Button>
+        </div>
+      )}
+      {company && !open && (
+        <p data-testid="cost-summary" className="mt-2 text-sm">
+          <strong>{company.name}</strong> · directos{" "}
+          {company.direct_cost_net ? formatEurosExact(company.direct_cost_net) : "sin determinar"} ·
+          indirectos{" "}
+          {company.overhead_net ? formatEurosExact(company.overhead_net) : "sin determinar"} ·
+          revisión {company.revision}.
+          {stale ? " Tus datos cambiaron en otro lugar: abre el editor para verlo." : ""}
+        </p>
+      )}
+      {company && draft && open && (
+        <div className="mt-3 grid gap-3" data-testid="cost-editor">
           <label className="block text-sm">
             <span className="font-medium">Nombre de tu empresa</span>
             <input
@@ -429,10 +491,22 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
               Al guardar, estos costes dejan de ser de ejemplo.
             </p>
           )}
-          {conflict && (
-            <p role="alert" className="text-sm text-error">
-              {conflict}
-            </p>
+          {stale && company && (
+            <div role="alert" className="rounded-lg border border-alert bg-alert-soft p-3 text-sm">
+              <p className="font-semibold">
+                Tus datos cambiaron en otro lugar. Tu borrador sigue intacto.
+              </p>
+              {drift.length > 0 && (
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {drift.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-1">
+                Guarda de todas formas solo si revisaste las diferencias.
+              </p>
+            </div>
           )}
           {saveError && (
             <p role="alert" className="text-sm text-error">
@@ -441,7 +515,7 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
           )}
           <div>
             <Button data-testid="save-cost" onClick={handleSave} disabled={saving || !valid}>
-              {saving ? "Guardando…" : "Guardar tus costes"}
+              {saving ? "Guardando…" : stale ? "Guardar de todas formas" : "Guardar tus costes"}
             </Button>
           </div>
         </div>

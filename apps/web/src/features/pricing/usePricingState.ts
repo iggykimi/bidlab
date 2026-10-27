@@ -2,7 +2,7 @@
 // Toda cifra viaja como cadena del backend; aquí no hay aritmética.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   evaluateScenario,
   getCompany,
@@ -77,6 +77,7 @@ export interface PricingState {
 }
 
 export function usePricingState(workspace: Workspace): PricingState {
+  const queryClient = useQueryClient();
   const session = loadSession();
   const scope = workspace.tender.scopes[0] ?? null;
   const rule = workspace.pricing_rules[0] ?? null;
@@ -236,6 +237,8 @@ export function usePricingState(workspace: Workspace): PricingState {
       updatePricing({
         savedCopy: { id: saved.id, hash: saved.snapshot_sha256, name: name.data, inputKey: payloadKey },
       });
+      // R03: the Informe list must show this copy without a reload.
+      await queryClient.invalidateQueries({ queryKey: ["tenderScenarios", workspace.tender.id] });
     } catch (err) {
       setSaveError(errorEs(err, "No pudimos guardar tu prueba. Vuelve a intentarlo en unos segundos."));
       setSaveRawError(errorCode(err));

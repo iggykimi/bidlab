@@ -396,5 +396,59 @@ con cero F/E y exit 0. Candidatura NO enviada (pendiente autor).
   debounce slider), menos tipográfico U+2212, glosario en app,
   O2 precisión cabecera/exacta (diseño), O4 inglés en
   secciones técnicas colapsadas.
-- Demo: docs/demo/*.png refrescados del run verde 17:57.
-- Push final único pendiente de CI verde (ahorro de minutos).
+- Demo: docs/demo/*.png de entonces; refrescados de nuevo tras
+  R01–R06 (ver entrada revision_50e07cf).
+- Push/CI cancelados por el autor (puertas locales desde entonces).
+
+## Revisión R01–R06, revision_50e07cf (27-oct, docs R07)
+
+Fecha: 2026-10-27. Commit base: 50e07cf (árbol SUCIO con R01–R06 sin
+commitear; esta entrada registra solo lo contado por docs R07, sin
+ejecutar puertas con servidores). Sin push, sin CI remota (prohibidos
+por el autor), sin vídeo grabado, sin jueces internos (prohibidos).
+
+Conteos verificados hoy en este árbol (baratos, sin servidores):
+
+- Backend: 321 tests en las rutas de `verify.py`
+  (`unit + integration + contracts`), todos en verde.
+  (`test_review_materialize.py`, 11 tests, se movió a
+  `integration/` para entrar en puertas; 1 live opt-in excluido.)
+- `npm run test:unit -w apps/web` → exit 0, 21 ficheros, 175 passed.
+- `npx playwright test --list -c tests/e2e/playwright.config.ts` →
+  Total: 50 tests in 16 files (specs: compare, cost-editor,
+  e01-e02-e09, e03-e06, e07-e08, e10, e11, e12, intake, own-journey,
+  qa-visual, r01-r04-state, r06-layout, smoke, t23-t24, ux-drafts).
+- Caso oro verificado cifra a cifra: base 118336.00 + coste 90000.00
+  (80000 + 10000, «Pyme de ejemplo») → 10 %: 106502.40 / 16502.40 /
+  49 pts; 15 %: 100585.60 / 10585.60 / 49 pts; delta 5916.80.
+  Fuentes: `fixtures/demo/expected.json` (5/15/30 %),
+  `fixtures/demo/company.json`, CMP-02 (49,0 de 49 a 10 %,
+  «-5916,80 €», «con los mismos puntos»), R06 («106.502,40» a 10 %),
+  backend `test_golden_compare_10_vs_15` (49.000000000000 en ambas,
+  deltas 5916.80, `higher_profit_same_score`) y
+  `test_compare_logic.py` (16502.40).
+- Literales UI entre «» de guion/runbook verificados uno a uno contra
+  `apps/web/src` (+ `_indicator`/`_dominance` de
+  `apps/api/bidlab/services/compare.py` para las frases de
+  comparación). Formatos `es-ES` corroborados con `node -e`
+  (Intl): «-5916,80 €» sin punto de miles, «+16.502,40 €»,
+  «106.502,40 €», «49,0 de 49».
+
+Puertas ejecutadas en este árbol (27-oct, `verify-final.log`):
+
+- `python scripts/verify.py` → ALL CHECKS PASSED, exit 0 (10/10
+  pasos: deps, pytest unit, pytest integración+contratos, eslint,
+  tsc, build, vitest, ruff, mypy, Playwright).
+- Backend: 321 passed. Frontend: 175 passed (21 ficheros).
+- Playwright: 50 passed, incl. own-journey 3/3, r06-layout 4/4,
+  r01-r04-state 4/4, CMP-02 (oro 10/15), axe serious+ limpio.
+- Capturas docs/demo/01–08 regeneradas con
+  scripts/demo-shots (base separada de E2E) e inspeccionadas:
+  sin nombres de tests ni payloads, sin transiciones a medias,
+  etiquetas de curva sin colisiones, 06 con prueba legible
+  («Rebaja 10 %») e informe abierto.
+- Ajustes del run final: specs intake al flujo de 3 pasos,
+  R02 restaura la empresa demo (suite independiente del orden),
+  revisión manual sin análisis abre revisión 1 (backend).
+
+Candidatura NO enviada (pendiente autor).

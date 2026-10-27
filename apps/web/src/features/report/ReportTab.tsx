@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -25,6 +25,7 @@ import {
 } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
 import { loadSession } from "../../lib/session";
+import { approvedPricingRule, isOwnTender } from "../review/ownTender";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { CompareSection } from "./CompareSection";
 import { reportNoteSchema } from "../../lib/validation";
@@ -320,7 +321,24 @@ export function ReportTab({ workspace }: Props) {
   });
   const decision = drafts.report.decision as Decision;
   const note = drafts.report.note;
-  const selectedScenario = params.get("prueba") ?? drafts.report.selectedScenario;
+  const linkedScenario = params.get("prueba");
+  // R01: ?prueba= is a one-shot deep link. It selects initially (only when
+  // the draft differs), then leaves the URL so later clicks own the
+  // selection and the export follows them. The ref guard is load-bearing:
+  // without it, the store write + re-navigation re-trigger the effect
+  // faster than the router can commit, a self-sustaining loop (observed).
+  const consumedLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (linkedScenario === null || consumedLinkRef.current === linkedScenario) return;
+    consumedLinkRef.current = linkedScenario;
+    if (drafts.report.selectedScenario !== linkedScenario) {
+      updateReport({ selectedScenario: linkedScenario });
+    }
+    const next = new URLSearchParams(params);
+    next.delete("prueba");
+    setParams(next, { replace: true });
+  }, [linkedScenario, params, setParams, updateReport, drafts.report.selectedScenario]);
+  const selectedScenario = linkedScenario ?? drafts.report.selectedScenario;
   const setDecision = (value: Decision) => updateReport({ decision: value });
   const setNote = (value: string) => updateReport({ note: value });
   const setSelectedScenario = (value: string | null) => updateReport({ selectedScenario: value });
@@ -396,6 +414,10 @@ export function ReportTab({ workspace }: Props) {
     goTab("precio");
   }
 
+  // Own tenders without an approved formula cannot simulate, so there
+  // is nothing to report yet: ask for the review first, plainly.
+  const gated = isOwnTender(workspace.tender) && approvedPricingRule(workspace) === null;
+
   async function handleExport() {
     setExportError(null);
     setExportRawError(null);
@@ -420,6 +442,20 @@ export function ReportTab({ workspace }: Props) {
     } finally {
       setExporting(false);
     }
+  }
+
+  if (gated) {
+    return (
+      <section aria-label="Informe bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold">¿Por qué no ves el informe?</h2>
+        <p className="mt-2 text-sm">
+          Aún no apruebas la fórmula de puntos. Sin fórmula aprobada no hay pruebas que guardar.
+        </p>
+        <Button data-testid="report-go-review" onClick={() => goTab("revisar")} className="mt-3">
+          Ir a Revisar
+        </Button>
+      </section>
+    );
   }
 
   return (

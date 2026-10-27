@@ -45,10 +45,24 @@ export interface CompanyDraft {
   baseRevision: number | null;
 }
 
+export interface ReviewDraft {
+  /** Tender id this draft was seeded from; null until then. Never reseeds. */
+  baseKey: string | null;
+  budgetNet: string;
+  periodMonths: string;
+  templateId: string;
+  maxPoints: string;
+  anomalyVariant: string;
+  threeBidder: boolean;
+  oneThird: boolean;
+  reason: string;
+}
+
 export interface ContextDrafts {
   pricing: PricingDraft;
   report: ReportDraft;
   company: CompanyDraft;
+  review: ReviewDraft;
 }
 
 export function defaultPricingDraft(): PricingDraft {
@@ -63,8 +77,27 @@ export function defaultCompanyDraft(): CompanyDraft {
   return { name: "", direct: "", overhead: "", addedEvidence: [], baseRevision: null };
 }
 
+export function defaultReviewDraft(): ReviewDraft {
+  return {
+    baseKey: null,
+    budgetNet: "",
+    periodMonths: "",
+    templateId: "proportional_inverse",
+    maxPoints: "",
+    anomalyVariant: "unsupported",
+    threeBidder: false,
+    oneThird: false,
+    reason: "",
+  };
+}
+
 export function defaultDrafts(): ContextDrafts {
-  return { pricing: defaultPricingDraft(), report: defaultReportDraft(), company: defaultCompanyDraft() };
+  return {
+    pricing: defaultPricingDraft(),
+    report: defaultReportDraft(),
+    company: defaultCompanyDraft(),
+    review: defaultReviewDraft(),
+  };
 }
 
 function canonical(value: unknown): unknown {
@@ -178,6 +211,28 @@ function sanitizeCompanyDraft(value: unknown): CompanyDraft {
   };
 }
 
+const TEMPLATE_IDS = new Set(["proportional_inverse", "linear_discount", "log_ratio"]);
+const ANOMALY_VARIANTS = new Set(["tias_18_5", "alfresco_18_5", "rglcap85_standard", "unsupported"]);
+
+function sanitizeReviewDraft(value: unknown): ReviewDraft {
+  const raw = (value !== null && typeof value === "object" ? value : {}) as Record<string, unknown>;
+  const baseKey = shortText(raw.baseKey, MAX_SHORT);
+  const templateId = shortText(raw.templateId, 32);
+  const anomalyVariant = shortText(raw.anomalyVariant, 32);
+  return {
+    baseKey: baseKey && baseKey.length > 0 ? baseKey : null,
+    budgetNet: shortText(raw.budgetNet, MAX_PRICE) ?? "",
+    periodMonths: shortText(raw.periodMonths, 16) ?? "",
+    templateId: templateId !== null && TEMPLATE_IDS.has(templateId) ? templateId : "proportional_inverse",
+    maxPoints: shortText(raw.maxPoints, MAX_PRICE) ?? "",
+    anomalyVariant:
+      anomalyVariant !== null && ANOMALY_VARIANTS.has(anomalyVariant) ? anomalyVariant : "unsupported",
+    threeBidder: flag(raw.threeBidder, false),
+    oneThird: flag(raw.oneThird, false),
+    reason: shortText(raw.reason, 2000) ?? "",
+  };
+}
+
 function sanitizeDrafts(value: unknown): ContextDrafts {
   const raw = (value !== null && typeof value === "object" ? value : {}) as Record<string, unknown>;
   const pricing = (raw.pricing !== null && typeof raw.pricing === "object" ? raw.pricing : {}) as Record<
@@ -202,6 +257,7 @@ function sanitizeDrafts(value: unknown): ContextDrafts {
       selectedScenario: selected && selected.length > 0 ? selected : null,
     },
     company: sanitizeCompanyDraft(raw.company),
+    review: sanitizeReviewDraft(raw.review),
   };
 }
 
@@ -245,11 +301,28 @@ export function loadDraftStore(): Record<string, ContextDrafts> {
   }
 }
 
-export function saveDraftStore(store: Record<string, ContextDrafts>): void {
-  if (!storageAvailable()) return;
+/** Typed persist outcome (R04): failures stay visible instead of silent. */
+export type PersistResult = "ok" | "quota" | "denied" | "unavailable";
+
+export function classifyPersistError(err: unknown): Exclude<PersistResult, "ok" | "unavailable"> {
+  const name = err !== null && typeof err === "object" && "name" in err ? String(err.name) : "";
+  const code =
+    err !== null && typeof err === "object" && "code" in err ? Number(err.code) : NaN;
+  if (name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED" || code === 22) {
+    return "quota";
+  }
+  return "denied";
+}
+
+export function saveDraftStore(store: Record<string, ContextDrafts>): PersistResult {
+  if (!storageAvailable()) return "unavailable";
   try {
+    // All-or-nothing single key: a failure writes nothing, so other
+    // contexts are never wiped by a failed persist.
     localStorage.setItem(STORAGE_KEY, serializeDraftStore(store));
-  } catch {
-    // Cuota llena o almacenamiento bloqueado: el borrador sigue en memoria.
+    return "ok";
+  } catch (err) {
+    // El borrador sigue en memoria; quien llama debe avisarlo (R04).
+    return classifyPersistError(err);
   }
 }

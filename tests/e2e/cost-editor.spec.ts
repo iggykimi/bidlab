@@ -43,6 +43,7 @@ test("cost editor save reprices profit and bumps the company revision", async ({
   const rev = Number(/rev\. (\d+)/.exec(revText ?? "")?.[1]);
   expect(Number.isInteger(rev)).toBe(true);
 
+  await page.getByTestId("cost-toggle").click();
   await page.getByTestId("cost-direct").fill("70000");
   await page.getByTestId("save-cost").click();
   await expect(page.getByTestId("profit-net")).toContainText("32.419,20");

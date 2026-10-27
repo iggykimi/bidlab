@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  classifyPersistError,
   contextKey,
   defaultDrafts,
   parseDraftStore,
+  saveDraftStore,
   serializeDraftStore,
   stableKey,
 } from "./draftStore";
@@ -119,5 +121,63 @@ describe("serializeDraftStore", () => {
     expect(Object.keys(parsed)).toHaveLength(20);
     expect(parsed.k24).toBeDefined();
     expect(parsed.k0).toBeUndefined();
+  });
+});
+
+describe("saveDraftStore (R04)", () => {
+  function installMemoryStorage() {
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => (data.has(key) ? (data.get(key) as string) : null),
+      setItem: (key: string, value: string) => {
+        data.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        data.delete(key);
+      },
+      clear: () => data.clear(),
+      key: (index: number) => [...data.keys()][index] ?? null,
+      get length() {
+        return data.size;
+      },
+    };
+    vi.stubGlobal("localStorage", storage);
+    return { data, storage };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("devuelve ok y persiste cuando hay sitio", () => {
+    const { data } = installMemoryStorage();
+    expect(saveDraftStore({ k: defaultDrafts() })).toBe("ok");
+    expect(data.get("bidlab.drafts.v2")).toContain("contexts");
+  });
+
+  it("clasifica la cuota llena sin lanzar ni borrar lo anterior", () => {
+    const { data, storage } = installMemoryStorage();
+    saveDraftStore({ k: defaultDrafts() });
+    const before = data.get("bidlab.drafts.v2");
+    const quota = new Error("full");
+    quota.name = "QuotaExceededError";
+    vi.spyOn(storage, "setItem").mockImplementationOnce(() => {
+      throw quota;
+    });
+    expect(saveDraftStore({ k: defaultDrafts(), other: defaultDrafts() })).toBe("quota");
+    expect(data.get("bidlab.drafts.v2")).toBe(before);
+  });
+
+  it("clasifica el acceso denegado", () => {
+    const { storage } = installMemoryStorage();
+    const denied = new Error("denied");
+    denied.name = "SecurityError";
+    vi.spyOn(storage, "setItem").mockImplementationOnce(() => {
+      throw denied;
+    });
+    expect(saveDraftStore({ k: defaultDrafts() })).toBe("denied");
+    expect(classifyPersistError({ code: 22 })).toBe("quota");
+    expect(classifyPersistError(null)).toBe("denied");
   });
 });

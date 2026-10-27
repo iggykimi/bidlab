@@ -20,5 +20,12 @@ export function DemoBadge({ mode }: Props) {
       </Badge>
     );
   }
+  if (mode === "manual") {
+    return (
+      <Badge tone="neutral" data-testid="demo-badge">
+        Tus datos
+      </Badge>
+    );
+  }
   return null;
 }

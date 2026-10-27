@@ -20,6 +20,7 @@ import {
 import { loadSession } from "../../lib/session";
 import { nombreImpuesto } from "../../lib/taxKind";
 import { decisionEs } from "../report/ReportTab";
+import { isOwnTender, ownChecklist } from "../review/ownTender";
 import { useWorkspaceDrafts } from "./WorkspaceDrafts";
 
 interface Props {
@@ -133,8 +134,70 @@ export function SummaryTab({ workspace }: Props) {
     detalles.push({ label: "Tipo de IGIC", value: "7 % calculado a partir de ambas cifras oficiales" });
   }
 
+  const own = isOwnTender(tender);
+  const checklist = own
+    ? ownChecklist({
+        workspace,
+        session,
+        tenderId: tender.id,
+        hasSavedCopy: drafts.pricing.savedCopy !== null,
+      })
+    : null;
+
   return (
     <div className="grid gap-4">
+      {own && checklist && (
+        <Card aria-label="Tu recorrido" data-testid="recorrido-propio">
+          <h2 className="text-lg font-semibold">¿Qué te falta?</h2>
+          <ol className="mt-2 list-decimal space-y-2 pl-6 text-sm">
+            <li>
+              {checklist.company ? (
+                "Tu empresa está creada."
+              ) : (
+                <>
+                  <Link
+                    to="?tab=revisar#tu-empresa"
+                    className="font-semibold text-primary underline hover:text-primary-ink"
+                  >
+                    Crea tu empresa
+                  </Link>{" "}
+                  con tus costes reales.
+                </>
+              )}
+            </li>
+            <li>
+              {checklist.review ? (
+                "Tu fórmula está aprobada."
+              ) : (
+                <>
+                  <Link
+                    to="?tab=revisar"
+                    className="font-semibold text-primary underline hover:text-primary-ink"
+                  >
+                    Revisa tu fórmula
+                  </Link>{" "}
+                  y aprueba tus datos.
+                </>
+              )}
+            </li>
+            <li>
+              {checklist.simulated ? (
+                `Prueba guardada «${drafts.pricing.savedCopy?.name ?? "sin nombre"}».`
+              ) : (
+                <>
+                  <Link
+                    to="?tab=precio"
+                    className="font-semibold text-primary underline hover:text-primary-ink"
+                  >
+                    Prueba precios
+                  </Link>{" "}
+                  y guarda tu prueba.
+                </>
+              )}
+            </li>
+          </ol>
+        </Card>
+      )}
       <Card aria-label="Lo esencial" data-testid="lo-esencial">
         <h2 className="text-lg font-semibold">Lo esencial</h2>
         <dl className="mt-3 grid gap-2 text-sm">

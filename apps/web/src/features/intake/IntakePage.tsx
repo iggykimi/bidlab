@@ -1,5 +1,6 @@
-// Intake flow: two short steps, "Identificar" then "Añadir documento".
-// The tender is created first; the PDF stays optional and local-only.
+// Intake flow: three short steps, "Identificar", "Añadir documento", "Tu empresa".
+// The tender is created first; the PDF and the company stay optional here
+// (Revisar offers the company form again if you skip it).
 // Voice: Spanish tú, short sentences, questions as headings.
 
 import { useRef, useState, type ReactNode } from "react";
@@ -15,6 +16,7 @@ import {
 import { Alert, Button } from "../../components/ui";
 import { errorCode, errorEs } from "../../lib/errors";
 import { PRECIO_INPUT_MODE } from "../../lib/format";
+import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import {
   buildTenderCreate,
   EMPTY_INTAKE_FORM,
@@ -63,8 +65,8 @@ function Field({
   );
 }
 
-function Stepper({ step }: { step: 1 | 2 }) {
-  const steps = ["Identificar", "Añadir documento"];
+function Stepper({ step }: { step: 1 | 2 | 3 }) {
+  const steps = ["Identificar", "Añadir documento", "Tu empresa"];
   return (
     <ol aria-label="Pasos para dar de alta" className="flex flex-wrap gap-2">
       {steps.map((label, index) => {
@@ -90,7 +92,7 @@ function Stepper({ step }: { step: 1 | 2 }) {
 export function IntakePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<IntakeForm>(EMPTY_INTAKE_FORM);
   const [errors, setErrors] = useState<IntakeErrors>({});
   const [creating, setCreating] = useState(false);
@@ -98,6 +100,7 @@ export function IntakePage() {
   const [createRaw, setCreateRaw] = useState<string | null>(null);
   const [tenderId, setTenderId] = useState<string | null>(null);
   const [tenderTitle, setTenderTitle] = useState("");
+  const [scopeId, setScopeId] = useState<string | null>(null);
   const creatingRef = useRef(false);
 
   const [file, setFile] = useState<File | null>(null);
@@ -135,6 +138,7 @@ export function IntakePage() {
       await queryClient.invalidateQueries({ queryKey: ["tenders"] });
       setTenderId(tender.id);
       setTenderTitle(tender.title);
+      setScopeId(tender.scopes[0]?.id ?? `${tender.id}-whole`);
       setStep(2);
     } catch (error) {
       setCreateError(errorEs(error, "No pudimos crear tu licitación. Revisa los datos."));
@@ -200,8 +204,8 @@ export function IntakePage() {
     }
   }
 
-  function openWorkspace() {
-    if (tenderId) void navigate(`/tenders/${tenderId}?tab=resumen`);
+  function openWorkspace(tab: string) {
+    if (tenderId) void navigate(`/tenders/${tenderId}?tab=${tab}`);
   }
 
   return (
@@ -438,8 +442,8 @@ export function IntakePage() {
                     </Button>
                   )}
                   {uploaded && (
-                    <Button data-testid="intake-open" onClick={openWorkspace}>
-                      Abrir tu licitación
+                    <Button data-testid="intake-open" onClick={() => setStep(3)}>
+                      Continuar con tu empresa
                     </Button>
                   )}
                 </div>
@@ -447,8 +451,24 @@ export function IntakePage() {
             )}
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Button data-testid="intake-skip" variant="secondary" onClick={openWorkspace}>
+              <Button data-testid="intake-skip" variant="secondary" onClick={() => setStep(3)}>
                 Continuar sin documento
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {step === 3 && tenderId && scopeId && (
+          <section aria-label="Tu empresa">
+            <CompanyCreateForm
+              tenderId={tenderId}
+              scopeId={scopeId}
+              initialPeriodMonths={form.periodMonths}
+              onCreated={() => openWorkspace("revisar")}
+            />
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button data-testid="intake-skip-company" variant="secondary" onClick={() => openWorkspace("resumen")}>
+                Continuar sin empresa
               </Button>
             </div>
           </section>

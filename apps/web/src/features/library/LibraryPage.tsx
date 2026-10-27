@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { createDemoSession, listTenders, type Tender } from "../../api/client";
 import { formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
-import { storeSession } from "../../lib/session";
+import { ownCompanyFor, storeSession } from "../../lib/session";
+import { isOwnTender } from "../review/ownTender";
 import { DemoBadge } from "../../components/DemoBadge";
 import { Skeleton } from "../../components/Skeleton";
-import { Alert, Button } from "../../components/ui";
+import { Alert, Button, Badge } from "../../components/ui";
 import { useQuery } from "@tanstack/react-query";
 
 /** Published status: PUB means the tender is published. Unknown codes pass through. */
@@ -55,6 +56,23 @@ export function LibraryPage() {
   const visible = needle
     ? items.filter((t) => `${t.title} ${t.external_id} ${t.cpv_codes.join(" ")}`.toLowerCase().includes(needle))
     : items;
+
+  // Own tenders restore their manual session (no example asked). When the
+  // company pointer is gone, the workspace checklist asks for it instead.
+  function openTender(tender: Tender) {
+    if (isOwnTender(tender)) {
+      const known = ownCompanyFor(tender.id);
+      if (known) {
+        storeSession({
+          tender_id: tender.id,
+          scope_id: known.scope_id,
+          company_id: known.company_id,
+          mode: "manual",
+        });
+      }
+    }
+    void navigate(`/tenders/${tender.id}?tab=resumen`);
+  }
 
   return (
     <main className="mx-auto max-w-4xl p-4 sm:p-8">
@@ -122,10 +140,11 @@ export function LibraryPage() {
               <li key={t.id} className="py-3">
                 <button
                   type="button"
-                  onClick={() => navigate(`/tenders/${t.id}?tab=resumen`)}
+                  onClick={() => openTender(t)}
                   className="w-full rounded-lg p-1 text-left hover:bg-surface"
                 >
-                  <span className="font-semibold text-primary underline hover:text-primary-ink">{t.title}</span>
+                  <span className="font-semibold text-primary underline hover:text-primary-ink">{t.title}</span>{" "}
+                  {isOwnTender(t) && <Badge data-testid="own-badge">Tuya</Badge>}
                   <span className="mt-1 block text-sm text-muted">
                     {t.contracting_body} · Expediente {t.external_id} · Actividad{" "}
                     {t.cpv_codes.join(", ") || "sin determinar"}

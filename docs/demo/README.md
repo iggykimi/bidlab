@@ -1,4 +1,4 @@
-# Pack de demo para revisores (jueces, humanos o modelos)
+# Pack de demo para revisores (humanos o modelos)
 
 BidLab ayuda a una pyme a decidir si pujar a una licitación: lee el
 pliego, extrae requisitos con citas por página y simula precios con un
@@ -7,10 +7,14 @@ Ayuntamiento de Tías (Lanzarote).
 
 ## Ver en 2 minutos (sin instalar nada)
 
+Capturas regeneradas tras R01–R06 con `scripts/demo-shots`
+(base separada de la suite E2E, nombres legibles, UI asentada):
+tuteo, «Datos de ejemplo», comparar desde «Precio».
+
 | Pantalla | Qué demuestra |
 |---|---|
 | [01-resumen.png](01-resumen.png) | Resumen: plazo, presupuesto, qué puntúa |
-| [02-precio.png](02-precio.png) | Pricing Lab: conclusión, puntos, anormalidad |
+| [02-precio.png](02-precio.png) | Precio: conclusión, puntos, anormalidad |
 | [03-curva.png](03-curva.png) | Curva precio→puntos con rivales supuestos |
 | [04-citas.png](04-citas.png) | Citas verificables contra el pliego |
 | [05-requisitos.png](05-requisitos.png) | Matriz de requisitos (cumple / no / sin datos) |
@@ -32,6 +36,11 @@ npm run dev -w apps/web               # web en 127.0.0.1:5173
 Abrir <http://127.0.0.1:5173/>, botón demo → workspace `/tenders/tias`.
 Sin claves ni red: la demo es 100 % offline (los E2E abortan cualquier
 petición no-loopback). Guion de 180 s: [demo-script-180s](../demo-script-180s.md).
+Caso oro: rebajas del 10 % y del 15 % dan los mismos 49 puntos, pero el
+10 % conserva 5916,80 € más de beneficio (fijado por CMP-02).
+Recorrido propio offline: «Nueva licitación» → alta + PDF + empresa +
+análisis + revisión manual + simular + comparar + exportar
+(fijado por tests/e2e/own-journey.spec.ts).
 
 ## Dónde mirar el código
 
@@ -40,23 +49,33 @@ petición no-loopback). Guion de 180 s: [demo-script-180s](../demo-script-180s.m
 - Contratos API: `docs/API_CONTRACT.yaml`
 - Frontend (React, español claro, guía de voz): `apps/web/src/`,
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
-- Tests: `apps/api/tests/` (229), `apps/web/src/**/*.test.ts` (109),
-  `tests/e2e/` (27 Playwright herméticos)
+- Tests (contados el 27-oct-2026 en este árbol, ver
+  [verification-log](../verification-log.md)):
+  backend 322 (`pytest --collect-only`: 220 unit + 90
+  integración/contratos en puertas + 11 de revisión propia pendientes
+  de incluir en `verify.py` + 1 live opt-in excluido),
+  web 175 en 21 ficheros (`npm run test:unit`),
+  E2E 50 en 16 specs (`playwright --list`, herméticos).
+  Puertas completas en verde el 27-oct (`verify-final.log`).
 
 ## Evidencia de calidad
 
-- CI verde en GitHub Actions (18 pasos: pytest, lint, typecheck,
-  build, vitest, ruff, mypy, Playwright): badge en el README.
-- `python scripts/verify.py` → 10/10 puertas, exit 0.
+- Puertas locales (sin CI remota, por decisión del autor):
+  `python scripts/verify.py` → 10 puertas (deps, pytest unit,
+  pytest integración+contratos, eslint, tsc, build, vitest, ruff,
+  mypy, Playwright): ALL CHECKS PASSED, exit 0, el 27-oct.
 - Log de verificación con evidencia real: [verification-log](../verification-log.md).
-- Auditoría UX externa aplicada + 4 jueces ≥ 9.5/10: [ux-review](../ux-review.md).
+- Auditoría UX externa aplicada: [ux-review](../ux-review.md).
 
 ## Límites honestos (no fingimos más)
 
 - Un tender real (Tías); precios de rivales y costes, sintéticos y rotulados.
 - Sin todas las ofertas reales no hay predicción de adjudicación.
 - `unknown` es `null`, nunca cero; la anormalidad es presunción, no exclusión.
+- Sin Meta en vivo en el frontal (solo smoke backend); empresa y rivales
+  sintéticos; sin predicción.
 - Histórico P1 aparcado; móvil solo "no rompe"; sin `LICENSE` aún (T32).
+- Sin vídeo grabado; sin envío (pendiente del autor).
 
 ## Qué feedback nos sirve
 

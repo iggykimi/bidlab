@@ -23,6 +23,12 @@ export const ERROR_ES: Record<string, string> = {
   requirements_tree_corrupt: "La lista de requisitos está dañada. Pide que la revisen.",
   money_unparseable: "Tu importe no es válido (usa coma o punto, como 1234,56). Corrige el valor.",
   forbidden: "No tienes permiso para esta acción.",
+  nothing_to_review: "Aún no hay nada que revisar. Pide el análisis o rellena el formulario.",
+  remote_processing_not_allowed: "El análisis en vivo necesita tu permiso. Marca la casilla o revisa a mano.",
+  rule_revision_conflict: "Otra revisión se te adelantó. Recarga la licitación e inténtalo de nuevo.",
+  basis_budget_invalid: "El presupuesto debe ser mayor que cero. Corrige el valor.",
+  rule_expression_invalid: "La fórmula no es válida. Elige otra e inténtalo de nuevo.",
+  rule_scope_mismatch: "El ámbito no es de esta licitación. Recarga la página.",
   invalid_response: "La aplicación devolvió una respuesta inesperada. Vuelve a intentarlo en unos segundos.",
 };
 

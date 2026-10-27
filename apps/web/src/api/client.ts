@@ -22,6 +22,7 @@ export type TenderDocumentKind = components["schemas"]["Document"]["kind"];
 export type Workspace = components["schemas"]["Workspace"];
 export type DemoSession = components["schemas"]["DemoSession"];
 export type MetadataEvidence = components["schemas"]["MetadataEvidence"];
+export type PriceBasis = components["schemas"]["PriceBasis"];
 export type PageText = components["schemas"]["PageText"];
 export type Citation = components["schemas"]["Citation"];
 export type RequirementNode = components["schemas"]["RequirementNode"];
@@ -47,6 +48,10 @@ export type CompareEntry = components["schemas"]["CompareEntry"];
 export type CompareDelta = components["schemas"]["CompareDelta"];
 export type Report = components["schemas"]["Report"];
 export type Decision = components["schemas"]["ReportCreate"]["decision"];
+export type ReviewRequest = components["schemas"]["ReviewRequest"];
+export type AnalysisRequest = components["schemas"]["AnalysisRequest"];
+export type Job = components["schemas"]["Job"];
+export type CompanyWrite = components["schemas"]["CompanyWrite"];
 
 export class ApiError extends Error {
   readonly status: number;
@@ -257,4 +262,54 @@ export async function fetchReportHtml(reportId: string, signal?: AbortSignal): P
 
 export function isAbort(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+export function createCompany(payload: CompanyWrite, signal?: AbortSignal): Promise<Company> {
+  return sendJson<Company>("POST", "/companies", payload, { signal });
+}
+
+export interface StartedAnalysis {
+  job: Job;
+  /** Raw Location header (points at the job resource); null when absent. */
+  location: string | null;
+}
+
+/** Queue extraction (202 + Location). Reads the Location header, so no sendJson. */
+export async function startAnalysis(
+  tenderId: string,
+  payload: AnalysisRequest,
+  signal?: AbortSignal,
+): Promise<StartedAnalysis> {
+  const res = await fetch(`${API_BASE}/tenders/${encodeURIComponent(tenderId)}/analysis`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-BidLab-Client": LOCAL_CLIENT,
+      "Idempotency-Key": newIdempotencyKey(),
+    },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (!res.ok) await parseError(res);
+  const job = (await res.json()) as Job;
+  return { job, location: res.headers.get("Location") };
+}
+
+export function getJob(jobId: string, signal?: AbortSignal): Promise<Job> {
+  return getJson<Job>(`/jobs/${encodeURIComponent(jobId)}`, signal);
+}
+
+/** Submit a manual review; the response is the new Workspace revision. */
+export async function submitReview(
+  tenderId: string,
+  payload: ReviewRequest,
+  signal?: AbortSignal,
+): Promise<Workspace> {
+  const raw: unknown = await sendJson(
+    "POST",
+    `/tenders/${encodeURIComponent(tenderId)}/reviews`,
+    payload,
+    { idempotencyKey: newIdempotencyKey(), signal },
+  );
+  return parseOrThrow(workspaceSchema, raw);
 }

@@ -1,13 +1,13 @@
 # BidLab — licitación real, revisión trazable, Pricing Lab determinista
 
-[![bidlab-ci](https://github.com/iggykimi/bidlab/actions/workflows/ci.yml/badge.svg)](https://github.com/iggykimi/bidlab/actions/workflows/ci.yml)
-
 BidLab ayuda a una pyme a decidir si pujar: biblioteca de licitaciones,
 matriz de requisitos con citas localizadas en página, y Pricing Lab con
 puntos, anomalía y curva calculados por un motor determinista en Python.
 El LLM propone estructura y citas; la aritmética, la elegibilidad y la
 anormalidad viven en dominio puro. Dinero y puntos en `Decimal`, API con
 strings, sin fórmulas autoritativas en el frontend.
+(Sin CI remota ni badge: por decisión del autor, las puertas son locales
+vía `scripts/verify.py`; sin push sin su autorización.)
 
 Caso P0: **2026/00006554N** (asistencia técnica del PAI de Tías),
 PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
@@ -124,15 +124,22 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 `npm run build`, `npm run test:unit`, `ruff check .`,
 `mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
 
-Estado a 27-oct-2026 (verificado por ejecución propia; detalle
-y comandos en [verification-log](docs/verification-log.md)):
+Estado a 27-oct-2026 (contado en este árbol; detalle y comandos
+en [verification-log](docs/verification-log.md)):
 
-- `verify.py`: ALL CHECKS PASSED, 10/10 puertas, exit 0.
-- Backend: 229 tests (164 unit + 65 integración/contratos); web: 109
-  unit; E2E: 27/27 herméticos. Ruff y mypy limpios.
-- CI (GitHub Actions, 18 pasos incl. Playwright): verde, ver badge.
-- Auditoría UX externa aplicada; 4 jueces ≥ 9.5/10
-  ([ux-review](docs/ux-review.md)).
+- Backend: 322 tests (`pytest --collect-only`: 220 unit + 90
+  integración/contratos en puertas de `verify.py` + 11 de revisión
+  propia pendientes de incluir en `verify.py` + 1 live opt-in
+  excluido). Web: 175 en 21 ficheros (`npm run test:unit`, verde).
+  E2E: 50 tests en 16 specs herméticos (`playwright --list`).
+- `verify.py` completo (10/10 puertas): EVIDENCIA-TBD en este árbol.
+- Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
+  Playwright, `verify.py`. Sin CI remota (decisión del autor).
+- Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
+- Alcance: ejemplo revisado (caso oro 10/15: mismos 49 puntos, el 10 %
+  conserva 5916,80 € más) + recorrido propio completo offline
+  (alta + PDF + empresa + análisis + revisión manual + simular +
+  comparar + exportar). Sin vídeo grabado; sin envío.
 
 ## Configuración
 
@@ -164,12 +171,15 @@ pertenece al entorno del CLI de Muse, no a la app.
 - `unknown` se representa con `null`, nunca cero; regla o scope
   pendientes bloquean puntos; la anormalidad es presunción, no
   exclusión automática.
+- Sin Meta en vivo en el frontal (solo smoke backend); empresa y
+  rivales sintéticos; sin predicción.
 - Histórico descriptivo P1 aparcado salvo P0 sólido + tiempo.
 
 ## Notas honestas de la demo
 
-- La insignia **Demo curada** significa: cifras de la semilla manual
+- La insignia **Datos de ejemplo** significa: cifras de la semilla manual
   revisada (`fixtures/demo/`), no de extracción live. Tokens `null`.
+  Las licitaciones propias muestran **Tus datos**.
 - Offline total: los E2E abortan cualquier petición no-loopback.
 - Ofertas de escenarios y costes de empresa sintéticos, siempre
   rotulados. Sin animaciones ni registros ficticios de API.

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCompanyUpdate,
   buildEvidenceRow,
+  describeCostDrift,
   mergeEvidence,
   moneyFieldToProtocol,
   type CostDraft,
@@ -118,7 +119,7 @@ describe("buildCompanyUpdate", () => {
   };
 
   it("builds the full body from the fetched revision", () => {
-    const body = buildCompanyUpdate(makeCompany(), draft);
+    const body = buildCompanyUpdate(makeCompany(), draft, 3);
     expect(body).toEqual({
       expected_revision: 3,
       name: "Mi pyme",
@@ -145,7 +146,48 @@ describe("buildCompanyUpdate", () => {
   });
 
   it("refuses invalid money or a blank name", () => {
-    expect(buildCompanyUpdate(makeCompany(), { ...draft, direct: "abc" })).toBeNull();
-    expect(buildCompanyUpdate(makeCompany(), { ...draft, name: "  " })).toBeNull();
+    expect(buildCompanyUpdate(makeCompany(), { ...draft, direct: "abc" }, 3)).toBeNull();
+    expect(buildCompanyUpdate(makeCompany(), { ...draft, name: "  " }, 3)).toBeNull();
+  });
+
+  it("sends the given base, so a stale draft never confirms itself (R02)", () => {
+    const rebased = buildCompanyUpdate(makeCompany(), draft, 5);
+    expect(rebased?.expected_revision).toBe(5);
+  });
+});
+
+describe("describeCostDrift", () => {
+  it("names each changed field with current and draft values", () => {
+    const lines = describeCostDrift(makeCompany(), {
+      name: "Mi pyme",
+      direct: "70000,00",
+      overhead: "",
+      addedEvidence: [],
+    });
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toContain("Pyme de ejemplo");
+    expect(lines[0]).toContain("Mi pyme");
+    expect(lines[1]).toContain("80000,00");
+    expect(lines[1]).toContain("70000,00");
+    expect(lines[2]).toContain("10000,00");
+  });
+
+  it("stays silent when nothing drifted and skips unparseable input", () => {
+    expect(
+      describeCostDrift(makeCompany(), {
+        name: "Pyme de ejemplo",
+        direct: "80000,00",
+        overhead: "10000,00",
+        addedEvidence: [],
+      })
+    ).toEqual([]);
+    expect(
+      describeCostDrift(makeCompany(), {
+        name: "Pyme de ejemplo",
+        direct: "abc",
+        overhead: "10000,00",
+        addedEvidence: [],
+      })
+    ).toEqual([]);
   });
 });

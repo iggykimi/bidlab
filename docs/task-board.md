@@ -3,7 +3,35 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
-## Ronda judge-fix 27-oct (cerrada 27-oct, push final pendiente CI)
+## Revisión R01–R06 (revision_50e07cf, 27-oct; cerrada, sin commit de R07)
+
+- R01: deep link ?prueba= selecciona al inicio; un clic posterior manda
+  y exporta (tests/e2e/r01-r04-state.spec.ts).
+- R02: borrador de coste obsoleto muestra conflicto y confirma explícito
+  («Tus datos cambiaron en otro lugar.» → «Guardar de todas formas»).
+- R03: prueba recién guardada aparece en Informe sin recargar.
+- R04: fallo de cuota avisa una vez («Tu borrador no se guardó en este
+  navegador.»), conserva memoria y limpia al reintentar.
+- R05: recorrido propio completo offline (alta + PDF + empresa + análisis
+  + revisión manual que materializa regla/ámbito + simular + comparar +
+  exportar): tests/e2e/own-journey.spec.ts 3/3 (verde 27-oct).
+- R06: rebaja arriba con asserts de bounding-box (1280×720 y 390×844),
+  coste resumido + editor ancho, comparar desde Precio:
+  tests/e2e/r06-layout.spec.ts 4/4 (verde 27-oct).
+- Caso oro 10/15: mismos 49 puntos, el 10 % conserva 5916,80 € más
+  (CMP-02 + backend golden + R06).
+- Sin push, sin CI remota (prohibidos por el autor), sin vídeo grabado,
+  sin jueces internos (prohibidos). Submission NOT sent.
+
+## R07 docs honestos (in_progress, 27-oct)
+
+- Guion 180 s reescrito al caso oro + runbook a la UI nueva
+  (demo-script-180s.md, demo-runbook.md).
+- Pack demo con conteos honestos y puertas locales (docs/demo/README.md).
+- Reconciliados README.md, AGENTS.md, DEMO_SUBMISSION.md y este tablero.
+- Fila revision_50e07cf en verification-log.md. NO commit, NO push.
+
+## Ronda judge-fix 27-oct (cerrada 27-oct; push/CI cancelados por el autor)
 
 - Alcance A + intake: drafts persistentes, comparar 2-3, coste
   editable, requisitos accionables, crear licitación + subir PDF.
@@ -16,9 +44,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - Residuales honestos (juez externo): consolidar live-regions
   (anunciador unico + debounce slider), guion ASCII vs menos
   tipografico, glosario en app.
-- Gates 27-oct: backend 310, web 146, E2E 39/39 x2, verify.py
-  10/10 exit 0, ruff/mypy/tsc/lint/build verdes. CI del push
-  final por confirmar.
+- Gates 27-oct (en su commit; este árbol va por delante sin
+  re-ejecutar): backend 310, web 146, E2E 39/39 x2, verify.py
+  10/10 exit 0, ruff/mypy/tsc/lint/build verdes. Push/CI
+  cancelados por el autor (puertas locales desde entonces).
 - T02/T04 still pending (author externals). Submission NOT sent.
 
 ## Gates
@@ -64,7 +93,7 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T30 | 2nov | 2 | T29 | done | visual QA desktop/mobile + a11y |
 | T31 | 3nov | 1.5 | T30 | done | clean install rehearsal, perf, freeze |
 | T32 | 3nov | 1.5 | T31 | done | reproducible README, licenses, verification |
-| T33 | 3nov | 2 | T32 | done | record 180s demo, verify video |
+| T33 | 3nov | 2 | T32 | in_progress | guion 180s done (R07); grabación y verificación del vídeo pendientes |
 | T34 | 4nov | 0.5 | T33 T02 T04 | done | delivery fields/links review; author sends |
 
 ## P1 (parked unless P0 solid + time)

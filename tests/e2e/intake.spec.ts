@@ -38,6 +38,7 @@ test("manual tender without document appears in the library and opens", async ({
 
   await createTenderToStep2(page, title, externalId);
   await page.getByTestId("intake-skip").click();
+  await page.getByTestId("intake-skip-company").click();
   await expect(page.getByTestId("tender-title")).toContainText(title);
 
   await page.goto("/");
@@ -77,6 +78,7 @@ test("non-PDF upload shows an explicit error and keeps the tender", async ({ pag
 
   // The tender survives the failed upload and opens normally.
   await page.getByTestId("intake-skip").click();
+  await page.getByTestId("intake-skip-company").click();
   await expect(page.getByTestId("tender-title")).toContainText(title);
   expect(guard.blocked()).toBe(0);
 });

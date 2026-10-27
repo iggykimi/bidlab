@@ -5,18 +5,22 @@ corrected one, and records requirement trees plus scope/pricing decisions as
 a new ``manual`` interpretation revision. Locating citations and semantic
 review stay distinct states: corrected citations are located and stored with
 their real ``match_status`` (``missing`` included), never upgraded silently.
-Every review writes an audit event.
+An approved ``pricing_rule`` also materializes as a ``RuleRevision`` and an
+approved ``scope_basis`` updates its scope, so own tenders can evaluate;
+pending/blocked payloads are only recorded. Every review writes an audit event.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
+from bidlab.domain import expressions as EX
 from bidlab.services import jobs as jobs_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
@@ -41,6 +45,44 @@ def _as_dict(value: object) -> dict[str, Any]:
     return {}
 
 
+def _validate_rule_expression(rule: dict[str, Any]) -> None:
+    """Approve-time expression check mirroring evaluation (same AST/template rules).
+
+    Evaluation parses the stored expression and requires it to equal the
+    canonical AST of its template; anything it would reject is rejected here
+    as ``rule_expression_invalid`` so an approved rule always executes.
+    """
+    stored = rule.get("expression")
+    template_id = rule.get("template_id")
+    if not isinstance(stored, dict) or not isinstance(template_id, str):
+        raise ApiError(422, "rule_expression_invalid", "rule lacks expression/template_id")
+    try:
+        parsed = EX.parse_expr(stored)
+    except EX.ExprError as exc:
+        raise ApiError(422, "rule_expression_invalid", f"expression invalid: {exc}") from exc
+    try:
+        canonical = EX.template_for(template_id)
+    except EX.ExprError as exc:
+        raise ApiError(422, "rule_expression_invalid", f"unknown template {template_id}") from exc
+    if parsed != canonical:
+        raise ApiError(422, "rule_expression_invalid", "stored AST differs from its template")
+
+
+def _basis_budget_cents(budget_net: object) -> int:
+    """Approved-basis budget as integer cents; unparseable/non-positive is 422."""
+    if not isinstance(budget_net, str):
+        raise ApiError(422, "basis_budget_invalid", "approved basis requires budget_net")
+    try:
+        cents = int(Decimal(budget_net) * 100)
+    except InvalidOperation:
+        raise ApiError(
+            422, "basis_budget_invalid", f"budget_net unparseable: {budget_net!r}"
+        ) from None
+    if cents <= 0:
+        raise ApiError(422, "basis_budget_invalid", "budget_net must be > 0")
+    return cents
+
+
 def latest_revision_row(session: Session, tender_id: str) -> models.InterpretationRevision | None:
     return session.scalars(
         select(models.InterpretationRevision)
@@ -55,17 +97,33 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
         raise ApiError(404, "tender_not_found", f"unknown tender {tender_id}")
     latest = latest_revision_row(session, tender_id)
     if latest is None:
-        raise ApiError(409, "nothing_to_review", f"no interpretation for {tender_id}")
-    if payload.expected_revision != latest.revision:
-        raise ApiError(
-            409,
-            "revision_conflict",
-            f"expected interpretation revision {latest.revision}, got {payload.expected_revision}",
-        )
+        # Manual tender without any analysis yet: the user is the source, so
+        # expected 0 opens revision 1. Anything else is a genuine conflict.
+        if payload.expected_revision != 0:
+            raise ApiError(
+                409,
+                "revision_conflict",
+                f"expected interpretation revision 0, got {payload.expected_revision}",
+            )
+        base_proposal: dict[str, Any] = {}
+        previous: dict[str, Any] = {}
+        doc_hashes: dict[str, Any] = {}
+        new_revision = 1
+    else:
+        if payload.expected_revision != latest.revision:
+            raise ApiError(
+                409,
+                "revision_conflict",
+                f"expected revision {latest.revision}, got {payload.expected_revision}",
+            )
+        base_proposal = _as_dict(latest.proposal_json)
+        previous = _as_dict(latest.reviewed_json)
+        doc_hashes = _as_dict(latest.document_hashes_json)
+        new_revision = latest.revision + 1
     proposal_data = (
         payload.corrected_proposal.model_dump(mode="json")
         if payload.corrected_proposal is not None
-        else _as_dict(latest.proposal_json)
+        else base_proposal
     )
     claim_keys = {
         str(claim["key"])
@@ -77,7 +135,45 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
         raise ApiError(
             422, "unknown_claim_key", f"unknown claim keys: {', '.join(sorted(unknown))}"
         )
-    new_revision = latest.revision + 1
+    # Materialization plan: validate EVERYTHING before persisting anything, so a
+    # 409/422 below leaves no orphan InterpretationRevision behind. Only an
+    # approved payload materializes; pending/blocked (or absent) payloads are
+    # recorded in reviewed_json alone.
+    pricing_dump: dict[str, Any] | None = None
+    rule_id = ""
+    rule_revision_no = 0
+    rule_scope_id = ""
+    if payload.pricing_rule is not None and payload.pricing_rule.review_status == "approved":
+        pricing_dump = payload.pricing_rule.model_dump(mode="json")
+        rule_id = payload.pricing_rule.id.root
+        rule_revision_no = payload.pricing_rule.revision
+        rule_scope_id = payload.pricing_rule.scope_id.root
+        rule_scope = session.get(models.Scope, rule_scope_id)
+        if rule_scope is None or rule_scope.tender_id != tender_id:
+            raise ApiError(
+                422, "rule_scope_mismatch", f"scope {rule_scope_id}: not part of {tender_id}"
+            )
+        _validate_rule_expression(pricing_dump)
+        if session.get(models.RuleRevision, (rule_id, rule_revision_no)) is not None:
+            raise ApiError(
+                409,
+                "rule_revision_conflict",
+                f"rule {rule_id}:{rule_revision_no} already exists",
+            )
+    basis_dump: dict[str, Any] | None = None
+    basis_row: models.Scope | None = None
+    basis_cents = 0
+    if payload.scope_basis is not None and payload.scope_basis.review_status == "approved":
+        basis_dump = payload.scope_basis.model_dump(mode="json")
+        basis_scope_id = payload.scope_basis.scope_id.root
+        basis_row = session.get(models.Scope, basis_scope_id)
+        if basis_row is None:
+            raise ApiError(404, "scope_not_found", f"unknown scope {basis_scope_id}")
+        if basis_row.tender_id != tender_id:
+            raise ApiError(
+                422, "scope_tender_mismatch", f"scope {basis_scope_id}: not part of {tender_id}"
+            )
+        basis_cents = _basis_budget_cents(basis_dump.get("budget_net"))
     if payload.corrected_proposal is not None:
         docs = session.scalars(
             select(models.Document).where(models.Document.tender_id == tender_id)
@@ -98,7 +194,6 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
             doc_sha256={doc.id: doc.sha256 for doc in docs},
         )
     trees = [tree.model_dump(mode="json") for tree in payload.requirement_trees]
-    previous = _as_dict(latest.reviewed_json)
     approved = [key.root for key in payload.approved_claim_keys]
     reviewed = {
         "status": "reviewed",
@@ -122,12 +217,29 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
             mode="manual",
             proposal_json=proposal_data,
             reviewed_json=reviewed,
-            document_hashes_json=_as_dict(latest.document_hashes_json),
+            document_hashes_json=doc_hashes,
             actor=payload.actor,
             reason=payload.reason,
             created_at=_now(),
         )
     )
+    if pricing_dump is not None:
+        session.add(
+            models.RuleRevision(
+                rule_id=rule_id,
+                revision=rule_revision_no,
+                scope_id=rule_scope_id,
+                interpretation_revision=new_revision,
+                rule_json=pricing_dump,
+                review_status="approved",
+                actor=payload.actor,
+                reason=payload.reason,
+                created_at=_now(),
+            )
+        )
+    if basis_dump is not None and basis_row is not None:
+        basis_row.basis_json = basis_dump
+        basis_row.budget_net_cents = basis_cents
     session.add(
         models.AuditEvent(
             id=f"audit-{tender_id}-interp-{new_revision}",
@@ -135,7 +247,7 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
             entity_id=f"{tender_id}:{new_revision}",
             actor=payload.actor,
             reason=payload.reason,
-            old_json={"revision": latest.revision},
+            old_json={"revision": new_revision - 1},
             new_json={"revision": new_revision, "approved_claim_keys": approved},
             created_at=_now(),
         )

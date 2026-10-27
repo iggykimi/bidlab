@@ -10,13 +10,15 @@ import { formatEurosExact, formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
 import { loadSession } from "../../lib/session";
 import { SummaryTab } from "./SummaryTab";
-import { WorkspaceDraftsProvider } from "./WorkspaceDrafts";
+import { DraftDurableBanner, WorkspaceDraftsProvider } from "./WorkspaceDrafts";
 import { RequirementsTab } from "../requirements/RequirementsTab";
 import { PricingLab } from "../pricing/PricingLab";
 import { EvidenceTab } from "../evidence/EvidenceTab";
 import { ReportTab } from "../report/ReportTab";
+import { ReviewTab } from "../review/ReviewTab";
+import { isOwnTender } from "../review/ownTender";
 
-const TABS = [
+const BASE_TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "requisitos", label: "Requisitos" },
   { id: "precio", label: "Precio" },
@@ -24,10 +26,19 @@ const TABS = [
   { id: "informe", label: "Informe" },
 ] as const;
 
-export type TabId = (typeof TABS)[number]["id"];
+const OWN_TABS = [
+  { id: "resumen", label: "Resumen" },
+  { id: "requisitos", label: "Requisitos" },
+  { id: "revisar", label: "Revisar" },
+  { id: "precio", label: "Precio" },
+  { id: "evidencia", label: "Citas" },
+  { id: "informe", label: "Informe" },
+] as const;
+
+export type TabId = (typeof OWN_TABS)[number]["id"];
 
 function parseTab(raw: string | null): TabId {
-  return TABS.some((t) => t.id === raw) ? (raw as TabId) : "resumen";
+  return OWN_TABS.some((t) => t.id === raw) ? (raw as TabId) : "resumen";
 }
 
 /**
@@ -49,10 +60,10 @@ export function WorkspacePage() {
   const { tenderId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
-  const tab = parseTab(params.get("tab"));
+  const rawTab = parseTab(params.get("tab"));
   const [, startTransition] = useTransition();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const prevTabRef = useRef(tab);
+  const prevTabRef = useRef(rawTab);
   const skipPanelFocusRef = useRef(false);
   const firstTenderRef = useRef(tenderId);
 
@@ -60,6 +71,11 @@ export function WorkspacePage() {
     queryKey: ["workspace", tenderId],
     queryFn: ({ signal }) => getWorkspace(tenderId, signal),
   });
+
+  // Own tenders gain the Revisar step between Requisitos and Precio.
+  const own = workspaceQuery.data ? isOwnTender(workspaceQuery.data.tender) : false;
+  const tabs = own ? OWN_TABS : BASE_TABS;
+  const tab: TabId = tabs.some((t) => t.id === rawTab) ? rawTab : "resumen";
 
   function selectTab(id: TabId) {
     // Focus stays on the tab itself (APG roving); the panel effect below skips.
@@ -100,12 +116,12 @@ export function WorkspacePage() {
   /** APG roving tabindex: arrows move and select, Home/End jump. */
   function onTabKey(event: React.KeyboardEvent, index: number) {
     let next: number | null = null;
-    if (event.key === "ArrowRight") next = (index + 1) % TABS.length;
-    else if (event.key === "ArrowLeft") next = (index - 1 + TABS.length) % TABS.length;
+    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
     else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = TABS.length - 1;
+    else if (event.key === "End") next = tabs.length - 1;
     if (next === null) return;
-    const target = TABS[next];
+    const target = tabs[next];
     if (!target) return;
     event.preventDefault();
     selectTab(target.id);
@@ -177,7 +193,7 @@ export function WorkspacePage() {
 
       <div className="mt-4">
         <ul role="tablist" aria-label="Secciones de la licitación" className="flex flex-wrap gap-2">
-          {TABS.map((t, i) => (
+          {tabs.map((t, i) => (
             <li key={t.id} role="presentation">
               <button
                 ref={(el) => {
@@ -213,8 +229,12 @@ export function WorkspacePage() {
         tabIndex={-1}
       >
         <WorkspaceDraftsProvider>
+          <div className="mb-4 [&:empty]:hidden">
+            <DraftDurableBanner />
+          </div>
           {tab === "resumen" && <SummaryTab workspace={workspace} />}
           {tab === "requisitos" && <RequirementsTab workspace={workspace} />}
+          {tab === "revisar" && <ReviewTab workspace={workspace} />}
           {tab === "precio" && <PricingLab workspace={workspace} />}
           {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
           {tab === "informe" && <ReportTab workspace={workspace} />}

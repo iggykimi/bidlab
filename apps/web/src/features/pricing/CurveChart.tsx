@@ -62,7 +62,7 @@ function toNum(raw: string | null): number | null {
 
 // Shared axes/tooltip config (recharts needs direct <XAxis>/<Tooltip>
 // children, so the sharing unit is props objects, not components).
-const CHART_MARGIN = { top: 8, right: 16, bottom: 28, left: 8 };
+const CHART_MARGIN = { top: 24, right: 24, bottom: 56, left: 8 };
 
 const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
   type: "number",
@@ -71,7 +71,7 @@ const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
   tick: { fontSize: 14 },
   tickFormatter: (v: number): string => formatEurosCompact(String(v)),
   minTickGap: 48,
-  label: { value: "Tu precio de oferta (€)", position: "insideBottom", offset: 0 },
+  label: { value: "Tu precio de oferta (€)", position: "insideBottom", offset: 30 },
 };
 
 const AXIS_TICK = { fontSize: 14 };
@@ -152,12 +152,20 @@ export function CurveChart({
   const yMax = Math.max(scoreMax, maxNum ?? 0) > 0 ? Math.max(scoreMax, maxNum ?? 0) : 1;
   const allScoresNull = rows.every((r) => r.score === null);
   const allProfitNull = rows.every((r) => r.profit === null);
-  // Own-dot label below the dot when it would clip against the top edge.
+  // Own-dot label: short "Tu oferta" just under the dot (full figures
+  // live in the caption). Only bottom-hugging dots label above, so the
+  // text never clips into the ticks.
   const profitMax = rows.reduce((m, r) => (r.profit !== null ? Math.max(m, r.profit) : m), 0);
-  const scoreLabelBelow =
-    ownScoreNum !== null && maxNum !== null && maxNum > 0 && ownScoreNum >= maxNum * 0.92;
-  const profitLabelBelow =
-    ownProfitNum !== null && profitMax > 0 && ownProfitNum >= profitMax * 0.92;
+  const profitMin = rows.reduce(
+    (m, r) => (r.profit !== null ? Math.min(m, r.profit) : m),
+    profitMax
+  );
+  const scoreLabelAbove =
+    ownScoreNum !== null && maxNum !== null && maxNum > 0 && ownScoreNum <= maxNum * 0.15;
+  const profitLabelAbove =
+    ownProfitNum !== null &&
+    profitMax > profitMin &&
+    ownProfitNum <= profitMin + (profitMax - profitMin) * 0.12;
 
   // Contiguous flagged runs (≥2 points) for the hatch overlay.
   const flaggedRuns: { x1: number; x2: number }[] = [];
@@ -246,7 +254,7 @@ export function CurveChart({
                     x1={run.x1}
                     x2={run.x2}
                     fill="url(#anomaly-hatch)"
-                    label={{ value: "Oferta sospechosa", position: "insideTop", fontSize: 14 }}
+                    label={{ value: "Oferta sospechosa", position: "insideBottom", fontSize: 14 }}
                   />
                 ))}
                 {maxNum !== null && (
@@ -254,7 +262,7 @@ export function CurveChart({
                     y={maxNum}
                     stroke="var(--color-primary)"
                     strokeDasharray="4 4"
-                    label={{ value: `Máx. ${formatMaxPoints(ownMax)} puntos`, position: "insideBottomRight", fontSize: 14 }}
+                    label={{ value: `Máx. ${formatMaxPoints(ownMax)} puntos`, position: "insideTopLeft", fontSize: 14 }}
                   />
                 )}
                 {validRivals.map((r, i) => (
@@ -288,8 +296,8 @@ export function CurveChart({
                     fill="var(--color-primary)"
                     stroke="var(--color-primary)"
                     label={{
-                      value: `Tu oferta ${formatEurosCompact(ownPrice)} · ${ownScore !== null ? formatPoints1(ownScore) : "—"} puntos`,
-                      position: scoreLabelBelow ? "bottom" : "top",
+                      value: "Tu oferta",
+                      position: scoreLabelAbove ? "top" : "bottom",
                       fontSize: 14,
                     }}
                   />
@@ -363,8 +371,8 @@ export function CurveChart({
                     fill="var(--color-chart-profit)"
                     stroke="var(--color-chart-profit)"
                     label={{
-                      value: `Tu oferta ${formatEurosCompact(ownPrice)}`,
-                      position: profitLabelBelow ? "bottom" : "top",
+                      value: "Tu oferta",
+                      position: profitLabelAbove ? "top" : "bottom",
                       fontSize: 14,
                     }}
                   />
