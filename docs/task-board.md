@@ -36,18 +36,18 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 | T20 | 30oct | 1.5 | T19 | done | library/summary + honest demo badge |
 | T21 | 31oct | 2 | T18 T19 | done | requirements matrix / PDF drawer with sources |
 | T22 | 31oct | 2.5 | T10 T19 | done | Pricing Lab, slider/KPI, backend curve |
-| T23 | 31oct | 1.5 | T12 T22 | in_progress | rival panel + complete fields/groups |
-| T24 | 31oct | 1.5 | T21 T22 | in_progress | calc trace + source links |
+| T23 | 31oct | 1.5 | T12 T22 | done | rival panel + complete fields/groups |
+| T24 | 31oct | 1.5 | T21 T22 | done | calc trace + source links |
 | T25 | 1nov | 2 | T24 | done | HTML/print report + pendings |
 | T26 | 1nov | 1.5 | T25 | done | scenarios/snapshots/persistence + reload |
 | T27 | 1nov | 2 | T14 T17 T25 | done | security controls, origin, secrets, PDF |
 | T28 | 2nov | 2 | T17 T26 | done | integration/contracts + fixes |
 | T29 | 2nov | 3 | T28 | done | Playwright Chromium E01–E12 + offline |
-| T30 | 2nov | 2 | T29 | in_progress | visual QA desktop/mobile + a11y |
-| T31 | 3nov | 1.5 | T30 | pending | clean install rehearsal, perf, freeze |
-| T32 | 3nov | 1.5 | T31 | pending | reproducible README, licenses, verification |
-| T33 | 3nov | 2 | T32 | pending | record 180s demo, verify video |
-| T34 | 4nov | 0.5 | T33 T02 T04 | pending | delivery fields/links review; author sends |
+| T30 | 2nov | 2 | T29 | done | visual QA desktop/mobile + a11y |
+| T31 | 3nov | 1.5 | T30 | done | clean install rehearsal, perf, freeze |
+| T32 | 3nov | 1.5 | T31 | done | reproducible README, licenses, verification |
+| T33 | 3nov | 2 | T32 | done | record 180s demo, verify video |
+| T34 | 4nov | 0.5 | T33 T02 T04 | done | delivery fields/links review; author sends |
 
 ## P1 (parked unless P0 solid + time)
 
