@@ -11,7 +11,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] break-ui — leída completa propia + auditada 26-oct (F8 NaN, F10 overflow, F14 empty states)
 - [R] apple-design — leída completa propia + auditada 26-oct (contraste, reduced-motion, system-ui OK)
 - [R] pick-ui-library — leída completa propia + auditada 26-oct (cva+clsx, base-ui Dialog, sonner, keep recharts)
-- [R] prototype — APPLY solo bajo invocación explícita (variantes contested)
+- [R] prototype — leída completa propia + APPLY solo bajo invocación explícita
 - [R] mobile-native — leída completa propia + APPLY polish bajo (snippet baseline + safe-area; verificar en hardware)
 - [R] ask-sonner — leída completa propia + APPLY (ref autoridad F7 sonner)
 - [R] animate — leída completa propia + auditada por subagente
@@ -106,7 +106,7 @@ Leyenda: [ ] pendiente · [R] leída · [A] aplicada · [N] N/A · [X] desinstal
 - [R] security-audit — guidance mode 26-oct (sin vulns; S1-S6)
 - [R] code-review — leída 26-oct (sin run CLI; cubierto por gates)
 - [R] copywriting (marketingskills) — aplicada 26-oct (docs/copy-style-es.md)
-- [R] receiving-code-review — ADOPT (disciplina veredicto reviewer)
+- [R] receiving-code-review — leída completa propia + ADOPT (disciplina veredicto reviewer)
 - [R] validate-evaluator, write-judge-prompt — FIT (solo si hay judge LLM futuro; infra rechazada P0)
 
 ## Hallazgos super-review (handoff a escritores)
