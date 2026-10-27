@@ -22,7 +22,7 @@ test.describe("E11 desktop 1280x720", () => {
     expect(overflowX).toBeLessThanOrEqual(1);
 
     await openTab(page, "Requisitos");
-    await page.getByRole("button", { name: /Ver evidencia.*página 6/ }).first().focus();
+    await page.getByRole("button", { name: /p\. 6: ver evidencia/ }).first().focus();
     await page.keyboard.press("Enter");
     await expect(page.getByTestId("evidence-drawer")).toBeVisible();
     await page.keyboard.press("Escape");
@@ -46,7 +46,7 @@ test.describe("E11 mobile 390x844", () => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
     await openTab(page, "Requisitos");
-    await page.getByRole("button", { name: /Ver evidencia.*página 6/ }).first().focus();
+    await page.getByRole("button", { name: /p\. 6: ver evidencia/ }).first().focus();
     await page.keyboard.press("Enter");
     await expect(page.getByTestId("evidence-drawer")).toBeVisible();
     await page.keyboard.press("Escape");

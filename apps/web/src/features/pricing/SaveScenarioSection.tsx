@@ -103,7 +103,7 @@ export function IdentifiersDetails({ scope, rule, state }: IdProps) {
   return (
     <details className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
       <summary className="cursor-pointer font-semibold">Identificadores y códigos</summary>
-      <div className="details-body mt-2">
+      <div className="mt-2">
         <div>
       <dl className="tnum grid gap-1 text-xs">
         <div className="flex justify-between gap-2">

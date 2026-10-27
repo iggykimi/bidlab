@@ -71,13 +71,13 @@ test("T24 every figure links to its source or citation", async ({ page }) => {
   await expect(page.getByTestId("source-hashes")).toContainText("snapshot Atom");
 
   const kpis = page.locator("section[aria-label='Indicadores']");
-  await kpis.getByRole("button", { name: /página 10/ }).first().click();
+  await kpis.getByRole("button", { name: /p\. 10: ver evidencia/ }).first().click();
   await expect(page.getByTestId("evidence-drawer")).toBeVisible();
   await expect(page.getByTestId("evidence-page")).toContainText("Página 10 de 41");
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("evidence-drawer")).toBeHidden();
 
-  await kpis.getByRole("button", { name: /página 20/ }).first().click();
+  await kpis.getByRole("button", { name: /p\. 20: ver evidencia/ }).first().click();
   await expect(page.getByTestId("evidence-drawer")).toBeVisible();
   await expect(page.getByTestId("evidence-page")).toContainText("Página 20 de 41");
   await page.keyboard.press("Escape");

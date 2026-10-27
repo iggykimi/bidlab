@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { clsx } from "clsx";
 import {
   ApiError,
   documentContentUrl,
@@ -18,8 +19,19 @@ export interface EvidenceTarget {
 interface Props {
   workspace: Workspace;
   target: EvidenceTarget;
+  /**
+   * Called after the O1 exit animation finishes (delayed unmount); the
+   * parent unmounts the drawer in response, which returns focus to the
+   * opener via the mount effect cleanup below.
+   */
   onClose: () => void;
 }
+
+/**
+ * Must stay >= the .drawer-enter/.drawer-scrim durations in styles.css so
+ * the O1 exit animation finishes before the drawer unmounts.
+ */
+const DRAWER_EXIT_MS = 250;
 
 function focusables(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>("a[href], button:not(:disabled), [tabindex]:not([tabindex='-1'])")].filter(
@@ -36,9 +48,24 @@ function focusables(root: HTMLElement): HTMLElement[] {
 export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const { citation } = target;
   const [page, setPage] = useState(citation.page_number);
+  // O1 exit animation: `closing` renders the exit classes and `onClose`
+  // (parent unmount) runs after DRAWER_EXIT_MS. Re-entrant close requests
+  // while the exit plays are ignored. Callers key by citation id, so a new
+  // citation remounts with fresh state and clears any pending exit timer.
+  const [closing, setClosing] = useState(false);
+  const exitTimer = useRef<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const doc = workspace.documents.find((d) => d.id === citation.document_id) ?? null;
+
+  const requestClose = useCallback(() => {
+    if (exitTimer.current !== null) return;
+    setClosing(true);
+    exitTimer.current = window.setTimeout(() => {
+      exitTimer.current = null;
+      onClose();
+    }, DRAWER_EXIT_MS);
+  }, [onClose]);
 
   // F1 stale-state: callers key by citation id, so a new citation remounts
   // the drawer on its own page; no resync effect needed.
@@ -48,6 +75,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      if (exitTimer.current !== null) window.clearTimeout(exitTimer.current);
       document.body.style.overflow = previousOverflow;
       opener?.focus();
     };
@@ -56,7 +84,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        onClose();
+        requestClose();
         return;
       }
       if (event.key !== "Tab") return;
@@ -76,7 +104,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [requestClose]);
 
   const pageQuery = useQuery({
     queryKey: ["page", citation.document_id, page],
@@ -97,8 +125,8 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
       <div
         data-testid="evidence-scrim"
         aria-hidden="true"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
+        onClick={requestClose}
+        className={clsx("drawer-scrim absolute inset-0 bg-black/40", closing && "drawer-scrim-exit")}
       />
       <div
         ref={panelRef}
@@ -106,7 +134,10 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`Evidencia ${citation.id}`}
-        className="drawer-enter absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl"
+        className={clsx(
+          "drawer-enter absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl",
+          closing && "drawer-exit"
+        )}
       >
       <div className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div>
@@ -115,7 +146,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
             Página {page} de {total ?? "—"}
           </p>
         </div>
-        <Button ref={closeRef} variant="subtle" onClick={onClose}>
+        <Button ref={closeRef} variant="subtle" onClick={requestClose}>
           Cerrar
         </Button>
       </div>

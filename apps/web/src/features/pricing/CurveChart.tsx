@@ -46,7 +46,7 @@ export function CurveChart({ curve }: Props) {
                 formatter={(value) => (typeof value === "number" ? value.toLocaleString("es-ES", { maximumFractionDigits: 4 }) : value)}
                 labelFormatter={(label) => `Precio ${Number(label).toLocaleString("es-ES", { minimumFractionDigits: 2 })} €`}
               />
-              <Line type="monotone" dataKey="score" name="Puntos" stroke="#3159D9" dot={false} connectNulls={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="score" name="Puntos" stroke="var(--color-primary)" dot={false} connectNulls={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -65,7 +65,7 @@ export function CurveChart({ curve }: Props) {
                 formatter={(value) => (typeof value === "number" ? value.toLocaleString("es-ES", { minimumFractionDigits: 2 }) : value)}
                 labelFormatter={(label) => `Precio ${Number(label).toLocaleString("es-ES", { minimumFractionDigits: 2 })} €`}
               />
-              <Line type="monotone" dataKey="profit" name="Beneficio €" stroke="#1E7B3C" dot={false} connectNulls={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="profit" name="Beneficio €" stroke="var(--color-chart-profit)" dot={false} connectNulls={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -74,7 +74,7 @@ export function CurveChart({ curve }: Props) {
         <summary className="cursor-pointer text-sm font-semibold">
           Ver puntos de la curva (tabla, {curve.length} puntos)
         </summary>
-        <div className="details-body mt-2">
+        <div className="mt-2">
           <div className="table-scroll max-h-64 overflow-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <caption className="sr-only">

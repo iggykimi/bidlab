@@ -9,10 +9,12 @@ BidLab — from a real tender document to a traceable bid decision
 
 ## Short description (≤ 500 chars)
 
-BidLab turns a real Spanish tender (PAI Tías 2026/00006554N) into a decision lab
-for an SME: page-cited requirements, price/cost/points under explicit hypotheses,
-a deterministic scoring engine, and an exportable report with sources. No win
-prediction, no confidential rival data.
+When an SME must decide whether to bid, BidLab turns the real Spanish tender
+PAI Tías 2026/00006554N (net budget 118,336 EUR, 49 price points) into a decision
+lab: page-cited requirements instead of scattered PDFs, price/cost/points under
+explicit hypotheses from a deterministic engine instead of gut feel, and an
+exportable report with sources to defend the call. No win prediction, no
+confidential rival data.
 
 ## What it does
 

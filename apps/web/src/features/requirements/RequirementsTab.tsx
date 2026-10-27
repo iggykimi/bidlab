@@ -190,7 +190,7 @@ export function RequirementsTab({ workspace }: Props) {
                             key={c.id}
                             variant="chip"
                             onClick={() => setEvidence({ citation: c })}
-                            aria-label={`Ver evidencia ${c.id}, página ${c.page_number}`}
+                            aria-label={`p. ${c.page_number}: ver evidencia ${c.id}`}
                           >
                             p. {c.page_number}
                           </Button>

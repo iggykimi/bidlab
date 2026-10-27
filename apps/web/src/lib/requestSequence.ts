@@ -1,4 +1,4 @@
-// Last-response-wins helper for debounced backend calls (Pricing Lab, T22).
+// Last-response-wins helper for debounced backend calls (price evaluation, T22).
 
 export class LatestOnly {
   private current: AbortController | null = null;

@@ -1,5 +1,6 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openTab, takeConsoleFailures } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
 
 // C10: any console.error / pageerror fails the test.
 test.afterEach(() => {
@@ -17,6 +18,22 @@ async function noHorizontalOverflow(page: Page, label: string): Promise<void> {
     () => document.documentElement.scrollWidth - window.innerWidth
   );
   expect(overflowX, `desbordamiento horizontal en ${label}`).toBeLessThanOrEqual(1);
+}
+
+// axe: zero serious/critical violations on the current tab. Minor/moderate
+// findings are reported by the run (see the failure message) but do not fail
+// the suite: axe minor impact covers best-practice polish, not blockers.
+// No rule exclusions: the Resumen+Precio tabs currently pass the full
+// default ruleset at serious+ on both viewports.
+async function expectNoSeriousViolations(page: Page, label: string): Promise<void> {
+  const results = await new AxeBuilder({ page }).analyze();
+  const serious = results.violations.filter(
+    (v) => v.impact === "serious" || v.impact === "critical"
+  );
+  expect(
+    serious.map((v) => `${v.id}: ${v.help} (${v.nodes.length} nodos)`),
+    `violaciones axe serious+ en ${label}`
+  ).toEqual([]);
 }
 
 test.describe("T30 visual QA desktop 1280x720", () => {
@@ -65,7 +82,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
 
     const opener = page
       .locator("section[aria-label='Indicadores']")
-      .getByRole("button", { name: /página 10/ })
+      .getByRole("button", { name: /p\. 10: ver evidencia/ })
       .first();
     await opener.click();
     const drawer = page.getByTestId("evidence-drawer");
@@ -103,6 +120,19 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     ).toBeVisible();
     expect(guard.blocked()).toBe(0);
   });
+
+  test("axe: Resumen+Precio sin violaciones serious+ en escritorio", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expectNoSeriousViolations(page, "resumen escritorio");
+
+    await openPricing(page);
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expectNoSeriousViolations(page, "precio escritorio");
+    expect(guard.blocked()).toBe(0);
+  });
 });
 
 test.describe("T30 visual QA mobile 390x844", () => {
@@ -128,7 +158,7 @@ test.describe("T30 visual QA mobile 390x844", () => {
     // El cajón ocupa todo el ancho en móvil y sigue siendo usable.
     const opener = page
       .locator("section[aria-label='Indicadores']")
-      .getByRole("button", { name: /página 10/ })
+      .getByRole("button", { name: /p\. 10: ver evidencia/ })
       .first();
     await opener.click();
     await expect(page.getByTestId("evidence-drawer")).toBeVisible();
@@ -142,6 +172,19 @@ test.describe("T30 visual QA mobile 390x844", () => {
     await openTab(page, "Informe");
     await page.screenshot({ path: "test-results/qa-mobile-informe.png" });
     await noHorizontalOverflow(page, "informe móvil");
+    expect(guard.blocked()).toBe(0);
+  });
+
+  test("axe: Resumen+Precio sin violaciones serious+ en móvil", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expectNoSeriousViolations(page, "resumen móvil");
+
+    await openPricing(page);
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expectNoSeriousViolations(page, "precio móvil");
     expect(guard.blocked()).toBe(0);
   });
 });

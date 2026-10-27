@@ -27,7 +27,7 @@ test("E02 technical requirement is unknown with page 6 of 41 evidence", async ({
   await page.getByRole("tab", { name: "Requisitos" }).click();
   const row = page.getByTestId("requirement-tech-services");
   await expect(row).toContainText("Por verificar");
-  await row.getByRole("button", { name: /página 6/ }).click();
+  await row.getByRole("button", { name: /p\. 6: ver evidencia/ }).click();
   await expect(page.getByTestId("evidence-drawer")).toBeVisible();
   await expect(page.getByTestId("evidence-page")).toContainText("Página 6 de 41");
   await expect(page.getByTestId("evidence-quote")).toContainText("207.088");

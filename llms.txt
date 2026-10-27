@@ -1,0 +1,26 @@
+# BidLab
+
+> Local-first decision lab: from a real Spanish tender document to a traceable bid decision.
+
+## What BidLab is
+
+BidLab is a local-first decision lab that helps a Spanish SME decide whether to bid on a public tender. It loads the real PAI Tías tender 2026/00006554N, shows requirements with page-cited evidence, and evaluates price scenarios through a deterministic Python engine. Money and points travel as decimal strings; the LLM only proposes structure and citations.
+
+## How to run
+
+Install with `uv sync --all-packages` and `npm install`, then start the API via `python scripts/dev.py` (127.0.0.1:8000), seed the demo with `uv run python scripts/seed_demo.py`, and run the web UI with `npm run dev -w apps/web` (127.0.0.1:5173). Press Cargar ejemplo to open workspace /tenders/tias. The offline demo needs no keys; Meta live extraction is opt-in via MODEL_API_KEY.
+
+## Key endpoints
+
+All routes live under /api/v1. GET /health and /capabilities report status and limits; GET /tenders and /tenders/{id}/workspace load the library and workspace; POST /demo/sessions creates the demo session; POST /scenarios/evaluate prices a hypothesis; /scenarios saves immutable snapshots; /reports exports HTML with sources. Mutations require X-BidLab-Client and Idempotency-Key headers over loopback.
+
+## Limits
+
+One tender is fully modelled; company costs and rival offers are declared synthetic hypotheses, never inferred distributions. Unknown stays null, pending rules block points, and anomaly verdicts are presumptions, never exclusions. There is no win prediction, OCR, or national search; PDFs cap at 20 MB and 120 pages; originals are not redistributed; the app is local-only without multi-user auth.
+
+## Docs
+
+- README.md: clean install, startup, verification gates, configuration.
+- docs/PRD.md, docs/ARCHITECTURE.md, docs/API_CONTRACT.yaml: scope, design, transport.
+- docs/RULE_ENGINE.md, docs/DATA_MODELS.md: scoring math, persistence.
+- docs/verification-log.md: real gate runs with exit codes and evidence.

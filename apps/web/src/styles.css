@@ -14,6 +14,7 @@
   --color-warn-bg: #fff4d6;
   --color-warn-ink: #7a4a00;
   --color-error: #b42318;
+  --color-chart-profit: #1e7b3c;
   --drawer-curve: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -42,7 +43,7 @@ th {
 .table-scroll thead th {
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--color-white); /* Tailwind default token: solid cover over scrolled rows. */
   z-index: 1;
 }
 
@@ -58,11 +59,25 @@ th {
   }
 }
 
-/* O1: evidence drawer entry. Mount-only animation; exit is instant on unmount. */
+/* O1: evidence drawer entry + exit. Entry plays on mount via
+ * @starting-style; exit plays while `.drawer-exit` is set during the delayed
+ * unmount (see requestClose in EvidenceDrawer.tsx), so the panel leaves
+ * along the same right edge it entered from. DRAWER_EXIT_MS there must stay
+ * >= the durations below. Reduced motion: fade-only both ways. */
 .drawer-enter {
   transition:
     transform 250ms var(--drawer-curve),
     opacity 200ms ease-out;
+}
+.drawer-exit {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.drawer-scrim {
+  transition: opacity 200ms ease-out;
+}
+.drawer-scrim-exit {
+  opacity: 0;
 }
 @starting-style {
   .drawer-enter {
@@ -73,6 +88,9 @@ th {
 @media (prefers-reduced-motion: reduce) {
   .drawer-enter {
     transition: opacity 200ms ease-out;
+  }
+  .drawer-exit {
+    transform: none;
   }
   @starting-style {
     .drawer-enter {
@@ -96,25 +114,35 @@ th {
   }
 }
 
-/* O4: <details> expand animation via grid-rows (close snaps shut). */
-.details-body {
-  display: grid;
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
+/* O4: <details> expand/collapse animation. DECISION: the previous
+ * .details-body grid-rows transition was effect-absent — a closed <details>
+ * does not render its content, so there is no first frame to transition from
+ * (close snapped shut, open had no start state). Kept the animation by
+ * switching to the ::details-content + interpolate-size pattern instead:
+ * Chromium (the verified E2E browser) animates height between 0 and auto
+ * with content-visibility flipping discretely at the end of the close;
+ * browsers without support ignore these rules and toggle instantly. Open
+ * content keeps its default overflow so nothing (focus rings, inner scroll
+ * areas) is clipped. Static under reduced motion. Removing the old
+ * `.details-body > div { overflow: hidden }` also un-breaks the inner
+ * `.table-scroll` overflow-auto it overrode (unlayered CSS beat the layered
+ * Tailwind utility, clipping long curve tables instead of scrolling them). */
 @media (prefers-reduced-motion: no-preference) {
-  .details-body {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
     transition:
-      grid-template-rows 200ms ease-out,
-      opacity 200ms ease-out;
+      height 200ms ease-out,
+      content-visibility 200ms ease-out allow-discrete;
   }
-  details:not([open]) .details-body {
-    grid-template-rows: 0fr;
-    opacity: 0;
+  details:not([open])::details-content {
+    height: 0;
+    overflow: clip;
   }
-}
-.details-body > div {
-  overflow: hidden;
+  details[open]::details-content {
+    height: auto;
+  }
 }
 
 /* Loading skeletons (static under reduced motion). */

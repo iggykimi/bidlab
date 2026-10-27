@@ -35,7 +35,7 @@ test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page })
   expect(html).toContain("&lt;script&gt;");
 
   await openTab(page, "Requisitos");
-  await page.getByTestId("requirement-tech-services").getByRole("button", { name: /página 6/ }).click();
+  await page.getByTestId("requirement-tech-services").getByRole("button", { name: /p\. 6: ver evidencia/ }).click();
   await expect(page.getByTestId("evidence-drawer")).toContainText("PDF original no se redistribuye");
   await expect(page.getByRole("link", { name: /Ver fuente oficial/ }).first()).toBeVisible();
   expect(guard.blocked()).toBe(0);

@@ -1,6 +1,6 @@
-// Pricing Lab source helpers (T23/T24). Lookup-only: every figure stays a
-// backend string; this module resolves citations/metadata and translates
-// protocol codes to Spanish labels. It never computes money, points or ratios.
+// Shared source/label helpers (T23/T24): price tab plus evidence, report and
+// requirements views. Lookup-only: every figure stays a backend string; this
+// module resolves citations/metadata and translates protocol codes to Spanish labels.
 
 import type { Citation, MetadataEvidence, Tender, Workspace } from "../../api/client";
 import { formatEUR, formatSignedEUR } from "../../lib/format";

@@ -1,4 +1,4 @@
-// Citation deep-links for Pricing Lab figures (T24). Buttons open the shared
+// Citation deep-links for price-tab figures (T24). Buttons open the shared
 // evidence drawer; every label comes from workspace data, never computed.
 
 import type { Citation } from "../../api/client";
@@ -11,7 +11,8 @@ interface Props {
   emptyText?: string;
 }
 
-/** Small "p. N" buttons, same pattern as the requirements matrix. */
+/** Small "p. N" buttons, same pattern as the requirements matrix. The name starts
+ * with the visible text so voice control and axe label-content-name-mismatch pass. */
 export function SourceCitations({ citations, onSelect, emptyText }: Props) {
   if (citations.length === 0) {
     return <span className="text-xs text-muted">{emptyText ?? "Sin citas vinculadas"}</span>;
@@ -23,7 +24,7 @@ export function SourceCitations({ citations, onSelect, emptyText }: Props) {
           key={c.id}
           variant="chip"
           onClick={() => onSelect(c)}
-          aria-label={`Ver evidencia ${c.id}, página ${c.page_number}`}
+          aria-label={`p. ${c.page_number}: ver evidencia ${c.id}`}
           title={`${c.id} · p. ${c.page_number} (${matchStatusEs(c.match_status)})`}
         >
           p. {c.page_number}

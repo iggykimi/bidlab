@@ -1,6 +1,7 @@
 // Entradas de hipótesis: baja propia, rivales supuestos y referencias por grupo.
 // Los precios rivales son hipótesis declaradas, nunca distribución inferida.
 
+import { Alert } from "../../components/ui";
 import { DISCOUNT_MAX, DISCOUNT_MIN, DISCOUNT_STEP } from "../../lib/validation";
 import { SourceCitations } from "./SourceCitations";
 import { branchEs, formatProtocol, reasonEs, variableEs } from "./sources";
@@ -62,13 +63,9 @@ export function DiscountSection({ state }: Props) {
         )}
       </p>
       {error && inputsValid && (
-        <p
-          role="alert"
-          title={rawError ?? undefined}
-          className="mt-2 rounded-lg border border-error p-3 text-sm text-error"
-        >
+        <Alert tone="error" title={rawError ?? undefined} className="mt-2">
           {error}
-        </p>
+        </Alert>
       )}
     </section>
   );
