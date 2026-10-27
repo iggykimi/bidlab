@@ -1,5 +1,7 @@
 # BidLab — licitación real, revisión trazable, Pricing Lab determinista
 
+[![bidlab-ci](https://github.com/iggykimi/bidlab/actions/workflows/ci.yml/badge.svg)](https://github.com/iggykimi/bidlab/actions/workflows/ci.yml)
+
 BidLab ayuda a una pyme a decidir si pujar: biblioteca de licitaciones,
 matriz de requisitos con citas localizadas en página, y Pricing Lab con
 puntos, anomalía y curva calculados por un motor determinista en Python.
@@ -12,6 +14,14 @@ PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
 (PCAP p.10) y anormalidad (PCAP p.20). Estado: P0 en curso según
 [task-board](docs/task-board.md); este README describe la instalación
 limpia rehearseada en T31/T32.
+
+## Demo
+
+Pack para revisores (capturas, guía de 5 minutos, límites honestos):
+[docs/demo/](docs/demo/). Vista rápida:
+
+![Resumen](docs/demo/01-resumen.png)
+![Pricing Lab](docs/demo/02-precio.png)
 
 ## Requisitos previos
 
@@ -109,23 +119,20 @@ python scripts/verify.py --skip-e2e # sin Playwright
 ```
 
 `verify.py` para en el primer fallo y devuelve su exit code. Puertas,
-en orden: `uv sync --frozen --all-packages`, pytest unit (144),
-pytest integration+contracts (43), `npm run lint`, `npm run typecheck`,
+en orden: `uv sync --frozen --all-packages`, pytest unit,
+pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 `npm run build`, `npm run test:unit`, `ruff check .`,
-`mypy apps/api/bidlab`, Playwright E2E (14, Chromium, API+web reales).
+`mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
 
-Estado a 26-oct-2026 (T31/T32, verificado por ejecución propia; detalle
+Estado a 27-oct-2026 (verificado por ejecución propia; detalle
 y comandos en [verification-log](docs/verification-log.md)):
 
-- PASS: deps, pytest 187/187, web unit 14/14, mypy 48 ficheros.
-- FAIL fuera de alcance T31/T32, pendiente del owner: `npm run
-  lint/typecheck/build` por trabajo sin commitear en
-  `apps/web/src/features/pricing/` (T23/T24 en curso); `ruff` por
-  `UP035` en la línea 4 de `apps/api/bidlab/main.py` (commiteado).
-- BLOCKED con causa: E2E, porque su `webServer` construye la web y el
-  build falla (último verde: 14 passed en T29).
-- `verify.py` funciona correctamente (detecta fallos reales); no se
-  tocó `apps/` ni `tests/`.
+- `verify.py`: ALL CHECKS PASSED, 10/10 puertas, exit 0.
+- Backend: 229 tests (164 unit + 65 integración/contratos); web: 109
+  unit; E2E: 27/27 herméticos. Ruff y mypy limpios.
+- CI (GitHub Actions, 18 pasos incl. Playwright): verde, ver badge.
+- Auditoría UX externa aplicada; 4 jueces ≥ 9.5/10
+  ([ux-review](docs/ux-review.md)).
 
 ## Configuración
 
