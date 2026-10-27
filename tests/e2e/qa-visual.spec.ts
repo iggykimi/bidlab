@@ -48,6 +48,9 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     await noHorizontalOverflow(page, "resumen escritorio");
 
     await openTab(page, "Requisitos");
+    // Contenido propio antes de capturar: sin esto, useTransition puede
+    // dejar el panel anterior en la foto (img 05 duplicaba la 01).
+    await expect(page.getByTestId("requirement-tech-services")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-desktop-requisitos.png" });
     await noHorizontalOverflow(page, "requisitos escritorio");
 
@@ -64,6 +67,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     await noHorizontalOverflow(page, "pricing escritorio");
 
     await openTab(page, "Citas");
+    await expect(page.locator("section[aria-label='Documentos']")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-desktop-evidencia.png" });
     await noHorizontalOverflow(page, "evidencia escritorio");
 
@@ -135,7 +139,7 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     // La transición pressable (120 ms) mezcla colores a mitad de camino:
     // axe debe probar la UI estable, no el fotograma intermedio.
     await openTab(page, "Requisitos");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByTestId("requirement-tech-services")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "requisitos escritorio");
 
@@ -145,12 +149,12 @@ test.describe("T30 visual QA desktop 1280x720", () => {
     await expectNoSeriousViolations(page, "precio escritorio");
 
     await openTab(page, "Citas");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("section[aria-label='Documentos']")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "citas escritorio");
 
     await openTab(page, "Informe");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByTestId("report-note-input")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "informe escritorio");
     expect(guard.blocked()).toBe(0);
@@ -168,6 +172,7 @@ test.describe("T30 visual QA mobile 390x844", () => {
     await noHorizontalOverflow(page, "resumen móvil");
 
     await openTab(page, "Requisitos");
+    await expect(page.getByTestId("requirement-tech-services")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-mobile-requisitos.png" });
     await noHorizontalOverflow(page, "requisitos móvil");
 
@@ -188,10 +193,12 @@ test.describe("T30 visual QA mobile 390x844", () => {
     await page.keyboard.press("Escape");
 
     await openTab(page, "Citas");
+    await expect(page.locator("section[aria-label='Documentos']")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-mobile-evidencia.png" });
     await noHorizontalOverflow(page, "evidencia móvil");
 
     await openTab(page, "Informe");
+    await expect(page.getByTestId("report-note-input")).toBeVisible();
     await page.screenshot({ path: "test-results/qa-mobile-informe.png" });
     await noHorizontalOverflow(page, "informe móvil");
     expect(guard.blocked()).toBe(0);
@@ -206,7 +213,7 @@ test.describe("T30 visual QA mobile 390x844", () => {
 
     // Ver escritorio: dejar que la transición pressable asiente antes de axe.
     await openTab(page, "Requisitos");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByTestId("requirement-tech-services")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "requisitos móvil");
 
@@ -216,14 +223,15 @@ test.describe("T30 visual QA mobile 390x844", () => {
     await expectNoSeriousViolations(page, "precio móvil");
 
     await openTab(page, "Citas");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("section[aria-label='Documentos']")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "citas móvil");
 
     await openTab(page, "Informe");
-    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByTestId("report-note-input")).toBeVisible();
     await page.waitForTimeout(250);
     await expectNoSeriousViolations(page, "informe móvil");
     expect(guard.blocked()).toBe(0);
   });
 });
+

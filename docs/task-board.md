@@ -3,6 +3,15 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
+## Ronda judge-fix 27-oct (en curso, sin commitear — docs-refresher)
+
+- Uncommitted sibling work: compare/intake backend + UI, persistent
+  drafts, CostEditor, a11y, 4 new E2E specs.
+- Gates observed 27-oct: backend 310 green, web unit 145 green,
+  ruff/mypy/tsc/build green; eslint RED (CostEditor.tsx:171);
+  E2E + full verify.py TBD (ports busy). See verification-log.
+- T02/T04 still pending (author externals). Submission NOT sent.
+
 ## Gates
 
 - G0 admission/rules/credit: pending (B01, author).

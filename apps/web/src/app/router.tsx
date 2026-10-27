@@ -8,6 +8,9 @@ const LibraryPage = lazy(() =>
 const WorkspacePage = lazy(() =>
   import("../features/workspace/WorkspacePage").then((m) => ({ default: m.WorkspacePage }))
 );
+const IntakePage = lazy(() =>
+  import("../features/intake/IntakePage").then((m) => ({ default: m.IntakePage }))
+);
 
 function RouteFallback() {
   return (
@@ -23,6 +26,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteFallback />}>
         <LibraryPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/nueva-licitacion",
+    element: (
+      <Suspense fallback={<RouteFallback />}>
+        <IntakePage />
       </Suspense>
     ),
   },

@@ -76,6 +76,7 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
     saveError,
     saveRawError,
     saveState,
+    saveIsCurrent,
   } = state;
   const rawCode = errorCodeOnly(saveRawError);
   return (
@@ -106,9 +107,20 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
           {rawCode ? ` (código: ${rawCode})` : ""}
         </p>
       )}
-      {saveState && (
+      {saveState && saveIsCurrent && (
         <p role="status" className="mt-2 text-sm">
           Prueba «{saveState.name}» guardada.{" "}
+          <Link
+            to={`/tenders/${workspace.tender.id}?tab=informe&scenario=${saveState.id}`}
+            className="text-primary underline"
+          >
+            Verla en el informe
+          </Link>
+        </p>
+      )}
+      {saveState && !saveIsCurrent && (
+        <p role="status" className="mt-2 text-sm">
+          Cambios desde la copia guardada «{saveState.name}».{" "}
           <Link
             to={`/tenders/${workspace.tender.id}?tab=informe&scenario=${saveState.id}`}
             className="text-primary underline"

@@ -96,7 +96,7 @@ describe("sources", () => {
 
   it("answers the suspicious-offer question with Sí/No text", () => {
     expect(anomalyVerdictEs("possible_justification_required")).toBe("Sí");
-    expect(anomalyVerdictEs("not_flagged_under_assumptions")).toBe("No");
+    expect(anomalyVerdictEs("not_flagged_under_assumptions")).toBe("No, en este supuesto");
     expect(anomalyVerdictEs("not_applicable")).toBe("No aplicable");
     expect(anomalyVerdictEs("unknown")).toBe("Sin determinar");
     expect(anomalyVerdictEs("future_status")).toBe("Sin determinar");
@@ -110,7 +110,7 @@ describe("sources", () => {
 
   it("translates anomaly statuses to Spanish", () => {
     expect(anomalyEs("possible_justification_required")).toBe("Posible necesidad de justificación");
-    expect(anomalyEs("not_flagged_under_assumptions")).toBe("No parece sospechosa con estos datos");
+    expect(anomalyEs("not_flagged_under_assumptions")).toBe("No, en este supuesto");
     expect(anomalyEs("not_applicable")).toBe("No aplicable");
     expect(anomalyEs("unknown")).toBe("Sin determinar");
   });

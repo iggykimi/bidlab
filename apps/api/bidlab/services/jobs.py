@@ -189,6 +189,7 @@ def _update_request(
     processed: int | None = None,
     warnings: list[str] | None = None,
     attempts: int | None = None,
+    manifest: dict[str, Any] | None = None,
 ) -> None:
     req = _as_dict(job.request_json)
     progress = _as_dict(req.get("progress"))
@@ -199,6 +200,8 @@ def _update_request(
         req["warnings"] = warnings[:30]
     if attempts is not None:
         req["attempts"] = attempts
+    if manifest is not None:
+        req["manifest"] = manifest
     job.request_json = req
 
 
@@ -351,6 +354,7 @@ def run_job(
         for page in pages
     ]
     input_hash = meta_adapter.pages_input_hash(inputs)
+    run_started = _now().isoformat()
     try:
         if adapter.is_live:
             check_live_budget(session)
@@ -406,7 +410,7 @@ def run_job(
             job_warnings.append(f"document {doc.id}: {have} of {doc.pages_count} pages have text")
 
     text_by_page = {(page.document_id, page.page_number): page.normalized_text for page in pages}
-    _, citation_warnings, unmatched = verify_and_store_citations(
+    citation_ids, citation_warnings, unmatched = verify_and_store_citations(
         session,
         id_prefix=f"cit-{job.id}-a{attempt}",
         proposal=proposal_data,
@@ -452,11 +456,29 @@ def run_job(
         isinstance(claim, dict) and claim.get("status") in NON_PROPOSED_CLAIM for claim in claims
     )
     needs_review = bool(job_warnings) or bool(proposal.unread_pages) or weak_claim or unmatched > 0
+    manifest = meta_adapter.build_run_manifest(
+        run_id=f"inv-{job.id}-a{attempt}",
+        mode=result.mode,
+        pages=inputs,
+        model_requested=result.model,
+        model_returned=result.returned_model,
+        schema_version=str(proposal_data.get("schema_version", meta_adapter.SCHEMA_VERSION)),
+        status="ok",
+        provider_request_id=result.provider_request_id,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        cached_tokens=result.cached_tokens,
+        proposal=proposal_data,
+        citation_ids=citation_ids,
+        citations_unmatched=unmatched,
+        started_at=run_started,
+        finished_at=_now().isoformat(),
+    )
     job.status = "needs_review" if needs_review else "succeeded"
     job.stage = "awaiting_review" if needs_review else "done"
     job.result_revision = new_revision
     job.error_code = None
     job.updated_at = _now().isoformat()
-    _update_request(job, processed=len(inputs), warnings=job_warnings)
+    _update_request(job, processed=len(inputs), warnings=job_warnings, manifest=manifest)
     session.flush()
     return job

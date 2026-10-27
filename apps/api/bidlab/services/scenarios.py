@@ -234,3 +234,75 @@ def get_scenario(session: Session, scenario_id: str) -> dict[str, Any]:
     if row is None:
         raise ApiError(404, "scenario_not_found", f"unknown scenario {scenario_id}")
     return scenario_to_dict(row)
+
+
+def resolve_tender_scopes(session: Session, tender_id: str, scope_id: str | None) -> list[str]:
+    """Scope ids visible under a tender, optionally narrowed to one scope."""
+    if session.get(models.Tender, tender_id) is None:
+        raise ApiError(404, "tender_not_found", f"unknown tender {tender_id}")
+    if scope_id is not None:
+        scope = session.get(models.Scope, scope_id)
+        if scope is None:
+            raise ApiError(404, "scope_not_found", f"unknown scope {scope_id}")
+        if scope.tender_id != tender_id:
+            raise ApiError(422, "scope_tender_mismatch", f"scope {scope_id} is not in {tender_id}")
+        return [scope_id]
+    return list(
+        session.scalars(
+            select(models.Scope.id)
+            .where(models.Scope.tender_id == tender_id)
+            .order_by(models.Scope.id)
+        ).all()
+    )
+
+
+def scenario_summary(row: models.Scenario) -> dict[str, Any]:
+    """Light collection item: headline figures without the full snapshot."""
+    full = scenario_to_dict(row)  # validates the snapshot hash
+    result = full.get("result", {})
+    result = result if isinstance(result, dict) else {}
+    score = result.get("score", {})
+    score = score if isinstance(score, dict) else {}
+    anomaly = result.get("anomaly", {})
+    anomaly = anomaly if isinstance(anomaly, dict) else {}
+    profit = result.get("profit_net")
+    score_value = score.get("value")
+    return {
+        "id": row.id,
+        "name": full.get("name"),
+        "scope_id": row.scope_id,
+        "rule_id": row.rule_id,
+        "rule_revision": row.rule_revision,
+        "company_id": row.company_id,
+        "company_revision": row.company_revision,
+        "price_net": result.get("price_net"),
+        "profit_net": profit,
+        "score_value": score_value,
+        "score_status": score.get("status"),
+        "anomaly_status": anomaly.get("status"),
+        "snapshot_sha256": row.snapshot_sha256,
+        "created_at": row.created_at,
+    }
+
+
+def list_by_tender(
+    session: Session, tender_id: str, scope_id: str | None, page: int, page_size: int
+) -> dict[str, Any]:
+    """Paginated light items for one tender in stable (created_at, id) order."""
+    scope_ids = resolve_tender_scopes(session, tender_id, scope_id)
+    rows = (
+        session.scalars(
+            select(models.Scenario)
+            .where(models.Scenario.scope_id.in_(scope_ids))
+            .order_by(models.Scenario.created_at, models.Scenario.id)
+        ).all()
+        if scope_ids
+        else []
+    )
+    start = (page - 1) * page_size
+    return {
+        "items": [scenario_summary(row) for row in rows[start : start + page_size]],
+        "page": page,
+        "page_size": page_size,
+        "total": len(rows),
+    }

@@ -17,6 +17,8 @@ test-results/
 *.sqlite3-shm
 
 # local drops (author workspace only)
+BidLab_Revision_UX_2026-10-27/
+BidLab_Revision_UX_2026-10-27.zip
 bidlab_blueprint/
 BidLab_MuseCode_Blueprint_2026-10-26.zip
 BidLab_Executive_Audit.md

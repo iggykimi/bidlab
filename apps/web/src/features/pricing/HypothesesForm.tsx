@@ -14,7 +14,8 @@ import { DISCOUNT_MAX, DISCOUNT_MIN, DISCOUNT_STEP } from "../../lib/validation"
 import { nombreImpuesto } from "../../lib/taxKind";
 import { SourceCitations } from "./SourceCitations";
 import { branchEs, errorCodeOnly, variableEs } from "./sources";
-import type { Hypotheses, PricingState } from "./usePricingState";
+import type { Hypotheses } from "./hypotheses";
+import type { PricingState } from "./usePricingState";
 
 interface Props {
   state: PricingState;
@@ -94,7 +95,7 @@ export function DiscountSection({ state }: Props) {
       <p className="mt-2 text-xs text-muted">
         Puedes simular rebajas de 0 a 40 %.{" "}
         {pending && (
-          <span data-testid="updating" role="status">
+          <span data-testid="updating">
             Actualizando…
           </span>
         )}
@@ -139,10 +140,12 @@ export function HypothesesForm({ state }: Props) {
             value={h.rivalAPrice}
             onChange={(e) => setField("rivalAPrice", e.target.value)}
             className="tnum mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
+            aria-invalid={fieldErrors.rivalA !== undefined}
+            aria-describedby={fieldErrors.rivalA ? "rival-a-error" : undefined}
           />
         </label>
         {fieldErrors.rivalA && (
-          <p role="alert" className="text-sm text-error">
+          <p role="alert" id="rival-a-error" className="text-sm text-error">
             {fieldErrors.rivalA}
           </p>
         )}
@@ -155,10 +158,12 @@ export function HypothesesForm({ state }: Props) {
             value={h.rivalBPrice}
             onChange={(e) => setField("rivalBPrice", e.target.value)}
             className="tnum mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
+            aria-invalid={fieldErrors.rivalB !== undefined}
+            aria-describedby={fieldErrors.rivalB ? "rival-b-error" : undefined}
           />
         </label>
         {fieldErrors.rivalB && (
-          <p role="alert" className="text-sm text-error">
+          <p role="alert" id="rival-b-error" className="text-sm text-error">
             {fieldErrors.rivalB}
           </p>
         )}

@@ -328,3 +328,44 @@ Alcance: la oleada UX solo toca presentacion + 1 literal backend. Verificacion r
 ## Fix CI typecheck TS2591 (27-oct)
 
 CI rojo en 5 pushes seguidos (runs 40460541795..40486470916): `tsc --noEmit -p apps/web` -> TS2591 `process` en vite.config.ts:6. Causa raiz: `vite/dist/node/index.d.ts:1` trae un triple-slash reference a types node y el repo no declaraba `@types/node`; en local resolvia por accidente via `C:/Users/zrano/node_modules/@types/node` (fuera del repo) -> el verde local de typecheck en verify.py era falso. Fix determinista: `@types/node` en devDependencies de apps/web (lock +18) + `"types": ["vite/client", "node"]` en tsconfig. Verificado: typecheck hermetico (`--typeRoots ./node_modules/@types`, simula runner limpio) exit 0, lint 0, build 0, unit web 109/109. CI hara el resto de gates por primera vez (nunca paso de typecheck). Confirmado: run 40487447554 success, 18/18 pasos en verde incluyendo test:e2e (2m21s).
+
+## Ronda judge-fix UX (27-oct, en curso — docs-refresher)
+
+Fecha: 2026-10-27 ~16:30–16:50 UTC. Árbol SUCIO (trabajo de agentes hermanos
+sin commitear); esta entrada registra solo lo observado por docs-refresher.
+Sin servidores arrancados (puertos ocupados por otros agentes): E2E y
+verify.py completo quedan TBD.
+
+Qué cambió (observado vía `git status`, sin commit):
+- Backend nuevo: services/compare.py, services/intake.py; tests nuevos
+  test_compare.py (10), test_intake_api.py (15), test_compare_logic.py (17),
+  test_intake.py (11). Tocados: APIs scenarios/reports/tenders/documents,
+  services jobs/meta_adapter/scenarios/reports, schemas generados, contrato.
+- Web nuevo: features/company/ (CostEditor), features/intake/,
+  report/CompareSection, report/openAsCopy, lib/draftStore,
+  lib/evidenceFields, workspace/WorkspaceDrafts, pricing/hypotheses.
+  PricingLab y tabs re-escritos (voz es-ES/tú, borradores persistentes).
+- E2E nuevos (no ejecutados): compare, cost-editor, intake, ux-drafts
+  specs + global-setup; helpers/config/qa-visual/e07-e08 tocados.
+
+Gates observados por docs-refresher (mismo árbol sucio):
+- `pytest apps/api/tests/unit` → exit 0, 220 dots, 0 F/E → 220 passed.
+- `pytest apps/api/tests/integration apps/api/tests/contracts` → exit 0,
+  90 dots, 0 F/E → 90 passed. Backend total 310.
+- `pytest apps/api/tests --collect-only -q` → 311 (220 unit + 76
+  integration + 14 contracts + 1 live opt-in, excluido como en verify.py).
+- `npm run test:unit` (vitest, apps/web) → exit 0, 18 ficheros,
+  145 tests passed.
+- `ruff check .` → exit 0, limpio. `mypy apps/api/bidlab` → exit 0,
+  44 ficheros limpios. `npm run typecheck` → exit 0. `npm run build` →
+  exit 0, built in 3.28s.
+- `npm run lint` → exit 1, ROJO (WIP ajeno, fuera de alcance docs):
+  apps/web/src/features/company/CostEditor.tsx:171 error
+  react-hooks/set-state-in-effect + 1 warning de disable-directive
+  sin usar (misma zona). No tocado.
+- E2E / verify.py completo: NO EJECUTADOS (arrancan servidores) → TBD.
+  Ningún resultado E2E de esta ronda es afirmado por docs-refresher.
+
+Nota honesta: en este entorno pytest no imprimió la línea resumen
+"N passed" (solo dots + exit 0); los conteos son conteo exacto de dots
+con cero F/E y exit 0. Candidatura NO enviada (pendiente autor).

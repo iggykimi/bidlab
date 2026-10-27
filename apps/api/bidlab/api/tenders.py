@@ -12,11 +12,13 @@ from bidlab.db import models
 from bidlab.schemas import generated as g
 from bidlab.services import demo as demo_service
 from bidlab.services import idempotency
+from bidlab.services import intake as intake_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
 router = APIRouter(responses=ERROR_RESPONSES, tags=["tenders"])
 
+CREATE_ROUTE = "POST /api/v1/tenders"
 DEMO_ROUTE = "POST /api/v1/demo/sessions"
 
 
@@ -47,6 +49,28 @@ def list_tenders(
             "total": len(items),
         }
     )
+
+
+@router.post("/tenders", response_model=g.Tender, status_code=201, operation_id="create_tender")
+async def create_tender(
+    payload: g.TenderCreate,
+    request: Request,
+    response: Response,
+    db: Annotated[Session, Depends(deps.get_db)],
+    _guard: Annotated[None, Depends(deps.require_local_client)],
+    idempotency_key: str = Header(max_length=100),
+) -> g.Tender:
+    body = await request.body()
+    stored = idempotency.check(db, CREATE_ROUTE, idempotency_key, body)
+    if stored is not None:
+        response.status_code = 200
+        return g.Tender.model_validate(stored)
+    created: dict[str, Any] = dict(intake_service.create_tender(db, payload))
+    winner = idempotency.store(db, CREATE_ROUTE, idempotency_key, body, created)
+    if winner is not None:
+        response.status_code = 200
+        return g.Tender.model_validate(winner)
+    return g.Tender.model_validate(created)
 
 
 @router.get("/tenders/{tender_id}", response_model=g.Tender, operation_id="get_tender")

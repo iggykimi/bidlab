@@ -51,7 +51,7 @@ function anomalySentence(
 }
 
 export function KpiSection({ workspace, state }: Props) {
-  const { result, pending, requestCount, h } = state;
+  const { result, pending, requestCount, h, resultStale } = state;
   const rebate = formatPercent(discountPercentToRate(h.discountPct));
   const pblNet = workspace.tender.pbl_net;
   const pblGross = workspace.tender.pbl_gross;
@@ -66,9 +66,17 @@ export function KpiSection({ workspace, state }: Props) {
   return (
     <section
       aria-label="Indicadores"
-      aria-busy={pending}
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      aria-busy={pending || resultStale}
+      className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 xl:grid-cols-4"
     >
+      {resultStale && (
+        <p
+          data-testid="stale-result"
+          className="rounded-lg border border-alert bg-warn-bg p-2 text-sm sm:col-span-2 xl:col-span-4"
+        >
+          Actualizando con tu último cambio… Estas cifras son del cálculo anterior.
+        </p>
+      )}
       <span role="status" aria-live="polite" className="sr-only" key={requestCount}>
         {result ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}` : "Calculando tu resultado…"}
       </span>

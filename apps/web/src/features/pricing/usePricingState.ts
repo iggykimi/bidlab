@@ -18,39 +18,18 @@ import type { EvidenceTarget } from "../evidence/EvidenceDrawer";
 import { errorCode, errorEs } from "../../lib/errors";
 import { discountPercentToRate, parsePrecioInput } from "../../lib/format";
 import { LatestOnly } from "../../lib/requestSequence";
-import { loadSession, rememberScenario, type StoredSession } from "../../lib/session";
+import { loadSession, type StoredSession } from "../../lib/session";
+import { stableKey, type SavedCopy } from "../../lib/draftStore";
 import {
   discountPercentSchema,
   rivalPriceSchema,
   scenarioNameSchema,
 } from "../../lib/validation";
+import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { citationsByIds, metadataForKey } from "./sources";
+import type { Hypotheses } from "./hypotheses";
 
-export interface Hypotheses {
-  discountPct: number;
-  rivalAPrice: string;
-  rivalAGroup: string;
-  rivalBPrice: string;
-  rivalBGroup: string;
-  ownGroup: string;
-  complete: boolean;
-  groupsConfirmed: boolean;
-  noRivals: boolean;
-  rivalState: "assumed" | "unspecified";
-}
-
-export const DEFAULTS: Hypotheses = {
-  discountPct: 5,
-  rivalAPrice: "106502.40",
-  rivalAGroup: "a",
-  rivalBPrice: "110052.48",
-  rivalBGroup: "b",
-  ownGroup: "c",
-  complete: true,
-  groupsConfirmed: true,
-  noRivals: false,
-  rivalState: "assumed",
-};
+export type { Hypotheses } from "./hypotheses";
 
 export type PricingScope = Workspace["tender"]["scopes"][number];
 export type PricingRule = Workspace["pricing_rules"][number];
@@ -67,7 +46,11 @@ export interface PricingState {
   fieldErrors: Record<string, string>;
   inputsValid: boolean;
   requestInput: EvaluationRequest | null;
+  /** Canonical identity of the current inputs; the painted result belongs to resultKey. */
+  inputKey: string | null;
   result: EvaluationResult | null;
+  /** True while the painted result belongs to older inputs (UX-04). */
+  resultStale: boolean;
   pending: boolean;
   error: string | null;
   rawError: string | null;
@@ -84,7 +67,9 @@ export interface PricingState {
   closeEvidence: () => void;
   scenarioName: string;
   setScenarioName: (name: string) => void;
-  saveState: { id: string; hash: string; name: string } | null;
+  saveState: SavedCopy | null;
+  /** False once you edit after saving: the copy stays, the draft moved (UX-03). */
+  saveIsCurrent: boolean;
   saveError: string | null;
   saveRawError: string | null;
   saving: boolean;
@@ -97,14 +82,22 @@ export function usePricingState(workspace: Workspace): PricingState {
   const rule = workspace.pricing_rules[0] ?? null;
   const companyId = session?.company_id ?? null;
 
-  const [h, setH] = useState<Hypotheses>(DEFAULTS);
+  // Editable state lives in the workspace drafts store (above the tabs),
+  // so switching sections never loses it (UX-01). Figures stay server-side.
+  const { drafts, updatePricing } = useWorkspaceDrafts({
+    tenderId: workspace.tender.id,
+    scopeId: scope?.id ?? "none",
+    companyId: companyId ?? "none",
+  });
+  const h = drafts.pricing.h;
+  const scenarioName = drafts.pricing.scenarioName;
+  const saveState = drafts.pricing.savedCopy;
   const [fetched, setFetched] = useState<EvaluationResult | null>(null);
+  const [resultKey, setResultKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rawError, setRawError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [requestCount, setRequestCount] = useState(0);
-  const [scenarioName, setScenarioName] = useState("Base 5 %");
-  const [saveState, setSaveState] = useState<{ id: string; hash: string; name: string } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveRawError, setSaveRawError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -176,16 +169,20 @@ export function usePricingState(workspace: Workspace): PricingState {
         }
       : null;
 
-  // requestInput is rebuilt every render; stringify once to depend on values only.
-  const requestKey = JSON.stringify(requestInput);
+  // requestInput is rebuilt every render; its canonical key is the
+  // value-stable identity (UX-04: key order must not change it).
+  const inputKey = requestInput ? stableKey(requestInput) : null;
   const ruleReviewStatus = rule?.review_status;
   // C4: invalid input hides the last fetch instead of showing stale figures.
   const result = inputsValid && requestInput !== null ? fetched : null;
+  // Stale the moment inputs change, even during the debounce (UX-04).
+  const resultStale = result !== null && inputKey !== null && resultKey !== inputKey;
   useEffect(() => {
     if (!requestInput || !inputsValid || ruleReviewStatus !== "approved") {
       return;
     }
     const payload = requestInput;
+    const payloadKey = stableKey(payload);
     const timer = window.setTimeout(() => {
       const seq = ++seqRef.current;
       setPending(true);
@@ -196,11 +193,13 @@ export function usePricingState(workspace: Workspace): PricingState {
         .then((res) => {
           if (seqRef.current !== seq) return; // stale response: never paint it
           setFetched(res);
+          setResultKey(payloadKey);
         })
         .catch((err: unknown) => {
           if (isAbort(err)) return;
           if (seqRef.current !== seq) return;
           setFetched(null);
+          setResultKey(null);
           setError(errorEs(err, "No pudimos evaluar tu oferta. Vuelve a intentarlo en unos segundos."));
           setRawError(errorCode(err));
         })
@@ -209,29 +208,34 @@ export function usePricingState(workspace: Workspace): PricingState {
         });
     }, 150);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- requestKey is the value-stable form of requestInput.
-  }, [requestKey, inputsValid, ruleReviewStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- inputKey is the value-stable form of requestInput.
+  }, [inputKey, inputsValid, ruleReviewStatus]);
 
   useEffect(() => () => latestRef.current.abort(), []);
 
   async function handleSave() {
     setSaveError(null);
     setSaveRawError(null);
-    setSaveState(null);
+    updatePricing({ savedCopy: null });
     const name = scenarioNameSchema.safeParse(scenarioName);
     if (!name.success) {
       setSaveError(name.error.issues[0]?.message ?? "Nombre no válido");
       return;
     }
-    if (!requestInput) {
+    if (!requestInput || !inputKey) {
       setSaveError("Te faltan datos para guardar (sesión, regla o empresa).");
       return;
     }
+    // Freeze what we send: edits during the flight stay in the draft,
+    // and the copy keeps the key of its own inputs (UX-03).
+    const payload = requestInput;
+    const payloadKey = inputKey;
     setSaving(true);
     try {
-      const saved = await saveScenario(name.data, requestInput);
-      rememberScenario(saved.id, name.data);
-      setSaveState({ id: saved.id, hash: saved.snapshot_sha256, name: name.data });
+      const saved = await saveScenario(name.data, payload);
+      updatePricing({
+        savedCopy: { id: saved.id, hash: saved.snapshot_sha256, name: name.data, inputKey: payloadKey },
+      });
     } catch (err) {
       setSaveError(errorEs(err, "No pudimos guardar tu prueba. Vuelve a intentarlo en unos segundos."));
       setSaveRawError(errorCode(err));
@@ -240,8 +244,14 @@ export function usePricingState(workspace: Workspace): PricingState {
     }
   }
 
+  const saveIsCurrent = saveState !== null && inputKey !== null && saveState.inputKey === inputKey;
+
   function setField<K extends keyof Hypotheses>(key: K, value: Hypotheses[K]) {
-    setH((prev) => ({ ...prev, [key]: value }));
+    updatePricing({ h: { ...h, [key]: value } });
+  }
+
+  function setScenarioName(name: string) {
+    updatePricing({ scenarioName: name });
   }
 
   return {
@@ -254,7 +264,9 @@ export function usePricingState(workspace: Workspace): PricingState {
     fieldErrors,
     inputsValid,
     requestInput,
+    inputKey,
     result,
+    resultStale,
     pending,
     error,
     rawError,
@@ -272,6 +284,7 @@ export function usePricingState(workspace: Workspace): PricingState {
     scenarioName,
     setScenarioName,
     saveState,
+    saveIsCurrent,
     saveError,
     saveRawError,
     saving,

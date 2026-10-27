@@ -10,10 +10,10 @@
   --color-primary-soft: #e8efff;
   --color-line: #e5e9f2;
   --color-border: #c9d2e8;
-  --color-alert: #9a5b00;
+  --color-alert: #6b4200;
   --color-warn-bg: #fff4d6;
-  --color-warn-ink: #7a4a00;
-  --color-error: #b42318;
+  --color-warn-ink: #5f3a00;
+  --color-error: #9c1f16;
   --color-chart-profit: #1e7b3c;
   --drawer-curve: cubic-bezier(0.32, 0.72, 0, 1);
 }

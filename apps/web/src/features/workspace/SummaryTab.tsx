@@ -4,18 +4,23 @@
 // the canonical format.ts/dates formatters, never recomputed here.
 
 import { Link } from "react-router-dom";
-import type { PricingRule, Workspace } from "../../api/client";
+import type { Decision, PricingRule, Workspace } from "../../api/client";
 import { TechnicalDetails, type TechnicalDetailItem } from "../../components/TechnicalDetails";
 import { Card } from "../../components/ui";
 import { diasRestantes } from "../../lib/dates";
 import {
+  discountPercentToRate,
   formatEurosExact,
   formatEurosHeadline,
   formatFechaCorta,
   formatFechaNormal,
   formatMaxPoints,
+  formatPercent,
 } from "../../lib/format";
+import { loadSession } from "../../lib/session";
 import { nombreImpuesto } from "../../lib/taxKind";
+import { decisionEs } from "../report/ReportTab";
+import { useWorkspaceDrafts } from "./WorkspaceDrafts";
 
 interface Props {
   workspace: Workspace;
@@ -95,6 +100,13 @@ export function SummaryTab({ workspace }: Props) {
   const taxKind = basis?.tax_kind ?? "unknown";
   const periodMonths = basis?.period_months ?? null;
   const rule = workspace.pricing_rules[0] ?? null;
+  const session = loadSession();
+  const { drafts } = useWorkspaceDrafts({
+    tenderId: tender.id,
+    scopeId: tender.scopes[0]?.id ?? "none",
+    companyId: session?.company_id ?? "none",
+  });
+  const rebate = formatPercent(discountPercentToRate(drafts.pricing.h.discountPct));
 
   const detalles: TechnicalDetailItem[] = [
     { label: "Copia del anuncio oficial (SHA-256)", value: tender.raw_snapshot_sha256 },
@@ -182,12 +194,6 @@ export function SummaryTab({ workspace }: Props) {
           <h2 className="text-lg font-semibold">Hechos</h2>
           <dl className="mt-3 grid gap-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Presupuesto de salida</dt>
-              <dd className="tnum text-right font-semibold">
-                {textoPresupuesto(tender.pbl_net, tender.pbl_gross, taxKind)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
               <dt className="text-muted">Valor estimado del contrato</dt>
               <dd className="text-right">
                 <span className="tnum font-semibold">
@@ -210,12 +216,6 @@ export function SummaryTab({ workspace }: Props) {
               <dt className="text-muted">Tipo de servicio (código CPV)</dt>
               <dd className="max-w-md text-right font-semibold">{lineaCPV(tender.cpv_codes)}</dd>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">Plazo para presentar ofertas</dt>
-              <dd className="text-right font-semibold">
-                {tender.deadline_at ? formatFechaNormal(tender.deadline_at) : "Sin determinar"}
-              </dd>
-            </div>
           </dl>
           <p className="mt-3 text-sm">Datos del {formatFechaCorta(tender.source_updated_at)}.</p>
           <p className="mt-2 text-sm">
@@ -233,6 +233,32 @@ export function SummaryTab({ workspace }: Props) {
         </Card>
 
         <div className="grid content-start gap-4">
+          <Card aria-label="Tu trabajo">
+            <h2 className="text-lg font-semibold">Tu trabajo</h2>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li>Borrador de precio: rebaja del {rebate}.</li>
+              <li>
+                {drafts.pricing.savedCopy
+                  ? `Copia guardada «${drafts.pricing.savedCopy.name}».`
+                  : "Aún no guardas ninguna copia."}
+              </li>
+              <li>
+                Decisión: {decisionEs(drafts.report.decision as Decision).toLowerCase()}.
+                {drafts.report.note
+                  ? " Tienes una nota que aún no está en ningún informe."
+                  : " Sin notas todavía."}
+              </li>
+            </ul>
+            <p className="mt-3 space-x-4 text-sm">
+              <Link to="?tab=pricing" className="font-semibold text-primary underline hover:text-primary-ink">
+                Retomar en Precio
+              </Link>
+              <Link to="?tab=informe" className="font-semibold text-primary underline hover:text-primary-ink">
+                Abrir el informe
+              </Link>
+            </p>
+          </Card>
+
           <Card aria-label="¿Cómo suma puntos tu oferta?">
             <h2 className="text-lg font-semibold">¿Cómo suma puntos tu oferta?</h2>
             {workspace.pricing_rules.length === 0 ? (

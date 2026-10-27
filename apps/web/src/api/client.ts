@@ -15,6 +15,10 @@ export const LOCAL_CLIENT = "local-ui";
 export type Capabilities = components["schemas"]["Capabilities"];
 export type Tender = components["schemas"]["Tender"];
 export type TenderList = components["schemas"]["TenderList"];
+export type TenderCreate = components["schemas"]["TenderCreate"];
+export type TenderBasisInput = components["schemas"]["TenderBasisInput"];
+export type TenderDocument = components["schemas"]["Document"];
+export type TenderDocumentKind = components["schemas"]["Document"]["kind"];
 export type Workspace = components["schemas"]["Workspace"];
 export type DemoSession = components["schemas"]["DemoSession"];
 export type MetadataEvidence = components["schemas"]["MetadataEvidence"];
@@ -25,12 +29,22 @@ export type RequirementLeaf = components["schemas"]["RequirementLeaf"];
 export type RequirementGroup = components["schemas"]["RequirementGroup"];
 export type PricingRule = components["schemas"]["PricingRule"];
 export type Company = components["schemas"]["Company"];
+export type CompanyUpdate = components["schemas"]["CompanyUpdate"];
+export type CompanyEvidence = components["schemas"]["CompanyEvidence"];
 export type EligibilityRequest = components["schemas"]["EligibilityRequest"];
 export type EligibilityResult = components["schemas"]["EligibilityResult"];
 export type EvaluationRequest = components["schemas"]["EvaluationRequest"];
 export type EvaluationResult = components["schemas"]["EvaluationResult"];
 export type CurvePoint = components["schemas"]["CurvePoint"];
 export type Scenario = components["schemas"]["Scenario"];
+export type ScenarioSummary = components["schemas"]["ScenarioSummary"];
+export type ScenarioList = components["schemas"]["ScenarioList"];
+export type ReportSummary = components["schemas"]["ReportSummary"];
+export type ReportList = components["schemas"]["ReportList"];
+export type CompareRequest = components["schemas"]["CompareRequest"];
+export type CompareResult = components["schemas"]["CompareResult"];
+export type CompareEntry = components["schemas"]["CompareEntry"];
+export type CompareDelta = components["schemas"]["CompareDelta"];
 export type Report = components["schemas"]["Report"];
 export type Decision = components["schemas"]["ReportCreate"]["decision"];
 
@@ -119,6 +133,10 @@ export function getCompany(companyId: string, signal?: AbortSignal): Promise<Com
   return getJson<Company>(`/companies/${encodeURIComponent(companyId)}`, signal);
 }
 
+export function updateCompany(companyId: string, payload: CompanyUpdate, signal?: AbortSignal): Promise<Company> {
+  return sendJson<Company>("PUT", `/companies/${encodeURIComponent(companyId)}`, payload, { idempotencyKey: newIdempotencyKey(), signal });
+}
+
 export function checkEligibility(payload: EligibilityRequest, signal?: AbortSignal): Promise<EligibilityResult> {
   return sendJson<EligibilityResult>("POST", "/eligibility/check", payload, { signal });
 }
@@ -155,6 +173,68 @@ export function saveScenario(name: string, input: EvaluationRequest, signal?: Ab
 
 export function getScenario(scenarioId: string, signal?: AbortSignal): Promise<Scenario> {
   return getJson<Scenario>(`/scenarios/${encodeURIComponent(scenarioId)}`, signal);
+}
+
+export function listTenderScenarios(
+  tenderId: string,
+  opts?: { scopeId?: string; page?: number; pageSize?: number; signal?: AbortSignal },
+): Promise<ScenarioList> {
+  const params = new URLSearchParams({
+    page: String(opts?.page ?? 1),
+    page_size: String(opts?.pageSize ?? 20),
+  });
+  if (opts?.scopeId) params.set("scope_id", opts.scopeId);
+  return getJson<ScenarioList>(
+    `/tenders/${encodeURIComponent(tenderId)}/scenarios?${params}`,
+    opts?.signal,
+  );
+}
+
+export function listTenderReports(
+  tenderId: string,
+  opts?: { scopeId?: string; page?: number; pageSize?: number; signal?: AbortSignal },
+): Promise<ReportList> {
+  const params = new URLSearchParams({
+    page: String(opts?.page ?? 1),
+    page_size: String(opts?.pageSize ?? 20),
+  });
+  if (opts?.scopeId) params.set("scope_id", opts.scopeId);
+  return getJson<ReportList>(
+    `/tenders/${encodeURIComponent(tenderId)}/reports?${params}`,
+    opts?.signal,
+  );
+}
+
+export function compareScenarios(
+  payload: CompareRequest,
+  signal?: AbortSignal,
+): Promise<CompareResult> {
+  return sendJson<CompareResult>("POST", "/scenarios/compare", payload, { signal });
+}
+
+export function createTender(payload: TenderCreate, signal?: AbortSignal): Promise<Tender> {
+  return sendJson<Tender>("POST", "/tenders", payload, { idempotencyKey: newIdempotencyKey(), signal });
+}
+
+export async function uploadTenderDocument(
+  tenderId: string,
+  file: File,
+  opts?: { kind?: TenderDocumentKind; idempotencyKey?: string; signal?: AbortSignal },
+): Promise<TenderDocument> {
+  const form = new FormData();
+  form.append("file", file);
+  if (opts?.kind) form.append("kind", opts.kind);
+  const res = await fetch(`${API_BASE}/tenders/${encodeURIComponent(tenderId)}/documents`, {
+    method: "POST",
+    headers: {
+      "X-BidLab-Client": LOCAL_CLIENT,
+      "Idempotency-Key": opts?.idempotencyKey ?? newIdempotencyKey(),
+    },
+    body: form,
+    signal: opts?.signal,
+  });
+  if (!res.ok) await parseError(res);
+  return (await res.json()) as TenderDocument;
 }
 
 export function createReport(scenarioId: string, decision: Decision, note: string, signal?: AbortSignal): Promise<Report> {

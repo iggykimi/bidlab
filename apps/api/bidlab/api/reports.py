@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, Request, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -46,6 +46,23 @@ async def create_report(
 @router.get("/reports/{report_id}", response_model=g.Report, operation_id="get_report")
 def get_report(report_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Report:
     return g.Report.model_validate(reports_service.get_report(db, report_id))
+
+
+@router.get(
+    "/tenders/{tender_id}/reports",
+    response_model=g.ReportList,
+    operation_id="list_tender_reports",
+)
+def list_tender_reports(
+    tender_id: str,
+    db: Annotated[Session, Depends(deps.get_db)],
+    scope_id: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> g.ReportList:
+    return g.ReportList.model_validate(
+        reports_service.list_by_tender(db, tender_id, scope_id, page, page_size)
+    )
 
 
 @router.get("/reports/{report_id}/html", operation_id="get_report_html")

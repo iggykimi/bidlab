@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -8,6 +8,9 @@ import {
   fetchReportHtml,
   getReport,
   getScenario,
+  listTenderReports,
+  listTenderScenarios,
+  type Citation,
   type Decision,
   type Report,
   type Scenario,
@@ -17,18 +20,15 @@ import { Button } from "../../components/ui";
 import {
   formatEurosExact,
   formatFechaNormal,
+  formatMaxPoints,
   formatPoints,
 } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
-import {
-  listSavedReports,
-  listSavedScenarios,
-  rememberReport,
-  type SavedReportEntry,
-  type SavedScenarioEntry,
-} from "../../lib/session";
+import { loadSession } from "../../lib/session";
+import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
+import { CompareSection } from "./CompareSection";
 import { reportNoteSchema } from "../../lib/validation";
-import { fuenteEs } from "../../lib/citationNames";
+import { scenarioToDraft } from "./openAsCopy";
 import { anomalyEs, reasonEs } from "../pricing/sources";
 import { assumptionEs } from "../../lib/assumptions";
 import "./print.css";
@@ -111,13 +111,31 @@ function fechaLocal(d = new Date()): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
-function ScenarioDetail({ scenario }: { scenario: Scenario }) {
+/** Page -> citation count, ascending. Repeated pages collapse (UX-14). */
+function pagesOf(citations: Citation[]): [number, number][] {
+  const counts = new Map<number, number>();
+  for (const c of citations) counts.set(c.page_number, (counts.get(c.page_number) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => a[0] - b[0]);
+}
+
+function ScenarioDetail({
+  scenario,
+  onOpenAsCopy,
+}: {
+  scenario: Scenario;
+  onOpenAsCopy: (scenario: Scenario) => void;
+}) {
   const r = scenario.result;
   return (
     <div className="mt-2 grid gap-2 text-sm" data-testid="scenario-detail">
       <p>
         <strong>{scenario.name}</strong> · guardado {formatFechaNormal(scenario.created_at)}
       </p>
+      <div>
+        <Button variant="secondary" data-testid="open-as-copy" onClick={() => onOpenAsCopy(scenario)}>
+          Abrir como copia en Precio
+        </Button>
+      </div>
       <dl className="grid gap-1">
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Precio neto</dt>
@@ -185,9 +203,10 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
       <div>
         <h4 className="font-semibold">Fuentes ({scenario.context.citations.length})</h4>
         <ul className="list-disc pl-5">
-          {scenario.context.citations.map((c) => (
-            <li key={c.id}>
-              Página {c.page_number} del pliego de condiciones (PCAP) · {fuenteEs(c.match_status)}
+          {pagesOf(scenario.context.citations).map(([page, count]) => (
+            <li key={page}>
+              Página {page} del pliego de condiciones (PCAP) ·{" "}
+              {count === 1 ? "1 cita" : `${count} citas`}
             </li>
           ))}
         </ul>
@@ -196,7 +215,13 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
   );
 }
 
-function ReportDetail({ report }: { report: Report }) {
+function ReportDetail({
+  report,
+  onOpenAsCopy,
+}: {
+  report: Report;
+  onOpenAsCopy: (scenario: Scenario) => void;
+}) {
   const [preview, setPreview] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadRawError, setDownloadRawError] = useState<string | null>(null);
@@ -256,10 +281,10 @@ function ReportDetail({ report }: { report: Report }) {
           ))}
         </ul>
       </div>
-      <ScenarioDetail scenario={report.scenario} />
+      <ScenarioDetail scenario={report.scenario} onOpenAsCopy={onOpenAsCopy} />
       <div className="mt-2 flex flex-wrap gap-2">
         <Button data-testid="download-report" onClick={handleDownload}>
-          Descargar informe
+          Descargar HTML
         </Button>
         <Button variant="secondary" onClick={handlePreview}>
           {preview ? "Ocultar vista previa" : "Vista previa del informe"}
@@ -284,12 +309,39 @@ function ReportDetail({ report }: { report: Report }) {
 
 export function ReportTab({ workspace }: Props) {
   const [params, setParams] = useSearchParams();
-  const [scenarioEntries, setScenarioEntries] = useState<SavedScenarioEntry[]>(() => listSavedScenarios());
-  const [selectedScenario, setSelectedScenario] = useState<string | null>(() => params.get("scenario"));
-  const [reportEntries, setReportEntries] = useState<SavedReportEntry[]>(() => listSavedReports());
+  const queryClient = useQueryClient();
+  // Decision draft lives above the tabs: switching sections never loses
+  // the note, the choice or the selected scenario (UX-02).
+  const draftSession = loadSession();
+  const { drafts, updatePricing, updateReport } = useWorkspaceDrafts({
+    tenderId: workspace.tender.id,
+    scopeId: draftSession?.scope_id ?? "none",
+    companyId: draftSession?.company_id ?? "none",
+  });
+  const decision = drafts.report.decision as Decision;
+  const note = drafts.report.note;
+  const selectedScenario = params.get("scenario") ?? drafts.report.selectedScenario;
+  const setDecision = (value: Decision) => updateReport({ decision: value });
+  const setNote = (value: string) => updateReport({ note: value });
+  const setSelectedScenario = (value: string | null) => updateReport({ selectedScenario: value });
+  // Server-backed collections (UX-10): the lists belong to this tender and
+  // scope, not to a global browser index shared across tenders.
+  const scopeFilter = draftSession?.scope_id ?? undefined;
+  const scenariosQuery = useQuery({
+    queryKey: ["tenderScenarios", workspace.tender.id, scopeFilter],
+    queryFn: ({ signal }) =>
+      listTenderScenarios(workspace.tender.id, { scopeId: scopeFilter, pageSize: 100, signal }),
+    enabled: draftSession !== null,
+  });
+  const reportsQuery = useQuery({
+    queryKey: ["tenderReports", workspace.tender.id, scopeFilter],
+    queryFn: ({ signal }) =>
+      listTenderReports(workspace.tender.id, { scopeId: scopeFilter, pageSize: 100, signal }),
+    enabled: draftSession !== null,
+  });
+  const scenarioItems = [...(scenariosQuery.data?.items ?? [])].reverse();
+  const reportItems = [...(reportsQuery.data?.items ?? [])].reverse();
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
-  const [decision, setDecision] = useState<Decision>("study");
-  const [note, setNote] = useState("");
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportRawError, setExportRawError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -328,17 +380,27 @@ export function ReportTab({ workspace }: Props) {
     enabled: selectedReport !== null,
   });
 
-  function goPricing() {
+  function goTab(tab: string) {
     const next = new URLSearchParams(params);
-    next.set("tab", "pricing");
+    next.set("tab", tab);
     setParams(next);
+  }
+
+  function goPricing() {
+    goTab("pricing");
+  }
+
+  function handleOpenAsCopy(scenario: Scenario) {
+    const patch = scenarioToDraft(scenario, drafts.pricing.h);
+    updatePricing({ h: patch.h, scenarioName: patch.scenarioName, savedCopy: null });
+    goTab("pricing");
   }
 
   async function handleExport() {
     setExportError(null);
     setExportRawError(null);
     if (!selectedScenario) {
-      setExportError("Selecciona un escenario guardado antes de exportar.");
+      setExportError("Selecciona un escenario guardado antes de crear el informe.");
       return;
     }
     const parsed = reportNoteSchema.safeParse(note);
@@ -349,11 +411,11 @@ export function ReportTab({ workspace }: Props) {
     setExporting(true);
     try {
       const created = await createReport(selectedScenario, decision, parsed.data);
-      setReportEntries(rememberReport(created.id));
+      await queryClient.invalidateQueries({ queryKey: ["tenderReports", workspace.tender.id] });
       setSelectedReport(created.id);
-      toast.success("Informe exportado. Puedes descargarlo o previsualizarlo.");
+      toast.success("Informe creado. Puedes descargarlo o previsualizarlo.");
     } catch (err) {
-      setExportError(errorEs(err, "No pudimos exportar. Vuelve a intentarlo en unos segundos."));
+      setExportError(errorEs(err, "No pudimos crear el informe. Vuelve a intentarlo en unos segundos."));
       setExportRawError(errorCode(err));
     } finally {
       setExporting(false);
@@ -364,7 +426,22 @@ export function ReportTab({ workspace }: Props) {
     <div className="grid gap-4 [&>*]:min-w-0">
       <section aria-label="Escenarios guardados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Paso 1 · Abre una prueba guardada</h2>
-        {scenarioEntries.length === 0 && (
+        {scenariosQuery.isPending && (
+          <p className="mt-2 text-sm" role="status">
+            Cargando tus pruebas guardadas…
+          </p>
+        )}
+        {scenariosQuery.isError && (
+          <div className="mt-2">
+            <p role="alert" className="text-sm text-error">
+              No pudimos cargar tus pruebas guardadas.
+            </p>
+            <Button variant="secondary" className="mt-2" onClick={() => scenariosQuery.refetch()}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+        {scenariosQuery.data && scenarioItems.length === 0 && (
           <div className="mt-2 text-sm">
             <p>
               Todavía no has guardado ninguna prueba. Una prueba es una rebaja con unos rivales
@@ -375,16 +452,13 @@ export function ReportTab({ workspace }: Props) {
             </Button>
           </div>
         )}
-        {scenarioEntries.length > 0 && (
+        {scenarioItems.length > 0 && (
           <ul className="mt-2 space-y-2">
-            {scenarioEntries.map((entry) => (
+            {scenarioItems.map((entry) => (
               <li key={entry.id}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedScenario(entry.id);
-                    setScenarioEntries(listSavedScenarios());
-                  }}
+                  onClick={() => setSelectedScenario(entry.id)}
                   aria-pressed={selectedScenario === entry.id}
                   className={clsx(
                     "tnum w-full rounded-lg border px-3 py-2 text-left text-sm hover:bg-surface",
@@ -392,11 +466,9 @@ export function ReportTab({ workspace }: Props) {
                   )}
                 >
                   Abrir escenario <strong>{entry.name || "sin nombre"}</strong>
-                  {entry.savedAt && (
-                    <span className="block text-xs text-muted">
-                      Guardado {formatFechaNormal(entry.savedAt)}
-                    </span>
-                  )}
+                  <span className="block text-xs text-muted">
+                    Guardado {formatFechaNormal(entry.created_at)}
+                  </span>
                 </button>
               </li>
             ))}
@@ -408,11 +480,13 @@ export function ReportTab({ workspace }: Props) {
             No pudimos cargar el escenario. Vuelve a intentarlo en unos segundos.
           </p>
         )}
-        {scenarioQuery.data && <ScenarioDetail scenario={scenarioQuery.data} />}
+        {scenarioQuery.data && (
+          <ScenarioDetail scenario={scenarioQuery.data} onOpenAsCopy={handleOpenAsCopy} />
+        )}
       </section>
 
       <section aria-label="Nuevo informe" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Paso 2 · Decide y exporta</h2>
+        <h2 className="text-lg font-semibold">Paso 2 · Decide y crea tu informe</h2>
         <p className="mt-1 text-sm text-muted">
           Tú decides. El informe recoge tu prueba, de dónde sale cada dato y lo que te falta por
           comprobar.
@@ -446,7 +520,7 @@ export function ReportTab({ workspace }: Props) {
           />
         </label>
         <Button data-testid="export-report" onClick={handleExport} disabled={exporting} className="mt-3">
-          {exporting ? "Exportando…" : "Exportar informe"}
+          {exporting ? "Creando…" : "Crear informe"}
         </Button>
         {!selectedScenario && (
           <p className="mt-2 text-sm">Primero abre un escenario guardado de la lista de arriba.</p>
@@ -474,7 +548,7 @@ export function ReportTab({ workspace }: Props) {
           )}
           {!reportQuery.data && (
             <p className="mt-1 text-sm text-muted">
-              {reportEntries.length > 0
+              {reportItems.length > 0
                 ? "Abre un informe de la lista de abajo para imprimirlo o guardarlo en PDF."
                 : "Crea tu informe para imprimirlo o guardarlo en PDF."}
             </p>
@@ -482,11 +556,22 @@ export function ReportTab({ workspace }: Props) {
         </div>
       </section>
 
-      {reportEntries.length > 0 && (
+      {reportsQuery.isError && (
+        <section aria-label="Informes" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold">Informes</h2>
+          <p role="alert" className="mt-2 text-sm text-error">
+            No pudimos cargar tus informes.
+          </p>
+          <Button variant="secondary" className="mt-2" onClick={() => reportsQuery.refetch()}>
+            Reintentar
+          </Button>
+        </section>
+      )}
+      {reportItems.length > 0 && (
         <section aria-label="Informes" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Informes</h2>
           <ul className="mt-2 space-y-2">
-            {reportEntries.map((entry) => (
+            {reportItems.map((entry) => (
               <li key={entry.id}>
                 <button
                   type="button"
@@ -497,12 +582,10 @@ export function ReportTab({ workspace }: Props) {
                     selectedReport === entry.id ? "border-primary bg-primary-soft" : "border-line"
                   )}
                 >
-                  Abrir informe (expediente {workspace.tender.external_id})
-                  {entry.savedAt && (
-                    <span className="block text-xs text-muted">
-                      Exportado {formatFechaNormal(entry.savedAt)}
-                    </span>
-                  )}
+                  Abrir informe · <strong>{entry.scenario_name}</strong> · {decisionEs(entry.decision)}
+                  <span className="block text-xs text-muted">
+                    Creado {formatFechaNormal(entry.created_at)}
+                  </span>
                 </button>
               </li>
             ))}
@@ -513,9 +596,18 @@ export function ReportTab({ workspace }: Props) {
               No pudimos cargar el informe. Vuelve a intentarlo en unos segundos.
             </p>
           )}
-          {reportQuery.data && <ReportDetail report={reportQuery.data} />}
+          {reportQuery.data && (
+            <ReportDetail report={reportQuery.data} onOpenAsCopy={handleOpenAsCopy} />
+          )}
         </section>
       )}
+
+      <CompareSection
+        summaries={scenarioItems}
+        scoreMax={
+          workspace.pricing_rules[0] ? formatMaxPoints(workspace.pricing_rules[0].max_points) : "—"
+        }
+      />
     </div>
   );
 }

@@ -20,14 +20,20 @@ test("E07 saved scenario survives reload with identical values", async ({ page }
   await expect(page.getByTestId("scenario-detail")).toContainText("112.419,20");
   const hash = await page.getByTestId("scenario-hash").textContent();
   expect(hash).toMatch(/^[0-9a-f]{64}$/);
+  // La revisión congelada sobrevive a recargar (sin fijar el número: otros
+  // specs, como el editor de costes, mueven la revisión de la empresa).
+  const before = await page.getByTestId("scenario-detail").textContent();
+  const frozenRev = /empresa rev\. \d+/.exec(before ?? "")?.[0];
+  expect(frozenRev).toBeTruthy();
 
   await page.reload();
   await expect(page.getByTestId("tender-title")).toContainText("Tías");
   await openTab(page, "Informe");
-  await page.getByRole("button", { name: /Abrir escenario/ }).first().click();
+  // La lista es global del expediente: elegir por nombre, no por posición.
+  await page.getByRole("button", { name: /Abrir escenario E07 base/ }).click();
   await expect(page.getByTestId("scenario-hash")).toHaveText(hash ?? "");
   await expect(page.getByTestId("scenario-detail")).toContainText("112.419,20");
-  await expect(page.getByTestId("scenario-detail")).toContainText("empresa rev. 1");
+  await expect(page.getByTestId("scenario-detail")).toContainText(frozenRev ?? "");
   expect(guard.blocked()).toBe(0);
 });
 

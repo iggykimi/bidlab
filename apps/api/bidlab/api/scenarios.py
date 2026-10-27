@@ -2,12 +2,13 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Request, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from bidlab.api import deps
 from bidlab.api.errors import ERROR_RESPONSES
 from bidlab.schemas import generated as g
+from bidlab.services import compare as compare_service
 from bidlab.services import evaluation as evaluation_service
 from bidlab.services import idempotency
 from bidlab.services import scenarios as scenarios_service
@@ -54,3 +55,34 @@ async def save_scenario(
 @router.get("/scenarios/{scenario_id}", response_model=g.Scenario, operation_id="get_scenario")
 def get_scenario(scenario_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Scenario:
     return g.Scenario.model_validate(scenarios_service.get_scenario(db, scenario_id))
+
+
+@router.get(
+    "/tenders/{tender_id}/scenarios",
+    response_model=g.ScenarioList,
+    operation_id="list_tender_scenarios",
+)
+def list_tender_scenarios(
+    tender_id: str,
+    db: Annotated[Session, Depends(deps.get_db)],
+    scope_id: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> g.ScenarioList:
+    return g.ScenarioList.model_validate(
+        scenarios_service.list_by_tender(db, tender_id, scope_id, page, page_size)
+    )
+
+
+@router.post("/scenarios/compare", response_model=g.CompareResult, operation_id="compare_scenarios")
+def compare_scenarios(
+    payload: g.CompareRequest,
+    db: Annotated[Session, Depends(deps.get_db)],
+    _guard: Annotated[None, Depends(deps.require_local_client)],
+) -> g.CompareResult:
+    # Pure computation over frozen snapshots (no persistence), so no
+    # Idempotency-Key: nothing to deduplicate.
+    data = payload.model_dump(mode="json")
+    ids = [str(item) for item in data["scenario_ids"]]
+    compared = compare_service.compare_scenarios(db, ids, str(data["primary_id"]))
+    return g.CompareResult.model_validate(compared)

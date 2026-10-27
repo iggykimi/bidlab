@@ -12,6 +12,7 @@ import { DemoBadge } from "../../components/DemoBadge";
 import { diasRestantes } from "../../lib/dates";
 import { formatEurosExact, formatEurosHeadline, formatFechaNormal } from "../../lib/format";
 import { SummaryTab } from "./SummaryTab";
+import { WorkspaceDraftsProvider } from "./WorkspaceDrafts";
 
 const HASH = "c15cf7144811345e9f547cc9b4a86e9054831bdc8c84481bdb830ca81ddb0da4";
 const DEADLINE_AT = "2026-11-25T22:59:00Z";
@@ -97,7 +98,9 @@ function makeWorkspace(): Workspace {
 function renderSummary(ws: Workspace): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <SummaryTab workspace={ws} />
+      <WorkspaceDraftsProvider>
+        <SummaryTab workspace={ws} />
+      </WorkspaceDraftsProvider>
     </MemoryRouter>
   );
 }
@@ -175,7 +178,8 @@ describe("shell: facts and pricing", () => {
     expect(html).toContain("Tipo de servicio (código CPV)");
     expect(html).toContain("79411000 · Servicios generales de consultoría en gestión");
     expect(html).toContain("71356200 · Servicios de asistencia técnica");
-    expect(html).toContain("Plazo para presentar ofertas");
+    // UX-16: el plazo vive solo en Lo esencial, no duplicado en Hechos.
+    expect(html).not.toContain("Plazo para presentar ofertas");
     expect(html).toContain(formatFechaNormal(DEADLINE_AT));
     expect(html).toContain("Datos del 25 de octubre de 2026");
     expect(html).toContain("Ver publicación en Contratación del Estado");

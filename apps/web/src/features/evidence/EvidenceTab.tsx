@@ -71,7 +71,12 @@ export function EvidenceTab({ workspace }: Props) {
           cual» quiere decir que la cita reproduce el pliego palabra por palabra.
         </p>
         <p className="mt-2 text-sm">Desliza a la derecha para ver más →</p>
-        <div className="table-scroll mt-2 overflow-x-auto">
+        <div
+          className="table-scroll mt-2 overflow-x-auto"
+          tabIndex={0}
+          role="region"
+          aria-label="Tabla de citas, desplázate horizontalmente"
+        >
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
               <tr className="text-left">
@@ -105,7 +110,7 @@ export function EvidenceTab({ workspace }: Props) {
                       variant="chip"
                       className="min-h-[48px]"
                       onClick={() => setEvidence({ citation: c })}
-                      aria-label={`Ver página ${c.page_number} de la cita del pliego`}
+                      aria-label={`Ver página ${c.page_number} de ${citationName(c.id)}`}
                     >
                       Ver página {c.page_number}
                     </Button>

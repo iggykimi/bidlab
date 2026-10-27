@@ -97,7 +97,31 @@ export interface paths {
          */
         get: operations["list_tenders"];
         put?: never;
-        post?: never;
+        /**
+         * Create own tender
+         * @description Manual intake: creates an own tender with an initial scope from the supplied fields only. Never fetches remote data and never infers tax from a single amount. Idempotent via Idempotency-Key.
+         */
+        post: operations["create_tender"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tenders/{tender_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload tender document
+         * @description Attach a user-supplied local PDF to an own tender. Validates magic bytes, size and readability before storing; failures keep the tender intact. Idempotent via Idempotency-Key over the file bytes plus kind.
+         */
+        post: operations["upload_tender_document"];
         delete?: never;
         options?: never;
         head?: never;
@@ -368,6 +392,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tenders/{tender_id}/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List tender scenarios
+         * @description Light scenario items for one tender without full snapshots; optional scope_id filter with page/page_size pagination.
+         */
+        get: operations["list_tender_scenarios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tenders/{tender_id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List tender reports
+         * @description Light report items for one tender; optional scope_id filter with page/page_size pagination.
+         */
+        get: operations["list_tender_reports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scenarios/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare scenarios
+         * @description Typed comparison of 2-3 saved scenarios: shared-context check, Decimal deltas, dominance and indicators with Spanish motivos. Pure computation over frozen snapshots; nothing is persisted.
+         */
+        post: operations["compare_scenarios"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports": {
         parameters: {
             query?: never;
@@ -442,7 +526,7 @@ export interface components {
          * @description Machine-readable failure code; the frontend maps known codes to Spanish copy.
          * @enum {string}
          */
-        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_too_large" | "validation_error";
+        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_not_pdf" | "upload_too_large" | "validation_error";
         Error: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -532,6 +616,21 @@ export interface components {
             page: number;
             page_size: number;
             total: number;
+        };
+        TenderBasisInput: {
+            pbl_net: string | null;
+            pbl_gross: string | null;
+            tax_kind: ("VAT" | "IGIC" | "other" | "unknown") | null;
+            period_months: number | null;
+            currency: "EUR" | null;
+        };
+        TenderCreate: {
+            title: string;
+            external_id: string;
+            contracting_body: string;
+            source_url: string | null;
+            scope_label: string | null;
+            basis: components["schemas"]["TenderBasisInput"] | null;
         };
         Document: {
             id: components["schemas"]["EntityId"];
@@ -938,6 +1037,99 @@ export interface components {
             /** @enum {string} */
             mode: "demo";
         };
+        ScenarioSummary: {
+            id: components["schemas"]["EntityId"];
+            name: string;
+            scope_id: components["schemas"]["EntityId"];
+            rule_id: components["schemas"]["EntityId"];
+            rule_revision: number;
+            company_id: components["schemas"]["EntityId"];
+            company_revision: number;
+            price_net: components["schemas"]["Money"];
+            profit_net: components["schemas"]["Decimal"] | null;
+            score_value: components["schemas"]["Decimal"] | null;
+            /** @enum {string} */
+            score_status: "defined" | "unknown" | "unsupported";
+            /** @enum {string} */
+            anomaly_status: "unknown" | "not_applicable" | "possible_justification_required" | "not_flagged_under_assumptions";
+            snapshot_sha256: string;
+            created_at: string;
+        };
+        ScenarioList: {
+            items: components["schemas"]["ScenarioSummary"][];
+            page: number;
+            page_size: number;
+            total: number;
+        };
+        ReportSummary: {
+            id: components["schemas"]["EntityId"];
+            scenario_id: components["schemas"]["EntityId"];
+            scenario_name: string;
+            scope_id: components["schemas"]["EntityId"];
+            /** @enum {string} */
+            decision: "study" | "prepare" | "discard";
+            created_at: string;
+        };
+        ReportList: {
+            items: components["schemas"]["ReportSummary"][];
+            page: number;
+            page_size: number;
+            total: number;
+        };
+        CompareRequest: {
+            scenario_ids: components["schemas"]["EntityId"][];
+            primary_id: components["schemas"]["EntityId"];
+        };
+        CompareContext: {
+            tender_id: components["schemas"]["EntityId"];
+            scope_id: components["schemas"]["EntityId"];
+            budget_net: components["schemas"]["Money"];
+            rule_id: components["schemas"]["EntityId"];
+            rule_revision: number;
+            company_id: components["schemas"]["EntityId"];
+            company_revision: number;
+            rivals_fingerprint: string;
+            rivals_count: number;
+        };
+        CompareEntry: {
+            scenario_id: components["schemas"]["EntityId"];
+            name: string;
+            discount_rate: components["schemas"]["Decimal"];
+            price_net: components["schemas"]["Money"];
+            profit_net: components["schemas"]["Decimal"] | null;
+            score_value: components["schemas"]["Decimal"] | null;
+            /** @enum {string} */
+            score_status: "defined" | "unknown" | "unsupported";
+            /** @enum {string} */
+            anomaly_status: "unknown" | "not_applicable" | "possible_justification_required" | "not_flagged_under_assumptions";
+        };
+        CompareDelta: {
+            base_id: components["schemas"]["EntityId"];
+            other_id: components["schemas"]["EntityId"];
+            delta_price_net: components["schemas"]["Decimal"] | null;
+            delta_price_motivo: string | null;
+            delta_profit_net: components["schemas"]["Decimal"] | null;
+            delta_profit_motivo: string | null;
+            delta_score: components["schemas"]["Decimal"] | null;
+            delta_score_motivo: string | null;
+            cost_per_point_net: components["schemas"]["Decimal"] | null;
+            cost_per_point_motivo: string | null;
+            dominant_id: components["schemas"]["EntityId"] | null;
+            dominance_motivo: string;
+            /** @enum {string} */
+            indicator: "same_price_score" | "higher_profit_same_score" | "tradeoff" | "unknown" | "different_context";
+            indicator_motivo: string;
+        };
+        CompareResult: {
+            /** @enum {string} */
+            status: "comparable" | "no_comparable" | "partial";
+            scenario_ids: components["schemas"]["EntityId"][];
+            primary_id: components["schemas"]["EntityId"];
+            context: components["schemas"]["CompareContext"];
+            entries: components["schemas"]["CompareEntry"][];
+            deltas: components["schemas"]["CompareDelta"][];
+            warnings: string[];
+        };
     };
     responses: {
         /** @description See Error.code for exact failure */
@@ -1231,6 +1423,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TenderList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    create_tender: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tender"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    upload_tender_document: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description PDF bytes; type, size and limits are validated server-side.
+                     */
+                    file: string;
+                    /**
+                     * @description Document kind; defaults to other.
+                     * @default other
+                     * @enum {string}
+                     */
+                    kind?: "pcap" | "ppt" | "other";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Document"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -1784,6 +2083,129 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Scenario"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    list_tender_scenarios: {
+        parameters: {
+            query?: {
+                /** @example tias-whole */
+                scope_id?: components["schemas"]["EntityId"];
+                /** @example 1 */
+                page?: number;
+                /** @example 20 */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    list_tender_reports: {
+        parameters: {
+            query?: {
+                /** @example tias-whole */
+                scope_id?: components["schemas"]["EntityId"];
+                /** @example 1 */
+                page?: number;
+                /** @example 20 */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    compare_scenarios: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareResult"];
                 };
             };
             400: components["responses"]["BadRequest"];

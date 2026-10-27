@@ -107,7 +107,7 @@ export function CalculationSection({ workspace, state }: CalcProps) {
             <li>
               {scoreDefined
                 ? rule?.template_id === "proportional_inverse"
-                  ? `Tus puntos: ${formatMaxPoints(result.score.max_points)} × ${formatEurosExact(best as string)} ÷ ${formatEurosExact(result.price_net)} = ${formatPoints1(result.score.value as string)}.`
+                  ? `Tus puntos: ${formatMaxPoints(result.score.max_points)} puntos máximos × oferta más barata ÷ tu oferta = ${formatPoints1(result.score.value as string)}.`
                   : "Tus puntos dependen de la fórmula del pliego."
                 : "Tus puntos están sin determinar."}
             </li>

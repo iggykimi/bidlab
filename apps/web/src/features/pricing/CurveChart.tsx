@@ -70,7 +70,7 @@ const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
   domain: ["dataMin", "dataMax"],
   tick: { fontSize: 14 },
   tickFormatter: (v: number): string => formatEurosCompact(String(v)),
-  minTickGap: 32,
+  minTickGap: 48,
   label: { value: "Tu precio de oferta (€)", position: "insideBottom", offset: 0 },
 };
 
@@ -152,6 +152,12 @@ export function CurveChart({
   const yMax = Math.max(scoreMax, maxNum ?? 0) > 0 ? Math.max(scoreMax, maxNum ?? 0) : 1;
   const allScoresNull = rows.every((r) => r.score === null);
   const allProfitNull = rows.every((r) => r.profit === null);
+  // Own-dot label below the dot when it would clip against the top edge.
+  const profitMax = rows.reduce((m, r) => (r.profit !== null ? Math.max(m, r.profit) : m), 0);
+  const scoreLabelBelow =
+    ownScoreNum !== null && maxNum !== null && maxNum > 0 && ownScoreNum >= maxNum * 0.92;
+  const profitLabelBelow =
+    ownProfitNum !== null && profitMax > 0 && ownProfitNum >= profitMax * 0.92;
 
   // Contiguous flagged runs (≥2 points) for the hatch overlay.
   const flaggedRuns: { x1: number; x2: number }[] = [];
@@ -245,7 +251,7 @@ export function CurveChart({
                     y={maxNum}
                     stroke="var(--color-primary)"
                     strokeDasharray="4 4"
-                    label={{ value: `Máx. ${formatMaxPoints(ownMax)} puntos`, position: "insideTopRight", fontSize: 14 }}
+                    label={{ value: `Máx. ${formatMaxPoints(ownMax)} puntos`, position: "insideBottomRight", fontSize: 14 }}
                   />
                 )}
                 {validRivals.map((r, i) => (
@@ -280,7 +286,7 @@ export function CurveChart({
                     stroke="var(--color-primary)"
                     label={{
                       value: `Tu oferta ${formatEurosCompact(ownPrice)} · ${ownScore !== null ? formatPoints1(ownScore) : "—"} puntos`,
-                      position: "top",
+                      position: scoreLabelBelow ? "bottom" : "top",
                       fontSize: 14,
                     }}
                   />
@@ -307,7 +313,7 @@ export function CurveChart({
                 <XAxis {...PRICE_X_AXIS} />
                 <YAxis
                   tick={AXIS_TICK}
-                  width={64}
+                  width={88}
                   domain={["auto", "auto"]}
                   tickFormatter={(v: number): string => formatEurosCompact(String(v))}
                   label={{ value: "Beneficio (€)", angle: -90, position: "insideLeft" }}
@@ -355,7 +361,7 @@ export function CurveChart({
                     stroke="var(--color-chart-profit)"
                     label={{
                       value: `Tu oferta ${formatEurosCompact(ownPrice)}`,
-                      position: "top",
+                      position: profitLabelBelow ? "bottom" : "top",
                       fontSize: 14,
                     }}
                   />
@@ -370,7 +376,12 @@ export function CurveChart({
           Ver la curva como tabla ({curve.length} filas)
         </summary>
         <div className="mt-2">
-          <div className="table-scroll max-h-64 overflow-auto">
+          <div
+            className="table-scroll max-h-64 overflow-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Tabla de la curva, desplázate para ver todas las filas"
+          >
             <table className="w-full min-w-[560px] border-collapse text-sm">
               <caption className="sr-only">
                 Tabla con los puntos de la curva: rebaja, precio, puntos, beneficio y oferta

@@ -1,7 +1,7 @@
-import { useRef, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { clsx } from "clsx";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { getWorkspace } from "../../api/client";
 import { DemoBadge } from "../../components/DemoBadge";
 import { Skeleton } from "../../components/Skeleton";
@@ -10,6 +10,7 @@ import { formatEurosExact, formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
 import { loadSession } from "../../lib/session";
 import { SummaryTab } from "./SummaryTab";
+import { WorkspaceDraftsProvider } from "./WorkspaceDrafts";
 import { RequirementsTab } from "../requirements/RequirementsTab";
 import { PricingLab } from "../pricing/PricingLab";
 import { EvidenceTab } from "../evidence/EvidenceTab";
@@ -47,9 +48,13 @@ function lineaPresupuesto(pblNet: string | null, pblGross: string | null, taxKin
 export function WorkspacePage() {
   const { tenderId = "" } = useParams();
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
   const tab = parseTab(params.get("tab"));
   const [, startTransition] = useTransition();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const prevTabRef = useRef(tab);
+  const skipPanelFocusRef = useRef(false);
+  const firstTenderRef = useRef(tenderId);
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace", tenderId],
@@ -57,12 +62,40 @@ export function WorkspacePage() {
   });
 
   function selectTab(id: TabId) {
+    // Focus stays on the tab itself (APG roving); the panel effect below skips.
+    skipPanelFocusRef.current = true;
     startTransition(() => {
       const next = new URLSearchParams(params);
       next.set("tab", id);
       setParams(next, { replace: false });
     });
   }
+
+  // Programmatic navigation (deep links, "Abrir como copia", "Ir a Precio")
+  // unmounts the focused control: land on the panel instead of <body> (J3 P1-1).
+  // A hash target (e.g. #tu-coste) owns the focus instead: this parent effect
+  // runs after the child's and must not steal it back.
+  useEffect(() => {
+    if (prevTabRef.current !== tab) {
+      prevTabRef.current = tab;
+      const hashTarget = location.hash
+        ? document.getElementById(location.hash.slice(1))
+        : null;
+      if (!skipPanelFocusRef.current && !hashTarget) {
+        document.getElementById("contenido")?.focus({ preventScroll: true });
+      }
+    }
+    skipPanelFocusRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- location.hash is read at effect time.
+  }, [tab]);
+
+  // Arriving from intake ("Abrir tu licitación") lands on the title.
+  useEffect(() => {
+    if (firstTenderRef.current !== tenderId) {
+      firstTenderRef.current = tenderId;
+      document.getElementById("tender-title")?.focus({ preventScroll: true });
+    }
+  }, [tenderId]);
 
   /** APG roving tabindex: arrows move and select, Home/End jump. */
   function onTabKey(event: React.KeyboardEvent, index: number) {
@@ -122,7 +155,7 @@ export function WorkspacePage() {
       </p>
       <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 data-testid="tender-title" className="text-xl font-bold sm:text-2xl">
+          <h1 id="tender-title" data-testid="tender-title" tabIndex={-1} className="text-xl font-bold sm:text-2xl">
             {tender.title}
           </h1>
           <p className="mt-1 text-sm text-muted">
@@ -177,13 +210,15 @@ export function WorkspacePage() {
         className="mt-4"
         role="tabpanel"
         aria-labelledby={`tab-${tab}`}
-        tabIndex={0}
+        tabIndex={-1}
       >
-        {tab === "resumen" && <SummaryTab workspace={workspace} />}
-        {tab === "requisitos" && <RequirementsTab workspace={workspace} />}
-        {tab === "pricing" && <PricingLab workspace={workspace} />}
-        {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
-        {tab === "informe" && <ReportTab workspace={workspace} />}
+        <WorkspaceDraftsProvider>
+          {tab === "resumen" && <SummaryTab workspace={workspace} />}
+          {tab === "requisitos" && <RequirementsTab workspace={workspace} />}
+          {tab === "pricing" && <PricingLab workspace={workspace} />}
+          {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
+          {tab === "informe" && <ReportTab workspace={workspace} />}
+        </WorkspaceDraftsProvider>
       </div>
     </main>
   );

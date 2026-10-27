@@ -1,83 +1,87 @@
-# BidLab — hackathon submission draft (T34)
+# BidLab — hackathon submission draft
 
-Status: DRAFT. Do NOT publish or send. Final review and submission are the author's.
-Language/video/rules fields are NC until the accepted official rules are checked.
+Status: DRAFT. NOT SENT. Do NOT publish or send. The author reviews every field and sends from their own account. Language, video, and rules fields stay NC until the accepted official rules are checked.
+
+## Story
+
+**Understand the rule. Compare the trade-off. Keep the decision.**
+
+A small supplier reads a real tender. They check what each requirement asks. They compare what each discount costs in profit and gains in points. They keep the decision with its sources.
+
+## Hook (conditional)
+
+Verified hook (use this one). A 15 % discount reaches 49.0000 price points. But it keeps 11,833.60 EUR less profit than 5 % (10,585.60 vs 22,419.20). Is the deeper discount worth it? Profits: `fixtures/demo/expected.json`. Points: E2E E03 (`tests/e2e/e03-e06-pricing.spec.ts`).
+
+Verified hook (repo-side, 27-oct). "Would you give up 5,916.80 EUR for the same price score?" The 10 % case scores 49/49 at 106,502.40 EUR price and 16,502.40 EUR profit under stated synthetic hypotheses (cost 90,000 EUR, rivals as seeded). Sources: `apps/api/tests/integration/test_compare.py` golden + `tests/e2e/compare.spec.ts` CMP-02. Always paired with the synthetic-hypotheses label.
 
 ## Title
 
-BidLab — from a real tender document to a traceable bid decision
+BidLab — Understand the rule. Compare the trade-off. Keep the decision.
 
 ## Short description (≤ 500 chars)
 
-When an SME must decide whether to bid, BidLab turns the real Spanish tender
-PAI Tías 2026/00006554N (net budget 118,336 EUR, 49 price points) into a decision
-lab: page-cited requirements instead of scattered PDFs, price/cost/points under
-explicit hypotheses from a deterministic engine instead of gut feel, and an
-exportable report with sources to defend the call. No win prediction, no
-confidential rival data.
+BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,336 EUR, 49 price points) into a reviewable bid lab: page-cited requirements, price scenarios under explicit hypotheses from a deterministic engine, and an exportable report with sources. No win prediction. No confidential rival data.
 
 ## What it does
 
-- Loads the real Tías tender (net budget 118,336 EUR, 49 price points) into a local
-  library and workspace (Summary, Requirements, Pricing Lab, Evidence, Report).
-- Shows each requirement with its verdict (met / not met / unknown) and page
-  evidence: e.g. the technical threshold stays unknown with its quote on PCAP p. 6.
-- Pricing Lab: own discount slider (0–40 %), two hypothetical rivals A/B,
-  KPIs (price, profit/margin, scenario points, anomaly presumption), price–points
-  curve, step-by-step trace, declared assumptions. All numbers come from the
-  Python backend as decimal strings; the frontend computes nothing.
-- Anomaly verdict is a conditional presumption ("possible justification required"),
-  never an automatic exclusion.
-- Save immutable scenarios (64-hex snapshot hash, survives reload) and export an
-  HTML report with decision, note, pendings, hypotheses, sources and rule ids.
-  User note HTML is escaped; the export contains no secrets.
+- Loads the real Tías tender into a local library and workspace (Summary, Requirements, Pricing Lab, Evidence, Report).
+- Shows each requirement with its verdict (met / not met / unknown) and page evidence. The technical threshold stays unknown with its quote on PCAP p. 6.
+- Pricing Lab: own discount slider (0–40 %), two hypothetical rivals A/B, KPIs (price, profit/margin, scenario points, anomaly presumption), price–points curve, step-by-step trace, declared assumptions. All numbers come from the Python backend as decimal strings. The frontend computes nothing.
+- Anomaly verdict is a conditional presumption ("possible justification required"), never an automatic exclusion.
+- Saves immutable scenarios (64-hex snapshot hash, survives reload). Compares 2–3 scenarios side by side with backend Decimal deltas (price, profit, points, cost per point) and plain-language trade-off/dominance verdicts.
+- Own-tender intake: manual tender creation plus PDF upload (validated, stored locally); company cost editing with revision-conflict handling.
+- Exports an HTML report with decision, note, pendings, hypotheses, sources, and rule ids. User note HTML is escaped. The export contains no secrets.
 
 ## Meta models usage (only what really ran)
 
 - Model: muse-spark-1.3.
-- Real evidence: evidence/meta_smoke_status.json — status PASS, HTTP 200,
-  executed_inference true, checked 2026-10-26T19:05:43Z, usage 14 prompt +
-  236 completion tokens (222 reasoning, 0 cached), 250 total, 1647 ms,
-  provider_request_id da5dbf70-cf11-436d-910a-e3140e4caa8b.
-- Backend analysis pipeline exists (POST /analysis → job → verified citations)
-  and returns honest 503 provider_not_configured without a key; unit/integration
-  covered with an explicitly labelled offline stub (fixture_stub).
-- NOT claimed: live document extraction in the demo UI is pending; the demo runs
-  on a manually curated seed labelled "Demo curada", and the frontend "live
-  analysis" button truthfully reports unavailability (E09). G3 is partial:
-  smoke green, real extraction pending.
+- Real evidence: `evidence/meta_smoke_status.json` — status PASS, HTTP 200, executed_inference true, checked 2026-10-26T19:05:43Z, usage 14 prompt + 236 completion tokens (222 reasoning, 0 cached), 250 total, 1647 ms, provider_request_id da5dbf70-cf11-436d-910a-e3140e4caa8b.
+- Backend analysis pipeline exists (POST /analysis → job → verified citations). It returns honest 503 provider_not_configured without a key. Unit and integration tests cover it with an explicitly labelled offline stub (fixture_stub).
+- NOT claimed: live document extraction in the demo UI is pending. The demo runs on a manually curated seed labelled "Demo curada". The frontend "live analysis" button truthfully reports unavailability (E09). G3 is partial: smoke green, real extraction pending.
 
 ## Verification (real runs, Windows)
 
-- Playwright E2E E01–E12 + smoke: 14 passed on real local API + web, Chromium,
-  every spec guarded to loopback-only traffic (0 external calls).
-- Backend: pytest unit + integration + contracts green; ruff and mypy clean.
-- Frontend: lint, typecheck, build green; unit tests 8 passed; npm audit 0 vulns.
-- Demo oracles: fixtures/demo/expected.json (cost 90000.00, rivals 106502.40 /
-  110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
-- Detail: docs/verification-log.md.
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED claimed for the UX wave (27-oct-2026); judge-fix round re-verification TBD (docs-refresher did not run full verify.py: E2E starts servers, ports busy; `npm run lint` currently red on CostEditor.tsx:171, sibling WIP).
+- Backend: 310 tests passing (220 unit + 90 integration/contracts), observed 27-oct (docs-refresher, exit 0 both gates). Web: 145 unit tests passing (18 files, vitest exit 0, observed 27-oct). Ruff, mypy (44 files), tsc and vite build clean, observed 27-oct.
+- Playwright E2E: 38/38 green (sibling-observed, NOT re-verified by docs-refresher) — TBD final green. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- CI (GitHub Actions, 18 steps incl. Playwright): green on run 40487447554 (pre-judge-fix); judge-fix round TBD.
+- Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
+- Detail: `docs/verification-log.md`.
+
+## Claim labels (per `BidLab_Revision_UX_2026-10-27/submission/CLAIMS.json`)
+
+| # | Claim | Label | Source |
+|---|---|---|---|
+| C01 | Engine calculates price, profit, price score, conditional anomaly | OBSERVED | verification-log T09–T12, T22; E03–E05 |
+| C02 | 10 % vs 15 %: same 49 points, 5,916.80 EUR profit gap | OBSERVED | `test_compare.py` golden + `compare.spec.ts` CMP-02 |
+| C03 | Minimal real Meta inference on record | OBSERVED (minimal) | `evidence/meta_smoke_status.json`, 2026-10-26T19:05:43Z |
+| C04 | Document → Meta extraction → reviewed rule → simulator, end to end in UI | NOT VERIFIED | Demo uses curated seed; live button reports E09 |
+| C05 | Guided tour and animated comparison in app | PROPOSED | Not implemented; do not script or claim |
+| C06 | Work survives navigation and reload | OBSERVED | E07 + UX-01/UX-02 (drafts) + cost draft |
+| C07 | Commercial superiority or exclusive feature | NOT CLAIMED | No comparative test exists |
+| C08 | Win probability or optimal bid across all criteria | NOT CLAIMED | Engine covers price only; no predictor |
+| C09 | 180 s video as official requirement | NOT CONFIRMED | User target only; check accepted rules |
 
 ## Limits (stated honestly)
 
-- One real tender fully modelled; company and rivals are synthetic hypotheses.
+- One real tender fully modelled. Company cost and rivals are synthetic hypotheses, always labelled.
 - No national search, no OCR, no win prediction, no probability rankings.
-- Rule engine covers proportional-inverse + reviewed DSL templates only;
-  unsupported formulas yield score unknown.
-- "Add tender" upload button is disabled in this version (no creation endpoint).
-- Original PDFs are research copies, not redistributed (publication-manifest
-  flags); the report embeds citations and links, not full private documents.
-- No video recorded yet; duration/language/format per official rules (NC).
+- Rule engine covers proportional-inverse + reviewed DSL templates only. Unsupported formulas yield score unknown.
+- "Nueva licitación" creates own tenders and stores PDFs (`intake.spec.ts`); one-click extraction-review from an upload is not wired yet.
+- Original PDFs are research copies, not redistributed (publication-manifest flags). The report embeds citations and links, not full private documents.
+- No video recorded yet. Duration, language, and format per official rules (NC).
 
 ## Links
 
 - Repo: https://github.com/iggykimi/bidlab (public, main).
-- Demo video (≤180 s): NC (record from docs/demo-script-180s.md after author review).
+- Demo video (≤180 s target): NC (record from `docs/demo-script-180s.md` after author review).
 - Live demo URL: NC — local-only app; no localhost URL presented as public.
 - Report sample: generated locally via Export (see E08), not hosted.
+- Submission portal: NC — no form URL invented; the author maps these fields to the real form.
 
 ## Declarations
 
-- Code is the team's own; official tender documents are attributed third-party
-  material, not team-authored.
-- No secrets in repo, logs or fixtures (.env never tracked).
+- Code is the team's own. Official tender documents are attributed third-party material, not team-authored.
+- No secrets in repo, logs, or fixtures (.env never tracked).
 - No organizer contact made by the agent.
+- No submission sent. This file is preparation only.

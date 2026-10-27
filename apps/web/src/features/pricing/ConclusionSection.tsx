@@ -37,7 +37,7 @@ function cheapestRival(h: PricingState["h"]): Rival | null {
 }
 
 export function ConclusionSection({ state }: Props) {
-  const { result, pending, h } = state;
+  const { result, pending, h, resultStale } = state;
   if (!result) {
     if (!pending) return null;
     return (
@@ -107,6 +107,9 @@ export function ConclusionSection({ state }: Props) {
 
   return (
     <Card aria-label="Conclusión">
+      {resultStale && (
+        <p className="mb-1 text-sm text-muted">Cifras del cálculo anterior. Actualizando…</p>
+      )}
       <p data-testid="conclusion" className="text-lg font-semibold">
         {sentences.join(" ")}
       </p>

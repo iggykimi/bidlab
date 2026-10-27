@@ -217,3 +217,21 @@ def test_run_job_refusal_fails_explicitly(session: Session) -> None:
     assert job.status == "failed"
     assert job.error_code == "provider_refusal"
     assert job.result_revision is None
+
+
+def test_run_job_persists_run_manifest(session: Session) -> None:
+    session.add(_job_row("failed"))
+    session.commit()
+    job = jobs_service.run_job(session, "job-test-1", adapter=meta_adapter.StubExtractor())
+    assert job.status == "needs_review"
+    request = job.request_json
+    assert isinstance(request, dict)
+    manifest = request.get("manifest")
+    assert isinstance(manifest, dict)
+    assert manifest["run_id"] == "inv-job-test-1-a2"
+    assert manifest["mode"] == "fixture"
+    assert manifest["schema_version"] == "1.0"
+    assert manifest["prompt_version"] == meta_adapter.PROMPT_VERSION
+    assert manifest["pages"] == []
+    assert manifest["citation_ids"] == []
+    assert manifest["human_review"] == "pending"

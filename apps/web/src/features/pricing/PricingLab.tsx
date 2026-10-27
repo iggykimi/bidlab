@@ -2,6 +2,7 @@
 // Sin lógica ni estilos propios; el estado vive en usePricingState.
 
 import type { Workspace } from "../../api/client";
+import { CostEditor } from "../company/CostEditor";
 import { EvidenceDrawer } from "../evidence/EvidenceDrawer";
 import { ConclusionSection } from "./ConclusionSection";
 import { CalculationSection, CurveSection } from "./CurveSection";
@@ -49,16 +50,22 @@ export function PricingLab({ workspace }: Props) {
       <ConclusionSection state={state} />
       <KpiSection workspace={workspace} state={state} />
       <div className="grid gap-4 lg:grid-cols-12">
-        <div className="grid min-w-0 gap-4 lg:col-span-8 [&>*]:min-w-0">
+        <div className="grid min-w-0 content-start gap-4 lg:col-span-8 [&>*]:min-w-0">
           <DiscountSection state={state} />
           <CurveSection state={state} />
           <CalculationSection workspace={workspace} state={state} />
         </div>
         <div className="grid min-w-0 content-start gap-4 lg:col-span-4">
           <HypothesesForm state={state} />
+          <SaveScenarioSection workspace={workspace} state={state} />
+          <CostEditor
+            companyId={companyId}
+            tenderId={workspace.tender.id}
+            scopeId={scope.id}
+            scopeLabel={scope.label}
+          />
           <GroupReferencesSection state={state} />
           <AssumptionsSection state={state} />
-          <SaveScenarioSection workspace={workspace} state={state} />
           <IdentifiersDetails scope={scope} rule={rule} state={state} />
         </div>
       </div>

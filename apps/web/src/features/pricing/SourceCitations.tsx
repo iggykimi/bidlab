@@ -3,7 +3,7 @@
 
 import type { Citation } from "../../api/client";
 import { Button } from "../../components/ui";
-import { fuenteEs } from "../../lib/citationNames";
+import { citationName, fuenteEs } from "../../lib/citationNames";
 
 interface Props {
   citations: Citation[];
@@ -18,13 +18,13 @@ export function SourceCitations({ citations, onSelect, emptyText }: Props) {
     return <span className="text-xs text-muted">{emptyText ?? "Sin citas vinculadas"}</span>;
   }
   return (
-    <span className="inline-flex flex-wrap gap-1">
+    <span className="inline-flex flex-wrap gap-1" role="group" aria-label="Citas que respaldan esta cifra">
       {citations.map((c) => (
         <Button
           key={c.id}
           variant="chip"
           onClick={() => onSelect(c)}
-          aria-label={`p. ${c.page_number}: ver cita`}
+          aria-label={`p. ${c.page_number}: ver cita (${citationName(c.id)})`}
           title={`Página ${c.page_number} (${fuenteEs(c.match_status)})`}
         >
           p. {c.page_number}

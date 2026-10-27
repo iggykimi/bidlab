@@ -74,11 +74,11 @@ export function LibraryPage() {
           {loadingDemo ? "Cargando ejemplo…" : "Cargar ejemplo"}
         </Button>
         <Button
+          data-testid="nueva-licitacion"
           variant="subtle"
-          disabled
-          title="No disponible en esta versión: aún no puedes añadir pliegos"
+          onClick={() => navigate("/nueva-licitacion")}
         >
-          Añadir pliego
+          Nueva licitación
         </Button>
       </div>
       {demoError && (

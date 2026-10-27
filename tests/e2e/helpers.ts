@@ -47,7 +47,7 @@ export async function loadDemo(page: Page): Promise<void> {
   await expect(page.getByTestId("tender-title")).toContainText("Tías");
 }
 
-export async function openTab(page: Page, name: "Resumen" | "Requisitos" | "Precio" | "Evidencia" | "Informe"): Promise<void> {
+export async function openTab(page: Page, name: "Resumen" | "Requisitos" | "Precio" | "Citas" | "Informe"): Promise<void> {
   await page.getByRole("tab", { name }).click();
 }
 

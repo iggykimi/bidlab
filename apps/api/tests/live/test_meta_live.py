@@ -1,8 +1,8 @@
 """Opt-in live Meta check (T16). Skipped unless explicitly enabled.
 
 Enable with BIDLAB_RUN_LIVE=1 plus MODEL_API_KEY and META_API_URL in the
-environment. Performs exactly one minimal call (no pages) and validates the
-shape; never asserts live behavior from a fixture.
+environment. Performs exactly one minimal call (one synthetic page) and
+validates the shape; never asserts live behavior from a fixture.
 """
 
 import os
@@ -22,6 +22,8 @@ def test_live_extraction_opt_in() -> None:
     adapter = meta_adapter.select_adapter("live")
     assert adapter.is_live is True
     assert isinstance(adapter, meta_adapter.LiveExtractor)
-    result = adapter.extract([])
+    result = adapter.extract(
+        [meta_adapter.PageInput("live-smoke", 1, "Synthetic smoke page for opt-in live runs.")]
+    )
     assert result.mode == "live"
     g.ExtractionProposal.model_validate(result.proposal)

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   checkEligibility,
   getCompany,
@@ -119,6 +119,11 @@ export function requirementTestId(leafId: string): string | undefined {
   return undefined;
 }
 
+/** Reason codes the user can fix by contributing company data. */
+const APORTABLE = new Set(["missing_company_evidence", "evidence_not_reviewed", "value_unparseable"]);
+
+const COST_LINK = "?tab=pricing#tu-coste" as const;
+
 export function RequirementsTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
   const navigate = useNavigate();
@@ -211,8 +216,14 @@ export function RequirementsTab({ workspace }: Props) {
         </p>
       )}
 
-      <p className="mt-3 text-sm">Desliza a la derecha para ver más →</p>
-      <div className="table-scroll mt-2 overflow-x-auto">
+      {/* relative: containing block para los spans sr-only (absolutos) de "Tu acción";
+          sin ancestro posicionado escapan al viewport y desbordan la página en móvil (T30). */}
+      <div
+        className="table-scroll relative mt-3 overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Tabla de requisitos, desplázate horizontalmente"
+      >
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="text-left">
@@ -231,12 +242,15 @@ export function RequirementsTab({ workspace }: Props) {
               <th scope="col" className="border-b border-border p-2">
                 Tu empresa
               </th>
+              <th scope="col" className="border-b border-border p-2">
+                Tu acción
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-4 text-center text-muted">
+                <td colSpan={6} className="p-4 text-center text-muted">
                   Esta licitación aún no tiene requisitos revisados.
                 </td>
               </tr>
@@ -259,7 +273,7 @@ export function RequirementsTab({ workspace }: Props) {
                             variant="chip"
                             className="min-h-[48px]"
                             onClick={() => setEvidence({ citation: c })}
-                            aria-label={`Ver página ${c.page_number} en el pliego`}
+                            aria-label={`Ver página ${c.page_number} en el pliego: ${leaf.label}`}
                           >
                             Ver página {c.page_number}
                           </Button>
@@ -285,6 +299,29 @@ export function RequirementsTab({ workspace }: Props) {
                       "…"
                     )}
                   </td>
+                  <td className="border-b border-line p-2">
+                    {!item ? (
+                      "…"
+                    ) : item.verdict === "met" ? (
+                      "—"
+                    ) : item.reason_codes.some((c) => APORTABLE.has(c)) &&
+                      leaf.company_field !== "manual" ? (
+                      <Link
+                        to={`?tab=pricing&campo=${leaf.company_field}#tu-coste`}
+                        className="text-primary underline"
+                      >
+                        Aportar dato <span className="sr-only">para {leaf.label}</span>
+                      </Link>
+                    ) : item.verdict === "not_met" ? (
+                      groupLabel.includes("OR") ? (
+                        <>No cumples esta vía. Revisa las demás opciones de «{apartado}».</>
+                      ) : (
+                        "No cumples este requisito con tus datos actuales."
+                      )
+                    ) : (
+                      "Aún no podemos comprobar este requisito."
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -295,10 +332,27 @@ export function RequirementsTab({ workspace }: Props) {
         Este resultado solo cuenta los requisitos ya comprobados. Cuando basta con cumplir una de
         varias opciones, con una es suficiente.
       </p>
-      <p className="mt-2 text-sm text-muted">
-        La empresa de ejemplo trae datos fijos. Si falta un dato, compruébalo a mano con tus
-        cuentas.
-      </p>
+      {companyQuery.data && (
+        <p className="mt-2 text-sm text-muted">
+          {companyQuery.data.synthetic ? (
+            <>
+              Usas la empresa de ejemplo. Aporta tus datos en{" "}
+              <Link to={COST_LINK} className="text-primary underline">
+                Precio → Tu coste
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              Usas tus propios datos de empresa. Puedes actualizarlos en{" "}
+              <Link to={COST_LINK} className="text-primary underline">
+                Precio → Tu coste
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      )}
       <TechnicalDetails
         className="mt-3"
         items={[

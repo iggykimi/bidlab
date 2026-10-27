@@ -13,9 +13,9 @@ const moneyNet = z
 export const rivalPriceSchema = moneyNet;
 
 export const discountPercentSchema = z
-  .number({ error: "La baja debe ser un número" })
-  .min(DISCOUNT_MIN, "La baja mínima es 0 %")
-  .max(DISCOUNT_MAX, "La baja máxima es 40 %");
+  .number({ error: "La rebaja debe ser un número" })
+  .min(DISCOUNT_MIN, "La rebaja mínima es 0 %")
+  .max(DISCOUNT_MAX, "La rebaja máxima es 40 %");
 
 export const scenarioNameSchema = z
   .string()

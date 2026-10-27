@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
@@ -80,6 +81,50 @@ def get_report(session: Session, report_id: str) -> dict[str, Any]:
     if not isinstance(row.report_json, dict):
         raise ApiError(500, "report_corrupt", f"report {report_id}: invalid payload")
     return row.report_json
+
+
+def list_by_tender(
+    session: Session, tender_id: str, scope_id: str | None, page: int, page_size: int
+) -> dict[str, Any]:
+    """Paginated light report items for one tender in stable (created_at, id) order."""
+    scope_ids = scenarios_service.resolve_tender_scopes(session, tender_id, scope_id)
+    rows = (
+        session.scalars(
+            select(models.Report)
+            .join(models.Scenario, models.Report.scenario_id == models.Scenario.id)
+            .where(models.Scenario.scope_id.in_(scope_ids))
+            .order_by(models.Report.created_at, models.Report.id)
+        ).all()
+        if scope_ids
+        else []
+    )
+    scenario_rows = (
+        session.scalars(
+            select(models.Scenario).where(models.Scenario.id.in_([row.scenario_id for row in rows]))
+        ).all()
+        if rows
+        else []
+    )
+    by_id = {row.id: row for row in scenario_rows}
+    start = (page - 1) * page_size
+    items: list[dict[str, Any]] = []
+    for row in rows[start : start + page_size]:
+        payload = row.report_json if isinstance(row.report_json, dict) else {}
+        scenario = by_id.get(row.scenario_id)
+        if scenario is None:
+            raise ApiError(500, "report_corrupt", f"report {row.id}: scenario missing")
+        core = scenario.snapshot_json if isinstance(scenario.snapshot_json, dict) else {}
+        items.append(
+            {
+                "id": row.id,
+                "scenario_id": row.scenario_id,
+                "scenario_name": core.get("name"),
+                "scope_id": scenario.scope_id,
+                "decision": payload.get("decision"),
+                "created_at": row.created_at,
+            }
+        )
+    return {"items": items, "page": page, "page_size": page_size, "total": len(rows)}
 
 
 def html_path(report_id: str) -> Path:

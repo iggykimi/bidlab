@@ -80,7 +80,7 @@ export function anomalyVerdictEs(status: string): string {
     case "possible_justification_required":
       return "Sí";
     case "not_flagged_under_assumptions":
-      return "No";
+      return "No, en este supuesto";
     case "not_applicable":
       return "No aplicable";
     default:
@@ -101,7 +101,7 @@ export function anomalyEs(status: string): string {
     case "possible_justification_required":
       return "Posible necesidad de justificación";
     case "not_flagged_under_assumptions":
-      return "No parece sospechosa con estos datos";
+      return "No, en este supuesto";
     case "not_applicable":
       return "No aplicable";
     default:
