@@ -59,7 +59,7 @@
           {
             "document_id": "doc-tias-pcap",
             "page_number": 10,
-            "verbatim_excerpt": "todetias.es sede.ayuntamientodetias.es CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
+            "verbatim_excerpt": "CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
           }
         ],
         "confidence": "high",
@@ -172,7 +172,7 @@
         {
           "document_id": "doc-tias-pcap",
           "page_number": 10,
-          "verbatim_excerpt": "todetias.es sede.ayuntamientodetias.es CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
+          "verbatim_excerpt": "CRITERIOS PUNTUACIÓN 1. Precio 49 puntos 2. Memoria explicativa de la prestación del servicio 22 puntos 3. Adscripción de perfiles adicional"
         }
       ],
       "ambiguities": ["Clause 12.2 distinguishes inverse vs direct proportion; inverse selected on review, not by text match alone."]
