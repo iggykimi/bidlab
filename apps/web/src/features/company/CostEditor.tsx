@@ -102,6 +102,9 @@ interface Props {
 
 const EMPTY_ROW = { field_key: "", value: "", unit: "", reference: "" };
 
+/** Arrival flash on #tu-coste. Kept as a source literal so Tailwind generates it. */
+const FLASH_CLASSES = "ring-2 ring-primary";
+
 const inputClass = "mt-1 w-full rounded-lg border border-border px-3 py-2 text-base";
 
 /** Protocol money ("80000.00") -> display ("80000,00"). Parsing back is parsePrecioInput. */
@@ -140,7 +143,6 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
   const preselectedField =
     requestedField !== null && isKnownEvidenceKey(requestedField) ? requestedField : "";
   const [row, setRow] = useState({ ...EMPTY_ROW, field_key: preselectedField });
-  const [highlight, setHighlight] = useState(false);
   const [rowError, setRowError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -168,10 +170,13 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
     // Move focus too (not just the scroll), and flash the card so arrivals
     // from Requisitos know where to look (J1 P2-3, J3 P1-1).
     card.focus({ preventScroll: true });
-    setHighlight(true);
-    const timer = window.setTimeout(() => setHighlight(false), 2500);
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- companyQuery.data gates the retry.
+    // Transient flash via the DOM node: no state, no extra render.
+    card.classList.add(...FLASH_CLASSES.split(" "));
+    const timer = window.setTimeout(() => card.classList.remove(...FLASH_CLASSES.split(" ")), 2500);
+    return () => {
+      window.clearTimeout(timer);
+      card.classList.remove(...FLASH_CLASSES.split(" "));
+    };
   }, [location.hash, companyQuery.data]);
 
   const directParsed = draft ? moneyFieldToProtocol(draft.direct) : null;
@@ -231,12 +236,7 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
   }
 
   return (
-    <Card
-      id="tu-coste"
-      aria-label="Tu coste"
-      tabIndex={-1}
-      className={highlight ? "ring-2 ring-primary" : undefined}
-    >
+    <Card id="tu-coste" aria-label="Tu coste" tabIndex={-1}>
       <h2 className="text-lg font-semibold">¿Cuánto te cuesta este contrato?</h2>
       <p className="mt-1 text-sm text-muted">Este coste vale solo para este ámbito.</p>
       {companyQuery.isPending && (
