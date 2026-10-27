@@ -26,7 +26,7 @@ export function citationPages(citations: Citation[]): string {
 }
 
 const REASON_ES: Record<string, string> = {
-  incomplete_scenario: "escenario incompleto: falta el conjunto completo de ofertas",
+  incomplete_scenario: "prueba incompleta: falta el conjunto completo de ofertas",
   incomplete_rival_set: "conjunto rival incompleto: puntos y oferta sospechosa sin determinar",
   missing_variable: "falta una variable de la fórmula",
   out_of_range: "resultado fuera del rango 0..máximo (sin límite autorizado)",
@@ -49,10 +49,10 @@ export function reasonEs(code: string): string {
 const BRANCH_ES: Record<string, string> = {
   n1: "un licitador (umbral 75 % de la base)",
   n2: "dos licitadores (umbral 80 % de la otra oferta)",
-  n3_trimmed: "tres licitadores, media podada (máxima retirada)",
-  n3_no_trim: "tres licitadores, media sin poda",
-  n4_trimmed: "cuatro o más, media podada",
-  n4_no_trim: "cuatro o más, media sin poda",
+  n3_trimmed: "tres licitadores, media sin la oferta más alta",
+  n3_no_trim: "tres licitadores, media de las tres ofertas",
+  n4_trimmed: "cuatro o más, media sin la más alta",
+  n4_no_trim: "cuatro o más, media de todas las ofertas",
   n4_fallback_lowest3: "cuatro o más, media de las tres más bajas",
 };
 

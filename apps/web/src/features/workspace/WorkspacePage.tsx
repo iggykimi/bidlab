@@ -19,7 +19,7 @@ import { ReportTab } from "../report/ReportTab";
 const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "requisitos", label: "Requisitos" },
-  { id: "pricing", label: "Precio" },
+  { id: "precio", label: "Precio" },
   { id: "evidencia", label: "Citas" },
   { id: "informe", label: "Informe" },
 ] as const;
@@ -71,7 +71,7 @@ export function WorkspacePage() {
     });
   }
 
-  // Programmatic navigation (deep links, "Abrir como copia", "Ir a Precio")
+  // Programmatic navigation (deep links, "Duplicar esta prueba", "Ir a Precio")
   // unmounts the focused control: land on the panel instead of <body> (J3 P1-1).
   // A hash target (e.g. #tu-coste) owns the focus instead: this parent effect
   // runs after the child's and must not steal it back.
@@ -192,7 +192,7 @@ export function WorkspacePage() {
                 onClick={() => selectTab(t.id)}
                 onKeyDown={(e) => onTabKey(e, i)}
                 className={clsx(
-                  "pressable min-h-[44px] rounded-lg px-4 py-2 font-semibold",
+                  "pressable min-h-[48px] rounded-lg px-4 py-2 font-semibold",
                   tab === t.id
                     ? "bg-primary text-white hover:bg-primary-hover"
                     : "bg-white text-primary shadow-sm hover:bg-primary-soft"
@@ -215,7 +215,7 @@ export function WorkspacePage() {
         <WorkspaceDraftsProvider>
           {tab === "resumen" && <SummaryTab workspace={workspace} />}
           {tab === "requisitos" && <RequirementsTab workspace={workspace} />}
-          {tab === "pricing" && <PricingLab workspace={workspace} />}
+          {tab === "precio" && <PricingLab workspace={workspace} />}
           {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
           {tab === "informe" && <ReportTab workspace={workspace} />}
         </WorkspaceDraftsProvider>

@@ -111,7 +111,7 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
         <p role="status" className="mt-2 text-sm">
           Prueba «{saveState.name}» guardada.{" "}
           <Link
-            to={`/tenders/${workspace.tender.id}?tab=informe&scenario=${saveState.id}`}
+            to={`/tenders/${workspace.tender.id}?tab=informe&prueba=${saveState.id}`}
             className="text-primary underline"
           >
             Verla en el informe
@@ -120,9 +120,9 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
       )}
       {saveState && !saveIsCurrent && (
         <p role="status" className="mt-2 text-sm">
-          Cambios desde la copia guardada «{saveState.name}».{" "}
+          Cambios desde la prueba guardada «{saveState.name}».{" "}
           <Link
-            to={`/tenders/${workspace.tender.id}?tab=informe&scenario=${saveState.id}`}
+            to={`/tenders/${workspace.tender.id}?tab=informe&prueba=${saveState.id}`}
             className="text-primary underline"
           >
             Verla en el informe

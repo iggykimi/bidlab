@@ -44,14 +44,16 @@ describe("TechnicalDetails", () => {
     expect(html).toContain(">Copiar<");
   });
 
-  it("gives the summary and copy buttons 44px+ touch targets", () => {
+  it("gives the summary and copy buttons 48px+ touch targets", () => {
     const html = render();
-    expect(html).toContain("<summary class=\"flex min-h-[44px]");
-    expect(html).toContain("min-h-[44px] min-w-[44px]");
+    expect(html).toContain("<summary class=\"flex min-h-[48px]");
+    expect(html).toContain("min-h-[48px] min-w-[48px]");
   });
 
-  it("announces copy results through a live region", () => {
-    expect(render()).toContain('aria-live="polite"');
+  it("renders no empty live region before copying (J2 F1)", () => {
+    // The polite announcer mounts only with a message, so idle views
+    // carry no silent live nodes for assistive tech to track.
+    expect(render()).not.toContain("aria-live");
   });
 
   it("shows a Spanish empty state without copy buttons", () => {

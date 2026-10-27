@@ -369,3 +369,32 @@ Gates observados por docs-refresher (mismo árbol sucio):
 Nota honesta: en este entorno pytest no imprimió la línea resumen
 "N passed" (solo dots + exit 0); los conteos son conteo exacto de dots
 con cero F/E y exit 0. Candidatura NO enviada (pendiente autor).
+
+## Cierre ronda 2, 27-oct (observado, orquestador)
+
+- E2E hermético: storage por run (BIDLAB_E2E_RUN_DIR), probe
+  check-ports.mjs fail-fast, reuseExistingServer:false, prune en
+  global-setup. Causa raíz del acumulado: webServer arranca antes
+  que globalSetup, el wipe veía el servidor propio y se saltaba.
+- Suite E2E: 39/39 verde DOS veces seguidas (1.3m/run) + 39/39
+  dentro de verify.py. T30 móvil verde (culpable: spans sr-only
+  en links «Aportar dato»).
+- verify.py: 10/10 exit 0 (deps, pytest-unit,
+  pytest-integration-contracts, lint, typecheck, build,
+  test-unit, ruff, mypy, playwright-e2e). Log: verify-final.log
+  (no commiteado).
+- Backend: 310 passed (220 unit + 90 integ/contracts), exit 0.
+  Web: 146 passed (18 ficheros), exit 0. tsc/lint/ruff/format/
+  mypy/build limpios.
+- Jueces internos ronda 2: J1 7.5 (D1 vocabulario, D2=D4-F1,
+  D3 URLs, D4 fixtures, D5 poda), J2 7.5 (F1/F2 live-regions,
+  F3 44px, F4 drawer), J4 9.0 (F1 dominancia con empate);
+  J3 cancelado por el autor (juzga un modelo externo).
+  Aplicados: D1, D2/F1, D3 (+?prueba=), D4, D5, O3-NBSP,
+  O3-doble-signo, F3-48px, F4, live vacías fuera.
+- Residuales honestos: F1/F2 profundo (anunciador único +
+  debounce slider), menos tipográfico U+2212, glosario en app,
+  O2 precisión cabecera/exacta (diseño), O4 inglés en
+  secciones técnicas colapsadas.
+- Demo: docs/demo/*.png refrescados del run verde 17:57.
+- Push final único pendiente de CI verde (ahorro de minutos).

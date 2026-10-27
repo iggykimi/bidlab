@@ -59,11 +59,11 @@ test("UX-03 editing after save shows changes since the copy", async ({ page }) =
   await expect(page.getByText("Prueba «Borrador UX 13» guardada.")).toBeVisible();
 
   await page.getByTestId("discount-input").fill("14");
-  await expect(page.getByText("Cambios desde la copia guardada «Borrador UX 13».")).toBeVisible();
+  await expect(page.getByText("Cambios desde la prueba guardada «Borrador UX 13».")).toBeVisible();
   expect(guard.blocked()).toBe(0);
 });
 
-// UX-05: una copia guardada se reabre como borrador editable sin tocar el original.
+// UX-05: una prueba guardada se reabre como borrador editable sin tocar el original.
 test("UX-05 saved scenario reopens as an editable copy", async ({ page }) => {
   const guard = await installOfflineGuard(page);
   await loadDemo(page);
@@ -77,7 +77,7 @@ test("UX-05 saved scenario reopens as an editable copy", async ({ page }) => {
   await expect(page.getByText("Prueba «Base para copiar» guardada.")).toBeVisible();
 
   await page.getByRole("tab", { name: "Informe" }).click();
-  await page.getByRole("button", { name: /Abrir escenario Base para copiar/ }).click();
+  await page.getByRole("button", { name: /Abrir prueba Base para copiar/ }).click();
   const detail = page.getByTestId("scenario-detail");
   await expect(detail).toContainText("102.952,32");
   await detail.getByTestId("open-as-copy").click();

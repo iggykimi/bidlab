@@ -89,7 +89,7 @@ describe("pendienteEs", () => {
       "X (faltan ofertas rivales para calcularlos; sin confirmar si hay empresas del mismo grupo): y"
     );
     expect(pendienteEs("X (incomplete_scenario): y")).toBe(
-      "X (escenario incompleto: falta el conjunto completo de ofertas): y"
+      "X (prueba incompleta: falta el conjunto completo de ofertas): y"
     );
   });
 

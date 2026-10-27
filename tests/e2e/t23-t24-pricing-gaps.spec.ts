@@ -50,7 +50,7 @@ test("T23 group references show backend minima, mean, threshold and branch", asy
   await expect(refs).toContainText("Rival A");
   await expect(refs).toContainText("Ofertas de referencia (mínimos por grupo)");
   await expect(page.getByTestId("reference-count")).toHaveText("3");
-  await expect(refs).toContainText("tres licitadores, media sin poda");
+  await expect(refs).toContainText("tres licitadores, media de las tres ofertas");
   await expect(refs).toContainText("109.658");
   await expect(refs).toContainText("art. 149 LCSP");
   await expect(page.getByTestId("anomaly-detail")).toContainText("3 ofertas de referencia");

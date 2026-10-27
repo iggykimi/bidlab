@@ -76,7 +76,7 @@ export function TechnicalDetails({ items, title = "Detalles técnicos", classNam
 
   return (
     <details className={clsx("group rounded-lg border border-border bg-surface", className)}>
-      <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-4 py-2 font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-4 py-2 font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
         <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">
           ▸
         </span>
@@ -103,15 +103,17 @@ export function TechnicalDetails({ items, title = "Detalles técnicos", classNam
                         type="button"
                         onClick={() => void onCopy(index, item.value)}
                         aria-label={`Copiar ${item.label}`}
-                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-primary px-3 py-1 text-sm font-medium text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="inline-flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border border-primary px-3 py-1 text-sm font-medium text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       >
                         {copied ? "Copiado" : failed ? "No pudimos copiar" : "Copiar"}
                       </button>
                     )}
                   </dd>
-                  <p aria-live="polite" className="sr-only">
-                    {copied ? `${item.label} copiado al portapapeles.` : ""}
-                  </p>
+                  {copied && (
+                    <p aria-live="polite" className="sr-only">
+                      {item.label} copiado al portapapeles.
+                    </p>
+                  )}
                 </div>
               );
             })}

@@ -133,7 +133,7 @@ function ScenarioDetail({
       </p>
       <div>
         <Button variant="secondary" data-testid="open-as-copy" onClick={() => onOpenAsCopy(scenario)}>
-          Abrir como copia en Precio
+          Duplicar esta prueba en Precio
         </Button>
       </div>
       <dl className="grid gap-1">
@@ -167,7 +167,7 @@ function ScenarioDetail({
        * component cannot attach. E07 asserts that testid.
        */}
       <details className="rounded-lg border border-border bg-surface">
-        <summary className="flex min-h-[44px] cursor-pointer list-none items-center px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
           Detalles técnicos
         </summary>
         <div className="border-t border-border px-3 py-2">
@@ -320,7 +320,7 @@ export function ReportTab({ workspace }: Props) {
   });
   const decision = drafts.report.decision as Decision;
   const note = drafts.report.note;
-  const selectedScenario = params.get("scenario") ?? drafts.report.selectedScenario;
+  const selectedScenario = params.get("prueba") ?? drafts.report.selectedScenario;
   const setDecision = (value: Decision) => updateReport({ decision: value });
   const setNote = (value: string) => updateReport({ note: value });
   const setSelectedScenario = (value: string | null) => updateReport({ selectedScenario: value });
@@ -387,20 +387,20 @@ export function ReportTab({ workspace }: Props) {
   }
 
   function goPricing() {
-    goTab("pricing");
+    goTab("precio");
   }
 
   function handleOpenAsCopy(scenario: Scenario) {
     const patch = scenarioToDraft(scenario, drafts.pricing.h);
     updatePricing({ h: patch.h, scenarioName: patch.scenarioName, savedCopy: null });
-    goTab("pricing");
+    goTab("precio");
   }
 
   async function handleExport() {
     setExportError(null);
     setExportRawError(null);
     if (!selectedScenario) {
-      setExportError("Selecciona un escenario guardado antes de crear el informe.");
+      setExportError("Selecciona una prueba guardada antes de crear el informe.");
       return;
     }
     const parsed = reportNoteSchema.safeParse(note);
@@ -465,7 +465,7 @@ export function ReportTab({ workspace }: Props) {
                     selectedScenario === entry.id ? "border-primary bg-primary-soft" : "border-line"
                   )}
                 >
-                  Abrir escenario <strong>{entry.name || "sin nombre"}</strong>
+                  Abrir prueba <strong>{entry.name || "sin nombre"}</strong>
                   <span className="block text-xs text-muted">
                     Guardado {formatFechaNormal(entry.created_at)}
                   </span>
@@ -474,10 +474,10 @@ export function ReportTab({ workspace }: Props) {
             ))}
           </ul>
         )}
-        {scenarioQuery.isPending && selectedScenario && <p className="mt-2 text-sm">Cargando escenario…</p>}
+        {scenarioQuery.isPending && selectedScenario && <p className="mt-2 text-sm">Cargando prueba…</p>}
         {scenarioQuery.isError && (
           <p role="alert" className="mt-2 text-sm text-error">
-            No pudimos cargar el escenario. Vuelve a intentarlo en unos segundos.
+            No pudimos cargar la prueba. Vuelve a intentarlo en unos segundos.
           </p>
         )}
         {scenarioQuery.data && (
@@ -495,7 +495,7 @@ export function ReportTab({ workspace }: Props) {
           <legend className="text-sm font-medium">¿Qué has decidido?</legend>
           <div className="mt-1 flex flex-wrap gap-4 text-sm">
             {DECISIONS.map((d) => (
-              <label key={d.value} className="flex min-h-[44px] items-center gap-2">
+              <label key={d.value} className="flex min-h-[48px] items-center gap-2">
                 <input
                   type="radio"
                   name="decision"
@@ -523,7 +523,7 @@ export function ReportTab({ workspace }: Props) {
           {exporting ? "Creando…" : "Crear informe"}
         </Button>
         {!selectedScenario && (
-          <p className="mt-2 text-sm">Primero abre un escenario guardado de la lista de arriba.</p>
+          <p className="mt-2 text-sm">Primero abre una prueba guardada de la lista de arriba.</p>
         )}
         {exportError && (
           <p role="alert" title={exportRawError ?? undefined} className="mt-2 text-sm text-error">

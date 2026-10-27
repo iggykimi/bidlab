@@ -6,14 +6,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 
 const buttonVariants = cva(
-  "pressable inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold disabled:opacity-60",
+  "pressable inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold disabled:opacity-60",
   {
     variants: {
       variant: {
         primary: "bg-primary text-white hover:bg-primary-hover",
         secondary: "border border-primary bg-white text-primary hover:bg-primary-soft",
         subtle: "border border-border bg-white text-ink hover:bg-surface",
-        chip: "min-h-[44px] min-w-[44px] rounded-lg border border-primary px-2 py-1 text-sm font-medium text-primary hover:bg-primary-soft",
+        chip: "min-h-[48px] min-w-[48px] rounded-lg border border-primary px-2 py-1 text-sm font-medium text-primary hover:bg-primary-soft",
       },
     },
     defaultVariants: { variant: "primary" },

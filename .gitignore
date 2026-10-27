@@ -10,6 +10,8 @@ storage/
 evidence/originals/
 playwright-report/
 test-results/
+test-results-final*/
+verify-full.log
 .pytest_cache/
 .coverage
 *.sqlite3

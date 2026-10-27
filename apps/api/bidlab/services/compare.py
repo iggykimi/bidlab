@@ -221,10 +221,10 @@ def _group_thousands(integer: str) -> str:
 
 
 def _abs_money_es(value: Decimal) -> str:
-    """Absolute money for embedding in sentences: "11.833,60 €"."""
+    """Absolute money for embedding in sentences: "11.833,60 €" (NBSP, like the frontend)."""
     text = format(MO.quantize_money(abs(value)), "f")
     integer, _, fraction = text.partition(".")
-    return f"{_group_thousands(integer)},{fraction or '00'} €"
+    return f"{_group_thousands(integer)},{fraction or '00'}\u00a0€"
 
 
 def _abs_points_es(value: Decimal) -> str:
@@ -311,6 +311,15 @@ def _cost_per_point(
     )
 
 
+def _supera(winner: str, loser: str, more_profit: bool, more_score: bool) -> str:
+    """Dominance sentence naming only the strictly-better dimensions (J4 F1)."""
+    if more_profit and more_score:
+        return f"«{winner}» supera a «{loser}» en beneficio y puntos en este caso."
+    if more_profit:
+        return f"«{winner}» supera a «{loser}» en beneficio, con los mismos puntos, en este caso."
+    return f"«{winner}» supera a «{loser}» en puntos, con el mismo beneficio, en este caso."
+
+
 def _dominance(
     base: LoadedScenario, other: LoadedScenario, profit_known: bool, score_known: bool
 ) -> tuple[str | None, str]:
@@ -350,12 +359,12 @@ def _dominance(
         and (profit_base > profit_other or score_base > score_other)
     )
     if other_wins:
-        return other.scenario_id, (
-            f"«{other.name}» supera a «{base.name}» en beneficio y puntos en este caso."
+        return other.scenario_id, _supera(
+            other.name, base.name, profit_other > profit_base, score_other > score_base
         )
     if base_wins:
-        return base.scenario_id, (
-            f"«{base.name}» supera a «{other.name}» en beneficio y puntos en este caso."
+        return base.scenario_id, _supera(
+            base.name, other.name, profit_base > profit_other, score_base > score_other
         )
     return None, "Ninguna prueba supera a la otra en beneficio y puntos en este caso."
 

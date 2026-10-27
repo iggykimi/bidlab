@@ -56,7 +56,7 @@ def test_golden_compare_10_vs_15(seeded_client: TestClient) -> None:
     assert "mismos puntos" in (delta["cost_per_point_motivo"] or "")
     assert delta["dominant_id"] == id10
     assert delta["indicator"] == "higher_profit_same_score"
-    assert "5916,80 €" in delta["indicator_motivo"]
+    assert "5916,80\u00a0€" in delta["indicator_motivo"]
     assert "con los mismos puntos" in delta["indicator_motivo"]
 
 

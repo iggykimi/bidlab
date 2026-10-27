@@ -171,7 +171,12 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        className="flex-1 overflow-y-auto p-4"
+        tabIndex={0}
+        role="region"
+        aria-label="Contenido de la cita, desplázate verticalmente"
+      >
         <dl className="grid gap-2 text-sm">
           <div>
             <dt className="font-medium text-muted">Documento</dt>

@@ -30,7 +30,7 @@ test("E07 saved scenario survives reload with identical values", async ({ page }
   await expect(page.getByTestId("tender-title")).toContainText("Tías");
   await openTab(page, "Informe");
   // La lista es global del expediente: elegir por nombre, no por posición.
-  await page.getByRole("button", { name: /Abrir escenario E07 base/ }).click();
+  await page.getByRole("button", { name: /Abrir prueba E07 base/ }).click();
   await expect(page.getByTestId("scenario-hash")).toHaveText(hash ?? "");
   await expect(page.getByTestId("scenario-detail")).toContainText("112.419,20");
   await expect(page.getByTestId("scenario-detail")).toContainText(frozenRev ?? "");

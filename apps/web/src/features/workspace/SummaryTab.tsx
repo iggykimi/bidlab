@@ -175,7 +175,7 @@ export function SummaryTab({ workspace }: Props) {
             y comprueba si puedes presentarte.
           </li>
           <li>
-            <Link to="?tab=pricing" className="font-semibold text-primary underline hover:text-primary-ink">
+            <Link to="?tab=precio" className="font-semibold text-primary underline hover:text-primary-ink">
               Prueba precios
             </Link>{" "}
             y mira cuántos puntos consigues.
@@ -240,7 +240,7 @@ export function SummaryTab({ workspace }: Props) {
               <li>
                 {drafts.pricing.savedCopy
                   ? `Copia guardada «${drafts.pricing.savedCopy.name}».`
-                  : "Aún no guardas ninguna copia."}
+                  : "Aún no guardas ninguna prueba."}
               </li>
               <li>
                 Decisión: {decisionEs(drafts.report.decision as Decision).toLowerCase()}.
@@ -250,7 +250,7 @@ export function SummaryTab({ workspace }: Props) {
               </li>
             </ul>
             <p className="mt-3 space-x-4 text-sm">
-              <Link to="?tab=pricing" className="font-semibold text-primary underline hover:text-primary-ink">
+              <Link to="?tab=precio" className="font-semibold text-primary underline hover:text-primary-ink">
                 Retomar en Precio
               </Link>
               <Link to="?tab=informe" className="font-semibold text-primary underline hover:text-primary-ink">

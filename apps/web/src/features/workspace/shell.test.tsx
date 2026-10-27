@@ -155,7 +155,7 @@ describe("shell: Lo esencial", () => {
   it("guides through three steps linked to their tabs", () => {
     for (const [label, tab] of [
       ["Revisa los requisitos", "tab=requisitos"],
-      ["Prueba precios", "tab=pricing"],
+      ["Prueba precios", "tab=precio"],
       ["Guarda tu decisión", "tab=informe"],
     ] as const) {
       expect(html).toContain(label);

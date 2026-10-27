@@ -206,7 +206,7 @@
         {
           "kind": "group",
           "id": "req-econ",
-          "label": "Solvencia económica: OR de tres medios (p.5-6)",
+          "label": "Solvencia económica: basta con cumplir uno de tres medios (p.5-6)",
           "operator": "OR",
           "children": [
             {
@@ -234,7 +234,7 @@
             {
               "kind": "leaf",
               "id": "req-econ-networth",
-              "label": "Patrimonio neto o ratio activos/pasivos (ap.c) — manual",
+              "label": "Patrimonio neto o ratio (apartado c; lo compruebas a mano)",
               "company_field": "manual",
               "operator": "manual",
               "threshold": null,
@@ -264,7 +264,7 @@
             {
               "kind": "leaf",
               "id": "req-tech-similarity",
-              "label": "Igual o similar naturaleza + acreditación — manual",
+              "label": "De igual o similar naturaleza, con acreditación (lo compruebas a mano)",
               "company_field": "manual",
               "operator": "manual",
               "threshold": null,

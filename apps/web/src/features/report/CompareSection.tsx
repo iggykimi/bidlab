@@ -219,7 +219,7 @@ export function CompareSection({ summaries, scoreMax }: Props) {
           const capped = !checked && selected.length >= 3;
           return (
             <li key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <label className="flex min-h-[44px] items-center gap-2">
+              <label className="flex min-h-[48px] items-center gap-2">
                 <input
                   type="checkbox"
                   checked={checked}
@@ -233,7 +233,7 @@ export function CompareSection({ summaries, scoreMax }: Props) {
                 </span>
               </label>
               {checked && (
-                <label className="flex min-h-[44px] items-center gap-2 text-sm">
+                <label className="flex min-h-[48px] items-center gap-2 text-sm">
                   <input
                     type="radio"
                     name="compare-primary"

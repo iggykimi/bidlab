@@ -190,7 +190,7 @@ export function HypothesesForm({ state }: Props) {
           <span>Tomar estos como todos los rivales</span>
         </label>
         <details className="rounded-lg border border-border p-3">
-          <summary className="flex min-h-[44px] cursor-pointer items-center text-sm font-semibold">
+          <summary className="flex min-h-[48px] cursor-pointer items-center text-sm font-semibold">
             Opciones avanzadas
           </summary>
           <p className="mt-2 text-sm text-muted">

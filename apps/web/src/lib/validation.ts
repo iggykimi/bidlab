@@ -20,7 +20,7 @@ export const discountPercentSchema = z
 export const scenarioNameSchema = z
   .string()
   .trim()
-  .min(1, "El escenario necesita un nombre")
+  .min(1, "La prueba necesita un nombre")
   .max(200, "Máximo 200 caracteres");
 
 export const reportNoteSchema = z.string().max(4000, "Máximo 4000 caracteres");

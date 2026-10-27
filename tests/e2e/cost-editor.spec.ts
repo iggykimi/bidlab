@@ -64,18 +64,21 @@ test("requirements action link opens the cost card on pricing", async ({ page })
   expect(guard.blocked()).toBe(0);
 });
 
-// J1 P1-2: the link preselects the datum the requirement needs, in human words.
+// J1 P1-2 + D3: the link carries a human slug (no protocol key in the URL)
+// and the select lands on the decoded evidence field.
 test("aportar dato preselects the needed evidence field", async ({ page }) => {
   const guard = await installOfflineGuard(page);
   await loadDemo(page);
   await openTab(page, "Requisitos");
   const link = page.getByRole("link", { name: /Aportar dato/ }).first();
   const href = await link.getAttribute("href");
-  const field = new URL(href ?? "", "http://x/").searchParams.get("campo");
-  expect(field).toBeTruthy();
+  expect(href).toContain("tab=precio");
+  const slug = new URL(href ?? "", "http://x/").searchParams.get("campo");
+  expect(slug).toBe("volumen-anual");
+  expect(href).not.toContain("annual_turnover_best_3y_net");
   await link.click();
   await expect(page.locator("#tu-coste")).toBeFocused();
-  await expect(page.getByTestId("evidence-key")).toHaveValue(field ?? "");
+  await expect(page.getByTestId("evidence-key")).toHaveValue("annual_turnover_best_3y_net");
   await expect(page.getByTestId("evidence-key")).toContainText("Volumen anual");
   expect(guard.blocked()).toBe(0);
 });

@@ -11,6 +11,7 @@ import {
   type Workspace,
 } from "../../api/client";
 import { loadSession } from "../../lib/session";
+import { slugForEvidenceKey } from "../../lib/evidenceFields";
 import { formatEUR } from "../../lib/format";
 import { Button } from "../../components/ui";
 import { TechnicalDetails } from "../../components/TechnicalDetails";
@@ -72,15 +73,22 @@ function umbralEs(threshold: string | null | undefined, unit: string | null | un
 interface LeafRow {
   leaf: RequirementLeaf;
   groupLabel: string;
+  groupOperator: "AND" | "OR" | null;
   depth: number;
 }
 
-function collectLeaves(node: RequirementNode, groupLabel: string, depth: number, out: LeafRow[]): RequirementGroup | null {
+function collectLeaves(
+  node: RequirementNode,
+  groupLabel: string,
+  groupOperator: "AND" | "OR" | null,
+  depth: number,
+  out: LeafRow[],
+): RequirementGroup | null {
   if (node.kind === "leaf") {
-    out.push({ leaf: node, groupLabel, depth });
+    out.push({ leaf: node, groupLabel, groupOperator, depth });
     return null;
   }
-  for (const child of node.children) collectLeaves(child, node.label, depth + 1, out);
+  for (const child of node.children) collectLeaves(child, node.label, node.operator, depth + 1, out);
   return node;
 }
 
@@ -122,7 +130,7 @@ export function requirementTestId(leafId: string): string | undefined {
 /** Reason codes the user can fix by contributing company data. */
 const APORTABLE = new Set(["missing_company_evidence", "evidence_not_reviewed", "value_unparseable"]);
 
-const COST_LINK = "?tab=pricing#tu-coste" as const;
+const COST_LINK = "?tab=precio#tu-coste" as const;
 
 export function RequirementsTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
@@ -157,7 +165,7 @@ export function RequirementsTab({ workspace }: Props) {
   const rows: LeafRow[] = [];
   const groups: RequirementGroup[] = [];
   for (const node of workspace.requirements) {
-    const group = collectLeaves(node, "", 0, rows);
+    const group = collectLeaves(node, "", null, 0, rows);
     if (group) groups.push(group);
   }
 
@@ -255,10 +263,10 @@ export function RequirementsTab({ workspace }: Props) {
                 </td>
               </tr>
             )}
-            {rows.map(({ leaf, groupLabel }) => {
+            {rows.map(({ leaf, groupLabel, groupOperator }) => {
               const item = verdictById.get(leaf.id);
               const citations = citationsForLeaf(workspace, leaf);
-              const apartado = groupLabel.replace(/\bOR\b/g, "o").replace(/\bAND\b/g, "y");
+              const apartado = groupLabel;
               return (
                 <tr key={leaf.id} data-testid={requirementTestId(leaf.id)} data-requirement-id={leaf.id}>
                   <td className="border-b border-line p-2 font-medium">{leaf.label}</td>
@@ -307,13 +315,13 @@ export function RequirementsTab({ workspace }: Props) {
                     ) : item.reason_codes.some((c) => APORTABLE.has(c)) &&
                       leaf.company_field !== "manual" ? (
                       <Link
-                        to={`?tab=pricing&campo=${leaf.company_field}#tu-coste`}
+                        to={`?tab=precio&campo=${slugForEvidenceKey(leaf.company_field)}#tu-coste`}
                         className="text-primary underline"
                       >
                         Aportar dato <span className="sr-only">para {leaf.label}</span>
                       </Link>
                     ) : item.verdict === "not_met" ? (
-                      groupLabel.includes("OR") ? (
+                      groupOperator === "OR" ? (
                         <>No cumples esta vía. Revisa las demás opciones de «{apartado}».</>
                       ) : (
                         "No cumples este requisito con tus datos actuales."

@@ -166,5 +166,5 @@ th {
 
 /* Larger range thumb for touch (visual only; keyboard behavior unchanged). */
 input[type="range"] {
-  min-height: 44px;
+  min-height: 48px;
 }

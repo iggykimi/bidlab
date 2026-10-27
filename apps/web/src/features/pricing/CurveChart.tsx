@@ -177,10 +177,13 @@ export function CurveChart({
   let deltaClause = "";
   if (cheapest !== null && ownPriceNum !== null) {
     const delta = Math.round((ownPriceNum - Number(cheapest.norm)) * 100) / 100;
-    deltaClause =
-      delta === 0
-        ? " — empatas con el rival más barato"
-        : ` — ${formatSignedEurosExact(String(delta))} frente al rival más barato`;
+    if (delta === 0) {
+      deltaClause = " — empatas con el rival más barato";
+    } else if (delta < 0) {
+      deltaClause = ` — ${formatEurosExact(String(Math.abs(delta)))} menos que el rival más barato`;
+    } else {
+      deltaClause = ` — ${formatEurosExact(String(delta))} más que el rival más barato`;
+    }
   }
   const pointsTitle =
     ownScore !== null
@@ -372,7 +375,7 @@ export function CurveChart({
         )}
       </figure>
       <details data-testid="curve-table" id="curve-table">
-        <summary className="flex min-h-[44px] cursor-pointer items-center text-sm font-semibold">
+        <summary className="flex min-h-[48px] cursor-pointer items-center text-sm font-semibold">
           Ver la curva como tabla ({curve.length} filas)
         </summary>
         <div className="mt-2">

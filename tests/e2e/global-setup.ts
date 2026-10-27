@@ -2,44 +2,28 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Prune E2E storage leftovers from PREVIOUS runs only.
- *
- * Why not wipe the current run's dir here: Playwright boots `webServer`
- * BEFORE `globalSetup`, so by the time this runs the API server has already
- * opened its sqlite file. The old "wipe unless a server is alive" check
- * therefore always saw our own freshly-started server and skipped the wipe,
- * accumulating scenario rows across runs (duplicate names -> strict-mode
- * violations). Hermeticity now comes from playwright.config.ts, which points
- * each run at a fresh `test-results/bidlab-e2e-storage-run-<ts>-<pid>` dir;
- * this setup just deletes previous runs' dirs (plus the legacy fixed
- * `bidlab-e2e-storage` dir), never the current one from BIDLAB_E2E_RUN_DIR.
- * Fail-fast against foreign live servers is handled by
- * `reuseExistingServer: false` in the config: Playwright aborts if either
- * port is already taken instead of testing against stale state.
+ * Prune E2E storage dirs from previous runs. Each run owns a fresh dir
+ * (tests/e2e/playwright.config.ts sets BIDLAB_E2E_RUN_DIR), because the
+ * backend opens its sqlite before globalSetup runs, so wiping "the" dir
+ * here could never work. Keep the current run's dir, drop the rest plus
+ * the legacy fixed dir from before per-run storage.
  */
 export default async function globalSetup(): Promise<void> {
   const root = path.resolve(__dirname, "..", "..");
-  const current = process.env.BIDLAB_E2E_RUN_DIR;
-  if (!current) {
-    console.log("[e2e setup] BIDLAB_E2E_RUN_DIR not set; skipping prune.");
+  const current = process.env.BIDLAB_E2E_RUN_DIR ?? "";
+  const currentAbs = current === "" ? "" : path.resolve(root, current);
+  const results = path.join(root, "test-results");
+  let entries: string[] = [];
+  try {
+    entries = fs.readdirSync(results);
+  } catch {
     return;
   }
-  const currentAbs = path.resolve(root, current);
-  const resultsDir = path.resolve(root, "test-results");
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(resultsDir, { withFileTypes: true });
-  } catch {
-    return; // No test-results yet: nothing to prune.
-  }
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    if (entry.name !== "bidlab-e2e-storage" && !entry.name.startsWith("bidlab-e2e-storage-run-")) {
-      continue;
-    }
-    const abs = path.join(resultsDir, entry.name);
-    if (abs === currentAbs) continue;
-    fs.rmSync(abs, { recursive: true, force: true });
-    console.log(`[e2e setup] pruned stale storage ${abs}`);
+    const full = path.join(results, entry);
+    const isRunDir = entry.startsWith("bidlab-e2e-storage");
+    if (!isRunDir) continue;
+    if (full === currentAbs) continue;
+    fs.rmSync(full, { recursive: true, force: true });
   }
 }

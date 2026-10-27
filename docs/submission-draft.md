@@ -41,10 +41,10 @@ BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,33
 
 ## Verification (real runs, Windows)
 
-- `scripts/verify.py`: 10/10 ALL CHECKS PASSED claimed for the UX wave (27-oct-2026); judge-fix round re-verification TBD (docs-refresher did not run full verify.py: E2E starts servers, ports busy; `npm run lint` currently red on CostEditor.tsx:171, sibling WIP).
-- Backend: 310 tests passing (220 unit + 90 integration/contracts), observed 27-oct (docs-refresher, exit 0 both gates). Web: 145 unit tests passing (18 files, vitest exit 0, observed 27-oct). Ruff, mypy (44 files), tsc and vite build clean, observed 27-oct.
-- Playwright E2E: 38/38 green (sibling-observed, NOT re-verified by docs-refresher) — TBD final green. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- CI (GitHub Actions, 18 steps incl. Playwright): green on run 40487447554 (pre-judge-fix); judge-fix round TBD.
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 27-oct-2026 (deps, pytest-unit, pytest-integration-contracts, lint, typecheck, build, test-unit, ruff, mypy, playwright-e2e).
+- Backend: 310 tests passing (220 unit + 90 integration/contracts), exit 0, observed 27-oct. Web: 146 unit tests passing (18 files, vitest exit 0, observed 27-oct). Ruff, mypy (44 files), tsc, eslint and vite build clean, observed 27-oct.
+- Playwright E2E: 39/39 green twice in a row (hermetic per-run storage), observed 27-oct. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2; final push pending confirmation (single push, CI-minutes budget).
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
 

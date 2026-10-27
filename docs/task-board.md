@@ -3,13 +3,22 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
-## Ronda judge-fix 27-oct (en curso, sin commitear — docs-refresher)
+## Ronda judge-fix 27-oct (cerrada 27-oct, push final pendiente CI)
 
-- Uncommitted sibling work: compare/intake backend + UI, persistent
-  drafts, CostEditor, a11y, 4 new E2E specs.
-- Gates observed 27-oct: backend 310 green, web unit 145 green,
-  ruff/mypy/tsc/build green; eslint RED (CostEditor.tsx:171);
-  E2E + full verify.py TBD (ports busy). See verification-log.
+- Alcance A + intake: drafts persistentes, comparar 2-3, coste
+  editable, requisitos accionables, crear licitación + subir PDF.
+- Round 2 interno: J1 7.5 (D1-D5) + J2 7.5 (F1-F4) + J4 9.0 (F1);
+  J3 cancelado por el autor (juzga otro modelo). Residuales
+  aplicados: vocabulario «prueba», URLs humanas (?tab=precio,
+  ?campo=<slug>, ?prueba=), fixtures redactados, operador explicito,
+  «poda» humanizada, dominancia honesta con empate, NBSP en €,
+  controles 48px, drawer region, live-regions vacias fuera.
+- Residuales honestos (juez externo): consolidar live-regions
+  (anunciador unico + debounce slider), guion ASCII vs menos
+  tipografico, glosario en app.
+- Gates 27-oct: backend 310, web 146, E2E 39/39 x2, verify.py
+  10/10 exit 0, ruff/mypy/tsc/lint/build verdes. CI del push
+  final por confirmar.
 - T02/T04 still pending (author externals). Submission NOT sent.
 
 ## Gates

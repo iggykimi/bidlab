@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   EVIDENCE_FIELD_OPTIONS,
   isKnownEvidenceKey,
+  keyForEvidenceSlug,
   labelForEvidenceKey,
+  slugForEvidenceKey,
 } from "./evidenceFields";
 
 describe("evidenceFields", () => {
@@ -21,5 +23,16 @@ describe("evidenceFields", () => {
     expect(isKnownEvidenceKey("professional_insurance_net")).toBe(true);
     expect(isKnownEvidenceKey("manual")).toBe(false);
     expect(labelForEvidenceKey("future_key")).toBe("future_key");
+  });
+
+  it("mapea slugs de URL legibles a claves de protocolo (J1 D3)", () => {
+    for (const option of EVIDENCE_FIELD_OPTIONS) {
+      expect(option.slug).not.toContain("_");
+      expect(keyForEvidenceSlug(option.slug)).toBe(option.key);
+      expect(slugForEvidenceKey(option.key)).toBe(option.slug);
+    }
+    expect(keyForEvidenceSlug("volumen-anual")).toBe("annual_turnover_best_3y_net");
+    expect(keyForEvidenceSlug("no-existe")).toBeNull();
+    expect(slugForEvidenceKey("future_key")).toBe("future_key");
   });
 });

@@ -18,6 +18,7 @@ import { errorEs } from "../../lib/errors";
 import {
   EVIDENCE_FIELD_OPTIONS,
   isKnownEvidenceKey,
+  keyForEvidenceSlug,
   labelForEvidenceKey,
 } from "../../lib/evidenceFields";
 import { parsePrecioInput, PRECIO_INPUT_MODE } from "../../lib/format";
@@ -136,12 +137,16 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
     scopeId,
     companyId,
   });
-  // RequirementsTab links here with ?campo=<company_field> so the select
-  // starts on the datum that leaf needs (J1 P1-2).
+  // RequirementsTab links here with ?campo=<slug> so the select starts on
+  // the datum that leaf needs (J1 P1-2, D3). Raw keys still decode, for
+  // bookmarks written before slugs existed.
   const [params] = useSearchParams();
   const requestedField = params.get("campo");
   const preselectedField =
-    requestedField !== null && isKnownEvidenceKey(requestedField) ? requestedField : "";
+    requestedField === null
+      ? ""
+      : (keyForEvidenceSlug(requestedField) ??
+        (isKnownEvidenceKey(requestedField) ? requestedField : ""));
   const [row, setRow] = useState({ ...EMPTY_ROW, field_key: preselectedField });
   const [rowError, setRowError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

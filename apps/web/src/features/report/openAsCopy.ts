@@ -1,4 +1,4 @@
-// Una copia guardada vuelve al simulador como borrador editable (UX-15).
+// Una prueba guardada vuelve al simulador como borrador editable (UX-15).
 // La copia original no se toca: el borrador reevalúa con los datos
 // vigentes y se guarda, si quieres, con otro nombre.
 

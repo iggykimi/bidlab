@@ -73,8 +73,11 @@ def test_golden_10_vs_15_same_score_profit_delta() -> None:
     assert "mismos puntos" in delta["cost_per_point_motivo"]
     assert delta["dominant_id"] == "scn-10"
     assert "supera" in delta["dominance_motivo"]
+    # J4 F1: tied points must never read as superiority in points.
+    assert "con los mismos puntos" in delta["dominance_motivo"]
+    assert "en beneficio y puntos" not in delta["dominance_motivo"]
     assert delta["indicator"] == "higher_profit_same_score"
-    assert "5916,80 €" in delta["indicator_motivo"]
+    assert "5916,80\u00a0€" in delta["indicator_motivo"]
 
 
 def test_primary_10_other_15_negative_delta() -> None:
