@@ -209,16 +209,15 @@ export function IntakePage() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl p-4 sm:p-8">
+    <main id="main" className="wrap" tabIndex={-1}>
+      <div className="mx-auto w-full max-w-2xl">
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:bg-white focus:p-2">
         Saltar al contenido
       </a>
-      <p>
-        <Link to="/" className="text-primary underline hover:text-primary-ink">
-          ← Volver a mis licitaciones
-        </Link>
+      <p className="backrow">
+        <Link to="/">← Volver a mis licitaciones</Link>
       </p>
-      <h1 className="mt-2 text-2xl font-bold">Nueva licitación</h1>
+      <h1 className="mt-2">Nueva licitación</h1>
       <div className="mt-3">
         <Stepper step={step} />
       </div>
@@ -226,7 +225,7 @@ export function IntakePage() {
       <div id="contenido" className="mt-6">
         {step === 1 && (
           <form onSubmit={(e) => void handleCreate(e)} noValidate aria-label="Identificar licitación">
-            <h2 className="text-lg font-semibold">¿Qué licitación quieres dar de alta?</h2>
+            <h2>¿Qué licitación quieres dar de alta?</h2>
             <p className="mt-1 text-sm text-muted">Escribe los datos tal como aparecen en el anuncio.</p>
             <div className="mt-4 grid gap-4">
               <Field htmlFor="intake-title" label="Título" error={errors.title}>
@@ -379,7 +378,7 @@ export function IntakePage() {
 
         {step === 2 && tenderId && (
           <section aria-label="Añadir documento">
-            <h2 className="text-lg font-semibold">¿Quieres añadir el pliego en PDF?</h2>
+            <h2>¿Quieres añadir el pliego en PDF?</h2>
             <p data-testid="intake-created" className="mt-1 text-sm text-muted">
               Tu licitación <span className="font-semibold text-ink">{tenderTitle}</span> ya existe. Este
               paso es opcional.
@@ -473,6 +472,7 @@ export function IntakePage() {
             </div>
           </section>
         )}
+      </div>
       </div>
     </main>
   );

@@ -46,7 +46,7 @@ export function PricingLab({ workspace }: Props) {
       );
     }
     return (
-      <p role="status" className="rounded-xl bg-white p-4 shadow-sm">
+      <p role="status" className="surface">
         Carga el ejemplo desde la biblioteca para simular con la empresa de ejemplo.
       </p>
     );
@@ -92,13 +92,13 @@ export function PricingLab({ workspace }: Props) {
     }
     if (!scope || !rule) {
       return (
-        <p role="alert" className="rounded-xl bg-white p-4 shadow-sm">
+        <p role="alert" className="surface">
           Esta licitación no tiene ámbito ni fórmula de puntos. No puedes simular nada.
         </p>
       );
     }
     return (
-      <p role="alert" className="rounded-xl bg-white p-4 shadow-sm">
+      <p role="alert" className="surface">
         {rule.review_status === "blocked"
           ? "La fórmula de puntos está bloqueada. No puedes simular hasta su revisión."
           : "La fórmula de puntos aún no está revisada. No puedes simular hasta su revisión."}

@@ -173,7 +173,7 @@ export function RequirementsTab({ workspace }: Props) {
 
   if (!session || !companyId) {
     return (
-      <section aria-label="Requisitos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+      <section aria-label="Requisitos" className="surface">
         <p role="status" className="text-sm">
           Para comprobar los requisitos, primero abre el ejemplo.
         </p>
@@ -189,8 +189,8 @@ export function RequirementsTab({ workspace }: Props) {
   const rawReasons = [...new Set((eligibilityQuery.data?.items ?? []).flatMap((i) => i.reason_codes))];
 
   return (
-    <section aria-label="Requisitos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">¿Puedes presentarte?</h2>
+    <section aria-label="Requisitos" className="surface">
+      <h2>¿Puedes presentarte?</h2>
       {companyQuery.isPending || eligibilityQuery.isPending ? (
         <p className="mt-2 text-sm" role="status">
           Comprobando si tu empresa cumple los requisitos…

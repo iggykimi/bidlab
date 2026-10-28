@@ -456,8 +456,8 @@ export function ReportTab({ workspace }: Props) {
 
   if (gated) {
     return (
-      <section aria-label="Informe bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">¿Por qué no ves el informe?</h2>
+      <section aria-label="Informe bloqueado" className="surface">
+        <h2>¿Por qué no ves el informe?</h2>
         <p className="mt-2 text-sm">
           Aún no apruebas la fórmula de puntos. Sin fórmula aprobada no hay pruebas que guardar.
         </p>
@@ -470,8 +470,8 @@ export function ReportTab({ workspace }: Props) {
 
   return (
     <div className="grid gap-4 [&>*]:min-w-0">
-      <section aria-label="Escenarios guardados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Paso 1 · Abre una prueba guardada</h2>
+      <section aria-label="Escenarios guardados" className="surface">
+        <h2>Paso 1 · Abre una prueba guardada</h2>
         {scenariosQuery.isPending && (
           <p className="mt-2 text-sm" role="status">
             Cargando tus pruebas guardadas…
@@ -531,8 +531,8 @@ export function ReportTab({ workspace }: Props) {
         )}
       </section>
 
-      <section aria-label="Nuevo informe" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Paso 2 · Decide y crea tu informe</h2>
+      <section aria-label="Nuevo informe" className="surface">
+        <h2>Paso 2 · Decide y crea tu informe</h2>
         <p className="mt-1 text-sm text-muted" data-testid="report-draft-state">
           Borrador (sin archivar). Tú decides: elige una opción, escribe tu nota y crea el informe.
         </p>
@@ -602,8 +602,8 @@ export function ReportTab({ workspace }: Props) {
       </section>
 
       {reportsQuery.isError && (
-        <section aria-label="Informes archivados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Informes archivados</h2>
+        <section aria-label="Informes archivados" className="surface">
+          <h2>Informes archivados</h2>
           <p role="alert" className="mt-2 text-sm text-error">
             No pudimos cargar tus informes.
           </p>
@@ -613,8 +613,8 @@ export function ReportTab({ workspace }: Props) {
         </section>
       )}
       {reportItems.length > 0 && (
-        <section aria-label="Informes archivados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Informes archivados</h2>
+        <section aria-label="Informes archivados" className="surface">
+          <h2>Informes archivados</h2>
           <ul className="mt-2 space-y-2">
             {reportItems.map((entry) => (
               <li key={entry.id}>

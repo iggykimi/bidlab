@@ -25,8 +25,8 @@ export function EvidenceTab({ workspace }: Props) {
 
   return (
     <div className="grid gap-4 [&>*]:min-w-0">
-      <section aria-label="Documentos" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Documentos</h2>
+      <section aria-label="Documentos" className="surface">
+        <h2>Documentos</h2>
         {workspace.documents.length === 0 && (
           <p className="mt-2 text-sm">Aún no hay documentos en esta licitación.</p>
         )}
@@ -63,9 +63,9 @@ export function EvidenceTab({ workspace }: Props) {
 
       <section
         aria-label="Dónde lo dice el pliego"
-        className="rounded-xl bg-white p-4 shadow-sm sm:p-6"
+        className="surface"
       >
-        <h2 className="text-lg font-semibold">Dónde lo dice el pliego</h2>
+        <h2>Dónde lo dice el pliego</h2>
         <p className="mt-1 text-sm text-muted">
           Cada cifra respaldada enlaza con la página del pliego donde aparece. «Copiado tal
           cual» quiere decir que la cita reproduce el pliego palabra por palabra.

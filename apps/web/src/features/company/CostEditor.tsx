@@ -282,7 +282,7 @@ export function CostEditor({ companyId, tenderId, scopeId, scopeLabel }: Props) 
 
   return (
     <Card id="tu-coste" aria-label="Tu coste" tabIndex={-1}>
-      <h2 className="text-lg font-semibold">¿Cuánto te cuesta este contrato?</h2>
+      <h2>¿Cuánto te cuesta este contrato?</h2>
       <p className="mt-1 text-sm text-muted">Este coste vale solo para este ámbito.</p>
       {companyQuery.isPending && (
         <p role="status" className="mt-2 text-sm">

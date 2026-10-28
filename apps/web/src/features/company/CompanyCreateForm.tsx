@@ -81,7 +81,7 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
 
   return (
     <form onSubmit={(e) => void handleCreate(e)} noValidate aria-label="Crear tu empresa">
-      <h2 className="text-lg font-semibold">{heading ?? "¿Quién eres en esta licitación?"}</h2>
+      <h2>{heading ?? "¿Quién eres en esta licitación?"}</h2>
       <p className="mt-1 text-sm text-muted">Tus costes valen solo para este ámbito.</p>
       <div className="mt-4 grid gap-4">
         <div>

@@ -162,7 +162,7 @@ export function AnalysisTracker({ workspace }: Props) {
   if (workspace.documents.length === 0) {
     return (
       <Card aria-label="Análisis automático">
-        <h2 className="text-lg font-semibold">¿Pides propuestas automáticas?</h2>
+        <h2>¿Pides propuestas automáticas?</h2>
         <p className="mt-2 text-sm">
           Esta licitación no tiene documento. El formulario de abajo basta para revisar.
         </p>
@@ -184,7 +184,7 @@ export function AnalysisTracker({ workspace }: Props) {
 
   return (
     <Card aria-label="Análisis automático">
-      <h2 className="text-lg font-semibold">¿Pides propuestas automáticas?</h2>
+      <h2>¿Pides propuestas automáticas?</h2>
       {trackWarning && (
         <Alert tone="warn" className="mt-2" data-testid="analysis-track-warning">
           No pudimos guardar el seguimiento en este navegador. Si recargas, pide el análisis de

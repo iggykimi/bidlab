@@ -30,7 +30,7 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
   const stored: Citation[] = workspace.citations ?? [];
   return (
     <Card aria-label="Propuestas automáticas">
-      <h2 className="text-lg font-semibold">¿Qué datos confirmas?</h2>
+      <h2>¿Qué datos confirmas?</h2>
       <p className="mt-1 text-sm text-muted">
         La máquina leyó tu documento. Marca solo lo que esté bien; lo demás se queda fuera.
       </p>

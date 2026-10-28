@@ -103,7 +103,7 @@ export function ReviewTab({ workspace }: Props) {
 
   if (!scope || !basis) {
     return (
-      <p role="alert" className="rounded-xl bg-white p-4 shadow-sm">
+      <p role="alert" className="surface">
         Esta licitación no tiene ámbito. No puedes revisarla.
       </p>
     );
@@ -254,7 +254,7 @@ export function ReviewTab({ workspace }: Props) {
       <RadarSection report={workspace.consistency} />
 
       <Card aria-label="Revisión manual">
-        <h2 className="text-lg font-semibold">¿Qué fórmula apruebas?</h2>
+        <h2>¿Qué fórmula apruebas?</h2>
         <p className="mt-1 text-sm text-muted">
           Revisión {workspace.interpretation_revision}. Tú decides cada dato.
         </p>
@@ -511,7 +511,7 @@ export function ReviewTab({ workspace }: Props) {
       </Card>
 
       <Card aria-label="Historial de revisiones">
-        <h2 className="text-lg font-semibold">¿Qué aprobaste hasta ahora?</h2>
+        <h2>¿Qué aprobaste hasta ahora?</h2>
         <p className="mt-1 text-sm text-muted">
           Revisión actual: {workspace.interpretation_revision}. Solo ves lo que apruebas en este navegador.
         </p>

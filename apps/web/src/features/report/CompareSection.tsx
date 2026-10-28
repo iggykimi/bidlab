@@ -199,7 +199,7 @@ export function CompareSection({ summaries, scoreMax }: Props) {
   if (summaries.length < 2) {
     return (
       <Card aria-label="Comparar pruebas">
-        <h2 className="text-lg font-semibold">¿Qué prueba te conviene más?</h2>
+        <h2>¿Qué prueba te conviene más?</h2>
         <p className="mt-2 text-sm">
           Guarda al menos dos pruebas en Precio y podrás verlas lado a lado con sus diferencias.
         </p>
@@ -209,7 +209,7 @@ export function CompareSection({ summaries, scoreMax }: Props) {
 
   return (
     <Card aria-label="Comparar pruebas">
-      <h2 className="text-lg font-semibold">¿Qué prueba te conviene más?</h2>
+      <h2>¿Qué prueba te conviene más?</h2>
       <p className="mt-1 text-sm text-muted">
         Elige dos o tres. La base es la prueba con la que comparas las demás.
       </p>

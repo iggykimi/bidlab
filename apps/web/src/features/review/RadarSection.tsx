@@ -48,7 +48,7 @@ function FindingCard({ finding, testid }: { finding: ConsistencyFinding; testid:
 export function RadarSection({ report }: Props) {
   return (
     <Card aria-label="Radar de incoherencias">
-      <h2 className="text-lg font-semibold">Radar de incoherencias</h2>
+      <h2>Radar de incoherencias</h2>
       <p className="mt-1 text-sm text-muted">
         Si dos fuentes compatibles dicen valores distintos, lo verás aquí con ambas citas. La
         herramienta pregunta; tú decides.

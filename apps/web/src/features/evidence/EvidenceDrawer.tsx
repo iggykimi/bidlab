@@ -201,7 +201,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
       >
       <div className="flex items-start justify-between gap-3 border-b border-line p-4">
         <div>
-          <h2 className="text-lg font-semibold">Lo que dice el pliego</h2>
+          <h2>Lo que dice el pliego</h2>
           <p data-testid="evidence-page" className="tnum mt-1 text-sm text-muted">
             Página {page} de {total ?? "—"}
           </p>

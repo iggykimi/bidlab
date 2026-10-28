@@ -148,7 +148,7 @@ export function SummaryTab({ workspace }: Props) {
     <div className="grid gap-4">
       {own && checklist && (
         <Card aria-label="Tu recorrido" data-testid="recorrido-propio">
-          <h2 className="text-lg font-semibold">¿Qué te falta?</h2>
+          <h2>¿Qué te falta?</h2>
           <ol className="mt-2 list-decimal space-y-2 pl-6 text-sm">
             <li>
               {checklist.company ? (
@@ -199,7 +199,7 @@ export function SummaryTab({ workspace }: Props) {
         </Card>
       )}
       <Card aria-label="Lo esencial" data-testid="lo-esencial">
-        <h2 className="text-lg font-semibold">Lo esencial</h2>
+        <h2>Lo esencial</h2>
         <dl className="mt-3 grid gap-2 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted">Plazo</dt>
@@ -254,7 +254,7 @@ export function SummaryTab({ workspace }: Props) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card aria-label="Hechos de la licitación">
-          <h2 className="text-lg font-semibold">Hechos</h2>
+          <h2>Hechos</h2>
           <dl className="mt-3 grid gap-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Valor estimado del contrato</dt>
@@ -297,7 +297,7 @@ export function SummaryTab({ workspace }: Props) {
 
         <div className="grid content-start gap-4">
           <Card aria-label="Tu trabajo">
-            <h2 className="text-lg font-semibold">Tu trabajo</h2>
+            <h2>Tu trabajo</h2>
             <ul className="mt-2 space-y-1 text-sm">
               <li>Borrador de precio: rebaja del {rebate}.</li>
               <li>
@@ -326,7 +326,7 @@ export function SummaryTab({ workspace }: Props) {
           </Card>
 
           <Card aria-label="¿Cómo suma puntos tu oferta?">
-            <h2 className="text-lg font-semibold">¿Cómo suma puntos tu oferta?</h2>
+            <h2>¿Cómo suma puntos tu oferta?</h2>
             {workspace.pricing_rules.length === 0 ? (
               <p className="mt-2 text-sm">Aún no hay fórmula de puntos revisada.</p>
             ) : (
