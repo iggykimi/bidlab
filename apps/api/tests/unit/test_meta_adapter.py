@@ -1,6 +1,5 @@
 """T16: stub honesty, typed failures (I07) and the live gate."""
 
-import hashlib
 import importlib
 import json
 from pathlib import Path
@@ -123,13 +122,23 @@ def test_select_adapter_live_with_key_and_endpoint(
     assert adapter.is_live is True
 
 
-# --- Official chat/completions translation (revision 2026-10-27) ---
+# --- Bounded hybrid packet (PKG-T06) ---
 
 
-def _page_dicts() -> list[dict[str, Any]]:
+def _page_inputs() -> list[meta_adapter.PageInput]:
     return [
-        {"document_id": "doc-a", "page_number": 6, "text": "precio neto 118336.00 euros"},
-        {"document_id": "doc-a", "page_number": 10, "text": "plazo 24 meses"},
+        meta_adapter.PageInput(
+            document_id="doc-a",
+            page_number=6,
+            normalized_text="precio neto 118336.00 euros",
+            document_sha256="a" * 64,
+        ),
+        meta_adapter.PageInput(
+            document_id="doc-a",
+            page_number=10,
+            normalized_text="plazo 24 meses",
+            document_sha256="a" * 64,
+        ),
     ]
 
 
@@ -142,53 +151,205 @@ def _tiny_schema() -> dict[str, Any]:
     }
 
 
-def test_request_uses_official_envelope() -> None:
-    payload = meta_adapter.build_chat_request(_page_dicts(), _tiny_schema())
-    assert set(payload.keys()) == {"model", "messages", "response_format"}
-    assert "pages" not in payload
-    assert "prompt_version" not in payload
-    assert payload["model"] == "muse-spark-1.3"
-    messages = payload["messages"]
-    assert [m["role"] for m in messages] == ["system", "user"]
-    assert "null for unknown" in messages[0]["content"]
-    user_pages = json.loads(messages[1]["content"])["pages"]
-    assert [(p["document_id"], p["page_number"]) for p in user_pages] == [
-        ("doc-a", 6),
-        ("doc-a", 10),
-    ]
-    assert (
-        user_pages[0]["text_sha256"] == hashlib.sha256(b"precio neto 118336.00 euros").hexdigest()
+def _image_page() -> meta_adapter.PageInput:
+    png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+        b"\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde"
     )
+    return meta_adapter.PageInput(
+        document_id="doc-a",
+        page_number=6,
+        normalized_text="precio neto",
+        document_sha256="a" * 64,
+        image_bytes=png,
+        image_id="im-doc-a-6",
+        image_sha256="b" * 64,
+        image_width=100,
+        image_height=200,
+    )
+
+
+def test_hybrid_envelope_shape() -> None:
+    payload, packet = meta_adapter.build_hybrid_request(_page_inputs(), _tiny_schema())
+    assert set(payload.keys()) == {"model", "messages", "max_completion_tokens", "response_format"}
+    assert "reasoning_effort" not in payload
+    assert "pages" not in payload
+    assert payload["model"] == "muse-spark-1.3"
+    assert payload["max_completion_tokens"] == meta_adapter.MAX_COMPLETION_TOKENS
+    messages = payload["messages"]
+    assert [part["role"] for part in messages] == ["system", "user"]
+    assert "Return unknowns as null" in messages[0]["content"]
+    parts = messages[1]["content"]
+    assert [part["type"] for part in parts] == ["text", "text"]
+    first = json.loads(parts[0]["text"])
+    assert first["source"]["document_id"] == "doc-a"
+    assert first["source"]["physical_page"] == 6
+    assert first["source"]["image_id"] is None
+    assert first["page_text"] == "precio neto 118336.00 euros"
     response_format = payload["response_format"]
     assert response_format["type"] == "json_schema"
-    assert response_format["json_schema"]["name"] == "bidlab_extraction"
+    assert response_format["json_schema"]["name"] == "bidlab_extraction_v1"
+    assert response_format["json_schema"]["strict"] is True
     assert response_format["json_schema"]["schema"]["type"] == "object"
+    assert len(packet["pages"]) == 2
+    assert len(packet["payload_identity"]) == 64
+    assert len(packet["schema_sha256"]) == 64
+    assert packet["semantic_review"] == "pending"
+    assert packet["mode"] == "request_built_not_executed"
 
 
-def test_request_rejects_empty_pages() -> None:
+def test_hybrid_image_part_shape() -> None:
+    payload, packet = meta_adapter.build_hybrid_request([_image_page()], _tiny_schema())
+    parts = payload["messages"][1]["content"]
+    assert [part["type"] for part in parts] == ["text", "image_url"]
+    assert parts[1]["image_url"]["url"].startswith("data:image/png;base64,")
+    meta = packet["pages"][0]
+    assert meta["image_id"] == "im-doc-a-6"
+    assert meta["image_sha256"] == "b" * 64
+    assert (meta["image_width"], meta["image_height"]) == (100, 200)
+
+
+def test_hybrid_empty_text_with_image_ok() -> None:
+    page = meta_adapter.PageInput(
+        document_id="doc-a",
+        page_number=1,
+        normalized_text="",
+        document_sha256="a" * 64,
+        image_bytes=b"\x89PNG Adams",
+        image_id="im-1",
+        image_sha256="c" * 64,
+        image_width=10,
+        image_height=10,
+    )
+    payload, _packet = meta_adapter.build_hybrid_request([page], _tiny_schema())
+    assert len(payload["messages"][1]["content"]) == 2
+
+
+def test_hybrid_reasoning_opt_in_changes_identity() -> None:
+    plain, _ = meta_adapter.build_hybrid_request(_page_inputs(), _tiny_schema())
+    assert "reasoning_effort" not in plain
+    medium, _ = meta_adapter.build_hybrid_request(
+        _page_inputs(), _tiny_schema(), reasoning_effort="medium"
+    )
+    assert medium["reasoning_effort"] == "medium"
     with pytest.raises(ValueError):
-        meta_adapter.build_chat_request([], _tiny_schema())
+        meta_adapter.build_hybrid_request(_page_inputs(), _tiny_schema(), reasoning_effort="high")
+
+
+def test_hybrid_manifest_identity_stable() -> None:
+    _, first = meta_adapter.build_hybrid_request(_page_inputs(), _tiny_schema())
+    _, second = meta_adapter.build_hybrid_request(_page_inputs(), _tiny_schema())
+    assert first["payload_identity"] == second["payload_identity"]
+    changed = [
+        meta_adapter.PageInput(document_id="doc-a", page_number=6, normalized_text="other text")
+    ]
+    _, third = meta_adapter.build_hybrid_request(changed, _tiny_schema())
+    assert third["payload_identity"] != first["payload_identity"]
+
+
+def test_hybrid_rejects_out_of_bounds_packets() -> None:
+    schema = _tiny_schema()
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request([], schema)
+    many = [
+        meta_adapter.PageInput(document_id="d", page_number=n + 1, normalized_text="x")
+        for n in range(7)
+    ]
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request(many, schema)
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request(_page_inputs(), {"type": "array"})
+    dup = [*_page_inputs(), _page_inputs()[0]]
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request(dup, schema)
+    long_text = "x" * (meta_adapter.MAX_HYBRID_TEXT_CHARS + 1)
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request(
+            [meta_adapter.PageInput(document_id="d", page_number=1, normalized_text=long_text)],
+            schema,
+        )
+    big_image = b"\x89PNG" + bytes(meta_adapter.MAX_HYBRID_IMAGE_BYTES)
+    with pytest.raises(ValueError):
+        meta_adapter.build_hybrid_request(
+            [
+                meta_adapter.PageInput(
+                    document_id="d",
+                    page_number=1,
+                    normalized_text="x",
+                    image_bytes=big_image,
+                    image_id="im",
+                    image_sha256="d" * 64,
+                    image_width=1,
+                    image_height=1,
+                )
+            ],
+            schema,
+        )
+    for bad_output in (0, 127, 16385, True, "4096"):
+        with pytest.raises(ValueError):
+            meta_adapter.build_hybrid_request(
+                _page_inputs(),
+                schema,
+                max_completion_tokens=bad_output,  # type: ignore[arg-type]
+            )
 
 
 @pytest.mark.parametrize(
     "page",
     [
-        {"page_number": 1, "text": "x"},
-        {"document_id": "", "page_number": 1, "text": "x"},
-        {"document_id": "d", "page_number": 0, "text": "x"},
-        {"document_id": "d", "page_number": True, "text": "x"},
-        {"document_id": "d", "page_number": "1", "text": "x"},
-        {"document_id": "d", "page_number": 1, "text": None},
+        meta_adapter.PageInput(document_id="", page_number=1, normalized_text="x"),
+        meta_adapter.PageInput(document_id="d", page_number=0, normalized_text="x"),
+        meta_adapter.PageInput(document_id="d", page_number=1, normalized_text=""),
+        meta_adapter.PageInput(
+            document_id="d",
+            page_number=1,
+            normalized_text="x",
+            image_bytes=b"\x89PNG",
+            image_id=None,
+            image_sha256="d" * 64,
+            image_width=1,
+            image_height=1,
+        ),
+        meta_adapter.PageInput(
+            document_id="d",
+            page_number=1,
+            normalized_text="x",
+            image_bytes=b"\x89PNG",
+            image_id="im",
+            image_sha256="d" * 64,
+            image_width=0,
+            image_height=1,
+        ),
+        meta_adapter.PageInput(
+            document_id="d",
+            page_number=1,
+            normalized_text="x",
+            image_bytes=b"\x89PNG",
+            image_id="im",
+            image_sha256="d" * 64,
+            image_width=1,
+            image_height=1,
+            image_mime="image/gif",
+        ),
     ],
 )
-def test_request_rejects_untyped_pages(page: dict[str, Any]) -> None:
+def test_hybrid_rejects_bad_pages(page: meta_adapter.PageInput) -> None:
     with pytest.raises(ValueError):
-        meta_adapter.build_chat_request([page], _tiny_schema())
+        meta_adapter.build_hybrid_request([page], _tiny_schema())
 
 
-def test_request_rejects_non_object_schema() -> None:
-    with pytest.raises(ValueError):
-        meta_adapter.build_chat_request(_page_dicts(), {"type": "array"})
+def test_validate_claim_sources() -> None:
+    packet = [{"document_id": "doc-a", "physical_page": 6}]
+    meta_adapter.validate_claim_sources({"claims": []}, packet)
+    meta_adapter.validate_claim_sources({"claims": [{"citations": []}]}, packet)
+    meta_adapter.validate_claim_sources({"claims": "nope"}, packet)
+    ok = {"claims": [{"citations": [{"document_id": "doc-a", "page_number": 6}]}]}
+    meta_adapter.validate_claim_sources(ok, packet)
+    bad = {"claims": [{"citations": [{"document_id": "doc-x", "page_number": 99}]}]}
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        meta_adapter.validate_claim_sources(bad, packet)
+    assert exc.value.code == "invalid_model_output"
+    assert exc.value.receipt is None
 
 
 def test_extraction_schema_derived_from_proposal() -> None:
@@ -345,9 +506,13 @@ def test_live_extract_posts_official_envelope(monkeypatch: pytest.MonkeyPatch) -
     assert calls[0]["url"] == "https://meta.test/chat"
     assert calls[0]["headers"]["Authorization"] == "Bearer test-key"
     sent = calls[0]["json"]
-    assert set(sent.keys()) == {"model", "messages", "response_format"}
+    assert set(sent.keys()) == {"model", "messages", "max_completion_tokens", "response_format"}
     assert sent["model"] == "muse-spark-1.3"
-    assert sent["response_format"]["json_schema"]["name"] == "bidlab_extraction"
+    assert sent["max_completion_tokens"] == meta_adapter.MAX_COMPLETION_TOKENS
+    assert sent["response_format"]["json_schema"]["name"] == "bidlab_extraction_v1"
+    assert sent["response_format"]["json_schema"]["strict"] is True
+    assert result.packet_manifest is not None
+    assert result.packet_manifest["semantic_review"] == "pending"
     assert result.mode == "live"
     assert result.status == "ok"
     assert result.model == "muse-spark-1.3"
@@ -600,3 +765,41 @@ def test_stub_failures_carry_no_receipt() -> None:
     with pytest.raises(meta_adapter.AdapterError) as exc:
         meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL).extract(_pages())
     assert exc.value.receipt is None
+
+
+def test_live_extract_rejects_citation_outside_packet_with_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """PKG-T06 acceptance: strange echoes are refused but stay on the receipt."""
+    import httpx
+
+    proposal = json.loads(_valid_proposal_json())
+    proposal["claims"] = [
+        {
+            "key": "budget_net",
+            "raw_value": None,
+            "normalized_value": None,
+            "unit": None,
+            "citations": [
+                {
+                    "document_id": "doc-a",
+                    "page_number": 99,
+                    "verbatim_excerpt": "phantom quote",
+                }
+            ],
+            "confidence": "high",
+            "status": "proposed",
+            "notes": [],
+        }
+    ]
+    body = _chat_body(json.dumps(proposal))
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(200, body))
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        _live_adapter().extract(_pages())
+    assert exc.value.code == "invalid_model_output"
+    assert "outside submitted packet" in exc.value.message
+    receipt = exc.value.receipt
+    assert receipt is not None
+    assert receipt.mode == "live"
+    assert receipt.prompt_tokens == 100
+    assert receipt.completion_tokens == 50

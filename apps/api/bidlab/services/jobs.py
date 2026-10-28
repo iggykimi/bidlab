@@ -13,10 +13,11 @@ Live attempts reserve spend before the call and settle the reported cost
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import secrets
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 from sqlalchemy import func, select, update
@@ -29,6 +30,12 @@ from bidlab.schemas import generated as g
 from bidlab.services import budget as budget_service
 from bidlab.services import meta_adapter
 from bidlab.services import pdf as pdf_service
+from bidlab.services import render as render_service
+from bidlab.settings import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
 
 LEASE_MINUTES = 10
 NON_PROPOSED_CLAIM = frozenset({"not_found", "ambiguous", "unsupported"})
@@ -465,6 +472,112 @@ def claim_attempt(session: Session, job_id: str, worker_id: str) -> AttemptClaim
     )
 
 
+def _page_images(
+    storage_root: Path, tender_id: str, doc_id: str
+) -> dict[int, tuple[bytes, dict[str, Any]]]:
+    """Load rendered PNGs plus manifest entries for one document.
+
+    Best effort: a missing, failed or unreadable render means text-only
+    pages, never a failed attempt. Images load from files, outside any
+    database transaction.
+    """
+    try:
+        manifest = render_service.load_render_manifest(storage_root, tender_id, doc_id)
+    except (OSError, ValueError):
+        return {}
+    if not manifest or manifest.get("status") != "ready":
+        return {}
+    entries = manifest.get("pages")
+    if not isinstance(entries, list):
+        return {}
+    out: dict[int, tuple[bytes, dict[str, Any]]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        number = entry.get("physical_page")
+        file_name = entry.get("file")
+        if (
+            not isinstance(number, int)
+            or isinstance(number, bool)
+            or number < 1
+            or not isinstance(file_name, str)
+            or not file_name
+        ):
+            continue
+        try:
+            png = render_service.load_rendered_png(storage_root, tender_id, doc_id, file_name)
+        except OSError:
+            continue
+        if png is None:
+            continue
+        out[number] = (png, entry)
+    return out
+
+
+def _build_inputs_and_coverage(
+    page_rows: Sequence[models.DocumentPage],
+    doc_rows: Sequence[models.Document],
+    images_by_doc: dict[str, dict[int, tuple[bytes, dict[str, Any]]]],
+) -> tuple[tuple[meta_adapter.PageInput, ...], dict[str, Any]]:
+    """Assemble adapter inputs plus delivery coverage over the same rows."""
+    sha_by_doc = {doc.id: doc.sha256 for doc in doc_rows}
+    inputs: list[meta_adapter.PageInput] = []
+    cover_pages: list[pdf_service.CoveragePage] = []
+    for page in page_rows:
+        image = images_by_doc.get(page.document_id, {}).get(page.page_number)
+        png: bytes | None = None
+        width: int | None = None
+        height: int | None = None
+        image_id: str | None = None
+        image_sha: str | None = None
+        if image is not None:
+            raw, entry = image
+            entry_width = entry.get("width")
+            entry_height = entry.get("height")
+            entry_id = entry.get("cache_key")
+            dims_ok = (
+                isinstance(entry_width, int)
+                and not isinstance(entry_width, bool)
+                and entry_width >= 1
+                and isinstance(entry_height, int)
+                and not isinstance(entry_height, bool)
+                and entry_height >= 1
+            )
+            if dims_ok and isinstance(entry_id, str) and entry_id:
+                png, width, height, image_id = raw, entry_width, entry_height, entry_id
+                image_sha = hashlib.sha256(raw).hexdigest()
+        inputs.append(
+            meta_adapter.PageInput(
+                document_id=page.document_id,
+                page_number=page.page_number,
+                normalized_text=page.normalized_text,
+                document_sha256=sha_by_doc.get(page.document_id),
+                image_bytes=png,
+                image_id=image_id,
+                image_sha256=image_sha,
+                image_width=width,
+                image_height=height,
+            )
+        )
+        cover_pages.append(
+            pdf_service.CoveragePage(
+                document_id=page.document_id,
+                physical_page=page.page_number,
+                text=page.normalized_text,
+                flags=tuple(
+                    str(key)
+                    for key, value in (
+                        page.flags_json.items() if isinstance(page.flags_json, dict) else []
+                    )
+                    if value
+                ),
+                image_submitted=png is not None,
+            )
+        )
+    coverage = pdf_service.coverage({doc.id: doc.pages_count for doc in doc_rows}, cover_pages)
+    return tuple(inputs), coverage
+
+
 def execute_attempt(
     engine: Engine,
     claim: AttemptClaim,
@@ -478,55 +591,37 @@ def execute_attempt(
     failed attempt, never a stuck job.
     """
     with Session(engine) as session:
-        pages = session.scalars(
+        page_rows = session.scalars(
             select(models.DocumentPage)
             .where(models.DocumentPage.document_id.in_(claim.doc_ids))
             .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
         ).all()
-        docs = session.scalars(
+        doc_rows = session.scalars(
             select(models.Document).where(models.Document.id.in_(claim.doc_ids))
         ).all()
-        inputs = tuple(
-            meta_adapter.PageInput(
-                document_id=page.document_id,
-                page_number=page.page_number,
-                normalized_text=page.normalized_text,
-            )
-            for page in pages
-        )
-        coverage = pdf_service.coverage(
-            {doc.id: doc.pages_count for doc in docs},
-            [
-                pdf_service.CoveragePage(
-                    document_id=page.document_id,
-                    physical_page=page.page_number,
-                    text=page.normalized_text,
-                    flags=tuple(
-                        str(key)
-                        for key, value in (
-                            page.flags_json.items() if isinstance(page.flags_json, dict) else []
-                        )
-                        if value
-                    ),
-                )
-                for page in pages
-            ],
-        )
-    input_hash = meta_adapter.pages_input_hash(inputs)
-    run_started = _now().isoformat()
     if adapter is None:
         try:
             adapter = meta_adapter.select_adapter(claim.mode)
         except ApiError as exc:
+            inputs, coverage = _build_inputs_and_coverage(page_rows, doc_rows, {})
+            input_hash = meta_adapter.pages_input_hash(inputs)
             return AttemptOutcome(
                 inputs=inputs,
                 input_hash=input_hash,
-                run_started=run_started,
+                run_started=_now().isoformat(),
                 live=claim.mode == "live",
                 coverage=coverage,
                 error=meta_adapter.AdapterError(exc.code, exc.message),
             )
     live = adapter.is_live
+    images_by_doc: dict[str, dict[int, tuple[bytes, dict[str, Any]]]] = {}
+    if live:
+        storage_root = get_settings().storage_path.resolve()
+        for doc_id in claim.doc_ids:
+            images_by_doc[doc_id] = _page_images(storage_root, claim.tender_id, doc_id)
+    inputs, coverage = _build_inputs_and_coverage(page_rows, doc_rows, images_by_doc)
+    input_hash = meta_adapter.pages_input_hash(inputs)
+    run_started = _now().isoformat()
     key = f"inv-{claim.job_id}-a{claim.attempt}"
     estimate = 0
     if live:
@@ -761,6 +856,8 @@ def _publish_success(
         started_at=outcome.run_started,
         finished_at=_now().isoformat(),
     )
+    if result.packet_manifest is not None:
+        manifest["packet"] = result.packet_manifest
     job.status = "needs_review" if needs_review else "succeeded"
     job.stage = "awaiting_review" if needs_review else "done"
     job.result_revision = new_revision

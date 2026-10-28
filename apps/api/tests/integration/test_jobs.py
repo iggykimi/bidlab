@@ -511,6 +511,86 @@ def test_slow_provider_does_not_block_polling_or_health(
     assert terminal["status"] == "needs_review"
 
 
+def _one_page_pdf() -> bytes:
+    text = "(hola mundo)"
+    stream = f"BT /F1 12 Tf 20 20 Td {text} Tj ET".encode("latin-1")
+    pdf = b"%PDF-1.4\n"
+    offsets = {}
+    body = (
+        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Resources"
+        b"<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj\n"
+        b"4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n"
+        b"5 0 obj<</Length "
+        + str(len(stream)).encode("ascii")
+        + b">>stream\n"
+        + stream
+        + b"\nendstream\nendobj\n"
+    )
+    for num in (1, 2, 3, 4, 5):
+        marker = f"{num} 0 obj".encode("ascii")
+        offsets[num] = len(pdf) + body.index(marker)
+    pdf += body
+    xref_at = len(pdf)
+    pdf += b"xref\n0 6\n0000000000 65535 f \n"
+    for num in range(1, 6):
+        pdf += f"{offsets[num]:010d} 00000 n \n".encode("ascii")
+    pdf += b"trailer<</Size 6/Root 1 0 R>>\nstartxref\n" + str(xref_at).encode("ascii") + b"\n%%EOF"
+    return pdf
+
+
+def test_live_analysis_sends_rendered_images(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T06: upload renders travel inside the hybrid packet; packet persists."""
+    up = demo_client.post(
+        "/api/v1/tenders/tias/documents",
+        files={"file": ("render.pdf", _one_page_pdf(), "application/pdf")},
+        data={"kind": "other"},
+        headers={**CLIENT_HEADERS, "Idempotency-Key": "up-hybrid-img"},
+    )
+    assert up.status_code == 201, up.text
+    doc_id = up.json()["id"]
+    proposal = (
+        meta_adapter.StubExtractor().extract([meta_adapter.PageInput("doc-x", 1, "x")]).proposal
+    )
+    chat = {
+        "id": "mock-hybrid-no-network",
+        "model": "muse-spark-1.3",
+        "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(proposal)}}],
+        "usage": {"prompt_tokens": 100, "completion_tokens": 50},
+    }
+    captured: dict[str, Any] = {}
+
+    def _capture(*args: Any, **kwargs: Any) -> httpx.Response:
+        captured["json"] = kwargs["json"]
+        return httpx.Response(200, json=chat)
+
+    _live_transport(monkeypatch, _capture)
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True, document_ids=[doc_id]),
+        headers=_headers("k-hybrid-img"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    terminal = _poll_terminal(demo_client, job.id.root)
+    assert terminal["status"] == "needs_review"
+    parts = captured["json"]["messages"][1]["content"]
+    assert [part["type"] for part in parts] == ["text", "image_url"]
+    assert parts[1]["image_url"]["url"].startswith("data:image/png;base64,")
+    source = json.loads(parts[0]["text"])["source"]
+    assert source["document_id"] == doc_id
+    assert source["image_id"] is not None
+    with _db() as session:
+        stored = session.get(models.Job, job.id.root)
+        assert stored is not None
+        packet = stored.request_json["manifest"]["packet"]
+        assert packet["pages"][0]["document_id"] == doc_id
+        assert packet["pages"][0]["image_sha256"] is not None
+
+
 def test_worker_start_requeues_orphans(demo_client: TestClient) -> None:
     """PKG-T03: boot re-queues jobs left queued by a previous process."""
     now = dt.datetime.now(dt.UTC).isoformat()

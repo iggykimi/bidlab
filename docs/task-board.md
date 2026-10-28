@@ -39,6 +39,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   cache_key, hook upload); backend 383 + E2E 62/62.
   Ayudas render inexistentes en paquete (ver log).
   Siguiente: PKG-T06 (payload híbrido).
+- 28-oct: PKG-T06 hecho (payload híbrido acotado,
+  bindings, tope real en budget); backend 391 +
+  E2E 62/62. SME Spark pendiente autor.
+  Siguiente: PKG-T07 (observations).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

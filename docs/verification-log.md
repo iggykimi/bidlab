@@ -684,3 +684,38 @@ Evidencia:
 - E2E completa 62/62 (uploads renderizan en ruta).
 - Deps: `pymupdf>=1.24,<2` (línea v1, sin extras
   2.0); uv.lock +20 líneas solo.
+
+## Plan Integral PKG-T06 — payload híbrido acotado (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 32e2d07. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (mocks).
+
+`build_hybrid_request` único camino live (B03): 1–6
+páginas, texto ≤100k, imágenes ≤5MB png/jpeg con id
+de servidor y dimensiones exactas, `max_completion_tokens`
+128–16384 (defecto 4096), `reasoning_effort` solo
+opt-in validado (no verificado en Spark: no se envía),
+`response_format` strict + nombre v1, paquete manifiesta
+SHAs/identidad. `validate_claim_sources` rechaza citas
+fuera del paquete con recibo conservado (aceptación 3).
+`PageInput` lleva imagen opcional; `execute_attempt`
+carga PNGs del render (solo live, best-effort) y guarda
+el packet en el manifest; `coverage` cuenta
+image_submitted; `budget` reserva con el tope real
+4096. Prompt bump `bidlab-extract-2`. Sin cambio de
+contrato API (schema v1; v2 en PKG-T07).
+
+Aceptación 2 (SME confirma precios/parámetros Spark
+1.3 Standard): PENDIENTE del autor — no puedo
+confirmarlo yo; tarifas ya en código desde precios
+publicados; `reasoning_effort` omitido por no
+verificado.
+
+Evidencia:
+- Backend: unit 267 + integración/contratos 124 = 391
+  passed, exit 0 (matriz de topes híbridos, identidad
+  estable, bindings, rechazo fuera de paquete con
+  recibo, upload→imagen en payload capturado +
+  packet persistido, coverage con imagen).
+- `ruff check`, `ruff format --check` (90 ficheros),
+  `mypy` (49): verdes. E2E completa 62/62.

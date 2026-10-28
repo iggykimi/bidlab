@@ -34,10 +34,9 @@ if TYPE_CHECKING:
 
 _MICRO = Decimal(1_000_000)
 
-# Estimated output size used for the pre-call reservation. PKG-T06 replaces
-# this with the real provider output cap; until then the estimate stays
-# conservative so admission never under-blocks.
-ASSUMED_MAX_COMPLETION_TOKENS = 8000
+# Pre-call reservation assumes the provider output cap (PKG-T06): billed
+# completions can never exceed max_completion_tokens, so admission blocks
+# exactly what the attempt may spend.
 _INPUT_CHARS_PER_TOKEN = 4
 
 
@@ -80,13 +79,13 @@ def usd_str_to_micro(raw: str) -> int:
 
 
 def estimate_attempt_micro_usd(input_chars: int) -> int:
-    """Conservative pre-call estimate: ~chars/4 input tokens + assumed output."""
+    """Pre-call estimate: ~chars/4 input tokens plus the real output cap."""
     from bidlab.services import meta_adapter
 
     tokens_in = max(1, -(-max(0, input_chars) // _INPUT_CHARS_PER_TOKEN))
     cost = (
         Decimal(tokens_in) * meta_adapter.META_INPUT_USD_PER_MTOK
-        + Decimal(ASSUMED_MAX_COMPLETION_TOKENS) * meta_adapter.META_OUTPUT_USD_PER_MTOK
+        + Decimal(meta_adapter.MAX_COMPLETION_TOKENS) * meta_adapter.META_OUTPUT_USD_PER_MTOK
     ) / _MICRO
     return max(1, int((cost * _MICRO).to_integral_value(rounding=ROUND_CEILING)))
 

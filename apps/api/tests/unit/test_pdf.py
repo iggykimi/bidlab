@@ -127,8 +127,16 @@ def test_locate_missing_quote() -> None:
     assert pdf_service.locate_citation("texto", "").match_status == "missing"
 
 
-def _page(doc: str, num: int, text: str, flags: tuple[str, ...] = ()) -> pdf_service.CoveragePage:
-    return pdf_service.CoveragePage(document_id=doc, physical_page=num, text=text, flags=flags)
+def _page(
+    doc: str,
+    num: int,
+    text: str,
+    flags: tuple[str, ...] = (),
+    image: bool = False,
+) -> pdf_service.CoveragePage:
+    return pdf_service.CoveragePage(
+        document_id=doc, physical_page=num, text=text, flags=flags, image_submitted=image
+    )
 
 
 def test_coverage_all_usable_is_quiet() -> None:
@@ -206,6 +214,26 @@ def test_coverage_rejects_duplicates_out_of_manifest_and_bad_totals() -> None:
         pdf_service.coverage({"d1": 1}, [_page("d2", 1, "a")])
     with pytest.raises(ValueError, match="invalid total"):
         pdf_service.coverage({"d1": 0}, [])
+
+
+def test_coverage_image_only_page_counts_image_not_text() -> None:
+    """PKG-T06: a scanned page delivers an image while text stays unread."""
+    report = pdf_service.coverage({"d1": 1}, [_page("d1", 1, "", image=True)])
+    assert report["usable_text"] == 0
+    assert report["image_submitted"] == 1
+    assert report["not_submitted"] == 0
+    assert report["requires_attention"] is True
+    entry = report["pages"][0]
+    assert entry["image_submitted"] is True
+    assert "not_submitted" not in entry["flags"]
+
+
+def test_coverage_text_and_image_page_is_fully_delivered() -> None:
+    report = pdf_service.coverage({"d1": 1}, [_page("d1", 1, "hello", image=True)])
+    assert report["usable_text"] == 1
+    assert report["image_submitted"] == 1
+    assert report["not_submitted"] == 0
+    assert report["requires_attention"] is False
 
 
 def test_coverage_warning_lines_cap_with_overflow() -> None:

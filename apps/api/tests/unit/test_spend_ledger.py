@@ -127,8 +127,8 @@ def test_estimate_positive_and_grows() -> None:
     assert budget_service.estimate_attempt_micro_usd(
         100_000
     ) > budget_service.estimate_attempt_micro_usd(10)
-    # 10 chars -> 3 input tokens: ceil((3 * 1.25 + 8000 * 4.25) * 1e6 / 1e6).
-    assert budget_service.estimate_attempt_micro_usd(10) == 34004
+    # 10 chars -> 3 input tokens: ceil((3 * 1.25 + 4096 * 4.25) * 1e6 / 1e6).
+    assert budget_service.estimate_attempt_micro_usd(10) == 17412
 
 
 def test_budget_cap_and_conversions(monkeypatch: pytest.MonkeyPatch) -> None:

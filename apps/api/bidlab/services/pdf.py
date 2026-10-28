@@ -56,6 +56,7 @@ class CoveragePage:
     physical_page: int
     text: str
     flags: tuple[str, ...] = ()
+    image_submitted: bool = False
 
 
 # Flags that deserve a human-visible warning. Stored informational flags
@@ -104,12 +105,13 @@ def coverage(expected_pages: dict[str, int], pages: list[CoveragePage]) -> dict[
             stored = known.get((doc_id, number))
             usable = stored is not None and bool(stored.text.strip())
             text_sent = bool(stored is not None and usable)
+            image_sent = bool(stored is not None and stored.image_submitted)
             flags = list(stored.flags) if stored else ["page_missing"]
             if stored is not None and not usable and "no_extractable_text" not in flags:
                 flags.append("no_extractable_text")
             if stored is not None and not usable:
                 flags.append("empty_text_not_coverage")
-            if not text_sent:
+            if not text_sent and not image_sent:
                 flags.append("not_submitted")
             if [flag for flag in flags if flag in WARNING_FLAGS]:
                 warnings.append({"document_id": doc_id, "physical_page": number, "flags": flags})
@@ -120,7 +122,7 @@ def coverage(expected_pages: dict[str, int], pages: list[CoveragePage]) -> dict[
                     "page_available": stored is not None,
                     "usable_text_available": usable,
                     "text_submitted": text_sent,
-                    "image_submitted": False,
+                    "image_submitted": image_sent,
                     "semantic_review": "pending",
                     "flags": flags,
                 }
@@ -130,8 +132,10 @@ def coverage(expected_pages: dict[str, int], pages: list[CoveragePage]) -> dict[
         "available": sum(1 for entry in manifest if entry["page_available"]),
         "usable_text": sum(1 for entry in manifest if entry["usable_text_available"]),
         "text_submitted": sum(1 for entry in manifest if entry["text_submitted"]),
-        "image_submitted": 0,
-        "not_submitted": sum(1 for entry in manifest if not entry["text_submitted"]),
+        "image_submitted": sum(1 for entry in manifest if entry["image_submitted"]),
+        "not_submitted": sum(
+            1 for entry in manifest if not (entry["text_submitted"] or entry["image_submitted"])
+        ),
         "requires_attention": bool(warnings),
         "warnings": warnings,
         "pages": manifest,
