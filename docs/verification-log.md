@@ -823,6 +823,47 @@ antes del cambio carecen de las claves nuevas (solo
 afecta a storage local de desarrollo; E2E/CI parten
 de storage fresco).
 
+## PKG-T15 — evidencia exacta (Windows)
+
+Fecha: 2026-10-28. Merge: aadab7c (rama helper
+6f9ba9ef34f984e179e68e806654b0f5419e347e sobre
+9ca02de; el helper informó un SHA largo distinto
+con el mismo prefijo — merge con SHA verificado
+por el lead). Entorno: Windows, Python 3.14
+(venv), Chromium. Sin red.
+
+Aceptación 1 (imagen exacta, nunca falsa):
+`GET /documents/{id}/pages/{n}/image` sirve el
+PNG del render versionado con SHA verificado
+contra el manifiesto (ETag=SHA, Cache-Control
+inmutable); 404 `document_bytes_unavailable`
+cuando no hay render, 404 `page_not_found`
+cuando la página no existe, 500 `internal`
+solo si el PNG almacenado no coincide con su
+hash. Códigos ya declarados en el contrato.
+El drawer muestra la imagen con estado
+carga/lista/ausente; en falta, texto explícito
+«Esta página no tiene imagen. Coteja con el
+texto de abajo» — ninguna vista previa falsa.
+
+Aceptación 2 (foco al cerrar): el drawer
+devuelve el foco al elemento que lo abrió.
+
+Aceptación 3 (cita vs revisión): la línea de
+cita usa vocabulario de localización máquina
+(«Copiado tal cual», «Localizado a mano»…)
+y el checkbox usa revisión humana («Lo
+confirmas» / «Por verificar»); sin mezcla.
+
+Gates en main (lead, post-merge): backend
+458/458 exit 0, ruff check + format OK (fix
+lead: línea larga en test_page_image.py),
+mypy 51 ficheros OK, vitest 212 (+2
+citaEstadoEs verificados contra baseline 4→6),
+eslint + tsc exit 0, build OK, E2E 70/70
+(67 + 3 t15-evidence). YAML +51/−0,
+generados regen.
+
 Evidencia:
 - Backend: unit 303 + integración/contratos 124 = 427
   passed, exit 0 (+3 job_to_dict; detalle live/fixture

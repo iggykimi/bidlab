@@ -34,7 +34,9 @@ def _page_stream(text: str) -> bytes:
     return f"BT /F1 12 Tf 10 180 Td ({text}) Tj ET".encode("latin-1")
 
 
-def _two_page_pdf(first: str = "Precio neto: 118336.00 euros", second: str = "Plazo: 24 meses") -> bytes:
+def _two_page_pdf(
+    first: str = "Precio neto: 118336.00 euros", second: str = "Plazo: 24 meses"
+) -> bytes:
     objects: list[bytes] = []
     objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
     objects.append(b"<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>")

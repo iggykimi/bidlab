@@ -63,6 +63,12 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   gold 25 + partición dev/eval + harness/CLI;
   backend 452. T15 sigue en su worktree.
   Siguiente: integrar T15, luego PKG-T11.
+- 28-oct: PKG-T15 hecho (helper, merge aadab7c):
+  GET imagen de página + drawer exacto vs texto +
+  cita/localización vs revisión humana; backend 458
+  + front 212 + E2E 70/70. Nota: el helper informó
+  un SHA largo erróneo (prefijo 6f9ba9e correcto);
+  merge con SHA verificado. Siguiente: PKG-T11.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
