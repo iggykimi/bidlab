@@ -34,9 +34,10 @@ def list_tenders(
     items: list[dict[str, Any]] = []
     for tender in rows:
         data = workspace_service.tender_to_dict(db, tender.id)
-        if q and q.lower() not in f"{data['title']} {data['external_id']}".lower():
-            continue
         codes = data["cpv_codes"] if isinstance(data["cpv_codes"], list) else []
+        haystack = f"{data['title']} {data['external_id']} {' '.join(str(c) for c in codes)}"
+        if q and q.lower() not in haystack.lower():
+            continue
         if cpv and cpv not in codes:
             continue
         items.append(data)

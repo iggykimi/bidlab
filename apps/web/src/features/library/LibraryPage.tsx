@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createDemoSession, listTenders, type Tender } from "../../api/client";
 import { formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
@@ -23,16 +23,60 @@ function nombreImpuesto(taxKind: string): string {
   return "impuestos";
 }
 
+const PAGE_SIZE_DEFAULT = 20;
+const SEARCH_DEBOUNCE_MS = 300;
+
+function parsePage(raw: string | null): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
+function parsePageSize(raw: string | null): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : PAGE_SIZE_DEFAULT;
+}
+
 export function LibraryPage() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("");
+  const [params, setParams] = useSearchParams();
+  // The query and page live in the URL: going back from a detail keeps them.
+  const q = params.get("q") ?? "";
+  const page = parsePage(params.get("page"));
+  const pageSize = parsePageSize(params.get("page_size"));
+  const [draft, setDraft] = useState(q);
+  const [lastQ, setLastQ] = useState(q);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
   const [demoRawError, setDemoRawError] = useState<string | null>(null);
 
+  // Back/forward navigation rewrites the URL: follow it in the input.
+  // Render-phase adjustment (no effect): q only changes from navigation
+  // or our own debounced commit, which already matches the draft.
+  if (lastQ !== q) {
+    setLastQ(q);
+    setDraft(q);
+  }
+
+  // Debounce typing into the URL; a new query restarts at page 1.
+  useEffect(() => {
+    if (draft === q) return;
+    const timer = window.setTimeout(() => {
+      setParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (draft.trim()) next.set("q", draft.trim());
+        else next.delete("q");
+        next.set("page", "1");
+        return next;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [draft, q, setParams]);
+
+  // Server-side search over the complete set (title, file number, CPV).
   const tendersQuery = useQuery({
-    queryKey: ["tenders"],
-    queryFn: ({ signal }) => listTenders(signal),
+    queryKey: ["tenders", q, page, pageSize],
+    queryFn: ({ signal }) =>
+      listTenders({ q: q === "" ? undefined : q, page, page_size: pageSize }, signal),
   });
 
   async function handleDemoLoad() {
@@ -52,10 +96,16 @@ export function LibraryPage() {
   }
 
   const items: Tender[] = tendersQuery.data?.items ?? [];
-  const needle = filter.trim().toLowerCase();
-  const visible = needle
-    ? items.filter((t) => `${t.title} ${t.external_id} ${t.cpv_codes.join(" ")}`.toLowerCase().includes(needle))
-    : items;
+  const total = tendersQuery.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  function goPage(next: number) {
+    setParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      nextParams.set("page", String(Math.min(Math.max(1, next), totalPages)));
+      return nextParams;
+    });
+  }
 
   // Own tenders restore their manual session (no example asked). When the
   // company pointer is gone, the workspace checklist asks for it instead.
@@ -111,8 +161,9 @@ export function LibraryPage() {
           <span className="text-sm font-medium">Buscar por título, expediente o código de actividad (CPV)</span>
           <input
             type="search"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            data-testid="library-search"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
             placeholder="Tías, 79411000…"
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
           />
@@ -131,12 +182,23 @@ export function LibraryPage() {
             </Button>
           </div>
         )}
-        {tendersQuery.isSuccess && visible.length === 0 && (
+        {tendersQuery.isSuccess && total === 0 && q !== "" && (
+          <p className="mt-4">Sin resultados para «{q}».</p>
+        )}
+        {tendersQuery.isSuccess && total === 0 && q === "" && (
           <p className="mt-4">Sin resultados. Carga el ejemplo para empezar.</p>
         )}
-        {visible.length > 0 && (
+        {tendersQuery.isSuccess && total > 0 && (
+          <p data-testid="library-count" className="mt-4 text-sm text-muted">
+            {total === 1 ? "1 resultado" : `${total} resultados`}
+          </p>
+        )}
+        {tendersQuery.isSuccess && total > 0 && items.length === 0 && (
+          <p className="mt-2">Esta página está vacía.</p>
+        )}
+        {items.length > 0 && (
           <ul className="mt-4 divide-y divide-line">
-            {visible.map((t) => (
+            {items.map((t) => (
               <li key={t.id} className="py-3">
                 <button
                   type="button"
@@ -160,6 +222,29 @@ export function LibraryPage() {
               </li>
             ))}
           </ul>
+        )}
+        {tendersQuery.isSuccess && totalPages > 1 && (
+          <nav aria-label="Páginas de la biblioteca" className="mt-4 flex items-center gap-3 text-sm">
+            <Button
+              variant="secondary"
+              data-testid="library-prev"
+              disabled={page <= 1}
+              onClick={() => goPage(page - 1)}
+            >
+              Anterior
+            </Button>
+            <span data-testid="library-page" role="status">
+              Página {Math.min(page, totalPages)} de {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              data-testid="library-next"
+              disabled={page >= totalPages}
+              onClick={() => goPage(page + 1)}
+            >
+              Siguiente
+            </Button>
+          </nav>
         )}
       </section>
     </main>

@@ -127,8 +127,18 @@ export function createDemoSession(signal?: AbortSignal): Promise<DemoSession> {
   return sendJson<DemoSession>("POST", "/demo/sessions", {}, { idempotencyKey: newIdempotencyKey(), signal });
 }
 
-export function listTenders(signal?: AbortSignal): Promise<TenderList> {
-  return getJson<TenderList>("/tenders?page=1&page_size=100", signal);
+export interface TenderSearchParams {
+  q?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export function listTenders(params?: TenderSearchParams, signal?: AbortSignal): Promise<TenderList> {
+  const query = new URLSearchParams();
+  if (params?.q) query.set("q", params.q);
+  query.set("page", String(params?.page ?? 1));
+  query.set("page_size", String(params?.page_size ?? 20));
+  return getJson<TenderList>(`/tenders?${query.toString()}`, signal);
 }
 
 export async function getWorkspace(tenderId: string, signal?: AbortSignal): Promise<Workspace> {

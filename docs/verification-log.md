@@ -831,3 +831,34 @@ Evidencia:
   tsc, build: verdes.
 - `ruff check`, `ruff format --check` (92 ficheros),
   `mypy` (50): verdes. E2E completa 63/63 (+1 recarga).
+
+## Plan Integral PKG-T12 — búsqueda/paginación servidor (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 27d3023. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (API local real).
+
+Aceptación 1 (expediente 102 desde búsqueda): `q` del
+servidor cubre título + expediente + CPV (antes solo
+título/expediente; el front filtraba en cliente sobre
+100). Con 21 licitaciones, `q=102` devuelve total 1
+(`2026/00102`) y el ítem de la página 2 se recupera
+por `q` (el orden por id aleatorio impide asumir
+posición; el test lo resuelve sin orden). Sin cambio
+de contrato (q/cpv/page ya declarados).
+
+Aceptación 2 (consulta/página al volver): `q`/`page`
+(`page_size` honrado) viven en la URL; debounce
+300 ms; volver de detalle conserva ambos.
+
+Aceptación 3 (sin filtros sin soporte): desaparece el
+filtro cliente; la etiqueta (título/expediente/CPV)
+es ahora literalmente cierta en servidor; sin otros
+filtros anunciados. Pushdown SQL a P1/T27.
+
+Evidencia:
+- Backend: unit 303 + integración/contratos 127 = 430
+  passed, exit 0 (+3 test_tenders.py).
+- Front: vitest 208, eslint, tsc, build: verdes.
+- `ruff check`, `ruff format --check` (93 ficheros),
+  `mypy` (50): verdes. E2E completa 65/65 (+2
+  library-search: búsqueda+retorno, paginación).

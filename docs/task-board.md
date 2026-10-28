@@ -51,7 +51,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T09 hecho (Job +invocación, tracker
   rehidratable, E2E recarga); backend 427 + front
   208 + E2E 63/63. Crítico T01–T09 cerrado.
-  Siguiente: PKG-T12 (búsqueda/paginación).
+- 28-oct: PKG-T12 hecho (búsqueda servidor + URL +
+  paginación); backend 430 + E2E 65/65.
+  Siguiente: PKG-T13 (conteos/vigencia malla).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
