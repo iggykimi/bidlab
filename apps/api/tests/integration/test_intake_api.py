@@ -1,5 +1,7 @@
 """Own-tender intake: creation + local PDF upload over HTTP."""
 
+from typing import Any, cast
+
 from bidlab.schemas import generated as g
 from bidlab.services import pdf as pdf_service
 from bidlab.services import render as render_service
@@ -33,10 +35,10 @@ def _create_body(**overrides: object) -> dict[str, object]:
     return body
 
 
-def _create(client: TestClient, key: str, **overrides: object) -> dict:
+def _create(client: TestClient, key: str, **overrides: object) -> dict[str, Any]:
     res = client.post("/api/v1/tenders", json=_create_body(**overrides), headers=_headers(key))
     assert res.status_code == 201, res.text
-    return res.json()
+    return cast("dict[str, Any]", res.json())
 
 
 def _page_stream(text: str) -> bytes:
@@ -76,12 +78,13 @@ def _upload_res(
     kind: str | None = None,
 ) -> Response:
     data = {} if kind is None else {"kind": kind}
-    return client.post(
+    res = client.post(
         f"/api/v1/tenders/{tender_id}/documents",
         files={"file": (filename, pdf_bytes, "application/pdf")},
         data=data,
         headers=_headers(key),
     )
+    return cast("Response", res)
 
 
 def test_create_tender_happy_path(fresh_client: TestClient) -> None:

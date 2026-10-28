@@ -1,5 +1,7 @@
 """T14/T15: deterministic PDF extraction + citation locating (pure, offline)."""
 
+from typing import Any, cast
+
 import pytest
 from bidlab.services import pdf as pdf_service
 from pypdf import PdfWriter
@@ -200,7 +202,7 @@ def test_coverage_truncated_usable_page_warns_but_counts() -> None:
 def test_coverage_stored_informational_flags_stay_quiet() -> None:
     report = pdf_service.coverage({"d1": 1}, [_page("d1", 1, "hello", ("curated_excerpt_only",))])
     assert report["requires_attention"] is False
-    entry = report["pages"][0]
+    entry = cast("list[dict[str, Any]]", report["pages"])[0]
     assert entry["flags"] == ["curated_excerpt_only"]
     assert entry["usable_text_available"] is True
 
@@ -223,7 +225,7 @@ def test_coverage_image_only_page_counts_image_not_text() -> None:
     assert report["image_submitted"] == 1
     assert report["not_submitted"] == 0
     assert report["requires_attention"] is True
-    entry = report["pages"][0]
+    entry = cast("list[dict[str, Any]]", report["pages"])[0]
     assert entry["image_submitted"] is True
     assert "not_submitted" not in entry["flags"]
 

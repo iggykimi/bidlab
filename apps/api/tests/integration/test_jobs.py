@@ -5,7 +5,7 @@ import json
 import socket
 import threading
 import time
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -634,7 +634,8 @@ def test_live_analysis_sends_rendered_images(
     with _db() as session:
         stored = session.get(models.Job, job.id.root)
         assert stored is not None
-        packet = stored.request_json["manifest"]["packet"]
+        request_json = cast("dict[str, Any]", stored.request_json)
+        packet = request_json["manifest"]["packet"]
         assert packet["pages"][0]["document_id"] == doc_id
         assert packet["pages"][0]["image_sha256"] is not None
         assert packet["observations"]["observations"][0]["id"] == "ob-1"
@@ -691,7 +692,7 @@ def test_empty_pages_count_zero_and_force_review(demo_client: TestClient) -> Non
     with _db() as session:
         stored = session.get(models.Job, job.id.root)
         assert stored is not None
-        manifest = stored.request_json["manifest"]
+        manifest = cast("dict[str, Any]", stored.request_json["manifest"])
         assert manifest["coverage"]["usable_text"] == 0
         assert manifest["coverage"]["not_submitted"] == 41
         assert manifest["coverage"]["requires_attention"] is True

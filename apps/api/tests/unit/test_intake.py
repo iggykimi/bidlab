@@ -59,7 +59,7 @@ def test_parse_money_input_never_float() -> None:
     parse = intake_service.parse_money_input
     for bad in [118336.00, 0.05, 118336, True]:
         with pytest.raises(ApiError) as exc:
-            parse(bad, field="basis.pbl_net")  # type: ignore[arg-type]
+            parse(bad, field="basis.pbl_net")
         assert exc.value.code == "money_unparseable"
 
 

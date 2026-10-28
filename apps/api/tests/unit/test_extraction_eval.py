@@ -391,7 +391,7 @@ def test_v1_and_v2_stub_outputs_score_alike() -> None:
     gold = ev.load_gold(GOLD_PATH)
     split = ev.load_split(SPLIT_PATH)
     claims = ev.eval_claims(gold, split)
-    v1_stub = {
+    v1_stub: dict[str, Any] = {
         "schema_version": "1.0",
         "claims": [
             {"key": "price_points", "normalized_value": "65", "status": "proposed"},
@@ -416,7 +416,7 @@ def test_v1_and_v2_stub_outputs_score_alike() -> None:
         }
         for item in v1_stub["claims"]
     ]
-    v2_stub = {
+    v2_stub: dict[str, Any] = {
         "schema_version": "2.0-proposal",
         "observations": [
             {"id": "ob-1", "field": "max_price_points", "value": "65"},

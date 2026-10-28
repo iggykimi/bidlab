@@ -69,8 +69,10 @@ La extracción gold inicial son hechos etiquetados manualmente desde tres PCAP, 
 MoneyText = Annotated[str, Field(pattern=r"^\d{1,12}\.\d{2}$")]
 DecimalText = Annotated[str, Field(pattern=r"^-?\d{1,12}(\.\d{1,12})?$")]
 
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
+
 
 class CitationProposal(StrictModel):
     document_id: str

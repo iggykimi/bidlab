@@ -3,7 +3,7 @@
 import json
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from bidlab.db import models
 from bidlab.db.session import get_engine
@@ -21,7 +21,7 @@ def _input() -> dict[str, Any]:
     raw = (ROOT / "examples" / "evaluation_request.json").read_text(encoding="utf-8")
     payload = json.loads(raw)
     payload["pricing_rule_id"] = "tias-price-r1"  # seed id; example file uses an illustrative id
-    return payload
+    return cast("dict[str, Any]", payload)
 
 
 def test_concurrent_save_scenario_same_key_returns_winner(

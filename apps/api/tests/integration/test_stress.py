@@ -7,9 +7,10 @@ Oracle B: same mesh with cost 110000 and limits 47pt/10000€ ->
 no tested discount qualifies (selection null).
 """
 
-from typing import Any
+from typing import Any, cast
 
 from fastapi.testclient import TestClient
+from httpx import Response
 
 HEADERS = {"X-BidLab-Client": "local-ui"}
 SCOPE = "tias-whole"
@@ -126,8 +127,9 @@ def test_snapshot_survives_rule_change(seeded_client: TestClient) -> None:
     assert res.json()["selection"] == before["selection"]
 
 
-def _run_raw(client: TestClient, payload: dict[str, Any]):  # type: ignore[no-any-unimported]
-    return client.post(f"/api/v1/scopes/{SCOPE}/stress-tests", json=payload, headers=HEADERS)
+def _run_raw(client: TestClient, payload: dict[str, Any]) -> Response:
+    res = client.post(f"/api/v1/scopes/{SCOPE}/stress-tests", json=payload, headers=HEADERS)
+    return cast("Response", res)
 
 
 def test_10x6_grid_computes(seeded_client: TestClient) -> None:

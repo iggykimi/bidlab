@@ -13,7 +13,7 @@ export default async function globalSetup(): Promise<void> {
   const current = process.env.BIDLAB_E2E_RUN_DIR ?? "";
   const currentAbs = current === "" ? "" : path.resolve(root, current);
   const results = path.join(root, "test-results");
-  let entries: string[] = [];
+  let entries: string[];
   try {
     entries = fs.readdirSync(results);
   } catch {

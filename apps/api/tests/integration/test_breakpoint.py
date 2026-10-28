@@ -34,7 +34,7 @@ def _make_company(client: TestClient, cost: str, tag: str) -> str:
         headers=HEADERS,
     )
     assert res.status_code == 201, res.text
-    return str(res.json()["id"])  # type: ignore[no-any-return]
+    return str(res.json()["id"])
 
 
 def _evaluate(client: TestClient, company_id: str) -> dict[str, Any]:

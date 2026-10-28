@@ -7,15 +7,16 @@ against the Error model. Any drift fails loudly here instead of in an SDK.
 
 import pathlib
 import sys
-from typing import Any
+from typing import Any, cast
 
 from bidlab.main import app
 from bidlab.schemas import generated as g
+from bidlab.schemas.common import StrictModel
 from fastapi.testclient import TestClient
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "tools"))
-from build_contract import build_spec  # noqa: E402
+from build_contract import build_spec  # type: ignore[import-not-found]  # noqa: E402
 
 # In-memory contract (build_spec is stdlib-only; the committed YAML is proven
 # byte-equal to it, and the generated models below come from that YAML).
@@ -47,13 +48,13 @@ def _app_ops() -> dict[tuple[str, str], dict[str, Any]]:
 def _resolve_param(param: dict[str, Any]) -> dict[str, Any]:
     ref = param.get("$ref", "")
     if ref.startswith("#/components/parameters/"):
-        return CONTRACT["components"]["parameters"][ref.rsplit("/", 1)[-1]]
+        return cast("dict[str, Any]", CONTRACT["components"]["parameters"][ref.rsplit("/", 1)[-1]])
     return param
 
 
-def _model_for(ref: str) -> type[g.StrictModel]:
+def _model_for(ref: str) -> type[StrictModel]:
     assert ref.startswith("#/components/schemas/"), ref
-    return getattr(g, ref.rsplit("/", 1)[-1])
+    return cast("type[StrictModel]", getattr(g, ref.rsplit("/", 1)[-1]))
 
 
 def test_versions_unified() -> None:
@@ -177,7 +178,7 @@ def test_o10_page_size_max_and_pdf_media_type() -> None:
 
 
 def test_error_envelopes_validate_live(seeded_client: TestClient) -> None:
-    probes = [
+    probes: list[tuple[str, str, int, str, dict[str, str]]] = [
         ("GET", "/api/v1/tenders/nope", 404, "tender_not_found", {}),
         ("POST", "/api/v1/companies", 403, "forbidden", {}),
         ("PUT", "/api/v1/tenders/tias", 405, "method_not_allowed", {}),

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
-from bidlab.domain.eligibility import MAX_TREE_DEPTH
+from bidlab.domain.eligibility import MAX_TREE_DEPTH as MAX_TREE_DEPTH
 from bidlab.schemas import generated as g
 from bidlab.services import evaluation as evaluation_service
 from bidlab.services import workspace as workspace_service

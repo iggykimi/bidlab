@@ -2,7 +2,7 @@
 
 import json
 import pathlib
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from bidlab.schemas import generated as g
@@ -533,7 +533,7 @@ def test_live_round_trip_binds_images_and_keeps_raw_v2(
 def _prompt_example() -> dict[str, Any]:
     root = pathlib.Path(__file__).resolve().parents[4]
     raw = (root / "examples/observations_prompt_gold.json").read_text(encoding="utf-8")
-    return json.loads(raw)
+    return cast("dict[str, Any]", json.loads(raw))
 
 
 def test_prompt_example_validates_and_separates_kinds() -> None:

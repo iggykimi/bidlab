@@ -1,5 +1,7 @@
 """PKG-T12: library search and pagination over the complete tender set."""
 
+from typing import Any, cast
+
 from fastapi.testclient import TestClient
 
 HEADERS = {"X-BidLab-Client": "local-ui"}
@@ -9,7 +11,7 @@ def _headers(key: str) -> dict[str, str]:
     return {**HEADERS, "Idempotency-Key": key}
 
 
-def _create(client: TestClient, key: str, title: str, external_id: str) -> dict:
+def _create(client: TestClient, key: str, title: str, external_id: str) -> dict[str, Any]:
     res = client.post(
         "/api/v1/tenders",
         json={
@@ -23,7 +25,7 @@ def _create(client: TestClient, key: str, title: str, external_id: str) -> dict:
         headers=_headers(key),
     )
     assert res.status_code == 201, res.text
-    return res.json()
+    return cast("dict[str, Any]", res.json())
 
 
 def test_q_finds_expediente_beyond_the_first_page(fresh_client: TestClient) -> None:

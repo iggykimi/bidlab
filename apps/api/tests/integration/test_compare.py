@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from bidlab.db import models
 from bidlab.db.session import get_engine
@@ -13,16 +14,16 @@ ROOT = Path(__file__).resolve().parents[4]
 COMPARE_HEADERS = {"X-BidLab-Client": "local-ui"}
 
 
-def _input(discount: str = "0.1000", rule_revision: int = 1) -> dict:
+def _input(discount: str = "0.1000", rule_revision: int = 1) -> dict[str, Any]:
     raw = (ROOT / "examples" / "evaluation_request.json").read_text(encoding="utf-8")
     payload = json.loads(raw)
     payload["pricing_rule_id"] = "tias-price-r1"
     payload["pricing_rule_revision"] = rule_revision
     payload["discount_rate"] = discount
-    return payload
+    return cast("dict[str, Any]", payload)
 
 
-def _save(client: TestClient, name: str, payload: dict, key: str) -> str:
+def _save(client: TestClient, name: str, payload: dict[str, Any], key: str) -> str:
     res = client.post(
         "/api/v1/scenarios",
         json={"name": name, "input": payload},

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from bidlab.domain.expressions import Const, template_for
@@ -26,14 +27,14 @@ VECTORS = json.loads((_examples() / "math_vectors.json").read_text(encoding="utf
 
 
 @pytest.mark.parametrize("case", VECTORS["scoring"])
-def test_scoring_vectors(case: dict[str, object]) -> None:
+def test_scoring_vectors(case: dict[str, Any]) -> None:
     expr = template_for(str(case["template"]))
     reference = case["reference_price"]
     result = evaluate_score(
         expr,
         str(case["max_points"]),
         str(case["own_price"]),
-        [str(r) for r in case["rivals"]],  # type: ignore[union-attr]
+        [str(r) for r in case["rivals"]],
         str(reference) if reference is not None else None,
         complete=True,
     )

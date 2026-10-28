@@ -177,15 +177,23 @@ Base fija https://api.meta.ai/v1; modelo por META_MODEL=muse-spark-1.3; clave so
 
 Fragmento documental mínimo:
 ~~~python
-client = OpenAI(base_url="https://api.meta.ai/v1", api_key=os.environ["MODEL_API_KEY"],
-                timeout=90.0, max_retries=0)
+client = OpenAI(
+    base_url="https://api.meta.ai/v1",
+    api_key=os.environ["MODEL_API_KEY"],
+    timeout=90.0,
+    max_retries=0,
+)
 response = client.chat.completions.create(
     model=settings.meta_model,
-    messages=[{"role":"developer","content":prompt},
-              {"role":"user","content":page_marked_text}],
+    messages=[
+        {"role": "developer", "content": prompt},
+        {"role": "user", "content": page_marked_text},
+    ],
     max_completion_tokens=6000,
-    response_format={"type":"json_schema","json_schema":{
-        "name":"bidlab_extraction","schema":extraction_schema}},
+    response_format={
+        "type": "json_schema",
+        "json_schema": {"name": "bidlab_extraction", "schema": extraction_schema},
+    },
 )
 # validar contenido y finish_reason antes de persistir cualquier propuesta
 ~~~

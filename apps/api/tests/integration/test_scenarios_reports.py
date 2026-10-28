@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from bidlab.api.errors import ApiError
@@ -16,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[4]
 HEADERS = {"X-BidLab-Client": "local-ui", "Idempotency-Key": "scn-1"}
 
 
-def _input() -> dict:
+def _input() -> dict[str, Any]:
     raw = (ROOT / "examples" / "evaluation_request.json").read_text(encoding="utf-8")
     payload = json.loads(raw)
     payload["pricing_rule_id"] = "tias-price-r1"
-    return payload
+    return cast("dict[str, Any]", payload)
 
 
 def test_save_get_roundtrip(seeded_client: TestClient) -> None:
@@ -170,7 +171,7 @@ def test_pending_items_spanish_copy(seeded_client: TestClient) -> None:
     assert "Posible anormalidad: preparar justificación de costes" in pending
 
 
-def _unfinished_report(score_status: str) -> dict:
+def _unfinished_report(score_status: str) -> dict[str, Any]:
     return {
         "scenario": {
             "name": "N",

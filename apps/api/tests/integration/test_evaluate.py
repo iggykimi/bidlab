@@ -3,6 +3,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, cast
 
 from bidlab.db import models
 from bidlab.db.session import get_engine
@@ -14,11 +15,11 @@ ROOT = Path(__file__).resolve().parents[4]
 HEADERS = {"X-BidLab-Client": "local-ui"}
 
 
-def _request() -> dict:
+def _request() -> dict[str, Any]:
     raw = (ROOT / "examples" / "evaluation_request.json").read_text(encoding="utf-8")
     payload = json.loads(raw)
     payload["pricing_rule_id"] = "tias-price-r1"  # seed id; example file uses an illustrative id
-    return payload
+    return cast("dict[str, Any]", payload)
 
 
 def test_evaluate_tias_5_percent(seeded_client: TestClient) -> None:
@@ -113,8 +114,10 @@ def test_evaluate_rglcap_has_no_absolute_close(seeded_client: TestClient) -> Non
     with Session(get_engine()) as session:
         rule = session.get(models.RuleRevision, ("tias-price-r1", 1))
         assert rule is not None
-        rule_json = dict(rule.rule_json) if isinstance(rule.rule_json, dict) else {}
-        policy = dict(rule_json.get("anomaly_policy", {}))
+        raw_rule_json = rule.rule_json
+        rule_json: dict[str, Any] = dict(raw_rule_json) if isinstance(raw_rule_json, dict) else {}
+        raw_policy = rule_json.get("anomaly_policy", {})
+        policy: dict[str, Any] = dict(raw_policy) if isinstance(raw_policy, dict) else {}
         assert policy.get("three_bidder_absolute_25") is True
         policy["variant"] = "rglcap85_standard"
         rule_json["anomaly_policy"] = policy

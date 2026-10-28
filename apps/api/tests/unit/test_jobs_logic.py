@@ -1,7 +1,8 @@
 """T15/T17 service logic: citation verification, budget guard, restarts."""
 
 import datetime as dt
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
+from typing import Any, cast
 
 import pytest
 from bidlab.api.errors import ApiError
@@ -311,7 +312,8 @@ def test_publish_stale_generation_aborts_without_side_effects(session: Session) 
 def test_execute_live_without_key_fails_attempt(session: Session) -> None:
     """A key removed after admission fails the attempt, never sticks it."""
     row = _job_row("queued")
-    row.request_json["input"]["mode"] = "live"
+    request_input = cast("dict[str, Any]", row.request_json["input"])
+    request_input["mode"] = "live"
     session.add(row)
     session.commit()
     engine = _engine_of(session)
@@ -329,11 +331,12 @@ def test_execute_budget_blocked_publishes_failed(
     class _LiveStub:
         is_live = True
 
-        def extract(self, pages: object) -> object:
-            return meta_adapter.StubExtractor().extract(pages)  # type: ignore[arg-type]
+        def extract(self, pages: Sequence[meta_adapter.PageInput]) -> meta_adapter.AdapterResult:
+            return meta_adapter.StubExtractor().extract(pages)
 
     row = _job_row("queued")
-    row.request_json["input"]["mode"] = "live"
+    request_input = cast("dict[str, Any]", row.request_json["input"])
+    request_input["mode"] = "live"
     session.add(row)
     session.commit()
     monkeypatch.setenv("BIDLAB_META_BUDGET_USD", "0.00")

@@ -14,8 +14,14 @@ def main() -> int:
         print(f"refusing non-loopback bind host: {host}", file=sys.stderr)
         return 2
     cmd = [
-        "uv", "run", "uvicorn", "bidlab.main:app",
-        "--host", host, "--port", str(port),
+        "uv",
+        "run",
+        "uvicorn",
+        "bidlab.main:app",
+        "--host",
+        host,
+        "--port",
+        str(port),
     ]
     print(f"starting API: {' '.join(cmd)} (cwd={ROOT})")
     return subprocess.call(cmd, cwd=ROOT)

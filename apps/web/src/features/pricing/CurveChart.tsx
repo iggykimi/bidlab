@@ -76,8 +76,8 @@ const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
 
 const AXIS_TICK = { fontSize: 14 };
 
-function tooltipLabel(label: number): string {
-  return `Precio ${formatEurosExact(String(label))}`;
+function tooltipLabel(label: unknown): string {
+  return typeof label === "number" ? `Precio ${formatEurosExact(String(label))}` : "—";
 }
 
 function tooltipPoints(value: unknown): string {
