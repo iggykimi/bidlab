@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion. Footage real sin narración: docs/demo/footage-oro-20261028.webm (flujo oro, 28-oct). Vídeo narrado de 180 s pendiente de grabar. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4e0b37d: 40+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm ANTERIOR a T09–T15 (drawer, tracker, vocabulario): NO reutilizar como metraje final, regrabar desde limpio. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -46,11 +46,15 @@ cifras vienen de una semilla revisada a mano.»
 ## Bloque 3 — Revisión (40–60s)
 
 Pantalla: pestaña «Requisitos». Fila «Servicios similares año mayor ejecución
-≥ 207.088,00 €»: «Por verificar». Clic en «Ver página 6» → «Página 6 de 41»,
-cita con 207.088. «Cerrar» antes del siguiente bloque.
+≥ 207.088,00 €»: «Por verificar». Clic en «Ver página 6 en el pliego» →
+«Página 6 de 41»: la semilla no trae imagen, así que se ve el aviso
+«Esta página no tiene imagen. Coteja con el texto de abajo.» y la cita con
+207.088 como texto rotulado. «Cerrar» antes del siguiente bloque
+[NO SE LEE: el drawer devuelve el foco al botón; no finjas una imagen
+que no existe].
 Narración: «Este requisito queda pendiente. La empresa no acredita el umbral
-y la cita está en la página 6. BidLab lo marca Por verificar. No inventa
-certificados.»
+y la cita está en la página 6. Sin imagen, BidLab lo dice y enseña el texto
+rotulado. No inventa certificados.»
 
 ## Bloque 4 — Coste e hipótesis (60–80s)
 
@@ -65,7 +69,7 @@ que declaras tú. Sin ofertas reales, no hay predicción posible.»
 
 ## Bloque 5 — Resultado al 10 % (80–100s)
 
-Pantalla: «Escribe tu rebaja (%)» a 10. KPIs: «Tu oferta» 106.502,40 €,
+Pantalla: «Escribe tu rebaja (%)» a 10. KPIs: «Tu oferta (sin IGIC)» 106.502,40 €,
 «Tu beneficio» +16.502,40 €, «Tus puntos por precio» «49,0 de 49»,
 «Sacarías 49,0 de 49 puntos por precio.» «¿Cómo sale tu resultado?»:
 «Tu precio: 118.336 € menos un 10,0 % = 106.502,40 €.», «La oferta más
@@ -119,12 +123,15 @@ y el informe la conserva con tus notas. Entiende la regla, compara y guarda.»
 
 ## Recorrido propio (evidencia local, fuera de los 180 s)
 
-No sale en el vídeo por tiempo. Probado E2E 3/3 (tests/e2e/own-journey.spec.ts,
-re-ejecutado en verde el 27-oct): «Nueva licitación» →
+No sale en el vídeo por tiempo. Probado E2E 4/4 (tests/e2e/own-journey.spec.ts,
+R05 ×4 incluido recarga-sin-duplicar, re-ejecutado en verde el 28-oct
+dentro de la suite 70/70): «Nueva licitación» →
 «¿Qué licitación quieres dar de alta?» → «¿Quieres añadir el pliego en PDF?»
 → «¿Quién eres en esta licitación?» → pestaña «Revisar» (insignia
-«Tus datos»): «¿Pides propuestas automáticas?» → «Lista», «Sin propuestas
-automáticas; revisa a mano.», «Aprobar tu revisión» → «Ya guardamos tu revisión» → «Ir a Precio» → simular,
+«Tus datos»): «¿Pides propuestas automáticas?» → seguidor con «Estado:»
+(«En cola» / «En marcha» / «Lista») + «Detalles técnicos» con la clase de
+ejecución, «Sin propuestas automáticas; revisa a mano.»,
+«Aprobar tu revisión» → «Ya guardamos tu revisión N.» (con número) → «Ir a Precio» → simular,
 «Guardar esta prueba» → «Verla en el
 informe» → «Crear informe» → «Descargar HTML». Todo offline, sin tocar el
 ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
@@ -161,5 +168,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
 - Números esperados 5/15/30 %: fixtures/demo/expected.json (90000.00 =
   80000 + 10000 de company.json «Pyme de ejemplo»; casos 5/15/30 %;
   anomalía a 30 %); caso 10 % fijado por CMP-02 + R06 + backend, no por expected.json.
-- Puertas globales: `python scripts/verify.py` ALL CHECKS PASSED
-  (exit 0, 27-oct; ver docs/verification-log.md).
+- Puertas globales: suite 70/70 + backend 458 + web 212 en verde
+  el 28-oct (@a870598; ver docs/verification-log.md PKG-T15);
+  re-ejecutar `python scripts/verify.py` tras el merge de PKG-T11
+  antes de grabar (el 10/10 anterior es anterior al paquete).
