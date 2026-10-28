@@ -895,3 +895,32 @@ Evidencia:
 - `ruff check`, `ruff format --check` (93 ficheros),
   `mypy` (50): verdes. E2E completa 66/66 (+1
   vigencia malla).
+
+## Plan Integral PKG-T14 — ruta visual diseno_anterior (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 9ca02de. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red.
+
+Aceptación 1 (tokens, sin piezas nuevas): solo
+`styles.css` (@theme + body + foco): surface/ink/
+muted/soft/line/border/alert/warn/error/chart del
+`:root` del prototipo; primary idéntico; hover/ink
+oscuros conservados (sin equivalente, contraste);
+foco offset 4px; interlineado 1.55. Sin página
+nueva (sería una pieza; el listado del paquete era
+aspiracional). Decisión D28-3: base 18px del
+prototipo NO aplicada (reescala rem global;
+follow-up con QA visual si el autor la quiere).
+
+Aceptación 2 (demo y tour intactos): E2E 67/67
+(incluye tour + axe contraste), capturas 01–08
+regeneradas e inspeccionadas (escritorio+móvil
+legibles, sin desbordes).
+
+Evidencia:
+- Backend: 436 passed sin tocar (exit 0).
+- Front: vitest 210, eslint, tsc, build: verdes.
+- `ruff check`, `ruff format --check` (93 ficheros):
+  verdes (mypy no aplica: sin cambios py).
+- E2E completa 67/67 (+1 prototipo.spec: estilos
+  computados body/muted/foco).

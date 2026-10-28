@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #f6f7fb;
-  --color-ink: #172033;
-  --color-muted: #3a4560;
+  /* T14: ruta visual del diseno_anterior (prototipo :root). Sin piezas
+   * nuevas: solo valores. primary-hover/primary-ink no tienen
+   * equivalente en el prototipo y se conservan (contraste). */
+  --color-surface: #f7f8fa;
+  --color-ink: #18243b;
+  --color-muted: #4c5d73;
   --color-primary: #2748b8;
   --color-primary-hover: #1e3fa0;
   --color-primary-ink: #162d75;
-  --color-primary-soft: #e8efff;
-  --color-line: #e5e9f2;
-  --color-border: #c9d2e8;
-  --color-alert: #6b4200;
-  --color-warn-bg: #fff4d6;
-  --color-warn-ink: #5f3a00;
-  --color-error: #9c1f16;
-  --color-chart-profit: #1e7b3c;
+  --color-primary-soft: #edf1ff;
+  --color-line: #c8d1df;
+  --color-border: #c8d1df;
+  --color-alert: #795000;
+  --color-warn-bg: #fff5dc;
+  --color-warn-ink: #795000;
+  --color-error: #a52d28;
+  --color-chart-profit: #176046;
   --drawer-curve: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -22,6 +25,7 @@ body {
   background: var(--color-surface);
   color: var(--color-ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.55;
 }
 
 .tnum {
@@ -30,7 +34,7 @@ body {
 
 :focus-visible {
   outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
+  outline-offset: 4px;
 }
 
 /* Long protocol tokens (hashes, decimals) must wrap inside table cells. */

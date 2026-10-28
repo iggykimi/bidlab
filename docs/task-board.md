@@ -56,7 +56,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T13 hecho (10×6, 422 con campos,
   banner vigencia); backend 436 + front 210 +
   E2E 66/66.
-  Siguiente: PKG-T14 (ruta visual diseno_anterior).
+- 28-oct: PKG-T14 hecho (tokens prototipo, 8 PNG
+  regen); backend 436 + front 210 + E2E 67/67.
+  D28-3: 18px no aplicado (follow-up con QA).
+  Siguiente: PKG-T15 + PKG-T10 en paralelo
+  (helpers, worktrees .worktrees/).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
