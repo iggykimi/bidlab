@@ -1301,3 +1301,23 @@ Tabla PASS/FAIL/BLOCKED por aceptación:
   live (credencial), envío (decisión
   autor). P1 diferido; PKG-T28–T30
   descartados. Sin publicación ni envío.
+
+## Docs-A+B — documentación alineada (Windows, helpers + lead)
+
+Fecha: 2026-10-28. Merges: 6de8731 (B) +
+6b7a30c (A) sobre 4f1cc61. Docs-B: 8
+ficheros técnicos (mapa real de módulos,
+19 tablas/0001→0006, suites 503/43 con
+desglose, literales de motor); el lead
+re-verificó cada afirmación comprobable
+(conteos collect-only idénticos, símbolos,
+versiones, ausencias pdfplumber/PDF.js).
+Docs-A: README + demo/runbook/submission/
+launch/social + guion (conteos 502/216/72,
+npm 313 auditado, Idempotency opcional en
+revisión, badge «Datos de ejemplo»);
+capturas 09-radar + 10-techo nuevas,
+inspeccionadas por lead y helper.
+Gates en main: shots 4/4 + E2E 72/72.
+Limpieza: uvicorn huérfano del helper B
+(PID 30976, ocupaba el 8000) detenido.

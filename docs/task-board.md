@@ -95,6 +95,12 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   tabla PASS/FAIL/BLOCKED (19 PASS, 0 FAIL, 2
   BLOCKED externos: T16 sesiones, T18 vídeo).
   Plan integral cerrado salvo autor.
+- 28-oct: Docs-A+B (helpers, merges 6de8731 +
+  6b7a30c): README + 9 docs técnicos + pack
+  demo alineados con código (conteos
+  re-ejecutados, literales re-verificados);
+  capturas 09-radar + 10-techo nuevas.
+  Shots 4/4 + E2E 72/72 en main.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
