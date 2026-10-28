@@ -93,12 +93,14 @@ $env:BIDLAB_STORAGE_DIR = "C:\ruta\fresca"   # PowerShell
 export BIDLAB_STORAGE_DIR=/ruta/fresca       # bash
 ```
 
-Comprobado en T31: arrancar con storage vacío crea 18 tablas
-(alembic `0001_initial`), la primera petición responde 200 (sin 500),
-y `GET /tenders` devuelve `total: 0` hasta sembrar. Tras
-`seed_demo.py`: 1 tender (`tias`), 6 páginas, 9 citas, 1 regla, 1
-empresa + revisión; `POST /demo/sessions` → 201
-`{"tender_id":"tias","scope_id":"tias-whole","company_id":"company-demo","mode":"demo"}`.
+Comprobado en T19 (dos ensayos limpios R1+R2, 28-oct):
+arrancar con storage vacío crea 20 tablas (alembic
+`0006_job_generation`), la primera petición responde 200
+(sin 500), y `GET /tenders` devuelve `total: 0` hasta
+sembrar. Tras `seed_demo.py`: 1 tender (`tias`);
+`POST /demo/sessions` → 201
+`{"tender_id":"tias","scope_id":"tias-whole","company_id":"company-demo","mode":"demo"}`;
+capacidades `mode: demo, meta_configured: false`; web `/` 200.
 
 Mutaciones API (demo incluida) exigen cabeceras:
 
@@ -127,10 +129,10 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 Estado a 28-oct-2026 (contado en este árbol; detalle y comandos
 en [verification-log](docs/verification-log.md)):
 
-- Backend: 333 tests (220 unit + 113 integración/contratos).
-  Web: 202 en 25 ficheros (`npm run test:unit`, verde).
-  E2E: 62 tests en 20 specs herméticos.
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0.
+- Backend: 502 tests (unit + evaluation + integración/contratos).
+  Web: 216 en 28 ficheros (`npm run test:unit`, verde).
+  E2E: 72 tests herméticos (Chromium, loopback).
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@a8fef2c, 28-oct).
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
@@ -138,9 +140,12 @@ en [verification-log](docs/verification-log.md)):
   conserva 5916,80 € más) + recorrido propio completo offline
   (alta + PDF + empresa + análisis + revisión manual + simular +
   comparar + exportar) + visita guiada + malla de resistencia.
-  Footage real sin narración
-  ([footage-oro-20261028.webm](docs/demo/footage-oro-20261028.webm));
-  vídeo narrado pendiente; sin envío.
+  Paquete integral: extracción con recibos live, gold humano +
+  comparativa medida texto/híbrido, imagen exacta de página,
+  radar de incoherencias, techo de coste con paridad motor.
+  Footage-oro anterior al paquete (obsoleto, regrabar);
+  guion 180s v2 verificado; vídeo narrado pendiente del autor;
+  sin envío.
 
 ## Configuración
 

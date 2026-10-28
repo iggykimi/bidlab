@@ -90,6 +90,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   contrato desde builder fusionado + ambas docs).
   Gates lead: backend 502 + E2E 72/72. T20–T21
   cerrados. Siguiente: T19.
+- 28-oct: PKG-T19 hecho (lead): verify.py 10/10
+  exit 0 + dos ensayos limpios 10/10 (R1+R2) +
+  tabla PASS/FAIL/BLOCKED (19 PASS, 0 FAIL, 2
+  BLOCKED externos: T16 sesiones, T18 vídeo).
+  Plan integral cerrado salvo autor.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

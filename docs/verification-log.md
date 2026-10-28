@@ -1208,11 +1208,96 @@ Evidencia (lead, en main tras merge 0f939a5):
   0.86.0, openapi-typescript 7.13.0):
   YAML +81/−0, unión verificada (T20 +
   max_cost_net T21). Docs: ambas secciones.
-- Nota «1 deselected» del helper: caza hecha.
-  Suite SIN filtros en worktree (495/495) y en
-  main (502/502) da exit 0: era un resto
-  intermedio, ningún fallo enmascarado.
+- Nota «1 deselected» del helper: aclarada. El
+  helper corrió `pytest apps/api/tests -m "not
+  live"`: el deseleccionado es
+  `tests/live/test_meta_live.py` (marca live,
+  opt-in con clave, convención del repo). Los
+  gates del lead usan los 4 dirs offline
+  (502/502 exit 0); el test live no se ejecuta
+  sin credencial. Ningún fallo enmascarado.
 - Backend 502/502 exit 0, ruff check (raíz) +
   format (103) + mypy (53) verdes. Front:
   vitest 216, eslint, tsc, build verdes.
 - E2E completa 72/72 (71 + t20-radar).
+
+## PKG-T19 — puertas, ensayos limpios y tabla final (Windows, lead)
+
+Fecha: 2026-10-28. Commit: a8fef2c. Entorno:
+Windows, Python 3.14 (venv), Node 26, Chromium.
+Sin red salvo loopback; `.env` local existe pero
+`capabilities` confirma meta_configured=false.
+
+Puertas completas (`python scripts/verify.py`,
+exit 0, ALL CHECKS PASSED): deps-python,
+pytest-unit (unit + evaluation), pytest
+integration+contracts, npm lint/typecheck/
+build/test:unit (vitest 216/216), ruff check
+(raíz), mypy (53), playwright-e2e 72/72.
+Backend total 502/502. `tests/live` opt-in no
+ejecutado (sin credencial, por convención).
+
+Dos ensayos limpios (R1 + R2, storage fresco
+vacío cada vez, servidores reales en loopback,
+script throwaway en /tmp): 10/10 pasos PASS
+en ambos, exit 0: storage vacío, API health
+200 (engine 1.0.0 / schema 1.0.0), tenders 0,
+seed exit 0, tenders 1 (tias), workspace 200,
+demo-sessions 201, capabilities demo/meta
+false, web / 200 (1845 bytes). DB sembrada:
+20 tablas, alembic 0006_job_generation.
+Tropiezos del arnés (no de la app): PID de
+npm.cmd no rastreable (se mató por error un
+Notepad del autor — declarado) → lanzar vite
+con node directo; ruta con espacio sin
+comillar → Cannot find module. La app sirve
+bien en los tres arranques.
+
+Tabla PASS/FAIL/BLOCKED por aceptación:
+- PKG-T01 recibos live: PASS (usage/latencia
+  antes de parsear; timeout=incierto).
+- PKG-T02 reserva atómica: PASS (micro-USD,
+  UPDATE condicional).
+- PKG-T03 jobs async: PASS (202 + worker FIFO
+  + claim CAS + fence).
+- PKG-T04 cobertura páginas: PASS (usable/
+  entregado + warnings).
+- PKG-T05 render versionado: PASS (PyMuPDF<2,
+  hash, nunca rompe upload).
+- PKG-T06 payload híbrido: PASS (acotado,
+  tope real en budget).
+- PKG-T07 observations: PASS (v2 live +
+  adapt v1, crudo en manifest).
+- PKG-T08 prompts: PASS (extract-3 +
+  ejemplo sintético).
+- PKG-T09 recorrido UI: PASS (tracker
+  rehidratable, motor tras aprobar).
+- PKG-T10 gold/harness: PASS (25 gold,
+  split dev/eval, CLI 0/2).
+- PKG-T11 comparativa: PASS (texto 0/0/11
+  medido, híbrido blocked, n=11 + límites).
+- PKG-T12 búsqueda: PASS (q servidor +
+  URL + paginación).
+- PKG-T13 malla: PASS (10×6, 422 con
+  campos, banner vigencia).
+- PKG-T14 ruta visual: PASS (tokens
+  prototipo; 18px diferido D28-3).
+- PKG-T15 dato-fuente: PASS (imagen exacta
+  + cita vs revisión).
+- PKG-T16 usabilidad: BLOCKED externo
+  (protocolo listo, 0 sesiones; el autor
+  recluta).
+- PKG-T17 matriz: PASS (C01–C14 con
+  run/test/fuente; smoke separado).
+- PKG-T18 vídeo 180s: BLOCKED externo
+  (guion v2 verificado; graba el autor).
+- PKG-T19 puertas: PASS (este registro).
+- PKG-T20 radar: PASS (6 ejes, 2 fuentes
+  + pregunta, sintético rotulado).
+- PKG-T21 techo coste: PASS (96135.68/
+  96135.69, paridad motor, disclaimers).
+- FAIL: ninguno. BLOCKED externos: T16
+  (participantes), T18 (grabación), G3
+  live (credencial), envío (decisión
+  autor). P1 diferido; PKG-T28–T30
+  descartados. Sin publicación ni envío.

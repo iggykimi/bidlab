@@ -49,10 +49,10 @@ Current document-extraction state (28-oct):
 
 ## Verification (real runs, Windows)
 
-- Backend: 472/472 passing (unit + evaluation + integration + contracts), exit 0, observed 28-oct @c0b2ca1. Ruff check (root) + format clean, mypy 52 files clean, observed 28-oct.
-- Web: 212 vitest passing, eslint + tsc exit 0, vite build OK, observed 28-oct @a870598 (unchanged by T11).
-- Playwright E2E: 70/70 green (hermetic per-run storage), observed 28-oct @c0b2ca1. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- `scripts/verify.py`: full re-run at PKG-T19 (last 10/10 ALL CHECKS PASSED is stale, pre-package counts). Not claimed as current.
+- Backend: 502/502 passing (unit + evaluation + integration + contracts), exit 0, observed 28-oct @a8fef2c. Ruff check (root) + format clean, mypy 53 files clean, observed 28-oct.
+- Web: 216 vitest passing, eslint + tsc exit 0, vite build OK, observed 28-oct @a8fef2c.
+- Playwright E2E: 72/72 green (hermetic per-run storage), observed 28-oct @a8fef2c. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 28-oct @a8fef2c. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2 (26-oct); current pushes not forced through CI per author order.
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
@@ -70,6 +70,8 @@ Current document-extraction state (28-oct):
 | C12 | Citation (machine localisation) vs review (human) kept distinct | OBSERVED | PKG-T15: vocab split + `citaEstadoEs` tests |
 | C13 | Text-vs-hybrid extraction quality/cost measured | OBSERVED | `evidence/extraction_comparison.json` + `scripts/compare_extraction.py` (text 0/0/11, hybrid blocked, 14 tests) |
 | C14 | Usability sessions with target people | PENDING | Protocol in `docs/usability-log.md`; 0 sessions, author recruits |
+| C15 | Incoherence radar: two sources + neutral question, no precedence | OBSERVED | PKG-T20: `consistency.py` + `t20-radar.spec.ts` (empty honest + labeled synthetic) |
+| C16 | Cost ceiling that breaks the minimum profit, engine parity | OBSERVED | PKG-T21: `cost_ceiling` + `test_breakpoint.py` (96135.68/96135.69, score identical) |
 | C05 | Guided tour in app (?tour=1, verified steps) | OBSERVED | `tests/e2e/tour.spec.ts` + `apps/web/src/tour/` |
 | C10 | Animated comparison in app | PROPOSED | Not implemented; do not script or claim (repo-side id, 28-oct; not in UX CLAIMS.json) |
 | C06 | Work survives navigation and reload | OBSERVED | E07 + UX-01/UX-02 (drafts) + cost draft |
