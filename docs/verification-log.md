@@ -584,3 +584,38 @@ Evidencia:
 - Tests heredados intactos: 429 budget_exhausted con job
   failed + invocation live, fixture modes, live_spend
   3.75, envelope {model,messages,response_format}.
+
+## Plan Integral PKG-T03 — admisión async + worker (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 323bc7c. Entorno: Windows,
+Python 3.14 (venv), Chromium Playwright. Sin red.
+
+POST /analysis admite (validaciones + 429 rápido con
+auditoría) y devuelve 202 queued; `services/worker.py`
+nuevo (hilo daemon + cola FIFO, arranque/parada en
+lifespan, re-encola huérfanos queued/failed/expirados al
+arrancar) ejecuta claim CAS (status/lease/generation,
+migración 0006) → extract sin transacción abierta →
+publicación con fence de generación (rollback si el claim
+  caducó). `run_job` inline eliminado; fases
+claim/execute/publish + `run_claimed_attempt` +
+`cancel_queued_job` (perdedor de carrera de
+idempotencia). Sin cambio de contrato (Job ya incluía
+queued/running; front ya hacía polling).
+
+Evidencia:
+- Backend: unit 243 + integración/contratos 120 = 363
+  passed, exit 0 (11 tests de fases incl. CAS, fence
+  sin efectos, execute sin clave, bloqueo worker;
+  integración con polling real + proveedor lento que
+  no bloquea health/polling + re-encola).
+- `ruff check apps/api/`, `ruff format --check
+  apps/api/`, `mypy apps/api/bidlab` (48 ficheros):
+  verdes. Migración 0006: head único, downgrade -1 →
+  upgrade head exit 0.
+- E2E servidor real: own-journey 3/3, tour 2/2,
+  stress 2/2 (polling frontal lleva a terminal).
+- Front: eslint + tsc exit 0 (solo comentario
+  honesto en AnalysisTracker; lógica intacta).
+- 409 job_running retirado (claim devuelve None);
+  código sigue permitido en contrato.

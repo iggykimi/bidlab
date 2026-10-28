@@ -1,9 +1,11 @@
-"""Extraction jobs: persisted record + inline run (T17).
+"""Extraction jobs: queued admission + worker attempts (PKG-T03).
 
-Single-process design: the run endpoint executes the job synchronously and
-returns its terminal state with 202. ``run_job`` is restart-safe: terminal
-jobs (except ``failed``) are returned as-is, and a ``running`` job whose
-lease expired may be reclaimed. Failed jobs may be retried as a new attempt.
+Single-process design: the run endpoint persists a queued job and returns
+202 immediately; a worker thread claims it (compare-and-swap on
+status/lease/generation), extracts with no job transaction open, and
+publishes through a generation fence. Terminal jobs are returned as-is,
+failed jobs may be retried as new attempts, and lease-expired running jobs
+may be reclaimed; a publish from a superseded claim is rolled back.
 Live attempts reserve spend before the call and settle the reported cost
 (PKG-T02); only attempts that never reach the network release the hold.
 """
@@ -12,12 +14,14 @@ from __future__ import annotations
 
 import datetime as dt
 import secrets
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
@@ -25,9 +29,6 @@ from bidlab.schemas import generated as g
 from bidlab.services import budget as budget_service
 from bidlab.services import meta_adapter
 from bidlab.services import pdf as pdf_service
-
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
 
 LEASE_MINUTES = 10
 NON_PROPOSED_CLAIM = frozenset({"not_found", "ambiguous", "unsupported"})
@@ -167,7 +168,8 @@ def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest)
             "live mode requires allow_remote_processing=true",
         )
     # Gate live availability BEFORE creating any record: no fake jobs.
-    adapter = meta_adapter.select_adapter(payload.mode)
+    # The worker re-selects; this call only validates key + endpoint.
+    meta_adapter.select_adapter(payload.mode)
     expected = current_revision(session, tender_id)
     if payload.expected_interpretation_revision != expected:
         raise ApiError(
@@ -205,6 +207,7 @@ def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest)
             "attempts": 0,
         },
         stage="queued",
+        generation=1,
         worker_id=None,
         lease_until=None,
         result_revision=None,
@@ -214,7 +217,44 @@ def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest)
     )
     session.add(job)
     session.flush()
-    return run_job(session, job.id, adapter=adapter)
+    # Admission commits here: the worker must see the queued job, and the
+    # budget pre-check below stays auditable even when it fails fast. The
+    # authoritative admission is the worker-side reservation (PKG-T02).
+    session.commit()
+    if payload.mode == "live":
+        try:
+            check_live_budget(session)
+        except ApiError:
+            _fail_admission_over_budget(session, job, doc_ids)
+            session.commit()
+            raise
+    return job
+
+
+def _fail_admission_over_budget(session: Session, job: models.Job, doc_ids: list[str]) -> None:
+    # Fast 429 as failed attempt 1 (auditable, retry-safe).
+    pages = session.scalars(
+        select(models.DocumentPage)
+        .where(models.DocumentPage.document_id.in_(doc_ids))
+        .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
+    ).all()
+    inputs = [
+        meta_adapter.PageInput(
+            document_id=page.document_id,
+            page_number=page.page_number,
+            normalized_text=page.normalized_text,
+        )
+        for page in pages
+    ]
+    _fail_job(
+        session,
+        job,
+        code="budget_exhausted",
+        message="live model budget exhausted",
+        mode="live",
+        attempt=1,
+        input_hash=meta_adapter.pages_input_hash(inputs),
+    )
 
 
 def _update_request(
@@ -347,117 +387,239 @@ def verify_and_store_citations(
     return ids, warnings, missing
 
 
-def run_job(
-    session: Session, job_id: str, adapter: meta_adapter.ExtractionAdapter | None = None
-) -> models.Job:
-    job = get_job_or_404(session, job_id)
+@dataclass(frozen=True)
+class AttemptClaim:
+    """A worker's exclusive lease on one job attempt (CAS-claimed)."""
+
+    job_id: str
+    attempt: int
+    generation: int
+    tender_id: str
+    mode: str
+    doc_ids: tuple[str, ...]
+    worker_id: str
+
+
+@dataclass(frozen=True)
+class AttemptOutcome:
+    """Everything the execution learned, without touching job rows."""
+
+    inputs: tuple[meta_adapter.PageInput, ...]
+    input_hash: str
+    run_started: str
+    live: bool
+    result: meta_adapter.AdapterResult | None = None
+    error: meta_adapter.AdapterError | None = None
+    budget_blocked: bool = False
+
+
+def claim_attempt(session: Session, job_id: str, worker_id: str) -> AttemptClaim | None:
+    """CAS-claim a queued, failed, or lease-expired job for one attempt.
+
+    Flushes the claim; the caller commits the short transaction. Returns
+    None when the job is missing, terminal, or held by a live worker.
+    """
+    job = session.get(models.Job, job_id)
+    if job is None:
+        return None
     if job.status in ("succeeded", "needs_review", "cancelled"):
-        return job
+        return None
+    now = _now()
+    claimed = session.connection().execute(
+        update(models.Job)
+        .where(models.Job.id == job_id)
+        .where(models.Job.generation == job.generation)
+        .where(
+            (models.Job.status.in_(["queued", "failed"]))
+            | (
+                (models.Job.status == "running")
+                & ((models.Job.lease_until.is_(None)) | (models.Job.lease_until < now.isoformat()))
+            )
+        )
+        .values(
+            status="running",
+            stage="extracting",
+            worker_id=worker_id,
+            lease_until=(now + dt.timedelta(minutes=LEASE_MINUTES)).isoformat(),
+            updated_at=now.isoformat(),
+            generation=models.Job.generation + 1,
+        )
+    )
+    if claimed.rowcount != 1:
+        return None
+    session.refresh(job)
     req = _as_dict(job.request_json)
     attempt = _as_int(req.get("attempts")) + 1
-    if job.status == "running" and job.lease_until:
-        try:
-            leased = dt.datetime.fromisoformat(job.lease_until) > _now()
-        except ValueError:
-            leased = False
-        if leased:
-            raise ApiError(409, "job_running", f"job {job_id} is already running")
-    job_input = _as_dict(req.get("input"))
-    mode = str(job_input.get("mode", "curated_demo"))
-    doc_ids = [str(item) for item in (job_input.get("document_ids", []) or [])]
-    if adapter is None:
-        adapter = meta_adapter.select_adapter(mode)
-    job.status = "running"
-    job.stage = "extracting"
-    job.worker_id = "api-inline"
-    job.lease_until = (_now() + dt.timedelta(minutes=LEASE_MINUTES)).isoformat()
-    job.updated_at = _now().isoformat()
     _update_request(job, attempts=attempt)
     session.flush()
-    # Commit the claim before any spend reservation: the ledger runs on a
-    # separate short connection, which could never take its write lock while
-    # this session holds uncommitted writes. Crash-safe: the lease above lets
-    # another worker reclaim a job left running.
-    session.commit()
+    job_input = _as_dict(req.get("input"))
+    return AttemptClaim(
+        job_id=job.id,
+        attempt=attempt,
+        generation=job.generation,
+        tender_id=job.tender_id,
+        mode=str(job_input.get("mode", "curated_demo")),
+        doc_ids=tuple(str(item) for item in (job_input.get("document_ids", []) or [])),
+        worker_id=worker_id,
+    )
 
-    pages = session.scalars(
-        select(models.DocumentPage)
-        .where(models.DocumentPage.document_id.in_(doc_ids))
-        .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
-    ).all()
-    inputs = [
-        meta_adapter.PageInput(
-            document_id=page.document_id,
-            page_number=page.page_number,
-            normalized_text=page.normalized_text,
+
+def execute_attempt(
+    engine: Engine,
+    claim: AttemptClaim,
+    adapter: meta_adapter.ExtractionAdapter | None = None,
+) -> AttemptOutcome:
+    """Run the extraction with no job transaction open.
+
+    Pages are read through a short-lived session closed before any network
+    call; spend reservation/settlement use the ledger's own short
+    connections. Resolves the adapter here so a missing key surfaces as a
+    failed attempt, never a stuck job.
+    """
+    with Session(engine) as session:
+        pages = session.scalars(
+            select(models.DocumentPage)
+            .where(models.DocumentPage.document_id.in_(claim.doc_ids))
+            .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
+        ).all()
+        inputs = tuple(
+            meta_adapter.PageInput(
+                document_id=page.document_id,
+                page_number=page.page_number,
+                normalized_text=page.normalized_text,
+            )
+            for page in pages
         )
-        for page in pages
-    ]
     input_hash = meta_adapter.pages_input_hash(inputs)
     run_started = _now().isoformat()
-    reservation_key: str | None = None
-    reservation_estimate = 0
-    try:
-        if adapter.is_live:
-            reservation_key = f"inv-{job.id}-a{attempt}"
-            reservation_estimate = budget_service.estimate_attempt_micro_usd(
-                sum(len(page.normalized_text) for page in inputs)
+    if adapter is None:
+        try:
+            adapter = meta_adapter.select_adapter(claim.mode)
+        except ApiError as exc:
+            return AttemptOutcome(
+                inputs=inputs,
+                input_hash=input_hash,
+                run_started=run_started,
+                live=claim.mode == "live",
+                error=meta_adapter.AdapterError(exc.code, exc.message),
             )
-            engine = _engine_of(session)
-            try:
-                budget_service.reserve(
-                    engine,
-                    key=reservation_key,
-                    job_id=job.id,
-                    amount_micro=reservation_estimate,
-                    ceiling_micro=budget_service.budget_cap_micro_usd(),
-                )
-            except budget_service.BudgetBlockedError as exc:
-                _fail_job(
-                    session,
-                    job,
-                    code="budget_exhausted",
-                    message="live model budget exhausted",
-                    mode="live",
-                    attempt=attempt,
-                    input_hash=input_hash,
-                )
-                # The request scope rolls back on 429: commit the failed job
-                # and its invocation first so the 429 keeps an auditable trace.
-                session.commit()
-                raise ApiError(429, "budget_exhausted", "live model budget exhausted") from exc
+    live = adapter.is_live
+    key = f"inv-{claim.job_id}-a{claim.attempt}"
+    estimate = 0
+    if live:
+        estimate = budget_service.estimate_attempt_micro_usd(
+            sum(len(page.normalized_text) for page in inputs)
+        )
+        try:
+            budget_service.reserve(
+                engine,
+                key=key,
+                job_id=claim.job_id,
+                amount_micro=estimate,
+                ceiling_micro=budget_service.budget_cap_micro_usd(),
+            )
+        except budget_service.BudgetBlockedError:
+            return AttemptOutcome(
+                inputs=inputs,
+                input_hash=input_hash,
+                run_started=run_started,
+                live=True,
+                budget_blocked=True,
+            )
+    try:
         result = adapter.extract(inputs)
     except meta_adapter.AdapterError as exc:
-        receipt = exc.receipt
-        if reservation_key is not None:
+        if live:
+            receipt = exc.receipt
             _settle_attempt(
-                _engine_of(session),
-                reservation_key,
-                reservation_estimate,
+                engine,
+                key,
+                estimate,
                 sent=receipt is not None and receipt.sent,
                 cost_usd=receipt.estimated_cost_usd if receipt is not None else None,
             )
-        mode = receipt.mode if receipt is not None else ("live" if adapter.is_live else "fixture")
-        return _fail_job(
+        return AttemptOutcome(
+            inputs=inputs,
+            input_hash=input_hash,
+            run_started=run_started,
+            live=live,
+            error=exc,
+        )
+    if live:
+        _settle_attempt(engine, key, estimate, sent=True, cost_usd=result.estimated_cost_usd)
+    return AttemptOutcome(
+        inputs=inputs, input_hash=input_hash, run_started=run_started, live=live, result=result
+    )
+
+
+def publish_outcome(
+    session: Session, claim: AttemptClaim, outcome: AttemptOutcome
+) -> models.Job | None:
+    """Fence-checked publish. Commits, or rolls back and returns None if stale.
+
+    The guarded touch UPDATE is the real fence: it only matches while this
+    claim still owns the job, so a publish from a superseded worker (whose
+    lease expired and was reclaimed) rolls back instead of overwriting the
+    newer attempt.
+    """
+    job = session.get(models.Job, claim.job_id)
+    if (
+        job is None
+        or job.generation != claim.generation
+        or job.status != "running"
+        or job.worker_id != claim.worker_id
+    ):
+        session.rollback()
+        return None
+    fenced = session.connection().execute(
+        update(models.Job)
+        .where(models.Job.id == claim.job_id)
+        .where(models.Job.generation == claim.generation)
+        .where(models.Job.status == "running")
+        .where(models.Job.worker_id == claim.worker_id)
+        .values(updated_at=_now().isoformat())
+    )
+    if fenced.rowcount != 1:
+        session.rollback()
+        return None
+    if outcome.budget_blocked:
+        _fail_job(
+            session,
+            job,
+            code="budget_exhausted",
+            message="live model budget exhausted",
+            mode="live",
+            attempt=claim.attempt,
+            input_hash=outcome.input_hash,
+        )
+    elif outcome.error is not None:
+        exc = outcome.error
+        receipt = exc.receipt
+        mode = receipt.mode if receipt is not None else ("live" if outcome.live else "fixture")
+        _fail_job(
             session,
             job,
             code=exc.code,
             message=f"{exc.code}: {exc.message}",
             mode=mode,
-            attempt=attempt,
-            input_hash=input_hash,
+            attempt=claim.attempt,
+            input_hash=outcome.input_hash,
             receipt=receipt,
         )
+    elif outcome.result is not None:
+        _publish_success(session, job, claim, outcome, outcome.result)
+    session.commit()
+    session.refresh(job)
+    return job
 
-    if reservation_key is not None:
-        _settle_attempt(
-            _engine_of(session),
-            reservation_key,
-            reservation_estimate,
-            sent=True,
-            cost_usd=result.estimated_cost_usd,
-        )
 
+def _publish_success(
+    session: Session,
+    job: models.Job,
+    claim: AttemptClaim,
+    outcome: AttemptOutcome,
+    result: meta_adapter.AdapterResult,
+) -> None:
     try:
         proposal = g.ExtractionProposal.model_validate(result.proposal)
     except ValidationError as exc:
@@ -471,23 +633,27 @@ def run_job(
             estimated_cost_usd=result.estimated_cost_usd,
             latency_ms=result.latency_ms,
             status="failed",
-            sent=adapter.is_live,
+            sent=outcome.live,
         )
-        return _fail_job(
+        _fail_job(
             session,
             job,
             code="invalid_model_output",
             message=f"invalid_model_output: proposal failed schema ({exc.error_count()})",
             mode=result.mode,
-            attempt=attempt,
-            input_hash=input_hash,
+            attempt=claim.attempt,
+            input_hash=outcome.input_hash,
             receipt=receipt,
         )
+        return
     proposal_data = proposal.model_dump(mode="json")
 
-    docs = session.scalars(select(models.Document).where(models.Document.id.in_(doc_ids))).all()
+    docs = session.scalars(
+        select(models.Document).where(models.Document.id.in_(claim.doc_ids))
+    ).all()
     doc_sha256 = {doc.id: doc.sha256 for doc in docs}
     by_doc: dict[str, int] = {}
+    pages = outcome.inputs
     for page in pages:
         by_doc[page.document_id] = by_doc.get(page.document_id, 0) + 1
     job_warnings = list(result.warnings)
@@ -499,7 +665,7 @@ def run_job(
     text_by_page = {(page.document_id, page.page_number): page.normalized_text for page in pages}
     citation_ids, citation_warnings, unmatched = verify_and_store_citations(
         session,
-        id_prefix=f"cit-{job.id}-a{attempt}",
+        id_prefix=f"cit-{job.id}-a{claim.attempt}",
         proposal=proposal_data,
         text_by_page=text_by_page,
         doc_sha256=doc_sha256,
@@ -515,19 +681,19 @@ def run_job(
             proposal_json=proposal_data,
             reviewed_json={"status": "pending_review", "approved_claim_keys": []},
             document_hashes_json=dict(doc_sha256),
-            actor="meta-live" if adapter.is_live else "meta-stub",
+            actor="meta-live" if outcome.live else "meta-stub",
             reason=f"analysis job {job.id}",
             created_at=_now().isoformat(),
         )
     )
     session.add(
         models.ModelInvocation(
-            id=f"inv-{job.id}-a{attempt}",
+            id=f"inv-{job.id}-a{claim.attempt}",
             job_id=job.id,
             mode=result.mode,
             model=result.model,
             prompt_version=meta_adapter.PROMPT_VERSION,
-            input_hash=input_hash,
+            input_hash=outcome.input_hash,
             provider_request_id=result.provider_request_id,
             prompt_tokens=result.prompt_tokens,
             completion_tokens=result.completion_tokens,
@@ -540,13 +706,14 @@ def run_job(
     )
     claims = proposal_data.get("claims", []) or []
     weak_claim = any(
-        isinstance(claim, dict) and claim.get("status") in NON_PROPOSED_CLAIM for claim in claims
+        isinstance(claim_item, dict) and claim_item.get("status") in NON_PROPOSED_CLAIM
+        for claim_item in claims
     )
     needs_review = bool(job_warnings) or bool(proposal.unread_pages) or weak_claim or unmatched > 0
     manifest = meta_adapter.build_run_manifest(
-        run_id=f"inv-{job.id}-a{attempt}",
+        run_id=f"inv-{job.id}-a{claim.attempt}",
         mode=result.mode,
-        pages=inputs,
+        pages=list(pages),
         model_requested=result.model,
         model_returned=result.returned_model,
         schema_version=str(proposal_data.get("schema_version", meta_adapter.SCHEMA_VERSION)),
@@ -558,7 +725,7 @@ def run_job(
         proposal=proposal_data,
         citation_ids=citation_ids,
         citations_unmatched=unmatched,
-        started_at=run_started,
+        started_at=outcome.run_started,
         finished_at=_now().isoformat(),
     )
     job.status = "needs_review" if needs_review else "succeeded"
@@ -566,6 +733,38 @@ def run_job(
     job.result_revision = new_revision
     job.error_code = None
     job.updated_at = _now().isoformat()
-    _update_request(job, processed=len(inputs), warnings=job_warnings, manifest=manifest)
+    _update_request(job, processed=len(pages), warnings=job_warnings, manifest=manifest)
     session.flush()
-    return job
+
+
+def run_claimed_attempt(
+    engine: Engine,
+    job_id: str,
+    worker_id: str = "worker-inline",
+    adapter: meta_adapter.ExtractionAdapter | None = None,
+) -> models.Job | None:
+    """Claim, execute and publish one attempt with short sessions each.
+
+    Returns None when another worker holds the job or the claim went stale
+    before publishing.
+    """
+    with Session(engine) as session:
+        claim = claim_attempt(session, job_id, worker_id)
+        if claim is None:
+            return None
+        session.commit()
+    outcome = execute_attempt(engine, claim, adapter)
+    with Session(engine) as session:
+        return publish_outcome(session, claim, outcome)
+
+
+def cancel_queued_job(session: Session, job_id: str) -> bool:
+    """CAS-cancel a job that never started (idempotency race loser). Flushes."""
+    cancelled = session.connection().execute(
+        update(models.Job)
+        .where(models.Job.id == job_id)
+        .where(models.Job.status == "queued")
+        .values(status="cancelled", stage="cancelled", updated_at=_now().isoformat())
+    )
+    session.flush()
+    return bool(cancelled.rowcount == 1)

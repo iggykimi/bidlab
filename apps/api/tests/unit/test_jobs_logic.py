@@ -9,7 +9,8 @@ from bidlab.db import models
 from bidlab.services import jobs as jobs_service
 from bidlab.services import meta_adapter
 from bidlab.settings import get_settings
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, update
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 
@@ -177,53 +178,73 @@ def _job_row(status: str, lease_until: str | None = None) -> models.Job:
     )
 
 
-def test_run_job_terminal_is_idempotent(session: Session) -> None:
+def _engine_of(session: Session) -> Engine:
+    bind = session.get_bind()
+    assert isinstance(bind, Engine)
+    return bind
+
+
+def test_claim_terminal_returns_none(session: Session) -> None:
     session.add(_job_row("needs_review"))
     session.commit()
-    job = jobs_service.run_job(session, "job-test-1")
-    assert job.status == "needs_review"
-    assert job.result_revision == 2
+    assert jobs_service.claim_attempt(session, "job-test-1", "w1") is None
+    session.rollback()
 
 
-def test_run_job_running_with_live_lease_conflicts(session: Session) -> None:
+def test_claim_running_with_live_lease_returns_none(session: Session) -> None:
     lease = (dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5)).isoformat()
     session.add(_job_row("running", lease_until=lease))
     session.commit()
-    with pytest.raises(ApiError) as exc:
-        jobs_service.run_job(session, "job-test-1")
-    assert exc.value.status_code == 409
+    assert jobs_service.claim_attempt(session, "job-test-1", "w1") is None
+    session.rollback()
 
 
-def test_run_job_failed_retries_as_new_attempt(session: Session) -> None:
+def test_claim_race_second_loses(session: Session) -> None:
+    session.add(_job_row("queued"))
+    session.commit()
+    first = jobs_service.claim_attempt(session, "job-test-1", "w1")
+    assert first is not None
+    session.commit()
+    assert jobs_service.claim_attempt(session, "job-test-1", "w2") is None
+    session.rollback()
+
+
+def test_claim_failed_retries_as_new_attempt(session: Session) -> None:
     session.add(_job_row("failed"))
     session.commit()
-    job = jobs_service.run_job(session, "job-test-1", adapter=meta_adapter.StubExtractor())
+    claim = jobs_service.claim_attempt(session, "job-test-1", "w1")
+    assert claim is not None
+    assert claim.attempt == 2
+    assert claim.generation == 2
+    assert claim.mode == "curated_demo"
+    session.commit()
+    job = session.get(models.Job, "job-test-1")
+    assert job is not None
+    assert job.status == "running"
+    assert job.worker_id == "w1"
+
+
+def test_claim_expired_lease_reclaimed(session: Session) -> None:
+    lease = (dt.datetime.now(dt.UTC) - dt.timedelta(minutes=5)).isoformat()
+    session.add(_job_row("running", lease_until=lease))
+    session.commit()
+    claim = jobs_service.claim_attempt(session, "job-test-1", "w2")
+    assert claim is not None
+    assert claim.generation == 2
+    session.rollback()
+
+
+def test_run_claimed_attempt_success_persists_manifest(session: Session) -> None:
+    session.add(_job_row("failed"))
+    session.commit()
+    engine = _engine_of(session)
+    job = jobs_service.run_claimed_attempt(
+        engine, "job-test-1", "w1", adapter=meta_adapter.StubExtractor()
+    )
+    assert job is not None
     assert job.status == "needs_review"
     assert job.result_revision == 1
     assert job.error_code is None
-    invocation = session.get(models.ModelInvocation, "inv-job-test-1-a2")
-    assert invocation is not None
-    assert invocation.mode == "fixture"
-
-
-def test_run_job_refusal_fails_explicitly(session: Session) -> None:
-    session.add(_job_row("failed"))
-    session.commit()
-    job = jobs_service.run_job(
-        session,
-        "job-test-1",
-        adapter=meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL),
-    )
-    assert job.status == "failed"
-    assert job.error_code == "provider_refusal"
-    assert job.result_revision is None
-
-
-def test_run_job_persists_run_manifest(session: Session) -> None:
-    session.add(_job_row("failed"))
-    session.commit()
-    job = jobs_service.run_job(session, "job-test-1", adapter=meta_adapter.StubExtractor())
-    assert job.status == "needs_review"
     request = job.request_json
     assert isinstance(request, dict)
     manifest = request.get("manifest")
@@ -235,3 +256,105 @@ def test_run_job_persists_run_manifest(session: Session) -> None:
     assert manifest["pages"] == []
     assert manifest["citation_ids"] == []
     assert manifest["human_review"] == "pending"
+    with Session(engine) as reader:
+        invocation = reader.get(models.ModelInvocation, "inv-job-test-1-a2")
+        assert invocation is not None
+        assert invocation.mode == "fixture"
+
+
+def test_run_claimed_attempt_refusal_fails_explicitly(session: Session) -> None:
+    session.add(_job_row("failed"))
+    session.commit()
+    job = jobs_service.run_claimed_attempt(
+        _engine_of(session),
+        "job-test-1",
+        "w1",
+        adapter=meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL),
+    )
+    assert job is not None
+    assert job.status == "failed"
+    assert job.error_code == "provider_refusal"
+    assert job.result_revision is None
+
+
+def test_publish_stale_generation_aborts_without_side_effects(session: Session) -> None:
+    """PKG-T03 fence: a superseded claim publishes nothing."""
+    session.add(_job_row("queued"))
+    session.commit()
+    engine = _engine_of(session)
+    with Session(engine) as claim_session:
+        claim = jobs_service.claim_attempt(claim_session, "job-test-1", "w1")
+        assert claim is not None
+        claim_session.commit()
+    outcome = jobs_service.execute_attempt(engine, claim, adapter=meta_adapter.StubExtractor())
+    assert outcome.result is not None
+    # Another worker reclaims the job before we publish.
+    with Session(engine) as thief:
+        thief.execute(
+            update(models.Job)
+            .where(models.Job.id == "job-test-1")
+            .values(generation=claim.generation + 1, worker_id="w2")
+        )
+        thief.commit()
+    with Session(engine) as publish_session:
+        assert jobs_service.publish_outcome(publish_session, claim, outcome) is None
+    with Session(engine) as reader:
+        assert reader.get(models.InterpretationRevision, ("t1", 1)) is None
+        assert reader.get(models.ModelInvocation, "inv-job-test-1-a2") is None
+        job = reader.get(models.Job, "job-test-1")
+        assert job is not None
+        assert job.status == "running"
+        assert job.worker_id == "w2"
+
+
+def test_execute_live_without_key_fails_attempt(session: Session) -> None:
+    """A key removed after admission fails the attempt, never sticks it."""
+    row = _job_row("queued")
+    row.request_json["input"]["mode"] = "live"
+    session.add(row)
+    session.commit()
+    engine = _engine_of(session)
+    job = jobs_service.run_claimed_attempt(engine, "job-test-1", "w1")
+    assert job is not None
+    assert job.status == "failed"
+    assert job.error_code == "provider_not_configured"
+
+
+def test_execute_budget_blocked_publishes_failed(
+    session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Worker-side reserve is the authoritative admission (fast 429 already ran)."""
+
+    class _LiveStub:
+        is_live = True
+
+        def extract(self, pages: object) -> object:
+            return meta_adapter.StubExtractor().extract(pages)  # type: ignore[arg-type]
+
+    row = _job_row("queued")
+    row.request_json["input"]["mode"] = "live"
+    session.add(row)
+    session.commit()
+    monkeypatch.setenv("BIDLAB_META_BUDGET_USD", "0.00")
+    get_settings.cache_clear()
+    try:
+        job = jobs_service.run_claimed_attempt(
+            _engine_of(session), "job-test-1", "w1", adapter=_LiveStub()
+        )
+    finally:
+        get_settings.cache_clear()
+    assert job is not None
+    assert job.status == "failed"
+    assert job.error_code == "budget_exhausted"
+
+
+def test_cancel_queued_job(session: Session) -> None:
+    session.add(_job_row("queued"))
+    session.commit()
+    assert jobs_service.cancel_queued_job(session, "job-test-1") is True
+    session.commit()
+    job = session.get(models.Job, "job-test-1")
+    assert job is not None
+    assert job.status == "cancelled"
+    assert jobs_service.cancel_queued_job(session, "job-test-1") is False
+    session.rollback()

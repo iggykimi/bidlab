@@ -22,13 +22,18 @@ from bidlab.api import (
 )
 from bidlab.api.errors import new_request_id, register_handlers
 from bidlab.services import seed as seed_service
+from bidlab.services import worker as worker_service
 
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     # Fresh installs get tables on boot (no seed: demo stays explicit).
     seed_service.migrate()
-    yield
+    worker_service.start()
+    try:
+        yield
+    finally:
+        worker_service.stop()
 
 
 app = FastAPI(title="BidLab", version="1.0.0", lifespan=_lifespan)

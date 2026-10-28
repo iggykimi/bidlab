@@ -29,6 +29,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: B01–B05 reproducidos; PKG-T01 + PKG-T02 hechos
   (recibos live, ledger micro-USD, migración 0005);
   backend 355 verdes. Siguiente: PKG-T03 (jobs async).
+- 28-oct: PKG-T03 hecho (worker in-process, claim CAS,
+  fence, migración 0006); backend 363 + E2E 7/7 verdes.
+  Siguiente: PKG-T04 (cobertura de páginas).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

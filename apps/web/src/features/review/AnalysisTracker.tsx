@@ -1,7 +1,8 @@
 // Analysis tracker for own tenders: ask for automatic proposals, then
-// follow the job. The backend runs the job inline (POST returns 202 with
-// the terminal state), so polling only confirms it; pausing and leaving
-// only stop YOUR tracking, never the server run. Honest by design.
+// follow the job. The backend queues the job (POST returns 202 fast) and
+// a worker runs it; polling carries you to the terminal state. Pausing
+// and leaving only stop YOUR tracking, never the server run.
+// Honest by design.
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

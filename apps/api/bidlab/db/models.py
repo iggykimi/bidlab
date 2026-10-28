@@ -227,6 +227,7 @@ class Job(Base):
     stage: Mapped[str] = mapped_column(String, nullable=False)
     worker_id: Mapped[str | None] = mapped_column(String)
     lease_until: Mapped[str | None] = mapped_column(String)
+    generation: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     result_revision: Mapped[int | None] = mapped_column(Integer)
     error_code: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str] = mapped_column(String, nullable=False)

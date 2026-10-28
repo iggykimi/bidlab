@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from bidlab.api import deps
 from bidlab.api.errors import ERROR_RESPONSES
 from bidlab.schemas import generated as g
-from bidlab.services import idempotency
+from bidlab.services import idempotency, worker
 from bidlab.services import jobs as jobs_service
 
 router = APIRouter(responses=ERROR_RESPONSES, tags=["jobs"])
@@ -40,9 +40,13 @@ async def start_analysis(
     created = jobs_service.job_to_dict(job)
     winner = idempotency.store(db, route, idempotency_key, body, created)
     if winner is not None:
+        # Lost the insert race: our committed queued job is orphaned, so
+        # cancel it before it can ever be submitted to the worker.
+        jobs_service.cancel_queued_job(db, job.id)
         response.status_code = 202
         response.headers["Location"] = f"/api/v1/jobs/{winner['id']}"
         return g.Job.model_validate(winner)
+    worker.submit(job.id)
     response.headers["Location"] = f"/api/v1/jobs/{job.id}"
     return g.Job.model_validate(created)
 

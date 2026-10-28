@@ -1,7 +1,10 @@
 """I06 + T17: analysis run endpoint (202), job polling, stub honesty."""
 
+import datetime as dt
 import json
 import socket
+import threading
+import time
 from typing import Any
 
 import httpx
@@ -11,6 +14,7 @@ from bidlab.db.session import get_engine
 from bidlab.schemas import generated as g
 from bidlab.services import budget as budget_service
 from bidlab.services import meta_adapter
+from bidlab.services import worker as worker_service
 from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -48,11 +52,30 @@ def _db() -> Session:
     return Session(get_engine())
 
 
+_TERMINAL_STATUSES = ("succeeded", "needs_review", "failed", "cancelled")
+
+
+def _poll_terminal(client: TestClient, job_id: str, timeout_s: float = 20.0) -> dict[str, Any]:
+    """GET-poll a job until the worker reaches a terminal state."""
+    deadline = time.monotonic() + timeout_s
+    body: dict[str, Any] = {}
+    while True:
+        res = client.get(f"/api/v1/jobs/{job_id}")
+        assert res.status_code == 200
+        body = res.json()
+        if body["status"] in _TERMINAL_STATUSES:
+            return body
+        assert time.monotonic() < deadline, f"job {job_id} stuck in {body['status']}"
+        time.sleep(0.05)
+
+
 def test_start_and_poll_needs_review(demo_client: TestClient) -> None:
     res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k1"))
     assert res.status_code == 202
     assert res.headers["Location"].startswith("/api/v1/jobs/job-")
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "needs_review"
     assert job.result_revision is not None
     assert job.result_revision.root == 2
@@ -190,6 +213,8 @@ def test_stub_failure_fails_job_explicitly(
     res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k10"))
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "failed"
     assert job.error_code is not None
     assert job.error_code.root == "provider_refusal"
@@ -206,6 +231,8 @@ def test_offline_stub_makes_no_network_calls(
     monkeypatch.setattr(httpx, "post", _blocked)
     res = demo_client.post("/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k11"))
     assert res.status_code == 202
+    terminal = _poll_terminal(demo_client, res.json()["id"])
+    assert terminal["status"] in ("succeeded", "needs_review")
 
 
 def test_budget_exhaust_persists_failed_job(
@@ -275,6 +302,8 @@ def test_live_invalid_output_keeps_receipt(
     )
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "failed"
     assert job.error_code is not None
     assert job.error_code.root == "invalid_model_output"
@@ -332,6 +361,8 @@ def test_live_success_settles_reported_cost(
     )
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "needs_review"
     key = f"inv-{job.id.root}-a1"
     with _db() as session:
@@ -363,6 +394,8 @@ def test_live_invalid_output_settles_reported_cost(
     )
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "failed"
     key = f"inv-{job.id.root}-a1"
     with _db() as session:
@@ -389,6 +422,8 @@ def test_live_timeout_settles_estimate_as_uncertain(
     )
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "failed"
     assert job.error_code is not None
     assert job.error_code.root == "provider_failure"
@@ -426,6 +461,8 @@ def test_live_unsent_attempt_releases_hold(
     )
     assert res.status_code == 202
     job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    job = g.Job.model_validate(_poll_terminal(demo_client, job.id.root))
     assert job.status == "failed"
     key = f"inv-{job.id.root}-a1"
     with _db() as session:
@@ -437,3 +474,65 @@ def test_live_unsent_attempt_releases_hold(
         assert invocation.mode == "live"
     totals = budget_service.totals(get_engine(), ceiling_micro=20_000_000)
     assert (totals["spent"], totals["held"]) == (0, 0)
+
+
+def test_slow_provider_does_not_block_polling_or_health(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T03 acceptance: 202 returns before inference; polls stay fast."""
+
+    gate = threading.Event()
+
+    class _Gated:
+        is_live = False
+
+        def extract(self, pages: object) -> object:
+            assert gate.wait(timeout=20)
+            return meta_adapter.StubExtractor().extract(pages)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(
+        "bidlab.services.jobs.meta_adapter.select_adapter",
+        lambda mode: _Gated(),
+    )
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k-gated")
+    )
+    assert res.status_code == 202
+    assert res.json()["status"] == "queued"
+    job_id = res.json()["id"]
+    # The worker is gated inside extract: polling and health still answer.
+    queued = demo_client.get(f"/api/v1/jobs/{job_id}")
+    assert queued.status_code == 200
+    assert queued.json()["status"] in ("queued", "running")
+    health = demo_client.get("/api/v1/health")
+    assert health.status_code == 200
+    gate.set()
+    terminal = _poll_terminal(demo_client, job_id)
+    assert terminal["status"] == "needs_review"
+
+
+def test_worker_start_requeues_orphans(demo_client: TestClient) -> None:
+    """PKG-T03: boot re-queues jobs left queued by a previous process."""
+    now = dt.datetime.now(dt.UTC).isoformat()
+    with _db() as session:
+        session.add(
+            models.Job(
+                id="job-orphan-1",
+                tender_id="tias",
+                status="queued",
+                request_json={
+                    "input": {"document_ids": ["doc-tias-pcap"], "mode": "curated_demo"},
+                    "progress": {"processed_pages": 0, "total_pages": 6},
+                    "warnings": [],
+                    "attempts": 0,
+                },
+                stage="queued",
+                generation=1,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        session.commit()
+    worker_service.start()
+    terminal = _poll_terminal(demo_client, "job-orphan-1")
+    assert terminal["status"] == "needs_review"
