@@ -1004,3 +1004,69 @@ Evidencia (verificada por el lead en main):
   verdes (re-ejecutados por el lead).
 - E2E no re-ejecutada: sin diff en API/front
   (67/67 vigente del commit anterior).
+
+## PKG-T11 — comparativa texto vs híbrido medida (Windows, helper t11)
+
+Fecha: 2026-10-28. Worktree .worktrees/t11 (detached sobre
+a870598; commit local al final de esta sección, pendiente de
+merge por el lead). Entorno: Windows, Python 3.14 (venv
+del worktree). Cero llamadas de red en todo el paquete
+(tests con sockets bloqueados + credencial fregada).
+
+DECISIÓN D-T11-1 (ubicación): el comparador vive en
+`apps/api/bidlab/services/extraction_compare.py` (junto a
+`extraction_eval.py`, importable por el CLI) y sus tests en
+`apps/api/tests/evaluation/test_compare_modes.py`; el CLI es
+`scripts/compare_extraction.py` y el artefacto
+`evidence/extraction_comparison.json`. `scripts/verify.py`
+incluye el nuevo directorio en el paso pytest-unit.
+
+Aceptación 1 (texto medido offline): `run_text_mode`
+ejecuta el StubExtractor real una vez por página eval
+(6 llamadas, texto de entrada vacío documentado: el
+fixture lo ignora y los originales están fuera del
+repo por B04), mapea la propuesta v1 a predicciones
+con el MISMO mapper que usará el híbrido y puntúa
+con `ev.score`. Medido: n_eval=11, hits=0, miss=0,
+unsupported=11, accuracy=0, críticos=[], latencia
+p50=0.004ms/max=0.009ms (reales por llamada),
+coste 0 micro-USD + motivo fixture, tokens null.
+
+Aceptación 2 (híbrido blocked honesto): sin
+MODEL_API_KEY ni META_API_URL en el worktree
+(verificado: sin .env, sin originales), el gate
+`select_adapter("live")` devuelve 503 y el modo
+híbrido queda `blocked` con motivo G3: TODAS sus
+métricas en null (nunca cero), cero llamadas live.
+Escalera de rechazo verificada en tests: sin
+credencial → G3 aunque haya --allow-live; con
+credencial pero sin flag → no habilitado; con
+flag pero sin textos → sin textos. La rama de
+ejecución live existe (misma interfaz) pero NO se
+ejecutó ni se cubre con tests de red: queda
+explícitamente no-verificada-live.
+
+Aceptación 3 (artefacto): CLI exit 0 escribe el
+JSON con n total/dev/eval, tabla por caso (11
+filas: predicción, veredicto, latencia, crítico,
+estado de revisión esperado), agregados texto,
+bloque híbrido blocked y limitations (n=11
+pequeño, 4 expedientes, sin live). Re-ejecución
+verificada: mismas métricas. CLI exit 2 con gold
+inexistente o --page-texts malformado. Regla de
+criticidad documentada en el artefacto: miss en
+EUR/months/years/fórmula; unsupported nunca
+crítico (pero en denominador).
+
+Evidencia (helper, en el worktree):
+- Backend: 472 passed, exit 0 (458 base + 14
+  test_compare_modes; 0 fallos, 0 skips).
+- `ruff check .`: exit 0. `ruff format --check`
+  en los 4 ficheros propios: exit 0 (3 ficheros
+  preexistentes ajenos siguen sin formato:
+  docs/ARCHITECTURE.md, docs/DATA_MODELS.md,
+  scripts/dev.py; no tocados).
+- `mypy apps/api/bidlab`: 52 ficheros, exit 0.
+- `scripts/compare_extraction.py`: exit 0
+  (artefacto) y exit 2 (gold ausente).
+- E2E/front no tocados ni re-ejecutados.
