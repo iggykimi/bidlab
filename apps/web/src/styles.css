@@ -1,40 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  /* T14: ruta visual del diseno_anterior (prototipo :root). Sin piezas
-   * nuevas: solo valores. primary-hover/primary-ink no tienen
-   * equivalente en el prototipo y se conservan (contraste). */
+  /* Oficina tokens (diseno_anterior/sistema/tokens.json). Names keep the
+   * existing code working; values are the mock, verified byte for byte. */
+  --color-paper: #f7f8fa;
   --color-surface: #f7f8fa;
+  --color-white: #ffffff;
   --color-ink: #18243b;
   --color-muted: #4c5d73;
   --color-primary: #2748b8;
   --color-primary-hover: #1e3fa0;
   --color-primary-ink: #162d75;
   --color-primary-soft: #edf1ff;
-  --color-line: #c8d1df;
-  --color-border: #c8d1df;
+  --color-soft: #edf1ff;
+  --color-green: #176046;
+  --color-greenbg: #edf7f1;
+  --color-amber: #795000;
+  --color-amberbg: #fff5dc;
   --color-alert: #795000;
   --color-warn-bg: #fff5dc;
   --color-warn-ink: #795000;
   --color-error: #a52d28;
+  --color-red: #a52d28;
+  --color-redbg: #fff0ed;
+  --color-line: #c8d1df;
+  --color-border: #c8d1df;
   --color-chart-profit: #176046;
-  --drawer-curve: cubic-bezier(0.32, 0.72, 0, 1);
+  --drawer-curve: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --motion-feedback: 120ms;
+  --motion-result: 160ms;
+  --motion-evidence: 220ms;
+}
+
+/* Root stays at the browser default (16px): the mock's rem values assume
+ * it (body 1.125rem = 18px, the explicit "18/28" spec). The prototype's
+ * own :root{font-size:18px} would compute 20.25px body, contradicting
+ * tokens.json and all 16 plates, so tokens+plates win over that one rule.
+ * Comfort mode scales the whole UI by the same 1.125 ratio as the mock. */
+html.font-large {
+  font-size: 18px;
 }
 
 body {
-  background: var(--color-surface);
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1.125rem;
   line-height: 1.55;
+  margin: 0;
 }
 
-.tnum {
+.tnum,
+td {
   font-variant-numeric: tabular-nums;
 }
 
 :focus-visible {
   outline: 3px solid var(--color-primary);
-  outline-offset: 4px;
+  outline-offset: 2px;
 }
 
 /* Long protocol tokens (hashes, decimals) must wrap inside table cells. */
@@ -43,19 +66,594 @@ th {
   overflow-wrap: anywhere;
 }
 
+/* External references get the mock's arrow (same language as citations). */
+a[href^="http"]::after {
+  content: " ↗";
+  font-size: 0.889em;
+  white-space: nowrap;
+}
+
+@layer components {
+  /* ---- Mock primitives (prototipo/style.css, adapted names where the
+   * app already owns the pattern). Unported views keep working because
+   * Tailwind utilities win over this layer on conflict. ---- */
+
+  .page-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 56px;
+  }
+
+  .eyebrow {
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0 0 8px;
+  }
+
+  .lede {
+    color: var(--color-muted);
+    font-size: 1rem;
+    margin: 8px 0 0;
+  }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin: 24px 0;
+  }
+
+  .fineline {
+    color: var(--color-muted);
+    font-size: 0.889rem;
+    margin: 12px 0 0;
+  }
+
+  /* Shell: top bar, brand, disclosure. */
+  .top {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .top .bar {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .brand:hover {
+    color: var(--color-ink);
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .top nav {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .fontbtn {
+    background: none;
+    border: 0;
+    color: var(--color-primary);
+    font-size: 1rem;
+    min-height: 48px;
+    padding: 6px 4px;
+  }
+  .fontbtn .aa {
+    font-weight: 700;
+  }
+
+  /* Workhead + steps sidebar + base block (plates 02-07). */
+  .crumbs {
+    color: var(--color-muted);
+    font-size: 0.889rem;
+  }
+  .crumbs a {
+    color: var(--color-primary);
+  }
+  .workhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 8px 0 24px;
+  }
+  .workhead h1 {
+    margin: 0;
+    font-size: 1.65rem;
+    line-height: 1.25;
+  }
+  .workhead .sub {
+    color: var(--color-muted);
+    margin: 6px 0 0;
+  }
+  .workgrid {
+    display: grid;
+    grid-template-columns: 216px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .steps li {
+    margin: 0 0 6px;
+  }
+  .steps a,
+  .steps .step {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--color-muted);
+    text-decoration: none;
+    min-height: 48px;
+  }
+  .steps .now {
+    background: var(--color-soft);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+  .stepnum {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+  .base {
+    margin-top: 24px;
+    font-size: 1rem;
+  }
+  .base h2 {
+    font-size: 1rem;
+    margin: 0 0 8px;
+  }
+  .base ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .base li {
+    margin: 6px 0;
+    color: var(--color-muted);
+  }
+  .base li.ok {
+    color: var(--color-green);
+  }
+
+  /* Surfaces, benefit, notices, tags. */
+  .surface,
+  .benefit {
+    background: var(--color-white);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .benefit {
+    background: var(--color-greenbg);
+  }
+  .benefit.loss {
+    background: var(--color-redbg);
+  }
+  .benefit h3 {
+    margin: 0 0 8px;
+    font-size: 1.125rem;
+    color: var(--color-green);
+  }
+  .benefit.loss h3 {
+    color: var(--color-red);
+  }
+  .big {
+    font-size: 2.75rem;
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--color-green);
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+  }
+  .loss .big {
+    color: var(--color-red);
+  }
+  .notice {
+    background: var(--color-soft);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    margin: 16px 0;
+  }
+  .notice.ok {
+    background: var(--color-greenbg);
+    border-left-color: var(--color-green);
+  }
+  .notice.warn {
+    background: var(--color-amberbg);
+    border-left-color: var(--color-amber);
+  }
+  .notice.error {
+    background: var(--color-redbg);
+    border-left-color: var(--color-red);
+  }
+  .tag {
+    display: inline-block;
+    background: var(--color-soft);
+    color: var(--color-primary);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.889rem;
+    font-weight: 700;
+  }
+  .tag.ok {
+    background: var(--color-greenbg);
+    color: var(--color-green);
+  }
+  .tag.warn {
+    background: var(--color-amberbg);
+    color: var(--color-amber);
+  }
+
+  /* Facts, rows, compare, toolbar, pagination. */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+    margin: 0;
+  }
+  .facts > div {
+    margin: 0;
+  }
+  .facts dt {
+    color: var(--color-muted);
+    font-size: 1rem;
+  }
+  .facts dd {
+    margin: 4px 0 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .facts dd small {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+  .value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount {
+    font-variant-numeric: tabular-nums;
+  }
+  .tenders {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tenders li {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 20px 4px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .tenders li:last-child {
+    border-bottom: 0;
+  }
+  .tenders h3 {
+    margin: 0 0 4px;
+    font-size: 1.125rem;
+  }
+  .tenders .meta {
+    color: var(--color-muted);
+    font-size: 1rem;
+    margin: 0;
+  }
+  .tenders .amount {
+    text-align: right;
+    font-weight: 700;
+  }
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 16px 0 0;
+    padding: 0;
+  }
+  .compare > div {
+    background: var(--color-white);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .compare h4 {
+    margin: 0 0 8px;
+    font-size: 1.125rem;
+  }
+  .compare .alt {
+    background: var(--color-greenbg);
+    border-color: var(--color-greenbg);
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: end;
+    margin: 16px 0;
+  }
+  .toolbar label {
+    display: grid;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .toolbar .grow {
+    flex: 1 1 220px;
+  }
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .tablebox {
+    overflow-x: auto;
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    background: var(--color-white);
+  }
+  table.grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+  }
+  table.grid caption {
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--color-muted);
+  }
+  table.grid th,
+  table.grid td {
+    text-align: left;
+    padding: 12px 16px;
+    border-top: 1px solid var(--color-line);
+    vertical-align: top;
+  }
+  table.grid thead th {
+    border-top: 0;
+    color: var(--color-muted);
+    font-weight: 700;
+  }
+
+  /* Cost ceiling pair, archived strip, paper quote, checklist. */
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .archived {
+    background: var(--color-greenbg);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--color-green);
+    font-weight: 700;
+  }
+  .paperquote {
+    background: var(--color-paper);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .scoreline {
+    color: var(--color-muted);
+    font-size: 1rem;
+  }
+  .check {
+    list-style: none;
+    margin: 12px 0;
+    padding: 0;
+  }
+  .check li {
+    margin: 8px 0;
+    padding-left: 28px;
+    position: relative;
+  }
+  .check li::before {
+    content: "✓";
+    position: absolute;
+    left: 4px;
+    color: var(--color-green);
+    font-weight: 700;
+  }
+  .check li.pending::before {
+    content: "○";
+    color: var(--color-amber);
+  }
+  .check li.bad::before {
+    content: "✕";
+    color: var(--color-red);
+  }
+
+  /* Forms: 48px targets, 8px radius (plate 10). */
+  .field {
+    display: grid;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .field .hint {
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+  input[type="text"],
+  input[type="search"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input:not([type]),
+  select,
+  textarea {
+    font: inherit;
+    color: var(--color-ink);
+    background: var(--color-white);
+    border: 2px solid var(--color-line);
+    border-radius: 8px;
+    min-height: 48px;
+    padding: 10px 14px;
+    width: 100%;
+  }
+  textarea {
+    min-height: 96px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 24px;
+    height: 24px;
+    min-height: 0;
+    accent-color: var(--color-primary);
+  }
+  input[type="range"] {
+    min-height: 48px;
+  }
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* Dialogs (evidence drawer keeps its own panel; plain dialogs match). */
+  dialog {
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: min(640px, 92vw);
+  }
+  dialog::backdrop {
+    background: rgb(24 36 59 / 0.45);
+  }
+  .dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  /* Print: report already owns print; mock rules for ported views. */
+  .print-root {
+    display: none;
+  }
+
+  /* Comfortable responsive (880px breakpoint, plate 08). */
+  .mobileonly {
+    display: none;
+  }
+  .stepselect {
+    width: 100%;
+    margin: 0 0 16px;
+  }
+}
+
+@media (max-width: 880px) {
+  .page-wrap {
+    padding: 20px 16px 40px;
+  }
+  .workgrid {
+    grid-template-columns: 1fr;
+  }
+  .workgrid > aside {
+    display: none;
+  }
+  .benefit .big {
+    font-size: 2.25rem;
+  }
+  .tenders li {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .tenders .amount {
+    text-align: left;
+  }
+  .compare,
+  .pair,
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .toolbar {
+    display: block;
+  }
+  .toolbar > * + * {
+    margin-top: 12px;
+  }
+  .pagination {
+    justify-content: flex-start;
+  }
+  .mobileonly {
+    display: block;
+  }
+  .fontbtn .label {
+    display: none;
+  }
+  dialog {
+    padding: 20px;
+  }
+}
+
+@media print {
+  body.printing > *:not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    display: block !important;
+    color: #000;
+    max-width: 70ch;
+  }
+  .print-root a {
+    color: #000;
+    text-decoration: none;
+  }
+}
+
 /* Sticky headers for scrollable tables. */
 .table-scroll thead th {
   position: sticky;
   top: 0;
-  background: var(--color-white); /* Tailwind default token: solid cover over scrolled rows. */
+  background: var(--color-white);
   z-index: 1;
 }
 
-/* O2/F11: press feedback on primary actions (color-only under reduced motion). */
+/* Press feedback on primary actions (color-only under reduced motion).
+ * 120ms feedback per motion tokens. */
 .pressable {
   transition:
-    transform 120ms ease-out,
-    background-color 120ms ease-out;
+    transform var(--motion-feedback) ease-out,
+    background-color var(--motion-feedback) ease-out;
 }
 @media (prefers-reduced-motion: no-preference) {
   .pressable:not(:disabled):active {
@@ -63,14 +661,10 @@ th {
   }
 }
 
-/* O1: evidence drawer entry + exit. Entry plays on mount via
- * @starting-style; exit plays while `.drawer-exit` is set during the delayed
- * unmount (see requestClose in EvidenceDrawer.tsx), so the panel leaves
- * along the same right edge it entered from. DRAWER_EXIT_MS there must stay
- * >= the durations below. Reduced motion: fade-only both ways. */
+/* Evidence drawer entry + exit (220ms evidence timing, mock ease). */
 .drawer-enter {
   transition:
-    transform 250ms var(--drawer-curve),
+    transform var(--motion-evidence) var(--drawer-curve),
     opacity 200ms ease-out;
 }
 .drawer-exit {
@@ -103,10 +697,10 @@ th {
   }
 }
 
-/* O3: KPI crossfade on value change (keyed remount retriggers, no movement). */
+/* KPI crossfade on value change (keyed remount retriggers, no movement). */
 @media (prefers-reduced-motion: no-preference) {
   .kpi-crossfade {
-    animation: kpi-fade 150ms ease-out;
+    animation: kpi-fade var(--motion-result) ease-out;
   }
 }
 @keyframes kpi-fade {
@@ -118,27 +712,16 @@ th {
   }
 }
 
-/* O4: <details> expand/collapse animation. DECISION: the previous
- * .details-body grid-rows transition was effect-absent — a closed <details>
- * does not render its content, so there is no first frame to transition from
- * (close snapped shut, open had no start state). Kept the animation by
- * switching to the ::details-content + interpolate-size pattern instead:
- * Chromium (the verified E2E browser) animates height between 0 and auto
- * with content-visibility flipping discretely at the end of the close;
- * browsers without support ignore these rules and toggle instantly. Open
- * content keeps its default overflow so nothing (focus rings, inner scroll
- * areas) is clipped. Static under reduced motion. Removing the old
- * `.details-body > div { overflow: hidden }` also un-breaks the inner
- * `.table-scroll` overflow-auto it overrode (unlayered CSS beat the layered
- * Tailwind utility, clipping long curve tables instead of scrolling them). */
+/* <details> expand/collapse via ::details-content + interpolate-size
+ * (Chromium animates; others toggle instantly; static reduced motion). */
 @media (prefers-reduced-motion: no-preference) {
   :root {
     interpolate-size: allow-keywords;
   }
   details::details-content {
     transition:
-      height 200ms ease-out,
-      content-visibility 200ms ease-out allow-discrete;
+      height var(--motion-evidence) ease-out,
+      content-visibility var(--motion-evidence) ease-out allow-discrete;
   }
   details:not([open])::details-content {
     height: 0;
@@ -166,9 +749,4 @@ th {
   to {
     opacity: 1;
   }
-}
-
-/* Larger range thumb for touch (visual only; keyboard behavior unchanged). */
-input[type="range"] {
-  min-height: 48px;
 }

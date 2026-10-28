@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 
 const buttonVariants = cva(
-  "pressable inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold disabled:opacity-60",
+  "pressable inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-5 py-3 text-base font-bold disabled:opacity-60",
   {
     variants: {
       variant: {
@@ -30,7 +30,7 @@ export function Button({ variant, className, type = "button", ref, ...rest }: Bu
   return <button ref={ref} type={type} className={clsx(buttonVariants({ variant }), className)} {...rest} />;
 }
 
-const cardVariants = cva("rounded-xl bg-white shadow-sm", {
+const cardVariants = cva("rounded-xl bg-white", {
   variants: {
     pad: {
       md: "p-4 sm:p-6",
@@ -55,12 +55,12 @@ export function Card({ as = "section", pad, className, children, ...rest }: Card
   );
 }
 
-const alertVariants = cva("rounded-lg p-3 text-sm", {
+const alertVariants = cva("rounded-lg border-l-4 px-4 py-3 text-base text-ink", {
   variants: {
     tone: {
-      error: "border border-error bg-white text-error",
-      warn: "border border-alert bg-warn-bg text-ink",
-      info: "bg-surface text-ink",
+      error: "border-error bg-redbg",
+      warn: "border-alert bg-warn-bg",
+      info: "border-primary bg-primary-soft",
     },
   },
   defaultVariants: { tone: "error" },
@@ -78,12 +78,12 @@ export function Alert({ tone, className, children, role = "alert", ...rest }: Al
   );
 }
 
-const badgeVariants = cva("inline-block rounded-full border px-3 py-1 text-sm font-semibold", {
+const badgeVariants = cva("inline-block rounded-lg px-2.5 py-1 text-sm font-bold", {
   variants: {
     tone: {
-      demo: "border-alert bg-warn-bg text-warn-ink",
-      live: "border-primary bg-primary-soft text-primary-ink",
-      neutral: "border-border bg-white text-muted",
+      demo: "bg-warn-bg text-warn-ink",
+      live: "bg-primary-soft text-primary-ink",
+      neutral: "bg-primary-soft text-primary",
     },
   },
   defaultVariants: { tone: "neutral" },
