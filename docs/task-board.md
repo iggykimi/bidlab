@@ -72,7 +72,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T11 listo en worktree t11 (helper, pendiente merge
   lead): comparativa texto (fixture 0/11 medido) vs híbrido
   (blocked G3, nulls honestos) + artefacto + 14 tests; backend
-  472. El lead finalizará esta línea tras el merge.
+  472. Mergeado e772954 (SHA verificado), gates
+  lead en main: backend 472 + E2E 70/70. Crítico
+  T01–T11 cerrado. Siguiente: T17-cierre, T20–T21, T19.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

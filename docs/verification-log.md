@@ -1070,3 +1070,22 @@ Evidencia (helper, en el worktree):
 - `scripts/compare_extraction.py`: exit 0
   (artefacto) y exit 2 (gold ausente).
 - E2E/front no tocados ni re-ejecutados.
+
+Evidencia (lead, en main tras merge e772954):
+- SHA del helper verificado (e8bfa52...acef48
+  coincide); merge limpio sobre e6d21b0.
+- Backend: 472/472 exit 0 (unit + evaluation +
+  integración + contratos). `ruff check .` en
+  raíz: exit 0. `ruff format --check` en
+  apps/api: 98 ficheros OK. `mypy`: 52 OK.
+  (Nota: verify.py no tiene paso format; la
+  mención del helper a .md sin formato no
+  afecta a ningún gate.)
+- CLI re-ejecutado por el lead: exit 0 con
+  números idénticos (0/0/11, p50 0.004, max
+  0.009); exit 2 con gold ausente. Solo
+  difieren 3 latencias por caso en ±0.001 ms
+  (jitter de medición real) + timestamp:
+  prueba de que son medidas, no fijas.
+- E2E completa 70/70 en main post-merge.
+- Crítico PKG-T01–T11 cerrado.
