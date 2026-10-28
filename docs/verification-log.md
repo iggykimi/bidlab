@@ -719,3 +719,45 @@ Evidencia:
   packet persistido, coverage con imagen).
 - `ruff check`, `ruff format --check` (90 ficheros),
   `mypy` (49): verdes. E2E completa 62/62.
+
+## Plan Integral PKG-T07 — observations v2 con fuentes (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 01c2d9e. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (mocks).
+
+Contrato live pasa a observations v2 (fuentes exactas:
+doc sha + página física + image id/sha + bbox 0–1000;
+`schema_version: 2.0-proposal`, strict, nombre
+`bidlab_observations_v2`): `schemas/observations.py`
+hecho a mano desde `contratos/observations.schema.json`
+del paquete (régimen strict, bbox como array JSON,
+caja propia validada). `validate_observation_sources`
+liga cada eco al paquete enviado (triple documento,
+imagen exacta, bbox sin imagen rechazado, ids
+duplicados rechazados). `observations_to_proposal`
+adapta a v1 interno: valores a `raw_value` (normalized
+null hasta revisión humana), qualifiers/bbox en notas,
+template `unsupported` sin adivinar, v2 crudo en
+`packet["observations"]` del manifest para auditoría.
+API pública sigue v1 (opción compat del paquete).
+
+Truncados con marca `…` (slots v1 acotados; crudo
+intacto en manifest): excerpt 600, literales 2000/4000,
+notas/warnings 2000, unit/key 80. Presupuestos por
+construcción: ≤1 claim/obs (40/80), warnings ≤27/30,
+notas ≤8/10. `ruff exclude` añade `BidLab_*`
+(inputs del autor, no código producto; el gate CI
+`ruff check .` fallaba por estilo de terceros).
+
+Aceptación: ejemplo del paquete valida (2 obs + bbox);
+bindings rechazan 7 mutaciones; round-trip live con
+imagen+bbox mapea a v1 y persiste el v2; terminales
+`needs_review` intactos. SME Spark sigue pendiente.
+
+Evidencia:
+- Backend: unit 295 + integración/contratos 124 = 419
+  passed, exit 0 (+28: contrato, bindings, adapt,
+  round-trip live imagen+bbox, eco de bindings en
+  integración con v2 persistido).
+- `ruff check`, `ruff format --check` (92 ficheros),
+  `mypy` (50): verdes. E2E completa 62/62.

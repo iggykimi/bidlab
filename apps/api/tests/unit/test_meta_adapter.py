@@ -19,6 +19,58 @@ def _pages() -> list[meta_adapter.PageInput]:
     ]
 
 
+_LIVE_DOC_SHA = "a" * 64
+
+
+def _live_pages() -> list[meta_adapter.PageInput]:
+    """Pages as jobs.py builds them for live runs: document sha included."""
+    return [
+        meta_adapter.PageInput(
+            "doc-a", 6, "precio neto 118336.00 euros", document_sha256=_LIVE_DOC_SHA
+        ),
+        meta_adapter.PageInput("doc-a", 10, "plazo 24 meses", document_sha256=_LIVE_DOC_SHA),
+    ]
+
+
+def _valid_observations_json() -> str:
+    def _item(item_id: str, field: str, value: str, page: int) -> dict[str, Any]:
+        return {
+            "id": item_id,
+            "field": field,
+            "value": value,
+            "qualifier": {
+                "scope_id": None,
+                "unit": None,
+                "currency": None,
+                "tax_basis": None,
+                "period_segment": None,
+                "reference_kind": None,
+            },
+            "source": {
+                "document_id": "doc-a",
+                "document_sha256": _LIVE_DOC_SHA,
+                "physical_page": page,
+                "verbatim_excerpt": f"excerpt p.{page}",
+                "image_id": None,
+                "image_sha256": None,
+                "bbox_0_1000": None,
+            },
+            "status": "proposed",
+        }
+
+    return json.dumps(
+        {
+            "schema_version": "2.0-proposal",
+            "observations": [
+                _item("ob-1", "budget_net", "118336.00", 6),
+                _item("ob-2", "period_months", "24", 10),
+            ],
+            "ambiguities": [],
+            "unread_image_ids": [],
+        }
+    )
+
+
 def test_stub_proposal_is_schema_valid_and_empty() -> None:
     result = meta_adapter.StubExtractor().extract(_pages())
     proposal = g.ExtractionProposal.model_validate(result.proposal)
@@ -188,7 +240,7 @@ def test_hybrid_envelope_shape() -> None:
     assert first["page_text"] == "precio neto 118336.00 euros"
     response_format = payload["response_format"]
     assert response_format["type"] == "json_schema"
-    assert response_format["json_schema"]["name"] == "bidlab_extraction_v1"
+    assert response_format["json_schema"]["name"] == "bidlab_observations_v2"
     assert response_format["json_schema"]["strict"] is True
     assert response_format["json_schema"]["schema"]["type"] == "object"
     assert len(packet["pages"]) == 2
@@ -495,13 +547,13 @@ def test_live_extract_posts_official_envelope(monkeypatch: pytest.MonkeyPatch) -
         timeout: Any = None,
     ) -> _FakeResponse:
         calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
-        return _FakeResponse(200, _chat_body(_valid_proposal_json()))
+        return _FakeResponse(200, _chat_body(_valid_observations_json()))
 
     monkeypatch.setattr(httpx, "post", _fake_post)
     adapter = meta_adapter.LiveExtractor(
         api_key="test-key", model="muse-spark-1.3", endpoint_url="https://meta.test/chat"
     )
-    result = adapter.extract(_pages())
+    result = adapter.extract(_live_pages())
     assert len(calls) == 1
     assert calls[0]["url"] == "https://meta.test/chat"
     assert calls[0]["headers"]["Authorization"] == "Bearer test-key"
@@ -509,7 +561,7 @@ def test_live_extract_posts_official_envelope(monkeypatch: pytest.MonkeyPatch) -
     assert set(sent.keys()) == {"model", "messages", "max_completion_tokens", "response_format"}
     assert sent["model"] == "muse-spark-1.3"
     assert sent["max_completion_tokens"] == meta_adapter.MAX_COMPLETION_TOKENS
-    assert sent["response_format"]["json_schema"]["name"] == "bidlab_extraction_v1"
+    assert sent["response_format"]["json_schema"]["name"] == "bidlab_observations_v2"
     assert sent["response_format"]["json_schema"]["strict"] is True
     assert result.packet_manifest is not None
     assert result.packet_manifest["semantic_review"] == "pending"
@@ -522,7 +574,12 @@ def test_live_extract_posts_official_envelope(monkeypatch: pytest.MonkeyPatch) -
     assert result.provider_request_id == "chatcmpl-test-1"
     assert result.estimated_cost_usd == "0.000338"
     assert result.warnings == ()
-    g.ExtractionProposal.model_validate(result.proposal)
+    assert result.packet_manifest["observations"]["observations"][0]["id"] == "ob-1"
+    assert result.packet_manifest["observations"]["schema_version"] == "2.0-proposal"
+    proposal = g.ExtractionProposal.model_validate(result.proposal)
+    assert [claim.key for claim in proposal.claims] == ["budget_net", "period_months"]
+    assert proposal.claims[0].raw_value is not None
+    assert proposal.claims[0].raw_value.root == "118336.00"
 
 
 def test_live_extract_429_raises_without_retry(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -767,35 +824,18 @@ def test_stub_failures_carry_no_receipt() -> None:
     assert exc.value.receipt is None
 
 
-def test_live_extract_rejects_citation_outside_packet_with_receipt(
+def test_live_extract_rejects_observation_outside_packet_with_receipt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """PKG-T06 acceptance: strange echoes are refused but stay on the receipt."""
     import httpx
 
-    proposal = json.loads(_valid_proposal_json())
-    proposal["claims"] = [
-        {
-            "key": "budget_net",
-            "raw_value": None,
-            "normalized_value": None,
-            "unit": None,
-            "citations": [
-                {
-                    "document_id": "doc-a",
-                    "page_number": 99,
-                    "verbatim_excerpt": "phantom quote",
-                }
-            ],
-            "confidence": "high",
-            "status": "proposed",
-            "notes": [],
-        }
-    ]
+    proposal = json.loads(_valid_observations_json())
+    proposal["observations"][0]["source"]["physical_page"] = 99
     body = _chat_body(json.dumps(proposal))
     monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(200, body))
     with pytest.raises(meta_adapter.AdapterError) as exc:
-        _live_adapter().extract(_pages())
+        _live_adapter().extract(_live_pages())
     assert exc.value.code == "invalid_model_output"
     assert "outside submitted packet" in exc.value.message
     receipt = exc.value.receipt

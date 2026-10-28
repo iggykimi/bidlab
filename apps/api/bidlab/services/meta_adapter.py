@@ -15,19 +15,23 @@ Two implementations behind one honest gate:
   never a silent fixture.
 
 Official integration contract: POST JSON ``{"model", "messages",
-"response_format"}`` where ``response_format`` carries a JSON Schema
-derived from ``ExtractionProposal`` (amounts stay strings, unknown stays
-null; see :func:`extraction_json_schema`). The endpoint answers a
-chat-completions body; the proposal JSON lives in
-``choices[0].message.content`` and is revalidated with Pydantic.
-Unparseable, truncated or refused answers are explicit typed failures,
-never silently replaced by a fixture. Failed live attempts keep their
-provider receipt (mode/model/id/usage/latency, parsed before proposal
-validation); timeouts stay ``uncertain``. Single attempt, no retries:
-bounded spend by construction. Live calls use one bounded hybrid packet
-(1..6 pages, capped text/images, explicit output tokens, strict schema);
-citations outside the packet are refused with the receipt kept. Usage,
-when reported, feeds an estimated cost from the published Standard Spark
+"response_format"}`` where ``response_format`` carries the observations
+v2 JSON Schema (exact sources with document sha, page, image id and
+bbox; unknown stays null; see
+:func:`bidlab.schemas.observations.observations_json_schema`). The
+endpoint answers a chat-completions body; the observations JSON lives in
+``choices[0].message.content`` and is revalidated with Pydantic, bound
+to the submitted packet (see :func:`validate_observation_sources`), and
+adapted to the v1 review contract (see :func:`observations_to_proposal`);
+the raw v2 stays in the packet manifest for audit. Unparseable,
+truncated or refused answers are explicit typed failures, never silently
+replaced by a fixture. Failed live attempts keep their provider receipt
+(mode/model/id/usage/latency, parsed before proposal validation);
+timeouts stay ``uncertain``. Single attempt, no retries: bounded spend by
+construction. Live calls use one bounded hybrid packet (1..6 pages,
+capped text/images, explicit output tokens, strict schema); observations
+outside the packet are refused with the receipt kept. Usage, when
+reported, feeds an estimated cost from the published Standard Spark
 rates so the budget guard in ``bidlab.services.jobs`` keeps working;
 missing usage stays untracked, never zero-invented.
 
@@ -53,6 +57,7 @@ from pydantic import ValidationError
 
 from bidlab.api.errors import ApiError
 from bidlab.schemas import generated as g
+from bidlab.schemas import observations as obs
 from bidlab.settings import get_settings
 
 if TYPE_CHECKING:
@@ -60,7 +65,7 @@ if TYPE_CHECKING:
 
 PROMPT_VERSION = "bidlab-extract-2"
 SCHEMA_VERSION = "1.0"
-HYBRID_SCHEMA_NAME = "bidlab_extraction_v1"
+HYBRID_SCHEMA_NAME = "bidlab_observations_v2"
 META_API_URL_ENV = "META_API_URL"
 OFFICIAL_CHAT_COMPLETIONS_URL = "https://api.meta.ai/v1/chat/completions"
 MAX_UNREAD_PAGES = 120
@@ -343,7 +348,7 @@ def build_hybrid_request(
         msg = "benchmark another reasoning level before enabling it"
         raise ValueError(msg)
     if schema.get("type") != "object":
-        msg = "supply the provider-compatible ExtractionProposal JSON schema"
+        msg = "supply the provider-compatible model JSON schema"
         raise ValueError(msg)
     content: list[dict[str, Any]] = []
     mapping: list[dict[str, Any]] = []
@@ -482,6 +487,230 @@ def validate_claim_sources(
             if ref not in submitted:
                 msg = f"citation outside submitted packet: {ref[0]} p.{ref[1]}"
                 raise AdapterError("invalid_model_output", msg)
+
+
+_TRUNCATION_MARK = "…"
+_VALUE_FIELDS = ("budget_net", "period_months", "max_price_points")
+
+
+def _truncate_marked(text: str, limit: int) -> str:
+    """Clip ``text`` to ``limit`` chars, marking the cut.
+
+    v2 model strings are unbounded while v1 slots are capped; the raw v2
+    stays untouched in the packet manifest, so nothing is lost for audit.
+    """
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1] + _TRUNCATION_MARK
+
+
+def validate_observation_sources(
+    proposal: obs.ObservationsProposal, packet_pages: Sequence[Mapping[str, Any]]
+) -> None:
+    """Reject observations pointing outside the submitted packet (v2).
+
+    Checks references only, never semantic truth: every observation must
+    name a (document_id, document_sha256, physical_page) triple that was
+    actually submitted, and any image binding must match the submitted
+    render id and sha exactly. A bbox without a bound image is ungrounded
+    and refused, as are duplicate observation ids. Strange echoes stay
+    recorded on the receipt (PKG-T01); this validation only refuses to
+    store them.
+    """
+    submitted = {
+        (
+            str(entry.get("document_id")),
+            entry.get("document_sha256"),
+            entry.get("physical_page"),
+        )
+        for entry in packet_pages
+    }
+    images = {
+        str(entry.get("image_id")): entry.get("image_sha256")
+        for entry in packet_pages
+        if entry.get("image_id")
+    }
+    seen: set[str] = set()
+    for item in proposal.observations:
+        if item.id in seen:
+            msg = f"duplicate observation id: {item.id}"
+            raise AdapterError("invalid_model_output", msg)
+        seen.add(item.id)
+        source = item.source
+        ref = (source.document_id, source.document_sha256, source.physical_page)
+        if ref not in submitted:
+            msg = (
+                "observation outside submitted packet: "
+                f"{source.document_id} p.{source.physical_page}"
+            )
+            raise AdapterError("invalid_model_output", msg)
+        if (source.image_id is None) != (source.image_sha256 is None):
+            msg = f"observation {item.id} binds an image with id xor sha"
+            raise AdapterError("invalid_model_output", msg)
+        if source.image_id is not None:
+            if images.get(source.image_id) != source.image_sha256:
+                msg = f"observation {item.id} cites an image outside the submitted packet"
+                raise AdapterError("invalid_model_output", msg)
+        elif source.bbox_0_1000 is not None:
+            msg = f"observation {item.id} carries a bbox without a bound image"
+            raise AdapterError("invalid_model_output", msg)
+
+
+def _observation_citation(item: obs.Observation) -> dict[str, Any] | None:
+    """Build the v1 citation for an observation, or None without an excerpt."""
+    excerpt = item.source.verbatim_excerpt
+    if excerpt is None:
+        return None
+    return {
+        "document_id": item.source.document_id,
+        "page_number": item.source.physical_page,
+        "verbatim_excerpt": _truncate_marked(excerpt, 600),
+    }
+
+
+def _qualifier_notes(item: obs.Observation) -> list[str]:
+    """Carry v2 qualifiers (beyond the unit) as self-describing v1 notes."""
+    qualifier = item.qualifier
+    pairs = (
+        ("scope", qualifier.scope_id),
+        ("currency", qualifier.currency),
+        ("tax basis", qualifier.tax_basis),
+        ("period segment", qualifier.period_segment),
+        ("reference kind", qualifier.reference_kind),
+    )
+    return [f"{label}: {value}" for label, value in pairs if value]
+
+
+def _grounding_notes(item: obs.Observation) -> list[str]:
+    """Note visual grounding, which has no dedicated v1 slot."""
+    source = item.source
+    if source.bbox_0_1000 is None or source.image_id is None:
+        return []
+    return [f"visual evidence: {source.image_id} bbox {source.bbox_0_1000}"]
+
+
+def _value_claim(item: obs.Observation, citation: dict[str, Any] | None) -> dict[str, Any]:
+    """Adapt one scalar observation (budget/period/points) to a v1 claim."""
+    source = item.source
+    where = f"{source.document_id} p.{source.physical_page}"
+    if item.value is None:
+        return {
+            "key": item.field,
+            "raw_value": None,
+            "normalized_value": None,
+            "unit": None,
+            "citations": [],
+            "confidence": "medium",
+            "status": "not_found",
+            "notes": [_truncate_marked(f"searched: {where}", 2000)],
+        }
+    notes = _qualifier_notes(item) + _grounding_notes(item)
+    if citation is None:
+        notes.append(f"source excerpt missing: {where}")
+    unit = item.qualifier.unit
+    return {
+        "key": item.field,
+        "raw_value": _truncate_marked(item.value, 2000),
+        "normalized_value": None,
+        "unit": unit[:80] if unit else None,
+        "citations": [citation] if citation is not None else [],
+        "confidence": "medium",
+        "status": "proposed",
+        "notes": [_truncate_marked(note, 2000) for note in notes],
+    }
+
+
+def observations_to_proposal(proposal: obs.ObservationsProposal) -> g.ExtractionProposal:
+    """Adapt validated v2 observations to the v1 review contract.
+
+    Lossless where v1 has a slot, explicit elsewhere: model values land in
+    ``raw_value`` only (``normalized_value`` stays null until human review),
+    qualifiers beyond the unit ride in notes, and the raw v2 stays in the
+    packet manifest for audit. Template hints are never guessed
+    (``unsupported`` until review). Budgets hold by construction: at most
+    one claim per observation (40 of 80), warnings are 20 ambiguities plus
+    6 unread images plus one truncation summary, notes stay under 10.
+    """
+    claims: list[dict[str, Any]] = []
+    requirements: list[dict[str, Any]] = []
+    formula_literal: str | None = None
+    formula_citations: list[dict[str, Any]] = []
+    formula_ambiguities: list[str] = []
+    anomaly_text: str | None = None
+    anomaly_citations: list[dict[str, Any]] = []
+    truncated_excerpts = 0
+    for item in proposal.observations:
+        source = item.source
+        citation = _observation_citation(item)
+        if (
+            citation is not None
+            and source.verbatim_excerpt is not None
+            and len(source.verbatim_excerpt) > 600
+        ):
+            truncated_excerpts += 1
+        if item.field in _VALUE_FIELDS:
+            claims.append(_value_claim(item, citation))
+        elif item.field == "pricing_formula_literal":
+            if formula_literal is None and item.value is not None:
+                formula_literal = _truncate_marked(item.value, 2000)
+                if citation is not None:
+                    formula_citations.append(citation)
+                    notes = _qualifier_notes(item) + _grounding_notes(item)
+                else:
+                    where = f"{source.document_id} p.{source.physical_page}"
+                    notes = [f"source excerpt missing: {where}"]
+                formula_ambiguities.extend(_truncate_marked(note, 2000) for note in notes)
+            else:
+                claims.append(_value_claim(item, citation))
+        elif item.field == "anomaly_literal":
+            if anomaly_text is None and item.value is not None:
+                anomaly_text = _truncate_marked(item.value, 4000)
+                if citation is not None:
+                    anomaly_citations.append(citation)
+            else:
+                claims.append(_value_claim(item, citation))
+        else:
+            label = item.value or source.verbatim_excerpt or f"observation {item.id}"
+            requirements.append(
+                {
+                    "key": item.id[:80],
+                    "label": _truncate_marked(label, 1000),
+                    "category": "other",
+                    "logic_hint": "unknown",
+                    "group_key": None,
+                    "condition_text": _truncate_marked(
+                        item.value or source.verbatim_excerpt or "", 2000
+                    ),
+                    "citations": [citation] if citation is not None else [],
+                    "ambiguities": [],
+                }
+            )
+    warnings = [_truncate_marked(entry, 2000) for entry in proposal.ambiguities]
+    warnings.extend(
+        _truncate_marked(f"unread image: {image_id}", 2000)
+        for image_id in proposal.unread_image_ids
+    )
+    if truncated_excerpts:
+        warnings.append(f"{truncated_excerpts} excerpts truncated to 600 chars")
+    return g.ExtractionProposal.model_validate(
+        {
+            "schema_version": "1.0",
+            "claims": claims,
+            "requirements": requirements,
+            "pricing_formula": {
+                "formula_literal": formula_literal,
+                "template_hint": "unsupported",
+                "max_points": None,
+                "variables": [],
+                "citations": formula_citations,
+                "ambiguities": formula_ambiguities,
+            },
+            "anomaly_text": anomaly_text,
+            "anomaly_citations": anomaly_citations,
+            "unread_pages": [],
+            "warnings": warnings,
+        }
+    )
 
 
 def parse_chat_response[T](body: Mapping[str, Any], validate: Callable[[dict[str, Any]], T]) -> T:
@@ -692,7 +921,7 @@ class LiveExtractor:
         try:
             payload, packet = build_hybrid_request(
                 pages,
-                extraction_json_schema(),
+                obs.observations_json_schema(),
                 model=self._model,
             )
         except ValueError as exc:
@@ -771,7 +1000,9 @@ class LiveExtractor:
         body = _as_dict(data)
         receipt = body_receipt(body, latency_ms=latency_ms, model_requested=self._model)
         try:
-            proposal = parse_chat_response(body, validate=g.ExtractionProposal.model_validate)
+            observations = parse_chat_response(
+                body, validate=obs.ObservationsProposal.model_validate
+            )
         except ValidationError as exc:
             raise AdapterError(
                 "invalid_model_output",
@@ -780,11 +1011,12 @@ class LiveExtractor:
             ) from exc
         except AdapterError as exc:
             raise AdapterError(exc.code, exc.message, receipt=receipt) from exc
-        proposal_data = proposal.model_dump(mode="json")
         try:
-            validate_claim_sources(proposal_data, packet["pages"])
+            validate_observation_sources(observations, packet["pages"])
         except AdapterError as exc:
             raise AdapterError(exc.code, exc.message, receipt=receipt) from exc
+        proposal_data = observations_to_proposal(observations).model_dump(mode="json")
+        packet["observations"] = observations.model_dump(mode="json")
         returned_model = body.get("model")
         return AdapterResult(
             proposal=proposal_data,

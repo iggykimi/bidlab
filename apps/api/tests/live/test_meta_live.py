@@ -5,6 +5,7 @@ environment. Performs exactly one minimal call (one synthetic page) and
 validates the shape; never asserts live behavior from a fixture.
 """
 
+import hashlib
 import os
 
 import pytest
@@ -22,8 +23,16 @@ def test_live_extraction_opt_in() -> None:
     adapter = meta_adapter.select_adapter("live")
     assert adapter.is_live is True
     assert isinstance(adapter, meta_adapter.LiveExtractor)
+    text = "Synthetic smoke page for opt-in live runs."
     result = adapter.extract(
-        [meta_adapter.PageInput("live-smoke", 1, "Synthetic smoke page for opt-in live runs.")]
+        [
+            meta_adapter.PageInput(
+                "live-smoke",
+                1,
+                text,
+                document_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            )
+        ]
     )
     assert result.mode == "live"
     g.ExtractionProposal.model_validate(result.proposal)

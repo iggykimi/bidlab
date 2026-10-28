@@ -29,7 +29,9 @@ line-length = 100
 # tools/ holds frozen research probes from the blueprint import; style fixes there
 # would churn evidence, so lint covers only product code. .agents/ holds
 # third-party skill scripts, likewise outside the product gates.
-exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git", "apps/web", "tools", ".agents"]
+# BidLab_* are author-downloaded research/plan inputs (read-only evidence,
+# not product code); linting them would fail CI on third-party style.
+exclude = [".venv", "node_modules", "bidlab_blueprint", "storage", "dist", ".git", "apps/web", "tools", ".agents", "BidLab_*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "RUF", "N", "S", "C4", "DTZ", "TRY", "EM", "RET", "SIM", "TCH", "ASYNC"]

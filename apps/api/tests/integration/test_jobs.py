@@ -337,18 +337,19 @@ def test_live_success_settles_reported_cost(
     demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """PKG-T02: a billed ok call settles its reported cost, not the estimate."""
-    proposal = (
-        meta_adapter.StubExtractor()
-        .extract([meta_adapter.PageInput("doc-tias-pcap", 1, "x")])
-        .proposal
-    )
+    empty_v2 = {
+        "schema_version": "2.0-proposal",
+        "observations": [],
+        "ambiguities": [],
+        "unread_image_ids": [],
+    }
     body = {
         "id": "mock-ok-no-network",
         "model": "muse-spark-1.3",
         "choices": [
             {
                 "finish_reason": "stop",
-                "message": {"content": json.dumps(proposal)},
+                "message": {"content": json.dumps(empty_v2)},
             }
         ],
         "usage": {"prompt_tokens": 100, "completion_tokens": 50},
@@ -552,19 +553,47 @@ def test_live_analysis_sends_rendered_images(
     )
     assert up.status_code == 201, up.text
     doc_id = up.json()["id"]
-    proposal = (
-        meta_adapter.StubExtractor().extract([meta_adapter.PageInput("doc-x", 1, "x")]).proposal
-    )
-    chat = {
-        "id": "mock-hybrid-no-network",
-        "model": "muse-spark-1.3",
-        "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(proposal)}}],
-        "usage": {"prompt_tokens": 100, "completion_tokens": 50},
-    }
     captured: dict[str, Any] = {}
 
     def _capture(*args: Any, **kwargs: Any) -> httpx.Response:
         captured["json"] = kwargs["json"]
+        echo = json.loads(kwargs["json"]["messages"][1]["content"][0]["text"])["source"]
+        content = {
+            "schema_version": "2.0-proposal",
+            "observations": [
+                {
+                    "id": "ob-1",
+                    "field": "budget_net",
+                    "value": "118336.00",
+                    "qualifier": {
+                        "scope_id": None,
+                        "unit": "EUR",
+                        "currency": None,
+                        "tax_basis": None,
+                        "period_segment": None,
+                        "reference_kind": None,
+                    },
+                    "source": {
+                        "document_id": echo["document_id"],
+                        "document_sha256": echo["document_sha256"],
+                        "physical_page": echo["physical_page"],
+                        "verbatim_excerpt": "phantom quote",
+                        "image_id": echo["image_id"],
+                        "image_sha256": echo["image_sha256"],
+                        "bbox_0_1000": [0, 0, 10, 10],
+                    },
+                    "status": "proposed",
+                }
+            ],
+            "ambiguities": [],
+            "unread_image_ids": [],
+        }
+        chat = {
+            "id": "mock-hybrid-no-network",
+            "model": "muse-spark-1.3",
+            "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(content)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 50},
+        }
         return httpx.Response(200, json=chat)
 
     _live_transport(monkeypatch, _capture)
@@ -589,6 +618,7 @@ def test_live_analysis_sends_rendered_images(
         packet = stored.request_json["manifest"]["packet"]
         assert packet["pages"][0]["document_id"] == doc_id
         assert packet["pages"][0]["image_sha256"] is not None
+        assert packet["observations"]["observations"][0]["id"] == "ob-1"
 
 
 def test_worker_start_requeues_orphans(demo_client: TestClient) -> None:
