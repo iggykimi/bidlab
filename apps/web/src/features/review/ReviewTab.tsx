@@ -236,7 +236,7 @@ export function ReviewTab({ workspace }: Props) {
         </Card>
       )}
 
-      <AnalysisTracker workspace={workspace} />
+      <AnalysisTracker key={tender.id} workspace={workspace} />
 
       <ProposalClaims
         workspace={workspace}

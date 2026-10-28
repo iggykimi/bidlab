@@ -233,6 +233,14 @@ def test_offline_stub_makes_no_network_calls(
     assert res.status_code == 202
     terminal = _poll_terminal(demo_client, res.json()["id"])
     assert terminal["status"] in ("succeeded", "needs_review")
+    detail = demo_client.get(f"/api/v1/jobs/{res.json()['id']}")
+    assert detail.status_code == 200
+    data = g.Job.model_validate(detail.json()).model_dump(mode="json")
+    assert data["mode"] == "fixture"
+    assert data["invocation_id"] is not None
+    assert data["model"] is None
+    assert data["prompt_tokens"] is None
+    assert data["estimated_cost_usd"] is None
 
 
 def test_budget_exhaust_persists_failed_job(
@@ -375,6 +383,17 @@ def test_live_success_settles_reported_cost(
     totals = budget_service.totals(get_engine(), ceiling_micro=20_000_000)
     assert totals["spent"] == 338
     assert totals["held"] == 0
+    detail = demo_client.get(f"/api/v1/jobs/{job.id.root}")
+    assert detail.status_code == 200
+    data = g.Job.model_validate(detail.json()).model_dump(mode="json")
+    assert data["mode"] == "live"
+    assert data["model"] == "muse-spark-1.3"
+    assert data["prompt_tokens"] == 100
+    assert data["completion_tokens"] == 50
+    assert data["estimated_cost_usd"] == meta_adapter.estimate_cost_usd(100, 50)
+    assert data["provider_request_id"] == "mock-ok-no-network"
+    assert data["invocation_id"] == f"inv-{job.id.root}-a1"
+    assert data["latency_ms"] is not None
 
 
 def test_live_invalid_output_settles_reported_cost(

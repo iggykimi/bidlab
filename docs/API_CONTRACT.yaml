@@ -711,6 +711,14 @@ paths:
                     result_revision: 2
                     error_code: null
                     warnings: []
+                    invocation_id: inv-job-20261026-001-a1
+                    mode: fixture
+                    model: null
+                    prompt_tokens: null
+                    completion_tokens: null
+                    estimated_cost_usd: null
+                    provider_request_id: null
+                    latency_ms: null
           headers:
             Location:
               schema:
@@ -790,6 +798,14 @@ paths:
                     result_revision: 2
                     error_code: null
                     warnings: []
+                    invocation_id: inv-job-20261026-001-a1
+                    mode: fixture
+                    model: null
+                    prompt_tokens: null
+                    completion_tokens: null
+                    estimated_cost_usd: null
+                    provider_request_id: null
+                    latency_ms: null
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -3344,6 +3360,47 @@ components:
             maxLength: 2000
           minItems: 0
           maxItems: 30
+        invocation_id:
+          anyOf:
+          - $ref: '#/components/schemas/EntityId'
+          - type: 'null'
+        mode:
+          anyOf:
+          - type: string
+            enum:
+            - fixture
+            - live
+          - type: 'null'
+        model:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        prompt_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        completion_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        estimated_cost_usd:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+        provider_request_id:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+        latency_ms:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
       required:
       - id
       - tender_id
@@ -3354,6 +3411,14 @@ components:
       - result_revision
       - error_code
       - warnings
+      - invocation_id
+      - mode
+      - model
+      - prompt_tokens
+      - completion_tokens
+      - estimated_cost_usd
+      - provider_request_id
+      - latency_ms
       additionalProperties: false
     ReviewRequest:
       type: object

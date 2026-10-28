@@ -89,9 +89,28 @@ def get_job_or_404(session: Session, job_id: str) -> models.Job:
     return job
 
 
-def job_to_dict(job: models.Job) -> dict[str, Any]:
+def latest_invocation(session: Session, job_id: str) -> models.ModelInvocation | None:
+    """Newest invocation row for a job (attempts publish sequentially)."""
+    return session.scalars(
+        select(models.ModelInvocation)
+        .where(models.ModelInvocation.job_id == job_id)
+        .order_by(models.ModelInvocation.created_at.desc())
+        .limit(1)
+    ).first()
+
+
+def _capped(value: str | None, limit: int) -> str | None:
+    """Clip an unbounded stored string to its contract length."""
+    if value is None:
+        return None
+    return value[:limit]
+
+
+def job_to_dict(session: Session, job: models.Job) -> dict[str, Any]:
     req = _as_dict(job.request_json)
     progress = _as_dict(req.get("progress"))
+    invocation = latest_invocation(session, job.id)
+    mode = invocation.mode if invocation is not None else None
     return {
         "id": job.id,
         "tender_id": job.tender_id,
@@ -102,6 +121,18 @@ def job_to_dict(job: models.Job) -> dict[str, Any]:
         "result_revision": job.result_revision,
         "error_code": job.error_code,
         "warnings": _as_str_list(req.get("warnings"))[:30],
+        "invocation_id": invocation.id if invocation is not None else None,
+        "mode": mode if mode in ("fixture", "live") else None,
+        "model": _capped(invocation.model if invocation is not None else None, 80),
+        "prompt_tokens": invocation.prompt_tokens if invocation is not None else None,
+        "completion_tokens": (invocation.completion_tokens if invocation is not None else None),
+        "estimated_cost_usd": _capped(
+            invocation.estimated_cost_usd if invocation is not None else None, 32
+        ),
+        "provider_request_id": _capped(
+            invocation.provider_request_id if invocation is not None else None, 200
+        ),
+        "latency_ms": invocation.latency_ms if invocation is not None else None,
     }
 
 

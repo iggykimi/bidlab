@@ -37,7 +37,7 @@ async def start_analysis(
         response.headers["Location"] = f"/api/v1/jobs/{stored['id']}"
         return g.Job.model_validate(stored)
     job = jobs_service.start_analysis(db, tender_id, payload)
-    created = jobs_service.job_to_dict(job)
+    created = jobs_service.job_to_dict(db, job)
     winner = idempotency.store(db, route, idempotency_key, body, created)
     if winner is not None:
         # Lost the insert race: our committed queued job is orphaned, so
@@ -53,4 +53,6 @@ async def start_analysis(
 
 @router.get("/jobs/{job_id}", response_model=g.Job, operation_id="get_job")
 def get_job(job_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.Job:
-    return g.Job.model_validate(jobs_service.job_to_dict(jobs_service.get_job_or_404(db, job_id)))
+    return g.Job.model_validate(
+        jobs_service.job_to_dict(db, jobs_service.get_job_or_404(db, job_id))
+    )

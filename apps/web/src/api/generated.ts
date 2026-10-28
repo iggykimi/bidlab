@@ -876,6 +876,14 @@ export interface components {
             result_revision: number | null;
             error_code: components["schemas"]["JobErrorCode"] | null;
             warnings: string[];
+            invocation_id: components["schemas"]["EntityId"] | null;
+            mode: ("fixture" | "live") | null;
+            model: string | null;
+            prompt_tokens: number | null;
+            completion_tokens: number | null;
+            estimated_cost_usd: string | null;
+            provider_request_id: string | null;
+            latency_ms: number | null;
         };
         ReviewRequest: {
             expected_revision: number;

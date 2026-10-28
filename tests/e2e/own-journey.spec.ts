@@ -228,3 +228,51 @@ test("R05 review conflict keeps input and succeeds on resend", async ({ page }) 
   await expect(page.getByTestId("review-success")).toContainText("Ya guardamos tu revisión");
   expect(guard.blocked()).toBe(0);
 });
+
+// T09: reload keeps the tracked analysis run (one GET, no second POST)
+// and the invocation stays verifiable in the technical details.
+test("R05 reload keeps the analysis run without a second call", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  const tag = uniqueTag();
+  const title = `Recarga ${tag}`;
+
+  await createTenderToStep2(page, title, `RLD/${tag}`, "80000", "12");
+  await page.getByTestId("intake-file").setInputFiles({
+    name: "pliego.pdf",
+    mimeType: "application/pdf",
+    buffer: twoPagePdf(`Precio neto: 80000.00 euros (${tag})`, `Plazo: 12 meses (${tag})`),
+  });
+  await page.getByTestId("intake-upload").click();
+  await expect(page.getByTestId("intake-open")).toBeVisible();
+  await page.getByTestId("intake-open").click();
+  await page.getByTestId("company-create-name").fill("Empresa RLD");
+  await page.getByTestId("company-create-direct").fill("50000");
+  await page.getByTestId("company-create-overhead").fill("5000");
+  await page.getByTestId("company-create-submit").click();
+  await expect(page.getByRole("heading", { name: "¿Pides propuestas automáticas?" })).toBeVisible();
+
+  let posts = 0;
+  await page.route("**/api/v1/tenders/*/analysis", async (route) => {
+    if (route.request().method() === "POST") posts += 1;
+    await route.continue();
+  });
+
+  await page.getByTestId("analysis-start").click();
+  await expect(page.getByTestId("analysis-status")).toContainText("Lista");
+  await expect(page.getByTestId("analysis-run-kind")).toContainText("no llamó al servicio");
+
+  const card = page.locator('section[aria-label="Análisis automático"]');
+  await card.getByText("Detalles técnicos").click();
+  const details = card.locator("details");
+  await expect(details.locator("dt", { hasText: /^Ejecución$/ })).toBeVisible();
+  await expect(details.locator("code", { hasText: /^inv-/ })).toBeVisible();
+  await expect(details.locator("dt", { hasText: /^Modo$/ })).toBeVisible();
+  await expect(details.locator("code", { hasText: /^fixture$/ })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByTestId("analysis-status")).toContainText("Lista");
+  await expect(page.getByTestId("analysis-run-kind")).toContainText("no llamó al servicio");
+  await expect(page.getByTestId("analysis-start")).toHaveCount(0);
+  expect(posts).toBe(1);
+  expect(guard.blocked()).toBe(0);
+});

@@ -15,8 +15,13 @@ import {
   type Workspace,
 } from "../../api/client";
 import { TechnicalDetails } from "../../components/TechnicalDetails";
-import { Button, Card } from "../../components/ui";
+import { Alert, Button, Card } from "../../components/ui";
 import { errorCode, errorEs } from "../../lib/errors";
+import {
+  clearTrackedAnalysis,
+  loadTrackedAnalysis,
+  saveTrackedAnalysis,
+} from "./analysisJobStore";
 import { isTerminalJobStatus, jobStatusEs, jobWarningEs } from "./ownTender";
 
 interface Props {
@@ -37,6 +42,10 @@ export function AnalysisTracker({ workspace }: Props) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rawError, setRawError] = useState<string | null>(null);
+  const [rehydrating, setRehydrating] = useState(
+    () => loadTrackedAnalysis(tenderId) !== null
+  );
+  const [trackWarning, setTrackWarning] = useState(false);
   const startingRef = useRef(false);
 
   const capsQuery = useQuery({
@@ -51,6 +60,38 @@ export function AnalysisTracker({ workspace }: Props) {
   async function refreshWorkspace() {
     await queryClient.invalidateQueries({ queryKey: ["workspace", tenderId] });
   }
+
+  // Rehydrate the tracked run after a reload: one GET, never a new POST.
+  // A stale id (404, foreign tender) drops back to the start screen.
+  useEffect(() => {
+    const stored = loadTrackedAnalysis(tenderId);
+    if (stored === null) return;
+    let cancelled = false;
+    getJob(stored.jobId)
+      .then((found) => {
+        if (cancelled) return;
+        if (found.tender_id !== tenderId) {
+          clearTrackedAnalysis(tenderId);
+          setRehydrating(false);
+          return;
+        }
+        setJob(found);
+        setLocation(stored.location);
+        setRehydrating(false);
+        if (!isTerminalJobStatus(found.status)) {
+          setFollowing(true);
+          setPaused(false);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearTrackedAnalysis(tenderId);
+        setRehydrating(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenderId]);
 
   async function pollOnce() {
     if (!job) return;
@@ -92,6 +133,9 @@ export function AnalysisTracker({ workspace }: Props) {
       });
       setJob(started.job);
       setLocation(started.location);
+      setTrackWarning(
+        !saveTrackedAnalysis(tenderId, { jobId: started.job.id, location: started.location })
+      );
       if (isTerminalJobStatus(started.job.status)) {
         setFollowing(false);
         await refreshWorkspace();
@@ -131,10 +175,24 @@ export function AnalysisTracker({ workspace }: Props) {
       ? `Página ${Math.min(job.processed_pages, job.total_pages)} de ${job.total_pages}`
       : null;
 
+  const runKind =
+    job?.mode === "fixture"
+      ? "Análisis local: no llamó al servicio ni gastó nada."
+      : job?.mode === "live"
+        ? "Llamó al servicio de análisis."
+        : null;
+
   return (
     <Card aria-label="Análisis automático">
       <h2 className="text-lg font-semibold">¿Pides propuestas automáticas?</h2>
-      {!job && (
+      {trackWarning && (
+        <Alert tone="warn" className="mt-2" data-testid="analysis-track-warning">
+          No pudimos guardar el seguimiento en este navegador. Si recargas, pide el análisis de
+          nuevo.
+        </Alert>
+      )}
+      {!job && rehydrating && <p role="status" className="mt-2 text-sm">Recuperando tu análisis…</p>}
+      {!job && !rehydrating && (
         <div className="mt-2 grid gap-3 text-sm">
           <p>
             Leemos tu PDF y proponemos cifras. Tú decides después en el formulario.
@@ -180,6 +238,7 @@ export function AnalysisTracker({ workspace }: Props) {
             {progress ? ` · ${progress}` : ""}
             {paused && !terminal ? " · en pausa" : ""}
           </p>
+          {runKind && <p data-testid="analysis-run-kind">{runKind}</p>}
           {job.total_pages > 0 && (
             <div
               role="progressbar"
@@ -244,6 +303,7 @@ export function AnalysisTracker({ workspace }: Props) {
                   variant="secondary"
                   data-testid="analysis-retry"
                   onClick={() => {
+                    clearTrackedAnalysis(tenderId);
                     setJob(null);
                     setUnfollowed(false);
                   }}
@@ -263,6 +323,28 @@ export function AnalysisTracker({ workspace }: Props) {
               { label: "Análisis", value: job.id },
               ...(location ? [{ label: "Recurso", value: location }] : []),
               { label: "Etapa", value: job.stage },
+              ...(job.invocation_id
+                ? [{ label: "Ejecución", value: job.invocation_id }]
+                : []),
+              ...(job.mode ? [{ label: "Modo", value: job.mode }] : []),
+              ...(job.model ? [{ label: "Modelo", value: job.model }] : []),
+              ...(job.prompt_tokens !== null && job.completion_tokens !== null
+                ? [
+                    {
+                      label: "Tokens de entrada + salida",
+                      value: `${job.prompt_tokens} + ${job.completion_tokens}`,
+                    },
+                  ]
+                : []),
+              ...(job.estimated_cost_usd
+                ? [{ label: "Coste estimado (USD)", value: job.estimated_cost_usd }]
+                : []),
+              ...(job.provider_request_id
+                ? [{ label: "Petición del proveedor", value: job.provider_request_id }]
+                : []),
+              ...(job.latency_ms !== null
+                ? [{ label: "Latencia (ms)", value: String(job.latency_ms) }]
+                : []),
               ...(job.error_code ? [{ label: "Código de fallo", value: job.error_code }] : []),
               ...job.warnings.map((w, i) => ({ label: `Aviso ${i + 1} (original)`, value: w })),
             ]}

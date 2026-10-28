@@ -789,3 +789,45 @@ Evidencia:
   passed, exit 0 (+5: 3 prompt, 2 ejemplo v2→v1).
 - `ruff check`, `ruff format --check` (92 ficheros),
   `mypy` (50): verdes. E2E completa 62/62.
+
+## Plan Integral PKG-T09 — recorrido real en UI (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 3112aa1. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (mocks/proveedor
+simulado en tests).
+
+Aceptación 1 (invocación verificable): `Job` gana 7
+campos aditivos de la última invocación
+(`invocation_id`, `mode` fixture/live, `model`,
+tokens, `estimated_cost_usd`, `provider_request_id`,
+`latency_ms`; nulos sin intento). Regen exact-repro
+pinneado: builder → YAML (+65, 0 restas, 27/29/79
+intactos) → generated.py (+34/−1 timestamp) →
+generated.ts (+8). `job_to_dict` lee la invocación
+más nueva (modo foráneo → null, strings acotados).
+El tracker muestra la clase de ejecución y los hechos
+en Detalles técnicos.
+
+Aceptación 2 (puntos bloqueados pre-revisión, motor
+tras aprobar): ya cubierta (Precio bloqueado +
+simulación post-revisión); sigue verde sin cambios.
+
+Aceptación 3 (recarga sin duplicar): `analysisJobStore`
+(versionado, `bidlab.analysis.v1`) persiste el trabajo
+seguido; el tracker rehidrata con un GET y retoma el
+polling; `key` por licitación evita fugas entre
+licitaciones; fallo de persistencia avisa en UI.
+
+Nota: respuestas `Job` idempotentes guardadas <24h
+antes del cambio carecen de las claves nuevas (solo
+afecta a storage local de desarrollo; E2E/CI parten
+de storage fresco).
+
+Evidencia:
+- Backend: unit 303 + integración/contratos 124 = 427
+  passed, exit 0 (+3 job_to_dict; detalle live/fixture
+  en integración).
+- Front: vitest 208 (26 ficheros, +6 store), eslint,
+  tsc, build: verdes.
+- `ruff check`, `ruff format --check` (92 ficheros),
+  `mypy` (50): verdes. E2E completa 63/63 (+1 recarga).

@@ -48,7 +48,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T08 hecho (prompt extract-3 con
   unidades/ámbito/periodo/ambigüedad + ejemplo
   sintético); backend 424 + E2E 62/62.
-  Siguiente: PKG-T09 (recorrido real en UI).
+- 28-oct: PKG-T09 hecho (Job +invocación, tracker
+  rehidratable, E2E recarga); backend 427 + front
+  208 + E2E 63/63. Crítico T01–T09 cerrado.
+  Siguiente: PKG-T12 (búsqueda/paginación).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

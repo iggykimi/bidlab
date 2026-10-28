@@ -6,6 +6,7 @@ from collections.abc import Iterator
 import pytest
 from bidlab.api.errors import ApiError
 from bidlab.db import models
+from bidlab.schemas import generated as g
 from bidlab.services import jobs as jobs_service
 from bidlab.services import meta_adapter
 from bidlab.settings import get_settings
@@ -357,4 +358,89 @@ def test_cancel_queued_job(session: Session) -> None:
     assert job is not None
     assert job.status == "cancelled"
     assert jobs_service.cancel_queued_job(session, "job-test-1") is False
+    session.rollback()
+
+
+def _invocation_row(
+    attempt: int,
+    created_at: str,
+    mode: str = "live",
+    model: str | None = "muse-spark-1.3",
+) -> models.ModelInvocation:
+    return models.ModelInvocation(
+        id=f"inv-job-test-1-a{attempt}",
+        job_id="job-test-1",
+        mode=mode,
+        model=model,
+        prompt_version="bidlab-extract-3",
+        input_hash="h" * 64,
+        provider_request_id="chatcmpl-x",
+        prompt_tokens=100,
+        completion_tokens=50,
+        cached_tokens=None,
+        estimated_cost_usd="0.000338",
+        latency_ms=12,
+        status="ok",
+        created_at=created_at,
+    )
+
+
+def test_job_to_dict_without_invocation_has_nulls(session: Session) -> None:
+    """PKG-T09: a job with no attempt yet reports null invocation facts."""
+    session.add(_job_row("queued"))
+    session.commit()
+    job = session.get(models.Job, "job-test-1")
+    assert job is not None
+    payload = jobs_service.job_to_dict(session, job)
+    assert payload["invocation_id"] is None
+    assert payload["mode"] is None
+    assert payload["model"] is None
+    assert payload["prompt_tokens"] is None
+    assert payload["completion_tokens"] is None
+    assert payload["estimated_cost_usd"] is None
+    assert payload["provider_request_id"] is None
+    assert payload["latency_ms"] is None
+    g.Job.model_validate(payload)
+    session.rollback()
+
+
+def test_job_to_dict_exposes_latest_invocation(session: Session) -> None:
+    """PKG-T09: the newest attempt is the verifiable run."""
+    session.add(_job_row("needs_review"))
+    session.add(_invocation_row(1, "2026-10-28T10:00:00+00:00"))
+    session.add(_invocation_row(2, "2026-10-28T10:01:00+00:00"))
+    session.commit()
+    job = session.get(models.Job, "job-test-1")
+    assert job is not None
+    payload = jobs_service.job_to_dict(session, job)
+    assert payload["invocation_id"] == "inv-job-test-1-a2"
+    assert payload["mode"] == "live"
+    assert payload["model"] == "muse-spark-1.3"
+    assert payload["prompt_tokens"] == 100
+    assert payload["completion_tokens"] == 50
+    assert payload["estimated_cost_usd"] == "0.000338"
+    assert payload["provider_request_id"] == "chatcmpl-x"
+    assert payload["latency_ms"] == 12
+    parsed = g.Job.model_validate(payload)
+    assert parsed.invocation_id is not None
+    assert parsed.invocation_id.root == "inv-job-test-1-a2"
+    session.rollback()
+
+
+def test_job_to_dict_guards_foreign_mode_and_clips(session: Session) -> None:
+    """PKG-T09: unexpected stored values never break the contract."""
+    session.add(_job_row("failed"))
+    session.add(_invocation_row(1, "2026-10-28T10:00:00+00:00", mode="curated_demo"))
+    session.commit()
+    job = session.get(models.Job, "job-test-1")
+    assert job is not None
+    payload = jobs_service.job_to_dict(session, job)
+    assert payload["mode"] is None
+    session.rollback()
+    session.add(_invocation_row(2, "2026-10-28T10:02:00+00:00", model="m" * 100))
+    session.commit()
+    payload = jobs_service.job_to_dict(session, job)
+    assert payload["model"] == "m" * 80
+    assert payload["mode"] == "live"
+    g.Job.model_validate(payload)
     session.rollback()
