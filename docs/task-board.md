@@ -59,8 +59,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T14 hecho (tokens prototipo, 8 PNG
   regen); backend 436 + front 210 + E2E 67/67.
   D28-3: 18px no aplicado (follow-up con QA).
-  Siguiente: PKG-T15 + PKG-T10 en paralelo
-  (helpers, worktrees .worktrees/).
+- 28-oct: PKG-T10 hecho (helper, merge 456c5a1):
+  gold 25 + partición dev/eval + harness/CLI;
+  backend 452. T15 sigue en su worktree.
+  Siguiente: integrar T15, luego PKG-T11.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

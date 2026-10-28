@@ -924,3 +924,42 @@ Evidencia:
   verdes (mypy no aplica: sin cambios py).
 - E2E completa 67/67 (+1 prototipo.spec: estilos
   computados body/muted/foco).
+
+## Plan Integral PKG-T10 — gold humano + partición (28-oct, Windows)
+
+Fecha: 2026-10-28. Base: 9ca02de en worktree
+`.worktrees/t10`, merge --no-ff a main (456c5a1).
+Helper implementó, lead verificó e integró. Sin red.
+
+Aceptación 1 (gold humano): `examples/gold_claims.json`
+intacto (25 claims g01–g25, kind manual_initial_gold,
+con fichero+sha+página+cita). `load_gold` rechaza
+kind distinto; test cruza los 5 sha contra
+`evidence/download_manifest.json` (verificado por el
+lead: 5/5 presentes). Cubre importes, periodos y
+fórmulas/anormalidad. Límite honesto: `evidence/
+originals/*.pdf` no está en el repo → citas no
+re-verificables in-repo; shas fijados al manifest.
+Valida como v1 (jsonschema + pydantic) y v2.
+
+Aceptación 2 (partición): `evidence/
+evaluation_split.json`: dev = Tías 20777838 (14
+claims, caso semilla), eval = 4 expedientes
+retenidos (11 claims), unidad (expediente, sha).
+`check_split` impone cobertura, integridad por
+expediente y regla no-hermanas (verificado por el
+lead en lectura + tests).
+
+Aceptación 3 (denominador): `score` cuenta todo
+eval (ausente → unsupported, 0 puntos pero cuenta).
+CLI `scripts/score_extraction.py` verificado por el
+lead: exit 0 (11 claims, accuracy 1/11 en sonda) y
+exit 2 con fichero inexistente.
+
+Evidencia (verificada por el lead en main):
+- Backend: unit 319 + integración/contratos 133 =
+  452 passed, exit 0 (+16 test_extraction_eval).
+- `ruff check`, `ruff format --check`, `mypy`:
+  verdes (re-ejecutados por el lead).
+- E2E no re-ejecutada: sin diff en API/front
+  (67/67 vigente del commit anterior).
