@@ -25,7 +25,7 @@ const TEXTO_ES: Record<string, string> = {
   exact: "Copiado tal cual",
   normalized_match: "Equivalente",
   missing: "No encontrado",
-  manual_visual: "Revisado a mano",
+  manual_visual: "Localizado a mano",
 };
 
 /** Citation match status -> "Texto" column value (uxgaps C9). */
@@ -37,7 +37,7 @@ const FUENTE_ES: Record<string, string> = {
   exact: "texto idéntico",
   normalized_match: "texto equivalente",
   missing: "texto sin localizar",
-  manual_visual: "texto revisado a mano",
+  manual_visual: "texto localizado a mano",
 };
 
 /** Citation match status -> Informe "Fuentes" fragment (uxgaps C11). */

@@ -4,6 +4,7 @@ import { clsx } from "clsx";
 import {
   ApiError,
   documentContentUrl,
+  documentPageImageUrl,
   getDocumentContentStatus,
   getPage,
   type Citation,
@@ -49,6 +50,37 @@ function minuscula(s: string): string {
 /** Whitespace-insensitive comparison for the quote/page-text dedupe. */
 function normalizado(s: string): string {
   return s.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Exact page render with an explicit labeled fallback (T15). The caller keys
+ * by document+page so navigation remounts with fresh state. A 404 (document
+ * never rendered) unmounts the img and names the text below as the source;
+ * nothing renders a fake preview.
+ */
+function PageImage({ documentId, page }: { documentId: string; page: number }) {
+  const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
+  return (
+    <section aria-label="Imagen de la página" className="mt-4">
+      <h3 className="font-semibold">Imagen de la página</h3>
+      {state === "loading" && <p className="mt-2 text-sm">Cargando imagen…</p>}
+      {state !== "missing" && (
+        <img
+          src={documentPageImageUrl(documentId, page)}
+          alt={`Imagen exacta de la página ${page} del pliego`}
+          data-testid="evidence-image"
+          onLoad={() => setState("ready")}
+          onError={() => setState("missing")}
+          className={state === "ready" ? "mt-2 w-full rounded-lg border border-line" : "hidden"}
+        />
+      )}
+      {state === "missing" && (
+        <p role="status" data-testid="evidence-image-missing" className="mt-2 text-sm">
+          Esta página no tiene imagen. Coteja con el texto de abajo.
+        </p>
+      )}
+    </section>
+  );
 }
 
 /**
@@ -247,6 +279,12 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
             </Button>
           )}
         </div>
+
+        <PageImage
+          key={`${citation.document_id}-${page}`}
+          documentId={citation.document_id}
+          page={page}
+        />
 
         <section aria-label="Texto de la página" className="mt-4">
           <h3 className="font-semibold">Texto de la página</h3>

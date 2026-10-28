@@ -1,9 +1,17 @@
 // Live proposal review: every extracted claim with its value and
 // citations, accepted one by one. Nothing is pre-approved.
+// T15: the citation line is the machine localization state and the
+// checkbox is the human semantic review; the two never share wording.
 
 import type { Citation, ClaimProposal, Workspace } from "../../api/client";
 import { Card } from "../../components/ui";
-import { claimLabel, claimStatusEs, confidenceEs, joinClaimCitations } from "./claimHelpers";
+import {
+  citaEstadoEs,
+  claimLabel,
+  claimStatusEs,
+  confidenceEs,
+  joinClaimCitations,
+} from "./claimHelpers";
 
 interface Props {
   workspace: Workspace;
@@ -11,11 +19,9 @@ interface Props {
   onToggle: (key: string, checked: boolean) => void;
 }
 
-function matchEs(matchStatus: string): string {
-  if (matchStatus === "exact") return "Copiado tal cual";
-  if (matchStatus === "normalized_match") return "Coincide normalizado";
-  if (matchStatus === "manual_visual") return "Verificación visual";
-  return "Sin localizar";
+/** Lowercase first letter: "Copiado tal cual" -> "copiado tal cual". */
+function minuscula(s: string): string {
+  return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
 export function ProposalClaims({ workspace, approved, onToggle }: Props) {
@@ -53,13 +59,15 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
                     Confianza {confidenceEs(claim.confidence)}.
                     {statusNote ? ` ${statusNote}` : ""}
                   </span>
+                  <span className="block text-xs text-muted" data-testid={`claim-review-state-${claim.key}`}>
+                    {checked ? "Lo confirmas." : "Por verificar."}
+                  </span>
                 </span>
               </label>
               {joinClaimCitations(claim, stored).map((joined, i) => (
                 <div key={i} className="mt-2 rounded-lg bg-surface p-2 text-sm">
                   <p className="text-xs text-muted">
-                    Página {joined.proposal.page_number} ·{" "}
-                    {joined.verified ? matchEs(joined.verified.match_status) : "Sin verificar"}
+                    {`Página ${joined.proposal.page_number} · Cita (${minuscula(citaEstadoEs(joined.verified?.match_status ?? null))})`}
                   </p>
                   <p className="mt-1 whitespace-pre-wrap">
                     «{joined.proposal.verbatim_excerpt}»

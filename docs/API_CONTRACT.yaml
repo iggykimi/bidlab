@@ -640,6 +640,57 @@ paths:
           type: integer
           minimum: 1
         example: 6
+  /api/v1/documents/{document_id}/pages/{page_number}/image:
+    get:
+      operationId: get_page_image
+      summary: Get page image
+      description: Exact rendered PNG of one physical page (versioned render, SHA-verified);
+        404 when the document was never rendered (use the curated page text).
+      responses:
+        '200':
+          description: Successful response
+          content:
+            image/png:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - documents
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: doc-tias-pcap
+      - name: page_number
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+        example: 6
   /api/v1/documents/{document_id}/content:
     get:
       operationId: get_document_content

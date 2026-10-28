@@ -179,6 +179,11 @@ export function documentContentUrl(documentId: string): string {
   return `${API_BASE}/documents/${encodeURIComponent(documentId)}/content`;
 }
 
+/** Exact rendered PNG of one physical page; 404 JSON when never rendered. */
+export function documentPageImageUrl(documentId: string, pageNumber: number): string {
+  return `${API_BASE}/documents/${encodeURIComponent(documentId)}/pages/${pageNumber}/image`;
+}
+
 export async function evaluateScenario(payload: EvaluationRequest, signal?: AbortSignal): Promise<EvaluationResult> {
   const raw: unknown = await sendJson("POST", "/scenarios/evaluate", payload, { signal });
   return parseOrThrow(evaluationResultSchema, raw);

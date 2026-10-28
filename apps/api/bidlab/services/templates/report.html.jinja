@@ -19,7 +19,7 @@
 </head>
 <body>
 {% set ES = {"unknown": "sin determinar", "unsupported": "no soportada", "not_applicable": "no aplicable"} %}
-{% set MATCH_ES = {"exact": "literal", "normalized_match": "coincidencia normalizada", "missing": "no localizada", "manual_visual": "verificación visual"} %}
+{% set MATCH_ES = {"exact": "literal", "normalized_match": "coincidencia normalizada", "missing": "no localizada", "manual_visual": "localizada a mano"} %}
 {% if mode == "demo" %}<p><span class="badge demo">Demo curada: cifras de semilla revisada, no extracción en vivo</span></p>{% endif %}
 <h1>Informe de decisión — {{ report.scenario.context.tender_title }}</h1>
 <p><span class="badge decision">{{ report.decision }}</span></p>

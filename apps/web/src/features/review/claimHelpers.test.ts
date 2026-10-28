@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Citation, ClaimProposal } from "../../api/client";
 import {
+  citaEstadoEs,
   claimLabel,
   claimStatusEs,
   confidenceEs,
@@ -74,5 +75,19 @@ describe("joinClaimCitations", () => {
     const joined = joinClaimCitations(claim, makeStored());
     expect(joined).toHaveLength(1);
     expect(joined[0]?.verified).toBeNull();
+  });
+});
+
+describe("citaEstadoEs", () => {
+  it("names the machine localization state, never the human review", () => {
+    expect(citaEstadoEs("exact")).toBe("Copiado tal cual");
+    expect(citaEstadoEs("normalized_match")).toBe("Coincide normalizado");
+    expect(citaEstadoEs("manual_visual")).toBe("Localizado a mano");
+  });
+
+  it("stays Sin localizar without a match or a stored row", () => {
+    expect(citaEstadoEs("missing")).toBe("Sin localizar");
+    expect(citaEstadoEs(null)).toBe("Sin localizar");
+    expect(citaEstadoEs("fuzzy_v2")).toBe("Sin localizar");
   });
 });
