@@ -1,0 +1,226 @@
+{
+  "ambiguity_policy": "Blocked/ambiguous gold claims (expected_review_state=blocked) stay in the denominator; an extractor that reports them as unsupported scores 0 on them, never an exclusion from the metric.",
+  "assignments": [
+    {
+      "claim_id": "g01",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 8,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g02",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 8,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g03",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 9,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g04",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 9,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g05",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 10,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g06",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 10,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g07",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 10,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g08",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 10,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g09",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 5,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g10",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 6,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g11",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 6,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g12",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 11,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g13",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 20,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g14",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "expediente_id": "20777838",
+      "page_number": 20,
+      "split": "dev"
+    },
+    {
+      "claim_id": "g15",
+      "document_file": "evidence/originals/20777832_pcap.pdf",
+      "expediente_id": "20777832",
+      "page_number": 9,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g16",
+      "document_file": "evidence/originals/20777832_pcap.pdf",
+      "expediente_id": "20777832",
+      "page_number": 9,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g17",
+      "document_file": "evidence/originals/20777832_pcap.pdf",
+      "expediente_id": "20777832",
+      "page_number": 9,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g18",
+      "document_file": "evidence/originals/20706136_pcap.pdf",
+      "expediente_id": "20706136",
+      "page_number": 15,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g19",
+      "document_file": "evidence/originals/20706136_pcap.pdf",
+      "expediente_id": "20706136",
+      "page_number": 15,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g20",
+      "document_file": "evidence/originals/20706136_pcap.pdf",
+      "expediente_id": "20706136",
+      "page_number": 57,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g21",
+      "document_file": "evidence/originals/17907789_pcap.pdf",
+      "expediente_id": "17907789",
+      "page_number": 1,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g22",
+      "document_file": "evidence/originals/17907789_pcap.pdf",
+      "expediente_id": "17907789",
+      "page_number": 2,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g23",
+      "document_file": "evidence/originals/20010571_pcap.pdf",
+      "expediente_id": "20010571",
+      "page_number": 6,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g24",
+      "document_file": "evidence/originals/20010571_pcap.pdf",
+      "expediente_id": "20010571",
+      "page_number": 6,
+      "split": "eval"
+    },
+    {
+      "claim_id": "g25",
+      "document_file": "evidence/originals/20010571_pcap.pdf",
+      "expediente_id": "20010571",
+      "page_number": 6,
+      "split": "eval"
+    }
+  ],
+  "denominator_rule": "Every eval claim counts in the denominator, including claims the extractor reports as unsupported and claims with no prediction at all. Nothing is excluded from the metric for being hard.",
+  "documents": [
+    {
+      "admin_reference": "2026/00006554N",
+      "document_file": "evidence/originals/20777838_pcap.pdf",
+      "document_sha256": "c74d063237b012df89543da73390d76d8996a558a85b0202890182bcee289677",
+      "expediente_id": "20777838",
+      "split": "dev",
+      "title": "Tias: asistencia tecnica del Plan de Actuacion Integrado"
+    },
+    {
+      "admin_reference": "26 036 SR JD AB UA21",
+      "document_file": "evidence/originals/20777832_pcap.pdf",
+      "document_sha256": "78ef640e8bd83e95e23d0682dcf47dbd0dd3798e29efdf375ca793084e5d0dbd",
+      "expediente_id": "20777832",
+      "split": "eval",
+      "title": "Alfresco: formula logaritmica ambigua, caso de revision"
+    },
+    {
+      "admin_reference": "PA-1/2026",
+      "document_file": "evidence/originals/20706136_pcap.pdf",
+      "document_sha256": "a06f874f1308f840387b4096723b1e4090cada9f28db17e1993fbaa87ccae1a8",
+      "expediente_id": "20706136",
+      "split": "eval",
+      "title": "Marketing AMTC: referencia VEC, bloqueado para demo"
+    },
+    {
+      "admin_reference": "SERV-E-PA-47-2025",
+      "document_file": "evidence/originals/17907789_pcap.pdf",
+      "document_sha256": "0b3f252bb957fa3207bce5c1e25b182524be5e014af07135d1650bfe4aacedc7",
+      "expediente_id": "17907789",
+      "split": "eval",
+      "title": "Limpieza Tomelloso: tanto alzado, un ano inicial"
+    },
+    {
+      "admin_reference": "PA 79/2026",
+      "document_file": "evidence/originals/20010571_pcap.pdf",
+      "document_sha256": "77a2bba337cc5c1e52245c60f5b7d77cb4c460051a882239a734e9f91c119c3d",
+      "expediente_id": "20010571",
+      "split": "eval",
+      "title": "Licencias Microsoft Torrejon: tres lotes"
+    }
+  ],
+  "provenance": "Human annotation (research team, 2026-10-26): values transcribed from the PCAP pages cited in examples/gold_claims.json, cross-checked against docs/DATA_FEASIBILITY.md and evidence/download_manifest.json. Never model output: no live extraction ran before this split (G3 BLOCKED), so the split is a prospective quarantine, not a decontamination of tuned prompts. Dev holds the curated Tias seed case (fixtures/demo, examples, seed service) that developers build against; eval holds four held-out expedientes.",
+  "rule": "Partition unit is (expediente, document version): the version is the document sha256, and every claim of one expediente shares one split. Dev pages never score: claims assigned dev are excluded from the denominator. No sibling pages across the boundary: a (document, page) assigned dev must never contribute an eval claim, and vice versa. Enforced by bidlab.services.extraction_eval.check_split.",
+  "version": 1
+}
