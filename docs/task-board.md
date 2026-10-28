@@ -35,6 +35,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T04 hecho (coverage usable/entregado,
   warnings job+workspace, manifest); backend 373 +
   E2E 62/62 verdes. Siguiente: PKG-T05 (render).
+- 28-oct: PKG-T05 hecho (render PyMuPDF versionado,
+  cache_key, hook upload); backend 383 + E2E 62/62.
+  Ayudas render inexistentes en paquete (ver log).
+  Siguiente: PKG-T06 (payload híbrido).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

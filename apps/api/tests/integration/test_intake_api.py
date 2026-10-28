@@ -2,6 +2,8 @@
 
 from bidlab.schemas import generated as g
 from bidlab.services import pdf as pdf_service
+from bidlab.services import render as render_service
+from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from httpx import Response
 
@@ -316,3 +318,27 @@ def test_upload_idempotent_retry_and_duplicate(fresh_client: TestClient) -> None
     duplicate = _upload_res(fresh_client, tender_id, "up-idem-new-key", pdf_bytes, kind="pcap")
     assert duplicate.status_code == 409
     assert duplicate.json()["code"] == "document_duplicate"
+
+
+def test_upload_renders_versioned_pngs(fresh_client: TestClient) -> None:
+    """PKG-T05: uploads store PNGs plus a manifest with version/DPI/SHAs."""
+    tender_id = str(_create(fresh_client, "up-render-t")["id"])
+    pdf_bytes = _two_page_pdf()
+    res = _upload_res(fresh_client, tender_id, "up-render", pdf_bytes, kind="pcap")
+    assert res.status_code == 201, res.text
+    doc_id = res.json()["id"]
+    storage = get_settings().storage_path.resolve()
+    manifest = render_service.load_render_manifest(storage, tender_id, doc_id)
+    assert manifest is not None
+    assert manifest["status"] == "ready"
+    assert manifest["render_version"] == render_service.RENDER_VERSION
+    assert manifest["backend_version"] == render_service.backend_version()
+    assert manifest["dpi"] == render_service.DEFAULT_DPI
+    assert isinstance(manifest["pages"], list) and len(manifest["pages"]) == 2
+    for entry, number in zip(manifest["pages"], (1, 2), strict=True):
+        assert entry["physical_page"] == number
+        assert len(entry["image_sha256"]) == 64
+        assert len(entry["cache_key"]) == 64
+        png = render_service.load_rendered_png(storage, tender_id, doc_id, entry["file"])
+        assert png is not None
+        assert png[:8] == b"\x89PNG\r\n\x1a\n"

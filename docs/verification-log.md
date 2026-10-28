@@ -647,3 +647,40 @@ Evidencia:
 - `ruff check/mypy` verdes en pdf/jobs/workspace.
 - E2E completa 62/62 (tracker muestra warnings;
   ninguna aserción exacta de warnings rota).
+
+## Plan Integral PKG-T05 — render versionado (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: cb6f6c3. Entorno: Windows,
+Python 3.14 (venv), pymupdf 1.28.2, Chromium. Sin red
+salvo PyPI para la rueda autocontenida.
+
+`services/render.py` nuevo: raster PyMuPDF (ruedas
+autocontenidas, sin deps SO), cada página declara
+versión/DPI/página/dimensiones/sha; `cache_key`
+fingerprint estable (versión+backend+DPI+página+sha
+PDF); errores tipados; PNG deterministas; almacén
+`uploads/<tender>/<doc>.render-<versión>/` + manifest
+o manifest `failed` con código. `intake` renderiza tras
+ganar idempotencia; un fallo de render nunca tumba el
+upload (manifiesto failed). Sin migración (ficheros +
+manifiesto; T06 leerá imágenes de disco).
+
+Hallazgo paquete: TAREAS cita ayudas inexistentes
+(`render.py`, `cache_matrix.json`, `render-matrix.json`,
+`jobs.py`, `attest.py`, `observations.py`,
+`hybrid-meta.py`, `meta-payload.py` con guion); la
+referencia real es `meta_payload.py` + `identity.py` +
+`test_reference.py`. T05 se implementó desde la
+aceptación + `identity.fingerprint` como convención.
+
+Evidencia:
+- Backend: unit 260 + integración/contratos 123 = 383
+  passed, exit 0 (9 render incl. matriz A/B/A/B,
+  determinismo, límites, roundtrip + traversal;
+  upload→PNG+manifest).
+- `ruff check`, `ruff format --check`, `mypy`
+  (49 ficheros): verdes (4 `type: ignore`
+  localizados por stubs parciales pymupdf).
+- E2E completa 62/62 (uploads renderizan en ruta).
+- Deps: `pymupdf>=1.24,<2` (línea v1, sin extras
+  2.0); uv.lock +20 líneas solo.

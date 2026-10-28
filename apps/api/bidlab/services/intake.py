@@ -6,6 +6,7 @@ other (no tax inference). Uploads validate magic bytes, real byte size and
 readability before anything is persisted; failures keep the tender intact.
 """
 
+import contextlib
 import datetime as dt
 import hashlib
 import re
@@ -22,6 +23,7 @@ from bidlab.db import models
 from bidlab.domain.money import MoneyError, parse_decimal, quantize_money
 from bidlab.schemas import generated as g
 from bidlab.services import pdf as pdf_service
+from bidlab.services import render as render_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
@@ -295,6 +297,41 @@ def stage_document_upload(
     session.flush()
     payload, _warnings = workspace_service.document_to_dict(doc)
     return payload, blob_abs
+
+
+def render_staged_upload(
+    storage_root: Path,
+    tender_id: str,
+    document_id: str,
+    file_bytes: bytes,
+    pdf_sha256: str,
+) -> None:
+    """Render an uploaded PDF to versioned PNGs. Never fails the upload.
+
+    Text extraction already succeeded when this runs, so a render problem
+    is recorded as a failed manifest (precise code for later stages)
+    instead of failing the whole upload.
+    """
+    try:
+        pages = render_service.render_document(file_bytes)
+    except render_service.RenderError as exc:
+        with contextlib.suppress(OSError):
+            render_service.store_failed_render(storage_root, tender_id, document_id, code=exc.code)
+        return
+    try:
+        render_service.store_render(
+            storage_root,
+            tender_id,
+            document_id,
+            pages,
+            pdf_sha256=pdf_sha256,
+            dpi=render_service.DEFAULT_DPI,
+        )
+    except OSError:
+        with contextlib.suppress(OSError):
+            render_service.store_failed_render(
+                storage_root, tender_id, document_id, code="render_store_failed"
+            )
 
 
 __all__ = [

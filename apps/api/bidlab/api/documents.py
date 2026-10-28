@@ -79,6 +79,13 @@ async def upload_tender_document(
     except OSError:
         blob_abs.unlink(missing_ok=True)
         raise
+    intake_service.render_staged_upload(
+        get_settings().storage_path.resolve(),
+        tender_id,
+        str(staged["id"]),
+        raw,
+        str(staged["sha256"]),
+    )
     return g.Document.model_validate(staged)
 
 
