@@ -1089,3 +1089,57 @@ Evidencia (lead, en main tras merge e772954):
   prueba de que son medidas, no fijas.
 - E2E completa 70/70 en main post-merge.
 - Crítico PKG-T01–T11 cerrado.
+
+## PKG-T20 · Radar de incoherencias con dos evidencias (helper-dominio-t20)
+
+Fecha: 28-oct-2026. Jaula: .worktrees/t20 (HEAD base 080a940,
+detached). Commit: PKG-T20 (ver `git log` en el worktree).
+
+Decisión dimensión/versión (documentada en
+`apps/api/bidlab/services/consistency.py`):
+- Dimensión = los 6 ejes del qualifier (scope_id, unit, currency,
+  tax_basis, period_segment, reference_kind). Solo compara si los 6
+  son iguales; null vs valor = incompatible, null vs null =
+  compatible (sin evidencia de diferencia; la pregunta sigue neutra).
+- Versión = document_sha256. Compatible = ambas fuentes identifican
+  su versión (el esquema siempre la trae). Parejas del mismo
+  documento (PCAP p.10 vs p.20) y cruzadas (PCAP vs PPT) comparan;
+  la versión nunca bloquea pero queda registrada (same_document).
+- Cableado honesto: las observaciones v2 no se persisten por
+  licitación (solo propuesta + hashes de manifiesto), luego no hay
+  pares reales en el flujo actual. El informe sirve items reales
+  (hoy []) + ejemplo sintético rotulado `synthetic: true`,
+  producido por el comparador real, nunca escrito a mano. La UI
+  muestra «Sin pares comparables» + el ejemplo rotulado.
+- Superficie API: extensión aditiva de la respuesta existente
+  Workspace (`consistency: ConsistencyReport`) en vez de endpoint
+  nuevo: Revisar ya consume workspace, cero rutas/fetch nuevos,
+  contrato aditivo (0 restas: solo timestamp + línea extendida).
+
+Gates (todos dentro del worktree, exit codes observados):
+- `uv run --package bidlab-api pytest apps/api/tests -m "not live"`.
+  Exit 0: 495 passed, 1 deselected (live). Incluye 21 tests nuevos
+  `unit/test_consistency.py` (negativos neto/bruto, PBL/estimado,
+  lotes, prórrogas; positivos mismatch con dos fuentes) + 2 nuevos
+  `integration/test_consistency_api.py` (shape Workspace).
+- `uv run ruff check .`. Exit 0.
+- `uv run ruff format --check apps/api`. Exit 0 (101 ficheros).
+- `uv run mypy apps/api/bidlab`. Exit 0 (53 ficheros).
+- `npm run test:unit -w apps/web`. Exit 0: 216 passed (28 ficheros;
+  nuevos radarCopy + RadarSection render + schemas negativa).
+- `npm run typecheck`. Exit 0. `npm run lint`. Exit 0.
+- `npm run build`. Exit 0.
+- E2E `npx playwright test -c tests/e2e/playwright.config.ts
+  t20-radar`: exit 0, 1 passed (vacío honesto + ejemplo sintético
+  con ambas páginas y pregunta, offline guard 0 bloqueos).
+- E2E completa `npm run test:e2e` (puertos estándar): exit 0,
+  71 passed (70 base + t20-radar). Nota: con BIDLAB_PORT/
+  BIDLAB_WEB_PORT alternos la suite falla global con 403 porque
+  ALLOWED_ORIGINS fija 8000/5173 (limitación preexistente, sin
+  relación con este paquete; no se tocó).
+- Regen exact-repro: base byte-idéntica antes del cambio (YAML +
+  generated.ts; generated.py solo timestamp); tras el cambio
+  `python tools/build_contract.py` (79 → 82 schemas) +
+  datamodel-codegen 0.86.0 + openapi-typescript 7.13.0, diff
+  aditivo verificado línea a línea.
+- Offline: cero llamadas Meta (comparador puro + fixtures).

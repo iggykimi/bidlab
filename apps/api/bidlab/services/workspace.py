@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
+from bidlab.services import consistency as consistency_service
 from bidlab.services import pdf as pdf_service
 
 RIGHTS_MAP = {
@@ -238,5 +239,9 @@ def get_workspace(session: Session, tender_id: str, mode: str) -> dict[str, Any]
         "requirements": requirements,
         "citations": citations,
         "pricing_rules": pricing_rules,
+        # T20: observations v2 are not persisted per tender yet (only the
+        # proposal plus manifest hashes), so real items are honestly empty
+        # until then; the labeled synthetic example still demos the radar.
+        "consistency": consistency_service.build_report(()),
         "warnings": warnings,
     }

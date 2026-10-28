@@ -22,6 +22,32 @@ const tenderBase = {
   quality_flags: [],
 };
 
+const consistencyBase = {
+  items: [],
+  synthetic_example: {
+    field: "period_months",
+    same_document: false,
+    evidence_a: {
+      observation_id: "o1",
+      document_id: "doc-sintetico-pcap",
+      document_sha256: "0".repeat(64),
+      physical_page: 2,
+      verbatim_excerpt: "Plazo inicial de prestación: 24 meses.",
+      value: "24",
+    },
+    evidence_b: {
+      observation_id: "o2",
+      document_id: "doc-sintetico-ppt",
+      document_sha256: "1".repeat(64),
+      physical_page: 3,
+      verbatim_excerpt: "Plazo inicial de prestación: 12 meses.",
+      value: "12",
+    },
+    question: "¿Hablan de lo mismo?",
+    synthetic: true,
+  },
+};
+
 describe("schemas", () => {
   it("accepts a minimal workspace payload", () => {
     const parsed = workspaceSchema.safeParse({
@@ -54,6 +80,7 @@ describe("schemas", () => {
       citations: [],
       pricing_rules: [],
       warnings: [],
+      consistency: consistencyBase,
     });
     expect(parsed.success).toBe(true);
   });
@@ -63,6 +90,22 @@ describe("schemas", () => {
       tender: tenderBase,
       interpretation_revision: 1,
       mode: "staging",
+      documents: [],
+      claims: [],
+      requirements: [],
+      citations: [],
+      pricing_rules: [],
+      warnings: [],
+      consistency: consistencyBase,
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it("rejects a workspace missing the consistency report", () => {
+    const parsed = workspaceSchema.safeParse({
+      tender: tenderBase,
+      interpretation_revision: 1,
+      mode: "demo",
       documents: [],
       claims: [],
       requirements: [],

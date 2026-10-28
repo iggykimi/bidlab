@@ -3278,6 +3278,84 @@ components:
       - evidence_ids
       - anomaly_policy
       additionalProperties: false
+    ConsistencyEvidence:
+      type: object
+      properties:
+        observation_id:
+          type: string
+          maxLength: 80
+        document_id:
+          $ref: '#/components/schemas/EntityId'
+        document_sha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        physical_page:
+          type: integer
+          minimum: 1
+        verbatim_excerpt:
+          anyOf:
+          - type: string
+            maxLength: 600
+          - type: 'null'
+        value:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+      required:
+      - observation_id
+      - document_id
+      - document_sha256
+      - physical_page
+      - verbatim_excerpt
+      - value
+      additionalProperties: false
+    ConsistencyFinding:
+      type: object
+      properties:
+        field:
+          type: string
+          enum:
+          - budget_net
+          - period_months
+          - max_price_points
+          - pricing_formula_literal
+          - anomaly_literal
+          - other_requirement
+        same_document:
+          type: boolean
+        evidence_a:
+          $ref: '#/components/schemas/ConsistencyEvidence'
+        evidence_b:
+          $ref: '#/components/schemas/ConsistencyEvidence'
+        question:
+          type: string
+          maxLength: 1000
+        synthetic:
+          type: boolean
+      required:
+      - field
+      - same_document
+      - evidence_a
+      - evidence_b
+      - question
+      - synthetic
+      additionalProperties: false
+    ConsistencyReport:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsistencyFinding'
+          minItems: 0
+          maxItems: 50
+        synthetic_example:
+          $ref: '#/components/schemas/ConsistencyFinding'
+      required:
+      - items
+      - synthetic_example
+      additionalProperties: false
     Workspace:
       type: object
       properties:
@@ -3329,6 +3407,8 @@ components:
             maxLength: 2000
           minItems: 0
           maxItems: 50
+        consistency:
+          $ref: '#/components/schemas/ConsistencyReport'
       required:
       - tender
       - interpretation_revision
@@ -3339,6 +3419,7 @@ components:
       - citations
       - pricing_rules
       - warnings
+      - consistency
       additionalProperties: false
     AnalysisRequest:
       type: object
