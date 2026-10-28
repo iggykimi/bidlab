@@ -35,7 +35,7 @@ describe("textoEs", () => {
     expect(textoEs("exact")).toBe("Copiado tal cual");
     expect(textoEs("normalized_match")).toBe("Equivalente");
     expect(textoEs("missing")).toBe("No encontrado");
-    expect(textoEs("manual_visual")).toBe("Revisado a mano");
+    expect(textoEs("manual_visual")).toBe("Localizado a mano");
   });
 
   it("falls back to Sin determinar on unknown statuses", () => {
@@ -49,7 +49,7 @@ describe("fuenteEs", () => {
     expect(fuenteEs("exact")).toBe("texto idéntico");
     expect(fuenteEs("normalized_match")).toBe("texto equivalente");
     expect(fuenteEs("missing")).toBe("texto sin localizar");
-    expect(fuenteEs("manual_visual")).toBe("texto revisado a mano");
+    expect(fuenteEs("manual_visual")).toBe("texto localizado a mano");
   });
 
   it("falls back to texto sin localizar on unknown statuses", () => {

@@ -1,5 +1,6 @@
 """Document upload + page + content routes."""
 
+import contextlib
 import hashlib
 from pathlib import Path as Fspath
 from typing import Annotated, Any, Literal
@@ -15,6 +16,7 @@ from bidlab.schemas import generated as g
 from bidlab.services import idempotency
 from bidlab.services import intake as intake_service
 from bidlab.services import pdf as pdf_service
+from bidlab.services import render as render_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
@@ -103,6 +105,74 @@ def get_page(
     if page is None:
         raise ApiError(404, "page_not_found", f"unknown page {page_number} of {document_id}")
     return g.PageText.model_validate(workspace_service.page_to_dict(page))
+
+
+@router.get(
+    "/documents/{document_id}/pages/{page_number}/image",
+    operation_id="get_page_image",
+)
+def get_page_image(
+    document_id: str,
+    page_number: Annotated[int, Path(ge=1)],
+    db: Annotated[Session, Depends(deps.get_db)],
+) -> Response:
+    """Exact rendered PNG of one physical page (T15).
+
+    The PNG is the versioned render stored at upload, verified against its
+    manifest SHA before serving. Documents that were never rendered (seed
+    excerpts without bytes) answer 404 so the UI falls back to the labeled
+    page text.
+    """
+    doc = db.get(models.Document, document_id)
+    if doc is None:
+        raise ApiError(404, "document_not_found", f"unknown document {document_id}")
+    if db.get(models.DocumentPage, (document_id, page_number)) is None:
+        raise ApiError(404, "page_not_found", f"unknown page {page_number} of {document_id}")
+    storage = get_settings().storage_path.resolve()
+    try:
+        manifest = render_service.load_render_manifest(storage, doc.tender_id, document_id)
+    except (OSError, ValueError):
+        manifest = None
+    entry: dict[str, Any] | None = None
+    if isinstance(manifest, dict) and manifest.get("status") == "ready":
+        pages = manifest.get("pages")
+        if isinstance(pages, list):
+            for item in pages:
+                if not isinstance(item, dict):
+                    continue
+                number = item.get("physical_page")
+                file_name = item.get("file")
+                if (
+                    isinstance(number, int)
+                    and not isinstance(number, bool)
+                    and number == page_number
+                    and isinstance(file_name, str)
+                    and file_name
+                ):
+                    entry = item
+                    break
+    png: bytes | None = None
+    if entry is not None:
+        with contextlib.suppress(OSError):
+            png = render_service.load_rendered_png(
+                storage, doc.tender_id, document_id, str(entry["file"])
+            )
+    expected = entry.get("image_sha256") if entry is not None else None
+    if png is None or not isinstance(expected, str) or not expected:
+        raise ApiError(
+            404,
+            "document_bytes_unavailable",
+            f"page {page_number} of {document_id} was never rendered; use the curated page text",
+        )
+    if hashlib.sha256(png).hexdigest() != expected:
+        raise ApiError(
+            500, "internal", f"stored render of {document_id} p.{page_number} is corrupt"
+        )
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"ETag": f'"{expected}"'},
+    )
 
 
 @router.get("/documents/{document_id}/content", operation_id="get_document_content")

@@ -51,3 +51,17 @@ export function joinClaimCitations(
       ) ?? null,
   }));
 }
+
+/**
+ * Localization state of a claim citation in plain Spanish (T15).
+ *
+ * This is the machine match against the page text, never the human
+ * semantic review (the approval checkbox owns that state). A null
+ * status means no stored citation was located for the proposal.
+ */
+export function citaEstadoEs(matchStatus: string | null): string {
+  if (matchStatus === "exact") return "Copiado tal cual";
+  if (matchStatus === "normalized_match") return "Coincide normalizado";
+  if (matchStatus === "manual_visual") return "Localizado a mano";
+  return "Sin localizar";
+}

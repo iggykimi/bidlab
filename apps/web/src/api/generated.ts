@@ -188,6 +188,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{document_id}/pages/{page_number}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get page image
+         * @description Exact rendered PNG of one physical page (versioned render, SHA-verified); 404 when the document was never rendered (use the curated page text).
+         */
+        get: operations["get_page_image"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/documents/{document_id}/content": {
         parameters: {
             query?: never;
@@ -1755,6 +1775,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageText"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    get_page_image: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example doc-tias-pcap */
+                document_id: components["schemas"]["EntityId"];
+                /** @example 6 */
+                page_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
                 };
             };
             400: components["responses"]["BadRequest"];
