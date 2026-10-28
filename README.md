@@ -52,7 +52,7 @@ Notas exactas del ensayo limpio (T31):
   `apps/api`; sin ese flag el API no queda instalado.
 - `npm install` no necesita aprobación manual de esbuild: los
   `allowScripts` de esbuild ya están fijados en `package.json`.
-  Ensayo: `up to date, audited 279 packages, found 0 vulnerabilities`.
+  Ensayo: `up to date, audited 313 packages, found 0 vulnerabilities`.
 - Los locks (`uv.lock`, `package-lock.json`) fijan las versiones; no
   usar `latest`.
 
@@ -110,7 +110,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/demo/sessions \
   -H "X-BidLab-Client: local-ui" -H "Idempotency-Key: <uuid>" -d "{}"
 ```
 
-Sin `X-BidLab-Client: local-ui` → 403; sin `Idempotency-Key` → 422.
+Sin `X-BidLab-Client: local-ui` → 403; sin `Idempotency-Key` → 422
+(salvo revisión, que la acepta opcional).
 El bind solo acepta loopback (`127.0.0.1`, `localhost`, `::1`).
 
 ## Verificación
@@ -141,8 +142,8 @@ en [verification-log](docs/verification-log.md)):
   (alta + PDF + empresa + análisis + revisión manual + simular +
   comparar + exportar) + visita guiada + malla de resistencia.
   Paquete integral: extracción con recibos live, gold humano +
-  comparativa medida texto/híbrido, imagen exacta de página,
-  radar de incoherencias, techo de coste con paridad motor.
+  comparativa medida texto/híbrido (T11), imagen exacta de página (T15),
+  radar de incoherencias (T20), techo de coste con paridad motor (T21).
   Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
   sin envío.
@@ -170,7 +171,7 @@ pertenece al entorno del CLI de Muse, no a la app.
 
 - Un proceso Uvicorn + SQLite WAL; sin auth multiusuario (loopback +
   cabecera no es auth; despliegue público la exigiría).
-- PDF: 20 MB, 120 páginas, 100.000 caracteres; curva limitada a 201
+- PDF: 20 MB, 120 páginas, 100.000 caracteres por página; curva limitada a 201
   puntos (ver `/api/v1/capabilities`).
 - Sin todas las ofertas reales, los escenarios son hipótesis
   declaradas; no hay predictor de adjudicación ni distribución rival.

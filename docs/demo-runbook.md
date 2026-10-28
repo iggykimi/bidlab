@@ -218,8 +218,8 @@ Textos entre «» son literales verificados en código o E2E.
   «Precio neto» 106.502,40 €, «Copia (SHA-256)» de 64 hex (E07),
   «Regla tias-price-r1 rev. 1 · empresa rev. 1 · motor 1.0.0»,
   «Supuestos», «Lo que te falta por comprobar (n)», «Fuentes (n)».
-- «Paso 2 · Decide y crea tu informe»: «Tú decides. El informe recoge
-  tu prueba, de dónde sale cada dato y lo que te falta por comprobar.»
+- «Paso 2 · Decide y crea tu informe»: «Borrador (sin archivar). Tú decides:
+  elige una opción, escribe tu nota y crea el informe.»
   Marcar radio «Preparar oferta» (el defecto es «Seguir estudiándola»),
   escribir nota en «Tus notas (saldrán tal cual en el informe)»,
   clic «Crear informe» → «Decisión: Preparar oferta» (E08).
@@ -231,7 +231,7 @@ Textos entre «» son literales verificados en código o E2E.
 
 ## 3. Recorrido propio (fuera del vídeo; para ensayo local)
 
-Fijado por tests/e2e/own-journey.spec.ts (3/3) + R01–R04.
+Fijado por tests/e2e/own-journey.spec.ts (4/4, R05 ×4) + R01–R04.
 Mismos puertos, mismo arranque; no toca el ejemplo.
 
 1. Biblioteca → «Nueva licitación» → «¿Qué licitación quieres dar de

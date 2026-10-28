@@ -11,7 +11,8 @@ Capturas regeneradas el 28-oct-2026 (post-paquete T20/T21) con
 `npx playwright test -c scripts/demo-shots/playwright.shots.config.ts`
 (base separada de la suite E2E, nombres legibles, UI asentada):
 tuteo, «Datos de ejemplo», comparar desde «Precio», drawer con
-aviso honesto sin imagen (T15).
+aviso honesto sin imagen (T15), radar con ejemplo sintético (T20, 09)
+y techo de coste en la malla (T21, 10).
 
 | Pantalla | Qué demuestra |
 |---|---|
@@ -23,6 +24,8 @@ aviso honesto sin imagen (T15).
 | [06-informe.png](06-informe.png) | Informe exportable con fuentes y pendientes |
 | [07-evidencia-drawer.png](07-evidencia-drawer.png) | Panel de evidencia con página del pliego |
 | [08-movil.png](08-movil.png) | Móvil: no rompe (desktop-first, sin diseño móvil dedicado) |
+| [09-radar.png](09-radar.png) | Revisar: radar sin pares + ejemplo sintético rotulado (T20) |
+| [10-techo.png](10-techo.png) | Malla: techo de coste con disclaimers (T21) |
 
 ![Resumen](01-resumen.png)
 ![Precio](02-precio.png)
