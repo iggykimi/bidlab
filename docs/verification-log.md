@@ -1321,3 +1321,24 @@ inspeccionadas por lead y helper.
 Gates en main: shots 4/4 + E2E 72/72.
 Limpieza: uvicorn huérfano del helper B
 (PID 30976, ocupaba el 8000) detenido.
+
+## Visual-port - sistema Oficina en React (Windows, lead)
+
+Fecha: 2026-10-28. Commits: 3cd36a9 (base)
++ 29d1f74 (shell + lamina 01) + 4d328d0
+(marco 02-07) + 204f8b0 (precio) + 5262fa6
+(paneles + intake). Alcance: tokens/tipo
+exactos (root 16px, body 18px/1.55,
+D28-3), shell mock (skip/top/disclosure),
+biblioteca lamina 01, workhead + steps +
+base, precio twocol, h2/surfaces resto.
+Verificado vista por vista con captura
+propia vs mock (desktop + movil 390).
+Gates: E2E 72/72, backend 502+1skip,
+vitest 216, lint/build OK, detector diseno
+limpio, demo-shots 4/4 regen (docs/demo
+01-10). Testids/roles estables; tour y
+offline intactos. Desviaciones honestas:
+h2 Discount conserva text-lg (R06),
+tabs movil en fila scroll (no select),
+sin filtros/sort inventados.
