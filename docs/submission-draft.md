@@ -44,14 +44,15 @@ document extraction below:
 Current document-extraction state (28-oct):
 - Backend analysis pipeline is real (POST /analysis → 202 job → worker → verified citations; `tests/e2e/` reload spec + `analysisJobStore` rehydrate). It returns honest 503 provider_not_configured without a key. Unit and integration tests cover it with an explicitly labelled offline stub (fixture_stub).
 - Invocation receipts are real data when they run (mode fixture/live, tokens, cost, latency, provider_request_id on Job; PKG-T01/T09). Demo runs show mode fixture with null live tokens — never presented as live.
-- NOT claimed: live document extraction in the demo UI is pending (G3 partial: smoke green, no key, zero live extraction calls). The demo seed is manually curated and labelled "Demo curada". Text-vs-hybrid measured comparison pending PKG-T11.
+- NOT claimed: live document extraction in the demo UI is pending (G3 partial: smoke green, no key, zero live extraction calls). The demo seed is manually curated and labelled "Demo curada".
+- Measured comparison (PKG-T11, `evidence/extraction_comparison.json`): same 11 eval claims / 4 held-out expedientes, same schema. Text (offline fixture): 0 hit / 0 miss / 11 unsupported, 0 critical errors, p50 0.004 ms, cost 0 micro-USD + fixture reason, tokens null. Hybrid: blocked (G3, `provider_not_configured`), all metrics null, zero live calls. No advantage attributed to either mode; n=11 published with limitations, no savings invented.
 
 ## Verification (real runs, Windows)
 
-- Backend: 458/458 passing (unit + integration + contracts), exit 0, observed 28-oct @a870598. Ruff check + format clean, mypy 51 files clean, observed 28-oct.
-- Web: 212 vitest passing, eslint + tsc exit 0, vite build OK, observed 28-oct @a870598.
-- Playwright E2E: 70/70 green (hermetic per-run storage), observed 28-oct @a870598. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- `scripts/verify.py`: full re-run pending after PKG-T11 merge (last 10/10 ALL CHECKS PASSED is stale, pre-package counts). Not claimed as current.
+- Backend: 472/472 passing (unit + evaluation + integration + contracts), exit 0, observed 28-oct @c0b2ca1. Ruff check (root) + format clean, mypy 52 files clean, observed 28-oct.
+- Web: 212 vitest passing, eslint + tsc exit 0, vite build OK, observed 28-oct @a870598 (unchanged by T11).
+- Playwright E2E: 70/70 green (hermetic per-run storage), observed 28-oct @c0b2ca1. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: full re-run at PKG-T19 (last 10/10 ALL CHECKS PASSED is stale, pre-package counts). Not claimed as current.
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2 (26-oct); current pushes not forced through CI per author order.
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
@@ -67,7 +68,7 @@ Current document-extraction state (28-oct):
 | C04b | Same path with LIVE document extraction | NOT VERIFIED | Zero live calls; G3 partial, no key |
 | C11 | Exact page image in evidence drawer, labelled text fallback | OBSERVED | PKG-T15: `get_page_image` + `t15-evidence.spec.ts` 3/3 |
 | C12 | Citation (machine localisation) vs review (human) kept distinct | OBSERVED | PKG-T15: vocab split + `citaEstadoEs` tests |
-| C13 | Text-vs-hybrid extraction quality/cost measured | PENDING | PKG-T11 in progress; no advantage claimed before numbers |
+| C13 | Text-vs-hybrid extraction quality/cost measured | OBSERVED | `evidence/extraction_comparison.json` + `scripts/compare_extraction.py` (text 0/0/11, hybrid blocked, 14 tests) |
 | C14 | Usability sessions with target people | PENDING | Protocol in `docs/usability-log.md`; 0 sessions, author recruits |
 | C05 | Guided tour in app (?tour=1, verified steps) | OBSERVED | `tests/e2e/tour.spec.ts` + `apps/web/src/tour/` |
 | C10 | Animated comparison in app | PROPOSED | Not implemented; do not script or claim (repo-side id, 28-oct; not in UX CLAIMS.json) |
@@ -82,7 +83,7 @@ Current document-extraction state (28-oct):
 - No national search, no OCR, no win prediction, no probability rankings.
 - Rule engine covers proportional-inverse + reviewed DSL templates only. Unsupported formulas yield score unknown.
 - "Nueva licitación" creates own tenders and stores PDFs (`intake.spec.ts`); upload → job → review → simulator is wired (PKG-T09) but runs on the offline fixture until a key exists.
-- Extraction quality: human gold + dev/eval split exist (PKG-T10, n=11 eval); measured text-vs-hybrid numbers pending PKG-T11. No quality or savings figure is claimed before that.
+- Extraction quality: human gold + dev/eval split (PKG-T10, n=11 eval) + measured text-vs-hybrid (PKG-T11): text 0/0/11 with 0 critical errors, hybrid blocked with nulls. No quality advantage or savings figure is claimed.
 - Usability: protocol ready, 0 sessions (author recruits, incl. low-digital-fluency + senior profiles).
 - Original PDFs are research copies, not redistributed (publication-manifest flags). The report embeds citations and links, not full private documents.
 - Unnarrated real footage recorded 28-oct (`docs/demo/footage-oro-20261028.webm`, gold flow). Narrated ≤180 s video pending author. Duration, language, and format per official rules (NC).
