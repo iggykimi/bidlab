@@ -27,7 +27,7 @@ No dedicar un minuto a instalación ni leer tablas enteras. Puede grabarse voz i
 
 ## Preparación reproducible que debe implementar el agente
 1. Instalar dependencias/browser y compilar antes de desconectar red.
-2. python scripts/demo.py --reset-demo inicia DB de demo separada y servidorloopback (API8000); npm run dev -w apps/web para el frontal(5173). Semillaidempotente; no borrar DB de trabajo privada.
+2. python scripts/demo.py --reset-demo resetea la DB en BIDLAB_STORAGE_DIR e inicia servidorloopback (API8000); npm run dev -w apps/web para el frontal(5173). Semillaidempotente; no borrar DB de trabajo privada.
 3. Verificar GETcapabilities mode=demo, meta_configured=false, cero llamadas a proveedor y assets locales.
 4. Abrir1280×720, zoom100%; tras Cargar ejemplo, clic en Precio y comprobar que «Escribe tu rebaja (%)» cabe sin scroll (R06).
 5. Ensayo con E2Eycronómetro; exportar informe y comparar con fixtures/demo/expected.json (5/15/30%; caso10% fijado por CMP-02+R06+backend).
@@ -41,7 +41,7 @@ scripts/demo.py existe y es el arranque oficial de la demo. Las sondas tools/ so
 ### Elegibilidad y reglas — pendiente de participante
 Admisión efectiva, bases aplicables y fecha exacta de autoría; trackIndie/temaBuildforYourWorld; integrantes y límite real; obligaciones Meta; vídeo/duración/idioma/formato; repo/licencia; enlaces/submission y declaraciones de datos. Conservar evidencia privada de aceptación, no identidad/correos en repo.
 
-Fechapública:4nov202621:00America/New_York, que corresponde5nov03:00Europe/Madrid. Entrega interna4nov18:00CET. Volver a comprobar cambios en página oficial/portal antes de presentar.
+Fechapública (NC: cotejar bases aceptadas antes de enviar):4nov202621:00America/New_York, que corresponde5nov03:00Europe/Madrid. Entrega interna4nov18:00CET. Volver a comprobar cambios en página oficial/portal antes de presentar.
 
 ### Repositorio
 README con instalación, versiones fijadas, arquitectura corta, ejecución offline y limitaciones. LICENSE para código propio elegida por autor (propuestaMIT, decisión no ejecutada). THIRD_PARTY_NOTICES con bibliotecas/datos y condiciones. .env.example sin secretos, storagegitignored, secret scan y revisión de historial, puertas locales verdes con commit exacto (verify.py; sin CI remota por decisión del autor, sin push sin su autorización). No atribuir datos o código externos como autoría del hackathon.
@@ -54,7 +54,7 @@ publication-manifest por fichero: sha256, fuente, fecha, titular/condiciones, al
 Las copias de investigación incluidas no conceden una licencia de redistribución. Alternativa: script de descarga explícito, hechos estructurados y fixtures propios etiquetados. No retirar avisos ni firmar PDFs de terceros como propios. Evitar NIF/contactos/personasinnecesarios en CSVpúblico; revisar también screenshots y transcripciones.
 
 ### Producto y calidad
-Todos los US P0con estado y evidencia; mismos importes enUI/API/export; tipos decimales; score condicional; unknownsinconvertiracero; anormalidad correctamentecalificada; sinprobabilidades niusoscolusorios; assets/offline;G3parcial (smoke real; sin Meta en vivo en el frontal). Caso oro10/15 fijado (CMP-02 + backend golden + R06); recorrido propio offline fijado (own-journey3/3); estado R01–R04 fijado. Literales UI citados entre«» verificados en código; cifras de fixtures/demo/expected.json o specs.
+Todos los US P0con estado y evidencia; mismos importes enUI/API/export; tipos decimales; score condicional; unknownsinconvertiracero; anormalidad correctamentecalificada; sinprobabilidades niusoscolusorios; assets/offline;G3parcial (smoke real; sin Meta en vivo en el frontal). Caso oro10/15 fijado (CMP-02 + backend golden + R06); recorrido propio offline fijado (own-journey 4/4, R05 ×4); estado R01–R04 fijado. Literales UI citados entre«» verificados en código; cifras de fixtures/demo/expected.json o specs.
 
 ### Enlaces y envío
 Repo y vídeo accesibles en ventana privada del navegador; enlace demo según regla real; no URLs localhost presentadas como despliegue público. No inventar URLdeGitHub,hostingovídeo: registrarlas cuando existan. El agente deja un submission-draft con campos reales y los que falten en NC. La publicaciónyenvío finales corresponden al autor salvo autorización explícita posterior.

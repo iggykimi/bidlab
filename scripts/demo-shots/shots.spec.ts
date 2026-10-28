@@ -90,6 +90,62 @@ test("capture 01-07 desktop presentation shots", async ({ page }) => {
   await shot(page, "07-evidencia-drawer.png");
 });
 
+test("capture 09 radar presentation shot", async ({ page }) => {
+  // Own tender without document or company; Revisar shows the T20 radar
+  // with no comparable pairs plus the labeled synthetic example.
+  await page.goto("/");
+  await page.getByTestId("nueva-licitacion").click();
+  await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-title").fill("Radar de ejemplo");
+  await page.getByTestId("intake-external-id").fill("RADAR-DEMO");
+  await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");
+  await page.getByTestId("intake-submit").click();
+  await expect(page.getByRole("heading", { name: "¿Quieres añadir el pliego en PDF?" })).toBeVisible();
+  await page.getByTestId("intake-skip").click();
+  await page.getByTestId("intake-skip-company").click();
+  await expect(page.getByTestId("tender-title")).toContainText("Radar de ejemplo");
+  await expect(page.getByText("Tus datos")).toBeVisible();
+
+  await openTab(page, "Revisar");
+  await expect(page.getByTestId("radar-empty")).toContainText("Sin pares comparables");
+  await expect(page.getByTestId("radar-synthetic-badge")).toContainText("Ejemplo sintético");
+  const card = page.getByTestId("radar-synthetic");
+  await expect(card).toContainText("Duración en meses");
+  await expect(card).toContainText("Página 2");
+  await expect(card).toContainText("Página 3");
+  await expect(card).toContainText("¿Ambos documentos hablan de la misma prestación inicial?");
+  await page
+    .getByRole("heading", { name: "Radar de incoherencias" })
+    .evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await shot(page, "09-radar.png");
+});
+
+test("capture 10 techo presentation shot", async ({ page }) => {
+  // T21 cost ceiling: single-rebate grid on the demo scope, settled on
+  // the backend-computed ceiling with its disclaimers.
+  test.setTimeout(120_000);
+  await loadDemo(page);
+  await openTab(page, "Precio");
+  const section = page.getByTestId("stress-section");
+  await expect(section).toBeVisible();
+  await section.getByLabel("Rebaja inicial en tanto por ciento").fill("12");
+  await section.getByLabel("Rebaja final en tanto por ciento").fill("12");
+  await section.getByLabel("Paso de la malla en tanto por ciento").fill("0.5");
+  await section.getByLabel("Tu coste sin impuestos en € (coma o punto)").fill("80000,00");
+  await section.getByLabel("Periodo en meses").fill("24");
+  await section.getByLabel("Rival A · precio sin impuestos en €").fill("106502,40");
+  await section.getByLabel("Rival B · precio sin impuestos en €").fill("112419,20");
+  await section.getByLabel("Puntos por precio mínimos").fill("47");
+  await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("8000");
+  await section.getByTestId("stress-run").click();
+  const ceiling = section.getByTestId("stress-cost-ceiling");
+  await expect(ceiling).toContainText("tu coste máximo es", { timeout: 60_000 });
+  await expect(ceiling).toContainText("96.135,68");
+  await expect(section.getByText("misma base: mismo precio, periodo, impuestos y moneda")).toBeVisible();
+  await ceiling.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await shot(page, "10-techo.png");
+});
+
 test.describe("mobile shot", () => {
   test.use({ viewport: { width: 390, height: 844 } });
   test("capture 08 movil presentation shot", async ({ page }) => {

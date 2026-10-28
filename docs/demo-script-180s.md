@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4e0b37d: 40+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4f1cc61: 100+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -14,7 +14,7 @@ pero el 10 % conserva 5916,80 € más de beneficio.
 
 ## Preparación (antes de grabar)
 
-1. `python scripts/demo.py --reset-demo` (DB demo separada, API en loopback).
+1. `python scripts/demo.py --reset-demo` (resetea la DB en `BIDLAB_STORAGE_DIR`, API en loopback).
 2. GET capabilities: mode=demo, meta_configured=false, cero llamadas externas.
 3. `npm run dev -w apps/web` (el paso 1 NO arranca el frontal).
 4. Ventana 1280×720, zoom 100 %. Tras «Cargar ejemplo», clic en «Precio»
@@ -124,8 +124,8 @@ y el informe la conserva con tus notas. Entiende la regla, compara y guarda.»
 ## Recorrido propio (evidencia local, fuera de los 180 s)
 
 No sale en el vídeo por tiempo. Probado E2E 4/4 (tests/e2e/own-journey.spec.ts,
-R05 ×4 incluido recarga-sin-duplicar, re-ejecutado en verde el 28-oct
-dentro de la suite 70/70): «Nueva licitación» →
+R05 ×4 incluido recarga-sin-duplicar, en verde el 28-oct
+dentro de la suite 72/72): «Nueva licitación» →
 «¿Qué licitación quieres dar de alta?» → «¿Quieres añadir el pliego en PDF?»
 → «¿Quién eres en esta licitación?» → pestaña «Revisar» (insignia
 «Tus datos»): «¿Pides propuestas automáticas?» → seguidor con «Estado:»
@@ -161,14 +161,14 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
 - Bloque 7: rival A → 43,8 de 49, sin probabilidades: E04.
 - Bloque 8: conjunto incompleto, cifras intactas: E06.
 - Bloque 9: hash 64 hex idéntico tras recargar + informe HTML sin secretos: E07, E08.
-- Recorrido propio: tests/e2e/own-journey.spec.ts (3/3) + R01–R04
+- Recorrido propio: tests/e2e/own-journey.spec.ts (4/4, R05 ×4) + R01–R04
   (tests/e2e/r01-r04-state.spec.ts: deep link ?prueba=, borrador de coste
   obsoleto, listado tras guardar, aviso «Tu borrador no se guardó en este
   navegador.»).
 - Números esperados 5/15/30 %: fixtures/demo/expected.json (90000.00 =
   80000 + 10000 de company.json «Pyme de ejemplo»; casos 5/15/30 %;
   anomalía a 30 %); caso 10 % fijado por CMP-02 + R06 + backend, no por expected.json.
-- Puertas globales: suite 70/70 + backend 458 + web 212 en verde
-  el 28-oct (@a870598; ver docs/verification-log.md PKG-T15);
-  re-ejecutar `python scripts/verify.py` tras el merge de PKG-T11
-  antes de grabar (el 10/10 anterior es anterior al paquete).
+- Puertas globales: suite 72/72 + backend 502 + web 216 en verde
+  el 28-oct (@a8fef2c; ver docs/verification-log.md PKG-T19, post-paquete T20/T21);
+  re-ejecutar `python scripts/verify.py` tras cualquier cambio posterior
+  antes de grabar (el 10/10 citado es post-paquete).

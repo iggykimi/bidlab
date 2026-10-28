@@ -39,7 +39,7 @@ de precio bajo hipótesis declaradas e informe exportable con fuentes."
 
 What it is NOT (say it upfront, in the submission and the video):
 no win prediction, no rival confidential data, no live extraction in
-the demo UI (curated seed labelled "Demo curada"), one tender modelled,
+the demo UI (curated seed labelled "Datos de ejemplo"), one tender modelled,
 synthetic company and rivals. Honesty is the differentiator; the
 competitors skill rule applies: every claim must survive the rival's
 own team reading it.
@@ -59,8 +59,9 @@ Proof points to repeat verbatim (never paraphrase numbers):
   report with decision, note, pendings, hypotheses, sources, rule ids.
 - Meta evidence: muse-spark-1.3 smoke PASS, HTTP 200, real inference,
   2026-10-26 (`evidence/meta_smoke_status.json`).
-- Verification: Playwright E2E E01–E12 + smoke 14 passed (loopback
-  only, 0 external calls); pytest green; ruff + mypy clean;
+- Verification: 72 Playwright E2E green (incl. E01–E12, CMP-01/02,
+  R01–R06, T15/T20 evidence; loopback only, 0 external calls);
+  backend 502 + web 216 green; ruff + mypy clean;
   frontend lint/typecheck/build green; npm audit 0 vulns.
 
 ## 3. Channels (ORB, adapted to a hackathon)
@@ -98,7 +99,7 @@ conversion event (judges understand the project), not a funnel.
 
 - T-2 days: record video from `demo-script-180s.md` after author
   review; run `python scripts/demo.py --reset-demo` first; check no
-  keys, no non-loopback traffic, badge "Demo curada" visible.
+  keys, no non-loopback traffic, badge "Datos de ejemplo" visible.
 - T-1 day: author fills submission from `submission-draft.md`;
   second pair of eyes (or fresh re-read) checks every number against
   `fixtures/demo/expected.json`; confirm LICENSE + NC fields.
@@ -108,8 +109,8 @@ conversion event (judges understand the project), not a funnel.
 - T+0 hours: post announcement (X + LinkedIn) with the demo video or
   its link. Author sends from their own account.
 - T+1 day: post technical thread (X) + demo clip caption (LinkedIn
-  native video, 30–60 s cut: the 60–85 s pricing block or the
-  105–130 s anomaly block — show the end result in the first
+  native video, 30–60 s cut: the 60–100 s pricing block or the
+  100–122 s compare block — show the end result in the first
   3 seconds per the social skill).
 - T+3 days: judge-pitch repost only if the event has a public
   voting/gallery phase; otherwise stop. No drip campaign.
@@ -122,8 +123,8 @@ conversion event (judges understand the project), not a funnel.
 Cut from the single demo recording; each atom standalone-captioned:
 
 1. Full video → announcement post.
-2. 00:25–00:45 block → "unknown stays unknown" clip (differentiator).
-3. 01:45–02:10 block → anomaly presumption clip (domain credibility).
+2. 00:40–01:00 block → "unknown stays unknown" clip (differentiator).
+3. 02:02–02:20 block → hypothesis-change clip (domain credibility).
 4. Pricing Lab screenshots → technical thread visuals.
 5. Report HTML screenshot (hash, sources) → judge-pitch visual.
 

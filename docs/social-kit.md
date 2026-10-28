@@ -3,7 +3,8 @@
 Status: DRAFT. The author reviews, adapts, and sends every post from
 their own account. Nothing here has been published. Numbers copied
 from `docs/submission-draft.md` and `fixtures/demo/expected.json`;
-re-check before sending. Video link is still NC (no video recorded).
+re-check before sending. Video link is still NC (unnarrated footage exists;
+narrated 180 s pending the author).
 Links: add UTMs per `docs/launch-plan.md`
 (`utm_source=x|linkedin&utm_medium=social&utm_campaign=bidlab-submission`).
 
@@ -46,14 +47,14 @@ ES (DRAFT):
 ## 2. Demo clip caption (native video, 30–60 s cut)
 
 Suggested cut: script block 5–6 (discount 5 → 15 %: price
-100,585.60, profit 10,585.60, 49.0000 points; gap of 11,833.60 vs
+100,585.60, profit 10,585.60, 49.0 of 49 points; gap of 11,833.60 vs
 5 %). Show the end result in the first 3 seconds. Add subtitles;
 most views are silent.
 
 EN (DRAFT):
 
 > One slider, full trace. Moving the discount from 5 % to 15 %
-> reaches 49.0000 points at 100,585.60 EUR, and costs 11,833.60 EUR
+> reaches 49.0 of 49 points at 100,585.60 EUR, and costs 11,833.60 EUR
 > of estimated profit. Every figure shows its formula and assumptions.
 >
 > Full demo (once recorded): [video link]
@@ -61,7 +62,7 @@ EN (DRAFT):
 ES (DRAFT):
 
 > Un deslizador, traza completa. Al pasar la baja del 5 % al 15 %,
-> llegas a 49,0000 puntos con 100.585,60 euros, y cedes 11.833,60
+> llegas a 49,0 de 49 puntos con 100.585,60 euros, y cedes 11.833,60
 > euros de beneficio estimado. Cada cifra muestra su cálculo.
 >
 > Demo completa (pendiente de grabar): [enlace al vídeo]
@@ -81,7 +82,7 @@ EN (DRAFT):
 5. Scenarios are immutable: save, reload, identical values and
    64-hex snapshot hash. The HTML report keeps decision, note,
    pendings, hypotheses, and sources. No secrets inside.
-6. Tested: 229 backend tests, 109 web unit, 27 Playwright E2E on a
+6. Tested: 502 backend tests, 216 web unit, 72 Playwright E2E on a
    real local API plus web, loopback only. Repo:
    https://github.com/iggykimi/bidlab
 
@@ -100,7 +101,7 @@ ES (DRAFT):
 5. Los escenarios son inmutables: guarda, recarga, valores y hash
    idénticos. El informe HTML conserva decisión, nota, pendientes,
    hipótesis y fuentes. Sin secretos dentro.
-6. Probado: 229 tests de backend, 109 unit de web, 27 E2E
+6. Probado: 502 tests de backend, 216 unit de web, 72 E2E
    Playwright sobre API y web locales reales, solo loopback.
    Repo: https://github.com/iggykimi/bidlab
 
