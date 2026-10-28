@@ -79,7 +79,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   lead): money.cost_ceiling + techo por rebaja en stress
   (price_net/max_cost_net aditivos) + línea UI con disclaimers;
   paridad motor 96135.68 OK / 96135.69 rompe solo beneficio
-  (score 47.053997246669 idéntico). (El lead la finalizará.)
+  (score 47.053997246669 idéntico). Mergeado 2173d4d
+  (SHA verificado), gates lead: backend 479 + E2E 71/71.
+  T20 sigue en su worktree.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

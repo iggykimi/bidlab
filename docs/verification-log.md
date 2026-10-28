@@ -1132,3 +1132,12 @@ Evidencia (comandos reales en .worktrees/t21, commit del helper):
   tests/e2e/stress.spec.ts` → 4/4, exit 0 (incluye el test nuevo del
   texto del techo y sus disclaimers).
 - `python scripts/verify.py --skip-e2e` → ALL CHECKS PASSED, exit 0.
+
+Evidencia (lead, en main tras merge 2173d4d):
+- SHA del helper verificado; merge limpio sobre
+  080a940. Aritmética del ejemplo del contrato
+  comprobada (104135.68−8000=96135.68 ✓).
+- Backend 479/479 exit 0, ruff check (raíz) +
+  format (apps/api, 100) + mypy (52) verdes.
+- Front: vitest 212, eslint, tsc, build verdes.
+- E2E completa 71/71 (70 + techo de coste).
