@@ -3,6 +3,30 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
+## Plan Integral Meta 28-oct (leído ENTERO 93/93 + HTML; goal nuevo activo)
+
+- Paquete BidLab_Plan_Integral_Meta_2026-10-28 verificado (MANIFEST
+  93/93) y leído al completo: PLAN_MAESTRO 21 capítulos, backlog
+  PKG-T01–PKG-T30, contratos, backend_referencia, evidencia,
+  diseno_anterior (LEER 1050 líneas, GALERÍA 549, 16 SVG texto
+  idéntico embebido/standalone, app.js/style.css/vistas,
+  motor.json 972 outcomes + licitaciones.json 68 === inline
+  index.html, validación, sistema, ingenieria, investigación),
+  prototipo standalone (index.html sin refs externas) y 6 PNG
+  inspeccionados (Vista_General contact-sheet 16 láminas,
+  Vista_Oferta, Vista_Frontera, pipeline, radar, límite-coste).
+- DECISIÓN D28-1: tareas del paquete se citan PKG-T01–PKG-T30
+  (T01–T30 del repo ya existen con otro significado).
+- DECISIÓN D28-2: «siempre commit y push» (orden directa del
+  autor) prevalece sobre la cláusula no-push del paquete y de
+  AGENTS.md; vídeo lo narra el autor, no forzar CI.
+- Goal nuevo: camino crítico PKG-T01–T09 → PKG-T12–T15 →
+  PKG-T10–T11 → (PKG-T20–T21 condicional) → PKG-T16–T19;
+  P1 diferido; PKG-T28–T30 descartados.
+- Siguiente: reproducir B01–B05 en checkout real, empezar
+  PKG-T01 + PKG-T02. Paquete (zip + extraído + HTML) queda
+  untracked hasta que el autor diga si se versiona.
+
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
 - Tour verificado + TourBar (?tour=1): E2E tour 2/2, runner unit 6/6.
