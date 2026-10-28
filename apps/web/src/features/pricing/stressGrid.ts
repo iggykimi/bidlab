@@ -48,3 +48,35 @@ export function rateToDiscountPercent(rate: string): number | null {
   if (!Number.isFinite(n) || n < 0 || n > DISCOUNT_MAX / 100) return null;
   return Math.round(n * 1000) / 10;
 }
+
+const HYP_COST = /^hypotheses\[(\d+)\]\.cost_net$/;
+const CANDIDATE = /^candidate_discounts\[(\d+)\]$/;
+
+/**
+ * Rutas de campo del servidor (details del 422) a frases en español.
+ * Solo traduce rutas conocidas; el resto lo cubre el mensaje general.
+ */
+export function stressDetailsEs(details: string[]): string[] {
+  const out: string[] = [];
+  for (const detail of details) {
+    const hyp = HYP_COST.exec(detail);
+    if (hyp) {
+      out.push(`Hipótesis ${Number(hyp[1]) + 1}: revisa tu coste (mayor que cero).`);
+      continue;
+    }
+    const cand = CANDIDATE.exec(detail);
+    if (cand) {
+      out.push(`Rebaja ${Number(cand[1]) + 1}: fuera de 0–40 %.`);
+      continue;
+    }
+    if (detail === "constraints.min_price_points") {
+      out.push("Revisa tus puntos mínimos (mayores que cero).");
+      continue;
+    }
+    if (detail === "constraints.min_profit_net") {
+      out.push("Revisa tu beneficio mínimo (mayor que cero).");
+      continue;
+    }
+  }
+  return out;
+}

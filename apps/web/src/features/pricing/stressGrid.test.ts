@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildCandidateDiscounts, isGridOk, rateToDiscountPercent } from "./stressGrid";
+import {
+  buildCandidateDiscounts,
+  isGridOk,
+  rateToDiscountPercent,
+  stressDetailsEs,
+} from "./stressGrid";
 
 describe("buildCandidateDiscounts", () => {
   it("builds the full 0-40 % grid in 0.5 steps (81 rates)", () => {
@@ -58,5 +63,27 @@ describe("rateToDiscountPercent", () => {
     expect(rateToDiscountPercent("-0.0100")).toBeNull();
     expect(rateToDiscountPercent("no-numero")).toBeNull();
     expect(rateToDiscountPercent("")).toBeNull();
+  });
+});
+
+describe("stressDetailsEs", () => {
+  it("numbers hypotheses and rebates from zero-based paths", () => {
+    expect(stressDetailsEs(["hypotheses[1].cost_net"])).toEqual([
+      "Hipótesis 2: revisa tu coste (mayor que cero).",
+    ]);
+    expect(stressDetailsEs(["candidate_discounts[0]"])).toEqual([
+      "Rebaja 1: fuera de 0–40 %.",
+    ]);
+  });
+
+  it("translates constraint fields and drops unknown paths", () => {
+    expect(
+      stressDetailsEs(["constraints.min_price_points", "constraints.min_profit_net"])
+    ).toEqual([
+      "Revisa tus puntos mínimos (mayores que cero).",
+      "Revisa tu beneficio mínimo (mayor que cero).",
+    ]);
+    expect(stressDetailsEs(["body.hypotheses"])).toEqual([]);
+    expect(stressDetailsEs([])).toEqual([]);
   });
 });

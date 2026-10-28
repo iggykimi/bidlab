@@ -33,6 +33,10 @@ export const ERROR_ES: Record<string, string> = {
     "Esa empresa es de otra licitación. No mezclamos contextos: crea tu empresa dentro de esta licitación.",
   period_mismatch:
     "El coste cubre unos meses distintos de los del contrato. Ajusta el periodo de tu empresa o del presupuesto.",
+  stress_cost_invalid:
+    "Una hipótesis trae un coste de cero o menos. Revisa los costes de tus hipótesis.",
+  stress_constraints_invalid:
+    "Tus límites deben ser mayores que cero. Revisa los valores.",
   invalid_response: "La aplicación devolvió una respuesta inesperada. Vuelve a intentarlo en unos segundos.",
 };
 

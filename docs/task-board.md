@@ -53,7 +53,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   208 + E2E 63/63. Crítico T01–T09 cerrado.
 - 28-oct: PKG-T12 hecho (búsqueda servidor + URL +
   paginación); backend 430 + E2E 65/65.
-  Siguiente: PKG-T13 (conteos/vigencia malla).
+- 28-oct: PKG-T13 hecho (10×6, 422 con campos,
+  banner vigencia); backend 436 + front 210 +
+  E2E 66/66.
+  Siguiente: PKG-T14 (ruta visual diseno_anterior).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

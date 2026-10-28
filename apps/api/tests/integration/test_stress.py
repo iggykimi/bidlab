@@ -124,3 +124,73 @@ def test_snapshot_survives_rule_change(seeded_client: TestClient) -> None:
     res = seeded_client.get(f"/api/v1/stress-tests/{before['id']}", headers=HEADERS)
     assert res.status_code == 200, res.text
     assert res.json()["selection"] == before["selection"]
+
+
+def _run_raw(client: TestClient, payload: dict[str, Any]):  # type: ignore[no-any-unimported]
+    return client.post(f"/api/v1/scopes/{SCOPE}/stress-tests", json=payload, headers=HEADERS)
+
+
+def test_10x6_grid_computes(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 1: ten discounts by six hypotheses compute."""
+    payload = _request([_hyp(f"H{i}", f"{70000 + i * 1000}.00") for i in range(6)], "40", "1000.00")
+    payload["candidate_discounts"] = [f"0.{i:02d}" for i in range(1, 11)]
+    body = _run(seeded_client, payload)
+    assert body["tested_candidates"] == 10
+    assert body["tested_hypotheses"] == 6
+    assert len(body["cells"]) == 60
+    assert len(body["by_discount"]) == 10
+
+
+def test_82_discounts_rejected_with_field_list(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 2: excess discounts are a 422 naming the field."""
+    payload = _request([_hyp("Base", "80000.00")], "47", "8000.00")
+    payload["candidate_discounts"] = [f"0.{i:03d}" for i in range(82)]
+    res = _run_raw(seeded_client, payload)
+    assert res.status_code == 422, res.text
+    body = res.json()
+    assert body["code"] == "validation_error"
+    assert any("candidate_discounts" in detail for detail in body["details"])
+
+
+def test_10_hypotheses_rejected_with_field_list(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 2: excess hypotheses are a 422 naming the field."""
+    payload = _request([_hyp(f"H{i}", "80000.00") for i in range(10)], "47", "8000.00")
+    res = _run_raw(seeded_client, payload)
+    assert res.status_code == 422, res.text
+    body = res.json()
+    assert body["code"] == "validation_error"
+    assert any("hypotheses" in detail for detail in body["details"])
+
+
+def test_zero_cost_rejected_with_field_position(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 2: an invalid hypothesis names its position."""
+    payload = _request([_hyp("Base", "80000.00"), _hyp("Gratis", "0.00")], "47", "8000.00")
+    res = _run_raw(seeded_client, payload)
+    assert res.status_code == 422, res.text
+    body = res.json()
+    assert body["code"] == "stress_cost_invalid"
+    assert body["details"] == ["hypotheses[1].cost_net"]
+
+
+def test_zero_constraints_rejected_with_field_list(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 2: violated limits are listed, not lumped."""
+    payload = _request([_hyp("Base", "80000.00")], "0", "0.00")
+    res = _run_raw(seeded_client, payload)
+    assert res.status_code == 422, res.text
+    body = res.json()
+    assert body["code"] == "stress_constraints_invalid"
+    assert body["details"] == [
+        "constraints.min_price_points",
+        "constraints.min_profit_net",
+    ]
+
+
+def test_out_of_scope_discount_names_position(seeded_client: TestClient) -> None:
+    """PKG-T13 acceptance 2: the offending discount is pinpointed."""
+    payload = _request([_hyp("Base", "80000.00")], "47", "8000.00")
+    payload["candidate_discounts"] = ["0.05", "0.45"]
+    res = _run_raw(seeded_client, payload)
+    assert res.status_code == 422, res.text
+    body = res.json()
+    assert body["code"] == "discount_out_of_scope"
+    assert body["details"] == ["candidate_discounts[1]"]

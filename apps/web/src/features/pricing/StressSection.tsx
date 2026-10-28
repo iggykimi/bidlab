@@ -3,6 +3,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import {
+  ApiError,
   getStress,
   isAbort,
   runStress,
@@ -13,6 +14,7 @@ import { Alert, Badge, Button, Card } from "../../components/ui";
 import { errorCode, errorEs } from "../../lib/errors";
 import {
   PRECIO_INPUT_MODE,
+  formatDateTime,
   formatEurosExact,
   formatPercent,
   formatPoints1,
@@ -24,6 +26,7 @@ import {
   buildCandidateDiscounts,
   isGridOk,
   rateToDiscountPercent,
+  stressDetailsEs,
 } from "./stressGrid";
 import type { PricingState } from "./usePricingState";
 
@@ -216,7 +219,12 @@ export function StressSection({ state }: Props) {
     } catch (err: unknown) {
       if (isAbort(err)) return;
       setResult(null);
-      setError(errorEs(err, "No pudimos probar tu malla. Vuelve a intentarlo en unos segundos."));
+      const lines = err instanceof ApiError ? stressDetailsEs(err.details) : [];
+      setError(
+        lines.length > 0
+          ? lines.join(" ")
+          : errorEs(err, "No pudimos probar tu malla. Vuelve a intentarlo en unos segundos.")
+      );
       setRawError(errorCode(err));
     } finally {
       setPending(false);
@@ -256,6 +264,16 @@ export function StressSection({ state }: Props) {
 
   const ready = scope !== null && rule !== null && companyId !== null && companyRevision !== undefined;
   const selection = result?.selection ?? null;
+  // The result freezes its rule/company; a newer revision invalidates it.
+  const stale =
+    result !== null &&
+    rule !== null &&
+    companyId !== null &&
+    companyRevision !== undefined &&
+    (result.rule.id !== rule.id ||
+      result.rule.revision !== rule.revision ||
+      result.company.id !== companyId ||
+      result.company.base_revision !== companyRevision);
 
   return (
     <Card aria-label="Prueba de resistencia" data-testid="stress-section">
@@ -472,12 +490,21 @@ export function StressSection({ state }: Props) {
               </p>
             )}
             <p className="mt-1 text-xs text-muted">{result.selection_reason}</p>
+            <p data-testid="stress-computed-at" className="mt-1 text-xs text-muted">
+              Calculada el {formatDateTime(result.created_at)}.
+            </p>
             <p className="mt-1 text-xs text-muted">
               <Button variant="subtle" onClick={handleReload} disabled={pending}>
                 Recargar resultado
               </Button>
             </p>
           </div>
+
+          {stale && (
+            <Alert tone="warn" data-testid="stress-stale">
+              La regla o tu empresa cambió después de esta malla. Vuelve a probarla.
+            </Alert>
+          )}
 
           <div className="overflow-x-auto">
             <table className="tnum w-full text-sm">

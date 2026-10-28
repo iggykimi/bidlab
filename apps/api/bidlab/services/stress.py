@@ -18,9 +18,6 @@ from bidlab.schemas import generated as g
 from bidlab.services import evaluation as evaluation_service
 from bidlab.services.scenarios import snapshot_hash
 
-MAX_DISCOUNTS = 81
-MAX_HYPOTHESES = 9
-
 
 def _now() -> str:
     return dt.datetime.now(dt.UTC).isoformat()
@@ -92,10 +89,17 @@ def run_stress(session: Session, scope_id: str, payload: g.StressTestRequest) ->
     basis = scope.basis_json if isinstance(scope.basis_json, dict) else {}
 
     discounts: list[str] = []
-    for raw in payload.candidate_discounts:
-        rate = MO.validate_discount(raw.root)
+    for index, raw in enumerate(payload.candidate_discounts):
+        # Same shape as evaluation: parse, then scope-check with the field
+        # position attached (validate_discount would lose the index).
+        rate = MO.parse_decimal(raw.root, field="discount_rate")
         if rate < 0 or rate > evaluation_service.DISCOUNT_MAX:
-            raise ApiError(422, "discount_out_of_scope", "candidate discount outside 0 to 0.40")
+            raise ApiError(
+                422,
+                "discount_out_of_scope",
+                "candidate discount outside 0 to 0.40",
+                details=[f"candidate_discounts[{index}]"],
+            )
         text = format(rate, "f")
         if text not in discounts:
             discounts.append(text)
@@ -104,14 +108,32 @@ def run_stress(session: Session, scope_id: str, payload: g.StressTestRequest) ->
         payload.constraints.min_price_points.root, field="min_price_points"
     )
     min_profit = MO.parse_decimal(payload.constraints.min_profit_net.root, field="min_profit_net")
-    if min_points <= 0 or min_profit <= 0:
-        raise ApiError(422, "stress_constraints_invalid", "constraints must be greater than zero")
+    bad_constraints = [
+        name
+        for name, value in (
+            ("constraints.min_price_points", min_points),
+            ("constraints.min_profit_net", min_profit),
+        )
+        if value <= 0
+    ]
+    if bad_constraints:
+        raise ApiError(
+            422,
+            "stress_constraints_invalid",
+            "constraints must be greater than zero",
+            details=bad_constraints,
+        )
 
     hyps: list[tuple[g.StressHypothesisInput, Decimal]] = []
-    for h in payload.hypotheses:
+    for index, h in enumerate(payload.hypotheses):
         cost = MO.parse_decimal(h.cost_net.root, field="cost_net")
         if cost <= 0:
-            raise ApiError(422, "stress_cost_invalid", f"hypothesis {h.label!r}: cost must be > 0")
+            raise ApiError(
+                422,
+                "stress_cost_invalid",
+                f"hypothesis {h.label!r}: cost must be > 0",
+                details=[f"hypotheses[{index}].cost_net"],
+            )
         hyps.append((h, cost))
 
     # One evaluator call per (discount, rivals) shape; profit varies by cost.

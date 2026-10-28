@@ -862,3 +862,36 @@ Evidencia:
 - `ruff check`, `ruff format --check` (93 ficheros),
   `mypy` (50): verdes. E2E completa 65/65 (+2
   library-search: búsqueda+retorno, paginación).
+
+## Plan Integral PKG-T13 — malla: topes, errores, vigencia (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 8a0beb7. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (API local real).
+
+Aceptación 1 (10×6 computable): 10 rebajas × 6
+hipótesis = 60 celdas verificadas en integración.
+Topes únicos en contrato (81/9); se eliminan las
+constantes muertas del servicio (duplicaban sin
+aplicar).
+
+Aceptación 2 (422 con lista de campos): exceso →
+`validation_error` con rutas; coste 0 →
+`stress_cost_invalid` + `hypotheses[i].cost_net`;
+límites 0 → `stress_constraints_invalid` + ambos
+campos; rebaja fuera de rango → `discount_out_of_scope`
++ `candidate_discounts[i]` (antes el dominio lanzaba
+sin posición; patrón de evaluation). Sin códigos
+nuevos (enum 104 intacto, sin regen). Front traduce
+rutas a español (`stressDetailsEs` + 2 mapeos).
+
+Aceptación 3 (vigencia): el resultado congela
+regla/empresa; si cambian, banner «Vuelve a probarla»
++ «Calculada el {fecha-hora es-ES}» siempre visible.
+
+Evidencia:
+- Backend: unit 303 + integración/contratos 133 = 436
+  passed, exit 0 (+6 malla).
+- Front: vitest 210 (+2), eslint, tsc, build: verdes.
+- `ruff check`, `ruff format --check` (93 ficheros),
+  `mypy` (50): verdes. E2E completa 66/66 (+1
+  vigencia malla).
