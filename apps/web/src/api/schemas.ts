@@ -6,6 +6,9 @@ import { z } from "zod";
 import type { components } from "./generated";
 import type {
   Citation,
+  ConsistencyEvidence,
+  ConsistencyFinding,
+  ConsistencyReport,
   CurvePoint,
   EvaluationResult,
   PageText,
@@ -202,6 +205,36 @@ const pricingRuleSchema: z.ZodType<PricingRule> = z.object({
   anomaly_policy: anomalyPolicySchema,
 });
 
+const consistencyEvidenceSchema: z.ZodType<ConsistencyEvidence> = z.object({
+  observation_id: z.string(),
+  document_id: z.string(),
+  document_sha256: z.string(),
+  physical_page: z.number(),
+  verbatim_excerpt: z.string().nullable(),
+  value: z.string().nullable(),
+});
+
+const consistencyFindingSchema: z.ZodType<ConsistencyFinding> = z.object({
+  field: z.enum([
+    "budget_net",
+    "period_months",
+    "max_price_points",
+    "pricing_formula_literal",
+    "anomaly_literal",
+    "other_requirement",
+  ]),
+  same_document: z.boolean(),
+  evidence_a: consistencyEvidenceSchema,
+  evidence_b: consistencyEvidenceSchema,
+  question: z.string(),
+  synthetic: z.boolean(),
+});
+
+const consistencyReportSchema: z.ZodType<ConsistencyReport> = z.object({
+  items: z.array(consistencyFindingSchema),
+  synthetic_example: consistencyFindingSchema,
+});
+
 export const workspaceSchema: z.ZodType<Workspace> = z.object({
   tender: tenderSchema,
   interpretation_revision: z.number(),
@@ -212,6 +245,7 @@ export const workspaceSchema: z.ZodType<Workspace> = z.object({
   citations: z.array(citationSchema),
   pricing_rules: z.array(pricingRuleSchema),
   warnings: z.array(z.string()),
+  consistency: consistencyReportSchema,
 });
 
 const scoreResultSchema = z.object({

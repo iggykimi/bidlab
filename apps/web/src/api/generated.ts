@@ -864,6 +864,27 @@ export interface components {
             evidence_ids: components["schemas"]["EntityId"][];
             anomaly_policy: components["schemas"]["AnomalyPolicy"];
         };
+        ConsistencyEvidence: {
+            observation_id: string;
+            document_id: components["schemas"]["EntityId"];
+            document_sha256: string;
+            physical_page: number;
+            verbatim_excerpt: string | null;
+            value: string | null;
+        };
+        ConsistencyFinding: {
+            /** @enum {string} */
+            field: "budget_net" | "period_months" | "max_price_points" | "pricing_formula_literal" | "anomaly_literal" | "other_requirement";
+            same_document: boolean;
+            evidence_a: components["schemas"]["ConsistencyEvidence"];
+            evidence_b: components["schemas"]["ConsistencyEvidence"];
+            question: string;
+            synthetic: boolean;
+        };
+        ConsistencyReport: {
+            items: components["schemas"]["ConsistencyFinding"][];
+            synthetic_example: components["schemas"]["ConsistencyFinding"];
+        };
         Workspace: {
             tender: components["schemas"]["Tender"];
             interpretation_revision: number;
@@ -875,6 +896,7 @@ export interface components {
             citations: components["schemas"]["Citation"][];
             pricing_rules: components["schemas"]["PricingRule"][];
             warnings: string[];
+            consistency: components["schemas"]["ConsistencyReport"];
         };
         AnalysisRequest: {
             document_ids: components["schemas"]["EntityId"][];

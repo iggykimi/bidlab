@@ -24,6 +24,7 @@ import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { AnalysisTracker } from "./AnalysisTracker";
 import { ProposalClaims } from "./ProposalClaims";
+import { RadarSection } from "./RadarSection";
 import { appendReviewHistory, loadReviewHistory } from "./reviewHistory";
 import {
   ANOMALY_COPY,
@@ -249,6 +250,8 @@ export function ReviewTab({ workspace }: Props) {
           })
         }
       />
+
+      <RadarSection report={workspace.consistency} />
 
       <Card aria-label="Revisión manual">
         <h2 className="text-lg font-semibold">¿Qué fórmula apruebas?</h2>
