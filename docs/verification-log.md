@@ -1194,3 +1194,25 @@ Gates (todos dentro del worktree, exit codes observados):
   datamodel-codegen 0.86.0 + openapi-typescript 7.13.0, diff
   aditivo verificado línea a línea.
 - Offline: cero llamadas Meta (comparador puro + fixtures).
+
+Evidencia (lead, en main tras merge 0f939a5):
+- SHA del helper verificado; decisión
+  dimensión/versión aceptada y documentada
+  (versión identificada, no bloqueante; el
+  radar cruzado PCAP/PPT es el caso de uso).
+- Fusión con T21 (base común 080a940): 3
+  conflictos. build_contract.py auto-fusionó
+  ambos hunks; YAML + generated.py/.ts
+  REGENERADOS desde el builder fusionado
+  (build_contract.py → 82 schemas, datamodel
+  0.86.0, openapi-typescript 7.13.0):
+  YAML +81/−0, unión verificada (T20 +
+  max_cost_net T21). Docs: ambas secciones.
+- Nota «1 deselected» del helper: caza hecha.
+  Suite SIN filtros en worktree (495/495) y en
+  main (502/502) da exit 0: era un resto
+  intermedio, ningún fallo enmascarado.
+- Backend 502/502 exit 0, ruff check (raíz) +
+  format (103) + mypy (53) verdes. Front:
+  vitest 216, eslint, tsc, build verdes.
+- E2E completa 72/72 (71 + t20-radar).

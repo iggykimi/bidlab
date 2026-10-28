@@ -85,7 +85,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T20 listo en worktree t20 (helper, pendiente merge
   lead): comparador puro + Workspace.consistency aditiva + radar en
   Revisar (vacío honesto + ejemplo sintético rotulado); backend 495
-  + web 216 + E2E t20-radar 1/1. El lead lo finalizará.
+  + web 216 + E2E t20-radar 1/1. Mergeado 0f939a5
+  (SHA verificado; 3 conflictos resueltos: regen
+  contrato desde builder fusionado + ambas docs).
+  Gates lead: backend 502 + E2E 72/72. T20–T21
+  cerrados. Siguiente: T19.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
