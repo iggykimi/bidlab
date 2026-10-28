@@ -761,3 +761,31 @@ Evidencia:
   integración con v2 persistido).
 - `ruff check`, `ruff format --check` (92 ficheros),
   `mypy` (50): verdes. E2E completa 62/62.
+
+## Plan Integral PKG-T08 — prompts con unidades/ámbito (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 1d40a82. Entorno: Windows,
+Python 3.14 (venv), Chromium. Sin red (mocks).
+
+`HYBRID_SYSTEM_PROMPT` ampliado (bump `bidlab-extract-3`,
+registrado en manifest): PBL/estimado y neto/bruto como
+observaciones distintas que nunca se fusionan (currency,
+tax basis y reference kind literales, sin convertir);
+plazo inicial y cada prórroga separados con su segmento
+(sin sumar); lotes con su scope id; unidades literales
+en tokens cortos; dos candidatos → una observación cada
+uno + conflicto en `ambiguities`. Evidencia no
+instruccional intacta. Nuevo
+`examples/observations_prompt_gold.json` (sintético
+rotulado, 4 snippets + 6 obs esperadas con sha256 real
+de los snippets) demuestra las separaciones y adapta a
+v1 con notas distintivas.
+
+Aceptación 1–3: sentencias normativas presentes,
+acotadas (prompt ≤2000 chars) y ejemplo que valida.
+
+Evidencia:
+- Backend: unit 300 + integración/contratos 124 = 424
+  passed, exit 0 (+5: 3 prompt, 2 ejemplo v2→v1).
+- `ruff check`, `ruff format --check` (92 ficheros),
+  `mypy` (50): verdes. E2E completa 62/62.

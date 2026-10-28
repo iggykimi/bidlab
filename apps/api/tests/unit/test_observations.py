@@ -1,6 +1,7 @@
 """PKG-T07: observations v2 contract, packet bindings and the v1 review adapt."""
 
 import json
+import pathlib
 from typing import Any
 
 import pytest
@@ -524,3 +525,47 @@ def test_live_round_trip_binds_images_and_keeps_raw_v2(
     assert proposal.claims[0].raw_value.root == "118336.00"
     assert result.packet_manifest is not None
     assert result.packet_manifest["observations"]["observations"][0]["id"] == "ob-1"
+
+
+# --- PKG-T08 prompt example --------------------------------------------------
+
+
+def _prompt_example() -> dict[str, Any]:
+    root = pathlib.Path(__file__).resolve().parents[4]
+    raw = (root / "examples/observations_prompt_gold.json").read_text(encoding="utf-8")
+    return json.loads(raw)
+
+
+def test_prompt_example_validates_and_separates_kinds() -> None:
+    """PBL/estimated, net/gross, initial/extension and lots stay apart."""
+    doc = _prompt_example()
+    assert doc["kind"] == "synthetic_prompt_example"
+    proposal = obs.ObservationsProposal.model_validate(doc["expected"])
+    by_id = {item.id: item for item in proposal.observations}
+    assert by_id["ob-pbl"].qualifier.reference_kind == "base_budget"
+    assert by_id["ob-estimated"].qualifier.reference_kind == "estimated_value"
+    assert by_id["ob-pbl"].value != by_id["ob-estimated"].value
+    assert by_id["ob-pbl"].qualifier.tax_basis == "net"
+    assert by_id["ob-gross"].qualifier.tax_basis == "gross"
+    assert by_id["ob-initial"].qualifier.period_segment == "initial"
+    assert by_id["ob-extension"].qualifier.period_segment == "extension"
+    assert by_id["ob-lot-2"].qualifier.scope_id == "lot-2"
+    assert len(proposal.ambiguities) == 1
+
+
+def test_prompt_example_adapts_to_v1_with_distinguishing_notes() -> None:
+    doc = _prompt_example()
+    proposal = obs.ObservationsProposal.model_validate(doc["expected"])
+    adapted = meta_adapter.observations_to_proposal(proposal)
+    notes_by_value = {
+        claim.raw_value.root: [note.root for note in claim.notes]
+        for claim in adapted.claims
+        if claim.raw_value is not None
+    }
+    assert "reference kind: base_budget" in notes_by_value["250000.00"]
+    assert "reference kind: estimated_value" in notes_by_value["500000.00"]
+    assert "tax basis: gross" in notes_by_value["302500.00"]
+    assert "scope: lot-2" in notes_by_value["60000.00"]
+    assert "period segment: initial" in notes_by_value["24"]
+    assert "period segment: extension" in notes_by_value["12"]
+    assert any("extension" in warning.root for warning in adapted.warnings)

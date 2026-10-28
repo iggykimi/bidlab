@@ -45,7 +45,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T07 hecho (observations v2 live +
   bindings + adapt v1, v2 crudo en manifest);
   backend 419 + E2E 62/62.
-  Siguiente: PKG-T08 (prompts con unidades/ámbito).
+- 28-oct: PKG-T08 hecho (prompt extract-3 con
+  unidades/ámbito/periodo/ambigüedad + ejemplo
+  sintético); backend 424 + E2E 62/62.
+  Siguiente: PKG-T09 (recorrido real en UI).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

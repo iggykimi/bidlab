@@ -1,0 +1,172 @@
+{
+  "kind": "synthetic_prompt_example",
+  "semantic_review": "Invented snippets showing the intended PKG-T08 prompt behavior. Not evidence, not a real tender, never customer data.",
+  "document_id": "synthetic-pcap",
+  "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+  "sha_note": "sha256 over the JSON array of snippet texts below, joined as stored",
+  "snippets": [
+    {
+      "physical_page": 10,
+      "text": "Presupuesto base de licitación: 250.000,00 € (IVA excluido). Valor estimado del contrato: 500.000,00 € (IVA excluido)."
+    },
+    {
+      "physical_page": 11,
+      "text": "Importe total con IVA (21 %): 302.500,00 €."
+    },
+    {
+      "physical_page": 20,
+      "text": "Duración inicial: 24 meses. Prórrogas: dos prórrogas de 12 meses cada una."
+    },
+    {
+      "physical_page": 21,
+      "text": "Lote 2. Suministro: presupuesto 60.000,00 € (IVA excluido)."
+    }
+  ],
+  "expected": {
+    "schema_version": "2.0-proposal",
+    "observations": [
+      {
+        "id": "ob-pbl",
+        "field": "budget_net",
+        "value": "250000.00",
+        "qualifier": {
+          "scope_id": "contract",
+          "unit": "EUR",
+          "currency": "EUR",
+          "tax_basis": "net",
+          "period_segment": null,
+          "reference_kind": "base_budget"
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 10,
+          "verbatim_excerpt": "Presupuesto base de licitación: 250.000,00 € (IVA excluido).",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      },
+      {
+        "id": "ob-estimated",
+        "field": "budget_net",
+        "value": "500000.00",
+        "qualifier": {
+          "scope_id": "contract",
+          "unit": "EUR",
+          "currency": "EUR",
+          "tax_basis": "net",
+          "period_segment": null,
+          "reference_kind": "estimated_value"
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 10,
+          "verbatim_excerpt": "Valor estimado del contrato: 500.000,00 € (IVA excluido).",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      },
+      {
+        "id": "ob-gross",
+        "field": "budget_net",
+        "value": "302500.00",
+        "qualifier": {
+          "scope_id": "contract",
+          "unit": "EUR",
+          "currency": "EUR",
+          "tax_basis": "gross",
+          "period_segment": null,
+          "reference_kind": "total_with_tax"
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 11,
+          "verbatim_excerpt": "Importe total con IVA (21 %): 302.500,00 €.",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      },
+      {
+        "id": "ob-initial",
+        "field": "period_months",
+        "value": "24",
+        "qualifier": {
+          "scope_id": "contract",
+          "unit": "months",
+          "currency": null,
+          "tax_basis": null,
+          "period_segment": "initial",
+          "reference_kind": null
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 20,
+          "verbatim_excerpt": "Duración inicial: 24 meses.",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      },
+      {
+        "id": "ob-extension",
+        "field": "period_months",
+        "value": "12",
+        "qualifier": {
+          "scope_id": "contract",
+          "unit": "months",
+          "currency": null,
+          "tax_basis": null,
+          "period_segment": "extension",
+          "reference_kind": null
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 20,
+          "verbatim_excerpt": "Prórrogas: dos prórrogas de 12 meses cada una.",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      },
+      {
+        "id": "ob-lot-2",
+        "field": "budget_net",
+        "value": "60000.00",
+        "qualifier": {
+          "scope_id": "lot-2",
+          "unit": "EUR",
+          "currency": "EUR",
+          "tax_basis": "net",
+          "period_segment": null,
+          "reference_kind": "base_budget"
+        },
+        "source": {
+          "document_id": "synthetic-pcap",
+          "document_sha256": "b558a739810a6d9a0ea45930c0d4f16b42c60a6123e5acfbffb749f146c0f18b",
+          "physical_page": 21,
+          "verbatim_excerpt": "Lote 2. Suministro: presupuesto 60.000,00 € (IVA excluido).",
+          "image_id": null,
+          "image_sha256": null,
+          "bbox_0_1000": null
+        },
+        "status": "proposed"
+      }
+    ],
+    "ambiguities": [
+      "Two 12-month extensions are offered; kept as one 12-month extension observation, never added to the initial 24 months."
+    ],
+    "unread_image_ids": []
+  }
+}
