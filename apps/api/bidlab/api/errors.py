@@ -128,7 +128,7 @@ def _from_pdf_error(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
-def _from_unhandled(request: Request, exc: Exception) -> JSONResponse:
+def _from_unhandled(request: Request, _exc: Exception) -> JSONResponse:
     logger.exception("unhandled exception for %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,

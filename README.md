@@ -143,7 +143,7 @@ en [verification-log](docs/verification-log.md)):
   Paquete integral: extracción con recibos live, gold humano +
   comparativa medida texto/híbrido, imagen exacta de página,
   radar de incoherencias, techo de coste con paridad motor.
-  Footage-oro anterior al paquete (obsoleto, regrabar);
+  Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
   sin envío.
 

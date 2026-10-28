@@ -102,9 +102,7 @@ def _pending_items(
     return [item[:1000] for item in pending[:100]]
 
 
-def _citations_for(
-    session: Session, evidence_ids: list[str], tender_id: str
-) -> list[dict[str, Any]]:
+def _citations_for(session: Session, evidence_ids: list[str]) -> list[dict[str, Any]]:
     if not evidence_ids:
         return []
     rows = session.scalars(
@@ -184,7 +182,7 @@ def save_scenario(session: Session, name: str, req: g.EvaluationRequest) -> dict
         "basis": basis,
         "rule": rule,
         "company": profile,
-        "citations": _citations_for(session, ordered, scope.tender_id),
+        "citations": _citations_for(session, ordered),
         "tender_title": "",
         "source_url": "",
         "source_updated_at": "",

@@ -29,6 +29,12 @@ BidLab_Experience_Lab_2026-10-27.zip
 bidlab_blueprint/
 BidLab_MuseCode_Blueprint_2026-10-26.zip
 BidLab_Executive_Audit.md
+BidLab_Plan_Integral_Meta_2026-10-28/
+BidLab_Plan_Integral_Meta_2026-10-28.zip
+BidLab_Plan_Maestro_Meta_2026-10-28.html
+
+# helper worktrees (lead merges to main; never committed)
+.worktrees/
 
 # skills installer local links (regenerable)
 .claude/

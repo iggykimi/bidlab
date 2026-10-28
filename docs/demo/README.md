@@ -7,9 +7,11 @@ Ayuntamiento de Tías (Lanzarote).
 
 ## Ver en 2 minutos (sin instalar nada)
 
-Capturas regeneradas el 28-oct-2026 (árbol con tour + malla) con `scripts/demo-shots`
+Capturas regeneradas el 28-oct-2026 (post-paquete T20/T21) con
+`npx playwright test -c scripts/demo-shots/playwright.shots.config.ts`
 (base separada de la suite E2E, nombres legibles, UI asentada):
-tuteo, «Datos de ejemplo», comparar desde «Precio».
+tuteo, «Datos de ejemplo», comparar desde «Precio», drawer con
+aviso honesto sin imagen (T15).
 
 | Pantalla | Qué demuestra |
 |---|---|
@@ -51,11 +53,12 @@ análisis + revisión manual + simular + comparar + exportar
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
 - Tests (contados el 28-oct-2026 en este árbol, ver
   [verification-log](../verification-log.md)):
-  backend 333 (220 unit + 113 integración/contratos),
-  web 202 en 25 ficheros (`npm run test:unit`),
-  E2E 62 en 20 specs (herméticos).
+  backend 502 (unit + evaluation + integración/contratos),
+  web 216 en 28 ficheros (`npm run test:unit`),
+  E2E 72 herméticos (Chromium, loopback).
   Puertas completas en verde el 28-oct
-  (`uv run python scripts/verify.py`, 10/10).
+  (`python scripts/verify.py`, 10/10) + dos ensayos
+  limpios R1+R2.
 
 ## Evidencia de calidad
 
@@ -75,7 +78,7 @@ análisis + revisión manual + simular + comparar + exportar
 - Sin Meta en vivo en el frontal (solo smoke backend); empresa y rivales
   sintéticos; sin predicción.
 - Histórico P1 aparcado; móvil solo "no rompe"; sin `LICENSE` aún (T32).
-- Footage real sin narración ([footage-oro-20261028.webm](footage-oro-20261028.webm), flujo oro); vídeo narrado pendiente; sin envío (pendiente del autor).
+- Footage real sin narración ([footage-oro-20261028.webm](footage-oro-20261028.webm), flujo oro, regrabado post-paquete con UI actual); vídeo narrado pendiente; sin envío (pendiente del autor).
 
 ## Qué feedback nos sirve
 

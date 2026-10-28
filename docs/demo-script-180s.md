@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4e0b37d: 40+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm ANTERIOR a T09–T15 (drawer, tracker, vocabulario): NO reutilizar como metraje final, regrabar desde limpio. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4e0b37d: 40+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
