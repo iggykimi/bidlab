@@ -1089,3 +1089,46 @@ Evidencia (lead, en main tras merge e772954):
   prueba de que son medidas, no fijas.
 - E2E completa 70/70 en main post-merge.
 - Crítico PKG-T01–T11 cerrado.
+
+## PKG-T21 · Qué coste rompe este beneficio mínimo (helper, worktree t21, 28-oct)
+
+Decisión de exposición: extender la respuesta de stress existente con el
+techo por rebaja (`StressByDiscount.price_net` + `max_cost_net`, ambos
+`Money|null`), en vez de un endpoint nuevo. Motivos: (1) el techo solo
+tiene sentido bajo la misma base que la malla (precio/periodo/moneda ya
+fijados por el run); (2) la UI ya consume `by_discount` y la selección,
+así que la línea «Con este precio y este mínimo, tu coste máximo es X»
+es una búsqueda directa sin cálculo en el front; (3) el cambio de
+contrato es solo aditivo (builder → YAML → regenerados, 0 restas).
+Disclaimers como copia estática (misma base; no incluye cambios futuros
+de precio, otros criterios ni elegibilidad legal; no es probabilidad ni
+predicción de rivales).
+
+Implementación (offline, Decimal, API strings, unknown=null):
+- `apps/api/bidlab/domain/money.py`: `cost_ceiling(price, min_profit)`
+  pura (parse_decimal, None si negativa, rechaza negativos/float).
+- `apps/api/bidlab/services/stress.py`: techo por fila desde el precio
+  de la rebaja menos `min_profit_net`; null sin celda con precio.
+- `tools/build_contract.py` → `docs/API_CONTRACT.yaml` (+22/−0) →
+  `generated.py` / `generated.ts` regenerados con las versiones
+  fijadas del builder.
+- `StressSection.tsx`: columna «Tu coste máximo» + bloque de techo
+  para la rebaja seleccionada (`stress-cost-ceiling`) con disclaimers.
+
+Evidencia (comandos reales en .worktrees/t21, commit del helper):
+- `uv run pytest apps/api/tests/unit apps/api/tests/evaluation
+  apps/api/tests/integration apps/api/tests/contracts` → 479 passed,
+  exit 0 (472 base + 4 unit + 3 integración).
+- Paridad motor real (`test_breakpoint.py`, ejemplo sintético
+  rotulado): 96135.68 → beneficio 8000.00, 96135.69 → 7999.99, precio
+  104135.68 y score 47.053997246669 idéntico (mismos números que la
+  referencia breakpoint-engine.json).
+- `uv run ruff check .` → exit 0; `ruff format --check apps/api` →
+  100 ficheros OK, exit 0; `mypy apps/api/bidlab` → 52 ficheros OK,
+  exit 0.
+- `npm run lint` / `typecheck` / `build` / `test:unit` → exit 0
+  (vitest 212/212).
+- `npx playwright test -c tests/e2e/playwright.config.ts
+  tests/e2e/stress.spec.ts` → 4/4, exit 0 (incluye el test nuevo del
+  texto del techo y sus disclaimers).
+- `python scripts/verify.py --skip-e2e` → ALL CHECKS PASSED, exit 0.

@@ -227,13 +227,22 @@ def run_stress(session: Session, scope_id: str, payload: g.StressTestRequest) ->
         comparable = [c for c in group if c["score"] is not None and c["profit_net"] is not None]
         worst_score = min((Decimal(str(c["score"])) for c in comparable), default=None)
         worst_profit = min((Decimal(str(c["profit_net"])) for c in comparable), default=None)
+        # Price depends on the discount alone; every priced cell in the group
+        # agrees. No priced cell means unknown, never a zero ceiling.
+        row_price = next(
+            (Decimal(str(c["price_net"])) for c in group if c["price_net"] is not None),
+            None,
+        )
+        ceiling = MO.cost_ceiling(row_price, min_profit) if row_price is not None else None
         by_discount.append(
             {
                 "discount_rate": discount,
+                "price_net": MO.serialize_money(row_price) if row_price is not None else None,
                 "worst_score": MO.serialize_12dp(worst_score) if worst_score is not None else None,
                 "worst_profit_net": MO.serialize_money(worst_profit)
                 if worst_profit is not None
                 else None,
+                "max_cost_net": MO.serialize_money(ceiling) if ceiling is not None else None,
                 "all_feasible": len(group) > 0 and all(c["feasible"] for c in group),
                 "comparable_count": len(comparable),
             }

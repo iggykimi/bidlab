@@ -165,6 +165,26 @@ def margin(price: DecimalInput, cost: DecimalInput) -> Decimal:
     return result
 
 
+def cost_ceiling(price: DecimalInput, min_profit: DecimalInput) -> Decimal | None:
+    """Highest cost K with P - K >= M, i.e. K = P - M. None when negative.
+
+    Pure Decimal boundary for a FIXED price: costs never change the price
+    score, so one cent above the ceiling breaks only the profit condition.
+    Same base required (period, tax basis, currency); unknown stays null.
+    """
+    amount = parse_decimal(price, field="price_net")
+    floor = parse_decimal(min_profit, field="min_profit_net")
+    if amount < 0:
+        raise MoneyError("price_negative", "price_net: negative price rejected")
+    if floor < 0:
+        raise MoneyError("profit_negative", "min_profit_net: negative minimum rejected")
+    with arithmetic():
+        ceiling = amount - floor
+    if not ceiling.is_finite():
+        raise MoneyError("non_finite", "max_cost_net: non-finite result")
+    return ceiling if ceiling >= 0 else None
+
+
 def profit_or_none(price: DecimalInput, cost: DecimalInput | None) -> Decimal | None:
     """profit() that maps a null cost to null (price/points stay computable)."""
     if cost is None:

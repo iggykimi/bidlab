@@ -1232,8 +1232,10 @@ export interface components {
         };
         StressByDiscount: {
             discount_rate: components["schemas"]["Decimal"];
+            price_net: components["schemas"]["Money"] | null;
             worst_score: components["schemas"]["Decimal"] | null;
             worst_profit_net: components["schemas"]["Decimal"] | null;
+            max_cost_net: components["schemas"]["Money"] | null;
             all_feasible: boolean;
             comparable_count: number;
         };
