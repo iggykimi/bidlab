@@ -1,6 +1,8 @@
 # Ejecución con Muse Code
 Este paquete ya contiene AGENTS.md. Crear un repositorio nuevo dentro de la ventana permitida y copiar el paquete; revisar antes publication-manifest y no hacer público evidence/originals en bloque.
 
+> Nota 2026-10-28: el repositorio ya existe y contiene la implementación (HEAD 4f1cc61); no crear otro ni recopiar el paquete. El comando `/goal` y los prompts de este documento siguen valiendo para continuar (verificación, demo, candidatura).
+
 ## Arranque
 PowerShell:
 ~~~powershell

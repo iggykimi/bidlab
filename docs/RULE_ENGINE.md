@@ -1,5 +1,5 @@
 # Motor de reglas — especificación matemática
-El modelo interpreta documentos; este motor calcula. Las siguientes fórmulas se localizaron en PCAP reales descargados, no son fórmulas genéricas atribuidas a ellos. Los precios usados en ejemplos numéricos son **hipótesis de prueba**, nunca ofertas reales publicadas. Estado de implementación: pendiente; oráculos independientes entregados.
+El modelo interpreta documentos; este motor calcula. Las siguientes fórmulas se localizaron en PCAP reales descargados, no son fórmulas genéricas atribuidas a ellos. Los precios usados en ejemplos numéricos son **hipótesis de prueba**, nunca ofertas reales publicadas. Estado de implementación: implementado (`domain/{money,scoring,expressions,anomaly,eligibility,groups}.py`, `ENGINE_VERSION="1.0.0"` en `bidlab/__init__.py`); oráculos independientes en `examples/math_vectors.json` (`tools/verify_math_oracles.py`).
 
 ## Precondiciones y representación
 Entrada aprobada: scope/horizonte/moneda/unidad, regla y revisión, precio propio derivado de descuento, coste coherente y escenario rival. P0 solo EUR, precio global neto y duración inicial explícita.
@@ -14,7 +14,7 @@ Coste K=direct_cost+overhead del mismo scope y horizonte.
 - precio objetivo de margen m: K/(1-m), con 0≤m<1; es referencia del usuario, no oferta recomendada.
 - baja adjudicada histórica=(B-A)/B solo con par comparable.
 
-Costes negativos =>422. Coste/periodo distinto o no proporcionado => profit/margin=null, puntos pueden calcularse si su base sí está aprobada. Ganar dinero con coste sintético no acredita viabilidad real. Margen sobre ventas y recargo sobre coste son magnitudes distintas; la UI usa el primero.
+Costes negativos =>422. Coste/periodo distinto o no proporcionado => profit/margin=null, puntos pueden calcularse si su base sí está aprobada. Ganar dinero con coste sintético no acredita viabilidad real. Margen sobre ventas y recargo sobre coste son magnitudes distintas; la UI usa el primero. Techo de coste (`money.cost_ceiling`, expuesto como `max_cost_net` por `services/stress.py`): a precio fijo P y beneficio mínimo M, K_techo = P − M; null si negativo. Los costes nunca cambian los puntos: un céntimo por encima del techo rompe solo la condición de beneficio.
 
 ## Conjunto rival y mejor oferta
 Un escenario assumed, complete=true representa **un conjunto hipotético** de ofertas admitidas. La mejor oferta económica para puntuar es min(P, rivales). La propia oferta debe entrar en cada punto de la curva: nunca congelar best_price al mínimo rival si el usuario lo mejora.
@@ -63,7 +63,7 @@ Ejemplo puramente matemático usando referencia118054.97, P100000, best90000: co
 Estado real del expediente: blocked hasta confirmar unidades/periodo y tratamiento de referencias. Su plazo observado era26/10/2026 09:00 sin zona explícita; es ejemplo documental, no recomendación de licitar ahora.
 
 ## DSL / compilación segura
-P0 no admite lenguaje libre ni Python. Plantilla aprobada genera un AST canónico. Operadores JSON: add, sub, mul, div, min, max, log10. Variables permitidas: own_price, best_price, reference_price, max_points. Constantes Decimal finitas de magnitud≤10^12.
+P0 no admite lenguaje libre ni Python. Plantilla aprobada genera un AST canónico. Operadores JSON: add, sub, mul, div, min, max, log10. Variables permitidas: own_price, best_price, reference_price, max_points. Constantes Decimal finitas de magnitud≤10^12. (Verificado idéntico: `ALLOWED_OPS`/`ALLOWED_VARS`/`MAX_CONST_ABS` en `domain/expressions.py`; `MAX_RIVALS=20` en `domain/scoring.py`.)
 
 Ejemplo inversa:
 ~~~json
@@ -77,7 +77,7 @@ No eval, exec, ast.parse de código, imports, llamadas de atributos, lambdas, ac
 - add/sub/mul/div: exactamente2 hijos.
 - min/max: 2..8.
 - log10:1 hijo, argumento>0.
-- Profundidad≤12, nodos≤128, operaciones≤256 por evaluación; máximo201 puntos por curva. Rechazar ciclos si se usa representación en memoria.
+- Profundidad≤12, nodos≤128, operaciones≤256 por evaluación (`MAX_DEPTH`/`MAX_NODES`/`MAX_OPS` en `domain/expressions.py`); curva máx 201 puntos (`CurveRequest.points` máx 201 en contrato). Rechazar ciclos si se usa representación en memoria.
 - Divisor0 =>unknown con traza y motivo, no Infinity, NaN ni epsilon artificial.
 - Overflow/no finito =>error de dominio documentado.
 - Rango esperado0..max_points; si la plantilla no autoriza clamp, fuera de rango =>unsupported/needs_review, no corregirlo calladamente.
@@ -127,12 +127,13 @@ Hoja solo se calcula si regla revisada y evidencia pertinente con unidad/periodo
 - Ausencia de documento =>unknown, no not_met.
 - Valor inferior confirmado con medios alternativos no resueltos =>veredicto de esa hoja not_met, grupo puede seguir unknown/met.
 - Condiciones manuales/idioma/formato/modelo de anexo no reducibles a número =>unknown hasta revisión acreditada.
+- El dominio implementa además `Not` (unknown se mantiene; AND vacío=met, OR vacío=not_met); el contrato expone solo AND/OR en `RequirementGroup`.
 
 ## Estadística descriptiva
 No se prescribe distribución de rivales. Para n observaciones comparables ordenadas x:
 percentil tipo7, h=(n-1)p, j=floor(h), γ=h-j; q=(1-γ)x[j]+γx[j+1], índices desde0; extremo superior ajustado a x[n-1]. Usar Decimal, ordenar por valor no strings. Mostrar mediana p=.5, Q1=.25, Q3=.75 solo si gate DATA_FEASIBILITY satisfecho.
   
-No bootstrap ni intervalos de ganar. No “ahorro generado”, causalidad o futura distribución de ofertas a partir de adjudicaciones ganadoras. Validación estadística aquí significa controlar universo, grano, filtros y exclusiones; no simular una validación predictiva sin etiquetas.
+No bootstrap ni intervalos de ganar. No “ahorro generado”, causalidad o futura distribución de ofertas a partir de adjudicaciones ganadoras. Validación estadística aquí significa controlar universo, grano, filtros y exclusiones; no simular una validación predictiva sin etiquetas. Sin implementar como módulo (2026-10-28): no existe `domain/statistics.py` ni endpoint histórico (P1); la especificación de percentil tipo 7 sigue vigente para cuando se implemente.
 
 ## Matriz mínima de regresión
 | Caso | Entrada | Esperado |

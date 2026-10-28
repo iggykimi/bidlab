@@ -1,23 +1,31 @@
 # Estrategia de verificación
-Hay dos fases diferentes: **validación de este paquete** (sondas, contrato, SQL y oráculos, ejecutada donde consta en verification-log.md) y **pruebas del producto**, todavía por implementar. No convertir las segundas en resultados ficticios.
+Hay dos fases diferentes: **validación de este paquete** (sondas, contrato, SQL y oráculos, ejecutada donde consta en verification-log.md) y **pruebas del producto**, implementadas (ver «Suites implementadas»). Los resultados PASS/FAIL/BLOCKED viven en `docs/verification-log.md`, no aquí; no convertir la existencia de suites en resultados ficticios.
 
 ## Comandos que Muse debe proporcionar
 Desde raíz del futuro repo:
 ~~~text
-uv sync --frozen
+uv sync --frozen --all-packages
 npm ci
-uv run pytest apps/api/tests/unit -q
+uv run pytest apps/api/tests/unit apps/api/tests/evaluation -q
 uv run pytest apps/api/tests/integration apps/api/tests/contracts -q
 npm run lint
 npm run typecheck
 npm run build
 npm run test:unit
 npm run test:e2e
-python scripts/verify.py
+uv run ruff check .
+uv run mypy apps/api/bidlab
+python scripts/verify.py [--skip-e2e]
 ~~~
-scripts/verify.py orquesta procesos multiplataforma y registra exit codes; se detiene ante fallo. Playwright instala Chromium durante setup, no durante demo. CI ejecuta mismas entradas y guarda reportes/screenshot/trace al fallar. El agente debe escribir los scripts npm y configuración que aún no existen.
+`scripts/verify.py` orquesta esos pasos en orden y se detiene ante el primer fallo con el exit code del paso. Playwright instala Chromium durante setup, no durante demo. Los scripts npm existen en `package.json` (raíz) y `apps/web/package.json` (`test:unit` = `vitest run`).
 
 Smoke real separado: MODEL_API_KEY presente, ejecutar python tools/meta_smoke.py para conectividad/JSON mínimo; después uv run pytest apps/api/tests/live -m live -q para extracción del PCAP. Sin clave =>SKIPPED/BLOCKED explícito. Nunca fixture como respuesta live.
+
+## Suites implementadas (2026-10-28, HEAD 4f1cc61)
+
+Backend (collect-only: `uv run --group dev --with-editable apps/api pytest apps/api/tests --collect-only -q`): 503 tests en 43 ficheros — unit 344, integration 130, contracts 14, evaluation 14 (`tests/evaluation/test_compare_modes.py`, harness PKG-T10/T11 sobre gold de 25 claims + split dev/eval) y live 1 (marcado `live`, requiere clave). Frontend: 28 ficheros `*.test.*` bajo `apps/web/src` (`npm run test:unit` = `vitest run`). E2E: 24 specs Playwright en `tests/e2e/` (E01–E12 del diseño más intake, library, own-journey, stress, compare, tour, drafts, visual y responsive).
+
+Correspondencia ID→fichero (las tablas de IDs son la especificación; los nombres reales difieren en parte): U23 en `unit/test_meta_adapter.py` (50 tests), U24 en `unit/test_spend_ledger.py`, export/render en `unit/test_render.py` e `integration/test_scenarios_reports.py`; citas (U14/U15) se ejercitan en `unit/test_jobs_logic.py` (`test_verify_exact_citation_persisted_with_offsets`) e `integration/test_review.py`, sin fichero `test_citations.py` dedicado. Sin implementación ni tests de producto: ETL PLACSP (U16–U18; solo sonda `tools/probe_placsp.py`) y estadística histórica (U19–U22; P1, sin `domain/statistics.py` ni endpoint).
 
 ## Unitarios: entradas y resultados
 | ID / archivo previsto | Entrada concreta | Salida/propiedad |
@@ -69,7 +77,7 @@ Coverage meta: ramas del dominio≥90%, todas las ramas legales usadas por demo 
 | I11 |importe JSON number o campo desconocido |422 extra_forbidden/validation; tipos no derivados a float |
 | I12 |sin MODEL_API_KEY |capabilities false; analysis live503; demo sigue funcionando |
 | I13 |reimport resultado parcial real18210249 |unresolved_multiple_awards, nunca baja84% en histograma |
-| I14 |HTML informe / assets PDF.js |sin CDN, sin red, CSP y datos escapados |
+| I14 |HTML informe / visor (PNG backend, sin PDF.js) |sin CDN, sin red, CSP y datos escapados |
 
 Validar respuestas contra OpenAPI con JSON Schema y tipos generados. Comparar OpenAPI de FastAPI con contrato normativo: nombres/enums/nullable/required/rutas equivalentes; diferencias cosméticas de title/$defs permitidas, deriva funcional no. Añadir diff automático normalizado.
 
