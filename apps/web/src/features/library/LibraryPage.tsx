@@ -5,7 +5,6 @@ import { formatEurosHeadline } from "../../lib/format";
 import { errorCode, errorEs } from "../../lib/errors";
 import { ownCompanyFor, storeSession } from "../../lib/session";
 import { isOwnTender } from "../review/ownTender";
-import { DemoBadge } from "../../components/DemoBadge";
 import { Skeleton } from "../../components/Skeleton";
 import { Alert, Button, Badge } from "../../components/ui";
 import { useQuery } from "@tanstack/react-query";
@@ -36,6 +35,9 @@ function parsePageSize(raw: string | null): number {
   return Number.isInteger(n) && n >= 1 && n <= 100 ? n : PAGE_SIZE_DEFAULT;
 }
 
+// Plate 01 (portfolio): hero + demo inset + library surface + honesty
+// notice. Rows, toolbar, count and pagination follow the mock; controls
+// stay honest (search only, no invented filters or sort).
 export function LibraryPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -107,6 +109,16 @@ export function LibraryPage() {
     });
   }
 
+  function clearSearch() {
+    setDraft("");
+    setParams((prev) => {
+      const nextParams = new URLSearchParams(prev);
+      nextParams.delete("q");
+      nextParams.set("page", "1");
+      return nextParams;
+    });
+  }
+
   // Own tenders restore their manual session (no example asked). When the
   // company pointer is gone, the workspace checklist asks for it instead.
   function openTender(tender: Tender) {
@@ -124,129 +136,174 @@ export function LibraryPage() {
     void navigate(`/tenders/${tender.id}?tab=resumen`);
   }
 
+  const countText =
+    tendersQuery.isSuccess && total > 0
+      ? total === 1
+        ? "1 resultado"
+        : `${total} resultados`
+      : "";
+  const rangeText =
+    items.length === 0
+      ? `0 de ${total}`
+      : `${(page - 1) * pageSize + 1}–${Math.min(total, page * pageSize)} de ${total}`;
+
   return (
-    <main className="mx-auto max-w-4xl p-4 sm:p-8">
-      <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:bg-white focus:p-2">
-        Saltar al contenido
-      </a>
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <main id="main" className="wrap" tabIndex={-1}>
+      <div className="stack">
         <div>
-          <h1 className="text-2xl font-bold">BidLab</h1>
-          <p className="mt-1 text-muted">De un pliego a una decisión de oferta</p>
-        </div>
-        <DemoBadge mode={null} />
-      </header>
-
-      <div id="contenido" className="mt-6 flex flex-wrap gap-3">
-        <Button data-testid="demo-load" onClick={handleDemoLoad} disabled={loadingDemo}>
-          {loadingDemo ? "Cargando ejemplo…" : "Cargar ejemplo"}
-        </Button>
-        <Button
-          data-testid="nueva-licitacion"
-          variant="subtle"
-          onClick={() => navigate("/nueva-licitacion")}
-        >
-          Nueva licitación
-        </Button>
-      </div>
-      {demoError && (
-        <Alert className="mt-3" title={demoRawError ?? undefined}>
-          {demoError}
-        </Alert>
-      )}
-
-      <section aria-label="Biblioteca local" className="mt-8 rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">Biblioteca local</h2>
-        <label className="mt-3 block">
-          <span className="text-sm font-medium">Buscar por título, expediente o código de actividad (CPV)</span>
-          <input
-            type="search"
-            data-testid="library-search"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Tías, 79411000…"
-            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
-          />
-        </label>
-
-        {tendersQuery.isPending && (
-          <Skeleton lines={4} className="mt-4" label="Cargando licitaciones…" />
-        )}
-        {tendersQuery.isError && (
-          <div className="mt-4">
-            <p role="alert" className="text-error" title={errorCode(tendersQuery.error) ?? undefined}>
-              No pudimos cargar la biblioteca. Comprueba que el programa está en marcha y pulsa Reintentar.
-            </p>
-            <Button variant="secondary" onClick={() => void tendersQuery.refetch()} className="mt-2">
-              Reintentar
-            </Button>
-          </div>
-        )}
-        {tendersQuery.isSuccess && total === 0 && q !== "" && (
-          <p className="mt-4">Sin resultados para «{q}».</p>
-        )}
-        {tendersQuery.isSuccess && total === 0 && q === "" && (
-          <p className="mt-4">Sin resultados. Carga el ejemplo para empezar.</p>
-        )}
-        {tendersQuery.isSuccess && total > 0 && (
-          <p data-testid="library-count" className="mt-4 text-sm text-muted">
-            {total === 1 ? "1 resultado" : `${total} resultados`}
+          <p className="eyebrow">Cartera de trabajo</p>
+          <h1>Tus licitaciones</h1>
+          <p className="muted intro-width">
+            Expedientes guardados en este equipo. Carga el ejemplo de Tías para practicar el
+            recorrido completo.
           </p>
-        )}
-        {tendersQuery.isSuccess && total > 0 && items.length === 0 && (
-          <p className="mt-2">Esta página está vacía.</p>
-        )}
-        {items.length > 0 && (
-          <ul className="mt-4 divide-y divide-line">
-            {items.map((t) => (
-              <li key={t.id} className="py-3">
-                <button
-                  type="button"
-                  onClick={() => openTender(t)}
-                  className="w-full rounded-lg p-1 text-left hover:bg-surface"
-                >
-                  <span className="font-semibold text-primary underline hover:text-primary-ink">{t.title}</span>{" "}
-                  {isOwnTender(t) && <Badge data-testid="own-badge">Tuya</Badge>}
-                  <span className="mt-1 block text-sm text-muted">
-                    {t.contracting_body} · Expediente {t.external_id} · Actividad{" "}
-                    {t.cpv_codes.join(", ") || "sin determinar"}
-                  </span>
-                  <span className="tnum mt-1 block text-sm">
-                    Presupuesto de salida:{" "}
-                    {t.pbl_net
-                      ? `${formatEurosHeadline(t.pbl_net)} sin ${nombreImpuesto(t.scopes[0]?.basis.tax_kind ?? "unknown")}`
-                      : "sin determinar"}{" "}
-                    · Estado: {estadoPublicacion(t.status_raw)}
-                  </span>
-                </button>
+        </div>
+
+        <section className="inset" aria-labelledby="demo-title">
+          <div className="row between">
+            <div>
+              <h2 id="demo-title">Prueba el recorrido con Tías</h2>
+              <p className="last">Regla revisada. Costes y rivales inventados para practicar.</p>
+            </div>
+            <div className="row">
+              <Button data-testid="demo-load" onClick={handleDemoLoad} disabled={loadingDemo}>
+                {loadingDemo ? "Cargando ejemplo…" : "Cargar ejemplo"}
+              </Button>
+              <Button
+                data-testid="nueva-licitacion"
+                variant="secondary"
+                onClick={() => navigate("/nueva-licitacion")}
+              >
+                Nueva licitación
+              </Button>
+            </div>
+          </div>
+          {demoError && (
+            <Alert className="mt-4" title={demoRawError ?? undefined}>
+              {demoError}
+            </Alert>
+          )}
+        </section>
+
+        <section className="surface" aria-label="Biblioteca local">
+          <h2 id="list-title">Explora tu biblioteca</h2>
+          <div className="toolbar single">
+            <label>
+              Buscar licitación
+              <input
+                type="search"
+                data-testid="library-search"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Tías, 79411000…"
+                autoComplete="off"
+              />
+            </label>
+          </div>
+          <div className="row between rule" style={{ marginTop: 24 }}>
+            <p data-testid="library-count" role="status" className="last">
+              {countText}
+            </p>
+          </div>
+
+          {tendersQuery.isPending && (
+            <Skeleton lines={4} className="mt-4" label="Cargando licitaciones…" />
+          )}
+          {tendersQuery.isError && (
+            <div className="mt-4">
+              <p role="alert" className="text-error" title={errorCode(tendersQuery.error) ?? undefined}>
+                No pudimos cargar la biblioteca. Comprueba que el programa está en marcha y pulsa Reintentar.
+              </p>
+              <Button variant="secondary" onClick={() => void tendersQuery.refetch()} className="mt-2">
+                Reintentar
+              </Button>
+            </div>
+          )}
+          {tendersQuery.isSuccess && total === 0 && q !== "" && (
+            <ul className="tenders">
+              <li>
+                <div>
+                  <h3>No encontramos esa licitación.</h3>
+                  <p>Conservamos tu búsqueda para que puedas corregirla.</p>
+                  <Button variant="secondary" onClick={clearSearch}>
+                    Limpiar búsqueda
+                  </Button>
+                </div>
               </li>
-            ))}
-          </ul>
-        )}
-        {tendersQuery.isSuccess && totalPages > 1 && (
-          <nav aria-label="Páginas de la biblioteca" className="mt-4 flex items-center gap-3 text-sm">
-            <Button
-              variant="secondary"
-              data-testid="library-prev"
-              disabled={page <= 1}
-              onClick={() => goPage(page - 1)}
-            >
-              Anterior
-            </Button>
-            <span data-testid="library-page" role="status">
-              Página {Math.min(page, totalPages)} de {totalPages}
-            </span>
-            <Button
-              variant="secondary"
-              data-testid="library-next"
-              disabled={page >= totalPages}
-              onClick={() => goPage(page + 1)}
-            >
-              Siguiente
-            </Button>
-          </nav>
-        )}
-      </section>
+            </ul>
+          )}
+          {tendersQuery.isSuccess && total === 0 && q === "" && (
+            <p className="mt-4">Sin resultados. Carga el ejemplo para empezar.</p>
+          )}
+          {tendersQuery.isSuccess && total > 0 && items.length === 0 && (
+            <p className="mt-2">Esta página está vacía.</p>
+          )}
+          {items.length > 0 && (
+            <ul className="tenders">
+              {items.map((t) => (
+                <li key={t.id}>
+                  <div>
+                    <h3>{t.title}</h3>
+                    {isOwnTender(t) && <Badge data-testid="own-badge">Tuya</Badge>}{" "}
+                    <small>
+                      Expediente {t.external_id} · CPV {t.cpv_codes.join(", ") || "sin determinar"}
+                    </small>
+                    <br />
+                    <span className="tag">{estadoPublicacion(t.status_raw)}</span>{" "}
+                    <small>{t.contracting_body}</small>
+                  </div>
+                  <div className="amount">
+                    {t.pbl_net ? formatEurosHeadline(t.pbl_net) : "sin determinar"}
+                    <br />
+                    <small>
+                      Presupuesto neto
+                      {t.pbl_net
+                        ? ` sin ${nombreImpuesto(t.scopes[0]?.basis.tax_kind ?? "unknown")}`
+                        : ""}
+                    </small>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => openTender(t)}
+                    aria-label={`Abrir ${t.title}`}
+                  >
+                    Abrir
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {tendersQuery.isSuccess && totalPages > 1 && (
+            <nav aria-label="Páginas de la biblioteca" className="pagination">
+              <span>{rangeText} · </span>
+              <Button
+                variant="secondary"
+                data-testid="library-prev"
+                disabled={page <= 1}
+                onClick={() => goPage(page - 1)}
+              >
+                Anterior
+              </Button>
+              <span data-testid="library-page" role="status">
+                Página {Math.min(page, totalPages)} de {totalPages}
+              </span>
+              <Button
+                variant="secondary"
+                data-testid="library-next"
+                disabled={page >= totalPages}
+                onClick={() => goPage(page + 1)}
+              >
+                Siguiente
+              </Button>
+            </nav>
+          )}
+        </section>
+
+        <p className="notice">
+          Los estados publicados son los guardados en este equipo. Comprueba el estado y la versión
+          vigentes del expediente en su fuente oficial antes de preparar una oferta.
+        </p>
+      </div>
     </main>
   );
 }

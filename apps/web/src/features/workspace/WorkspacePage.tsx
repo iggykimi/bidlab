@@ -164,7 +164,7 @@ export function WorkspacePage() {
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:bg-white focus:p-2">
         Saltar al contenido
       </a>
-      <p>
+      <p className="backrow">
         <Link to="/" className="text-primary underline hover:text-primary-ink">
           ← Volver a mis licitaciones
         </Link>

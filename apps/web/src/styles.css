@@ -48,6 +48,7 @@ body {
   font-size: 1.125rem;
   line-height: 1.55;
   margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .tnum,
@@ -84,11 +85,52 @@ a[href^="http"]::after {
     padding: 32px 20px 56px;
   }
 
-  .eyebrow {
-    color: var(--color-primary);
+  /* Mock type scale (prototipo/style.css, exact values). Utilities win. */
+  h1 {
+    font-size: 1.9rem;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
     font-weight: 700;
-    font-size: 1rem;
-    margin: 0 0 8px;
+    max-width: 35ch;
+    margin: 0 0 16px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+    margin: 0 0 16px;
+  }
+  h3 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    font-weight: 700;
+    margin: 0 0 16px;
+  }
+  small,
+  .small {
+    font-size: 0.889rem;
+  }
+
+  .eyebrow {
+    font-size: 0.889rem;
+    font-weight: 650;
+    color: var(--color-primary);
+    margin: 0 0 12px;
+  }
+  .muted {
+    color: var(--color-muted);
+  }
+  .intro-width {
+    max-width: 75ch;
+  }
+  .last {
+    margin-bottom: 0;
+  }
+  .proof {
+    font-size: 0.889rem;
+    color: var(--color-muted);
+    margin-top: 16px;
   }
 
   .lede {
@@ -98,9 +140,32 @@ a[href^="http"]::after {
   }
 
   .rule {
-    border: 0;
     border-top: 1px solid var(--color-line);
-    margin: 24px 0;
+    padding-top: 24px;
+  }
+
+  /* Mock layout (prototipo/style.css, exact values). */
+  .wrap {
+    max-width: 1456px;
+    margin: auto;
+    padding: 32px;
+  }
+  .row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .between {
+    justify-content: space-between;
+  }
+  .stack > * + * {
+    margin-top: 24px;
+  }
+  .inset {
+    background: var(--color-soft);
+    border-radius: 10px;
+    padding: 20px;
   }
 
   .fineline {
@@ -109,25 +174,37 @@ a[href^="http"]::after {
     margin: 12px 0 0;
   }
 
-  /* Shell: top bar, brand, disclosure. */
-  .top {
+  /* Shell: top bar, brand, disclosure (prototipo, exact values). The app
+   * styles no native button globally, so the top bar carries the mock
+   * button base scoped to itself. */
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -100px;
     background: var(--color-white);
-    border-bottom: 1px solid var(--color-line);
+    padding: 12px;
+    z-index: 9;
   }
-  .top .bar {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 14px 20px;
+  .skip:focus {
+    top: 10px;
+  }
+  .top {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 24px;
+    min-height: 80px;
+    padding: 16px 32px;
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-line);
+    flex-wrap: wrap;
   }
   .brand {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 1.125rem;
+    gap: 10px;
+    font-size: 1.35rem;
+    font-weight: 750;
+    letter-spacing: -0.04em;
     color: var(--color-ink);
     text-decoration: none;
   }
@@ -135,33 +212,48 @@ a[href^="http"]::after {
     color: var(--color-ink);
   }
   .mark {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 7px;
+    font-size: 1.2rem;
+  }
+  .top .grow {
+    flex: 1;
+  }
+  .top button,
+  .top a.quiet {
+    cursor: pointer;
+    min-height: 48px;
+    border: 1px solid transparent;
+    background: var(--color-white);
+    color: var(--color-primary);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 650;
+    font-size: 0.889rem;
+    line-height: 1.4;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    background: var(--color-primary);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1rem;
   }
-  .top nav {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  .top #font {
+    border-color: var(--color-primary);
   }
-  .fontbtn {
-    background: none;
-    border: 0;
-    color: var(--color-primary);
-    font-size: 1rem;
-    min-height: 48px;
-    padding: 6px 4px;
+  .top button:hover:not(:disabled),
+  .top a.quiet:hover {
+    filter: brightness(0.95);
   }
-  .fontbtn .aa {
-    font-weight: 700;
+  .disclosure {
+    padding: 10px 32px;
+    background: var(--color-soft);
+    font-size: 0.889rem;
+  }
+  .footer-help {
+    padding-top: 0;
   }
 
   /* Workhead + steps sidebar + base block (plates 02-07). */
@@ -277,41 +369,43 @@ a[href^="http"]::after {
     color: var(--color-red);
   }
   .notice {
-    background: var(--color-soft);
+    padding: 16px 20px;
     border-left: 4px solid var(--color-primary);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 1rem;
+    background: var(--color-soft);
     margin: 16px 0;
-  }
-  .notice.ok {
-    background: var(--color-greenbg);
-    border-left-color: var(--color-green);
   }
   .notice.warn {
     background: var(--color-amberbg);
-    border-left-color: var(--color-amber);
+    border-color: var(--color-amber);
+    color: var(--color-amber);
+  }
+  .notice.ok {
+    background: var(--color-greenbg);
+    border-color: var(--color-green);
+    color: var(--color-green);
   }
   .notice.error {
     background: var(--color-redbg);
-    border-left-color: var(--color-red);
+    border-color: var(--color-red);
+    color: var(--color-red);
   }
   .tag {
     display: inline-block;
-    background: var(--color-soft);
-    color: var(--color-primary);
-    border-radius: 8px;
     padding: 4px 10px;
+    background: var(--color-soft);
+    border-radius: 6px;
+    color: var(--color-primary);
     font-size: 0.889rem;
-    font-weight: 700;
-  }
-  .tag.ok {
-    background: var(--color-greenbg);
-    color: var(--color-green);
+    font-weight: 650;
+    white-space: normal;
   }
   .tag.warn {
-    background: var(--color-amberbg);
     color: var(--color-amber);
+    background: var(--color-amberbg);
+  }
+  .tag.ok {
+    color: var(--color-green);
+    background: var(--color-greenbg);
   }
 
   /* Facts, rows, compare, toolbar, pagination. */
@@ -345,37 +439,30 @@ a[href^="http"]::after {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
-  .amount {
-    font-variant-numeric: tabular-nums;
-  }
   .tenders {
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 16px 0;
   }
   .tenders li {
+    padding: 22px 0;
+    border-top: 1px solid var(--color-line);
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 190px 104px;
+    gap: 24px;
     align-items: center;
-    padding: 20px 4px;
-    border-bottom: 1px solid var(--color-line);
-  }
-  .tenders li:last-child {
-    border-bottom: 0;
   }
   .tenders h3 {
-    margin: 0 0 4px;
-    font-size: 1.125rem;
-  }
-  .tenders .meta {
-    color: var(--color-muted);
     font-size: 1rem;
-    margin: 0;
+    margin-bottom: 6px;
   }
-  .tenders .amount {
-    text-align: right;
+  .tenders small {
+    color: var(--color-muted);
+  }
+  .amount {
     font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
   }
   .compare {
     display: grid;
@@ -398,28 +485,33 @@ a[href^="http"]::after {
     background: var(--color-greenbg);
     border-color: var(--color-greenbg);
   }
-  .toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: end;
-    margin: 16px 0;
+  label {
+    display: block;
+    font-weight: 650;
   }
-  .toolbar label {
+  label > small {
+    display: block;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+  .toolbar {
     display: grid;
-    gap: 6px;
-    font-size: 1rem;
-    font-weight: 700;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+    align-items: end;
+  }
+  .toolbar.single {
+    grid-template-columns: 1fr;
   }
   .toolbar .grow {
     flex: 1 1 220px;
   }
   .pagination {
     display: flex;
+    gap: 16px;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 16px;
+    flex-wrap: wrap;
   }
   .tablebox {
     overflow-x: auto;
@@ -580,25 +672,107 @@ a[href^="http"]::after {
   }
 }
 
+@layer components {
+@media (max-width: 1100px) {
+  .wrap {
+    padding: 24px;
+  }
+  .workgrid {
+    gap: 24px;
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .tenders li {
+    grid-template-columns: minmax(0, 1fr) 150px;
+  }
+  .tenders li > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+  .toolbar label:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 880px) {
   .page-wrap {
     padding: 20px 16px 40px;
   }
+  .top {
+    padding: 12px 20px;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .top .grow {
+    display: none;
+  }
+  .top button,
+  .top a.quiet {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+  .top .quiet {
+    padding: 10px 8px;
+  }
+  .top a.quiet.secondary {
+    display: none;
+  }
+  .top .brand {
+    margin-right: 0;
+    flex: 1;
+    font-size: 22px;
+  }
+  .top .mark {
+    width: 32px;
+    height: 32px;
+  }
+  .top #font {
+    font-size: 0;
+    padding: 10px 12px;
+  }
+  .top #font::after {
+    content: "Aa · Letra";
+    font-size: 16px;
+  }
+  .disclosure {
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 10px 20px;
+  }
+  .wrap {
+    padding: 24px 20px;
+  }
+  .stack > * + * {
+    margin-top: 20px;
+  }
+  h1 {
+    font-size: 1.65rem;
+  }
   .workgrid {
-    grid-template-columns: 1fr;
+    display: block;
   }
   .workgrid > aside {
+    display: none;
+  }
+  /* Mock parity: the workhead back control hides on mobile; the top
+   * bar Licitaciones link (same destination) stays visible. */
+  .backrow {
     display: none;
   }
   .benefit .big {
     font-size: 2.25rem;
   }
   .tenders li {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    display: block;
   }
   .tenders .amount {
     text-align: left;
+    margin: 12px 0;
+  }
+  .tenders li > button {
+    margin-top: 12px;
   }
   .compare,
   .pair,
@@ -608,21 +782,30 @@ a[href^="http"]::after {
   .toolbar {
     display: block;
   }
-  .toolbar > * + * {
-    margin-top: 12px;
+  .toolbar label {
+    margin-top: 16px;
+  }
+  .surface,
+  .benefit {
+    padding: 20px;
   }
   .pagination {
     justify-content: flex-start;
   }
+  .inset .row button {
+    width: 100%;
+  }
   .mobileonly {
     display: block;
   }
-  .fontbtn .label {
-    display: none;
+  .footer-help {
+    font-size: 16px;
+    padding-top: 0;
   }
   dialog {
     padding: 20px;
   }
+}
 }
 
 @media print {

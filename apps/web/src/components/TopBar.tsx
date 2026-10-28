@@ -1,5 +1,6 @@
-// Shared top bar (mock shell: brand + portfolio link + comfort font toggle).
-// No h1 here (pages own the single h1; qa-visual pins the count).
+// Shared top bar: the mock shell, exact markup (brand + portfolio link +
+// font toggle + secondary link). No h1 here (pages own the single h1).
+// Links point only at real routes; there is no help page to invent.
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -16,28 +17,34 @@ export function TopBar() {
   }
 
   return (
-    <header className="top">
-      <div className="bar">
+    <>
+      <a className="skip" href="#main">
+        Saltar al contenido
+      </a>
+      <header className="top">
         <Link to="/" className="brand">
-          <span className="mark" aria-hidden="true">
-            B
-          </span>
-          BidLab
+          <span className="mark">B</span> BidLab
         </Link>
-        <nav aria-label="Principal">
-          <Link to="/">Licitaciones</Link>
-          <button
-            type="button"
-            className="fontbtn"
-            aria-pressed={large}
-            title="Aumenta el tamaño de letra"
-            onClick={toggleFont}
-          >
-            <span className="label">Letra más grande · </span>
-            <span className="aa">Aa</span>
-          </button>
-        </nav>
+        <Link to="/" className="quiet">
+          Licitaciones
+        </Link>
+        <span className="grow" aria-hidden="true" />
+        <button
+          type="button"
+          id="font"
+          aria-pressed={large}
+          title="Aumenta el tamaño de letra"
+          onClick={toggleFont}
+        >
+          Letra más grande · Aa
+        </button>
+        <Link to="/nueva-licitacion" className="quiet secondary">
+          Nueva licitación
+        </Link>
+      </header>
+      <div className="disclosure">
+        Programa local · Funciona sin conexión · Sin llamadas a Meta
       </div>
-    </header>
+    </>
   );
 }
