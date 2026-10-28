@@ -32,7 +32,5 @@ def run_stress(
     response_model=g.StressTestResult,
     operation_id="get_stress_test",
 )
-def get_stress(
-    stress_id: str, db: Annotated[Session, Depends(deps.get_db)]
-) -> g.StressTestResult:
+def get_stress(stress_id: str, db: Annotated[Session, Depends(deps.get_db)]) -> g.StressTestResult:
     return g.StressTestResult.model_validate(stress.get_stress(db, stress_id))

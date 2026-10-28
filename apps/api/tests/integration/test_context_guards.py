@@ -125,9 +125,7 @@ def _create_company(client: TestClient, scope: str, period: int) -> dict[str, An
     return data
 
 
-def _evaluate(
-    client: TestClient, scope: str, rule_id: str, company_id: str
-) -> Any:
+def _evaluate(client: TestClient, scope: str, rule_id: str, company_id: str) -> Any:
     return client.post(
         "/api/v1/scenarios/evaluate",
         json={

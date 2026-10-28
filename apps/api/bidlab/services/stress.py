@@ -83,16 +83,12 @@ def _rivals_payload(h: g.StressHypothesisInput) -> dict[str, Any]:
     }
 
 
-def run_stress(
-    session: Session, scope_id: str, payload: g.StressTestRequest
-) -> dict[str, Any]:
+def run_stress(session: Session, scope_id: str, payload: g.StressTestRequest) -> dict[str, Any]:
     scope = _load_scope(session, scope_id)
     rule_row = _load_rule(
         session, payload.pricing_rule_id.root, payload.pricing_rule_revision, scope_id
     )
-    company = _load_company(
-        session, payload.company_id.root, payload.company_revision, scope_id
-    )
+    company = _load_company(session, payload.company_id.root, payload.company_revision, scope_id)
     basis = scope.basis_json if isinstance(scope.basis_json, dict) else {}
 
     discounts: list[str] = []
@@ -212,9 +208,7 @@ def run_stress(
         by_discount.append(
             {
                 "discount_rate": discount,
-                "worst_score": MO.serialize_12dp(worst_score)
-                if worst_score is not None
-                else None,
+                "worst_score": MO.serialize_12dp(worst_score) if worst_score is not None else None,
                 "worst_profit_net": MO.serialize_money(worst_profit)
                 if worst_profit is not None
                 else None,
@@ -247,8 +241,7 @@ def run_stress(
     warnings: list[str] = []
     for label in sorted(non_comparable_labels):
         warnings.append(
-            f"hypothesis {label!r}: some cells are not comparable"
-            " and never enter the selection"
+            f"hypothesis {label!r}: some cells are not comparable and never enter the selection"
         )
     if anomaly_hits:
         warnings.append(
