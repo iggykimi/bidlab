@@ -75,6 +75,11 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   472. Mergeado e772954 (SHA verificado), gates
   lead en main: backend 472 + E2E 70/70. Crítico
   T01–T11 cerrado. Siguiente: T17-cierre, T20–T21, T19.
+- 28-oct: PKG-T21 listo en worktree t21 (helper, pendiente merge
+  lead): money.cost_ceiling + techo por rebaja en stress
+  (price_net/max_cost_net aditivos) + línea UI con disclaimers;
+  paridad motor 96135.68 OK / 96135.69 rompe solo beneficio
+  (score 47.053997246669 idéntico). (El lead la finalizará.)
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

@@ -264,6 +264,11 @@ export function StressSection({ state }: Props) {
 
   const ready = scope !== null && rule !== null && companyId !== null && companyRevision !== undefined;
   const selection = result?.selection ?? null;
+  // Backend ceiling for the selected rebate: lookup only, no frontend math.
+  const ceilingRow =
+    result && selection
+      ? (result.by_discount.find((r) => r.discount_rate === selection.discount_rate) ?? null)
+      : null;
   // The result freezes its rule/company; a newer revision invalidates it.
   const stale =
     result !== null &&
@@ -490,6 +495,28 @@ export function StressSection({ state }: Props) {
               </p>
             )}
             <p className="mt-1 text-xs text-muted">{result.selection_reason}</p>
+            {ceilingRow !== null &&
+              ceilingRow.price_net !== null &&
+              ceilingRow.max_cost_net !== null && (
+                <div className="mt-2 rounded-lg border border-border p-3">
+                  <p data-testid="stress-cost-ceiling" className="text-sm font-semibold">
+                    Con este precio ({formatEurosExact(ceilingRow.price_net)}) y este mínimo, tu
+                    coste máximo es {formatEurosExact(ceilingRow.max_cost_net)}.
+                  </p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted">
+                    <li>
+                      Válido solo en esta misma base: mismo precio, periodo, impuestos y moneda.
+                    </li>
+                    <li>
+                      No incluye cambios futuros de precio, otros criterios ni elegibilidad legal.
+                    </li>
+                    <li>
+                      No es una probabilidad ni una predicción de rivales: es el coste que agota tu
+                      mínimo.
+                    </li>
+                  </ul>
+                </div>
+              )}
             <p data-testid="stress-computed-at" className="mt-1 text-xs text-muted">
               Calculada el {formatDateTime(result.created_at)}.
             </p>
@@ -520,6 +547,9 @@ export function StressSection({ state }: Props) {
                   <th scope="col" className="py-2 pr-4 font-semibold">
                     Beneficio (peor)
                   </th>
+                  <th scope="col" className="py-2 pr-4 font-semibold">
+                    Tu coste máximo
+                  </th>
                   <th scope="col" className="py-2 font-semibold">
                     Resultado
                   </th>
@@ -538,6 +568,9 @@ export function StressSection({ state }: Props) {
                     </td>
                     <td className="py-2 pr-4">
                       {row.worst_profit_net === null ? "—" : formatEurosExact(row.worst_profit_net)}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {row.max_cost_net === null ? "—" : formatEurosExact(row.max_cost_net)}
                     </td>
                     <td className="py-2">
                       <Badge tone={row.all_feasible ? "live" : "neutral"}>

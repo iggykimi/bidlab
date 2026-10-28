@@ -106,3 +106,27 @@ test("company change marks the grid stale with its timestamp", async ({ page }) 
 
   await restorePristineCompany(page.request);
 });
+
+test("selection shows the cost ceiling with its disclaimers", async ({ page }) => {
+  test.setTimeout(120_000);
+  await installOfflineGuard(page);
+  const section = await openStress(page);
+  await section.getByLabel("Rebaja inicial en tanto por ciento").fill("12");
+  await section.getByLabel("Rebaja final en tanto por ciento").fill("12");
+  await section.getByLabel("Paso de la malla en tanto por ciento").fill("0.5");
+  await section.getByLabel("Tu coste sin impuestos en € (coma o punto)").fill("80000,00");
+  await section.getByLabel("Periodo en meses").fill("24");
+  await section.getByLabel("Rival A · precio sin impuestos en €").fill("106502,40");
+  await section.getByLabel("Rival B · precio sin impuestos en €").fill("112419,20");
+  await section.getByLabel("Puntos por precio mínimos").fill("47");
+  await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("8000");
+  await section.getByTestId("stress-run").click();
+  const ceiling = section.getByTestId("stress-cost-ceiling");
+  await expect(ceiling).toContainText("tu coste máximo es", { timeout: 60_000 });
+  await expect(ceiling).toContainText("96.135,68");
+  await expect(section.getByText("misma base: mismo precio, periodo, impuestos y moneda")).toBeVisible();
+  await expect(
+    section.getByText("No es una probabilidad ni una predicción de rivales")
+  ).toBeVisible();
+  await expect(section.getByRole("columnheader", { name: "Tu coste máximo" })).toBeVisible();
+});
