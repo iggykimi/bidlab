@@ -124,22 +124,23 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 `npm run build`, `npm run test:unit`, `ruff check .`,
 `mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
 
-Estado a 27-oct-2026 (contado en este árbol; detalle y comandos
+Estado a 28-oct-2026 (contado en este árbol; detalle y comandos
 en [verification-log](docs/verification-log.md)):
 
-- Backend: 322 tests (`pytest --collect-only`: 220 unit + 90
-  integración/contratos en puertas de `verify.py` + 11 de revisión
-  propia pendientes de incluir en `verify.py` + 1 live opt-in
-  excluido). Web: 175 en 21 ficheros (`npm run test:unit`, verde).
-  E2E: 50 tests en 16 specs herméticos (`playwright --list`).
-- `verify.py` completo (10/10 puertas): EVIDENCIA-TBD en este árbol.
+- Backend: 333 tests (220 unit + 113 integración/contratos).
+  Web: 202 en 25 ficheros (`npm run test:unit`, verde).
+  E2E: 62 tests en 20 specs herméticos.
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0.
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
 - Alcance: ejemplo revisado (caso oro 10/15: mismos 49 puntos, el 10 %
   conserva 5916,80 € más) + recorrido propio completo offline
   (alta + PDF + empresa + análisis + revisión manual + simular +
-  comparar + exportar). Sin vídeo grabado; sin envío.
+  comparar + exportar) + visita guiada + malla de resistencia.
+  Footage real sin narración
+  ([footage-oro-20261028.webm](docs/demo/footage-oro-20261028.webm));
+  vídeo narrado pendiente; sin envío.
 
 ## Configuración
 

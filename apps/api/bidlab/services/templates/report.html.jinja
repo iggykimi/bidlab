@@ -24,6 +24,7 @@
 <h1>Informe de decisión — {{ report.scenario.context.tender_title }}</h1>
 <p><span class="badge decision">{{ report.decision }}</span></p>
 <p>Escenario <strong>{{ report.scenario.name }}</strong> · {{ report.created_at }}</p>
+{% if report.scenario.input is defined %}<p>Archivado el {{ report.created_at }} · Fórmula {{ report.scenario.input.pricing_rule_id }} rev. {{ report.scenario.input.pricing_rule_revision }} · Empresa rev. {{ report.scenario.input.company_revision }} · Copia {{ report.scenario.snapshot_sha256[:12] }}…</p>{% endif %}
 
 <h2>Resultado</h2>
 <table>

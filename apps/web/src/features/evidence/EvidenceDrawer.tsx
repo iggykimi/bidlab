@@ -12,6 +12,7 @@ import {
 import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
 import { textoEs } from "../../lib/citationNames";
+import { highlight } from "../../lib/motion";
 
 export interface EvidenceTarget {
   citation: Citation;
@@ -68,6 +69,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const exitTimer = useRef<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const quoteRef = useRef<HTMLElement>(null);
   const doc = workspace.documents.find((d) => d.id === citation.document_id) ?? null;
 
   const requestClose = useCallback(() => {
@@ -132,6 +134,12 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
 
   const total = doc?.pages_count ?? null;
   const pageText = pageQuery.data?.raw_text ?? null;
+
+  // Brief highlight once the real page text is on screen (no-op reduced-motion).
+  const pageReady = pageQuery.data !== undefined;
+  useEffect(() => {
+    if (pageReady && quoteRef.current) void highlight(quoteRef.current);
+  }, [pageReady]);
   const duplicate = pageText !== null && normalizado(pageText) === normalizado(citation.verbatim_excerpt);
   const nombreDocumento =
     doc === null
@@ -191,7 +199,11 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
                 ? "Cita y texto de la página (el mismo texto)"
                 : `Cita (${minuscula(textoEs(citation.match_status))})`}
             </dt>
-            <dd className="mt-1 rounded-lg bg-surface p-3" data-testid="evidence-quote">
+            <dd
+              ref={quoteRef}
+              className="mt-1 rounded-lg bg-surface p-3"
+              data-testid="evidence-quote"
+            >
               {citation.verbatim_excerpt}
             </dd>
           </div>

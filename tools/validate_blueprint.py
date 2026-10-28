@@ -13,8 +13,8 @@ def main():
     assert (ROOT/'AGENTS.md').is_file()
     for f in files:assert (ROOT/'docs'/f).is_file(),f
     spec=yaml.safe_load((ROOT/'docs/API_CONTRACT.yaml').read_text());validate_spec(spec)
-    count=sum(len(x) for x in spec['paths'].values());assert count==24
-    print('PASS: 12 required deliverables; OpenAPI 3.1, 22 paths / 24 operations')
+    count=sum(len(x) for x in spec['paths'].values());assert count==29
+    print('PASS: 12 required deliverables; OpenAPI 3.1, 27 paths / 29 operations')
     schema=read('schemas/extraction.schema.json');Draft202012Validator.check_schema(schema)
     Draft202012Validator(schema).validate(read('examples/extraction_proposal.json'))
     wrapper={'$ref':'#/components/schemas/EvaluationRequest','components':spec['components']}

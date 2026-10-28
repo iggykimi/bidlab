@@ -148,6 +148,48 @@ def _rival_offers(data: dict[str, Any]) -> tuple[list[GR.Offer], list[str]]:
     return offers, prices
 
 
+def _reject_crossed_context(
+    scope: models.Scope,
+    rule_row: models.RuleRevision,
+    company: models.CompanyRevision,
+    basis: dict[str, Any],
+) -> None:
+    """Same scope, period and basis: refuse to compute across contexts.
+
+    P0-1: a rule or company from another scope never prices this one.
+    P0-2: a cost with a known period different from the scope's known
+    period never prices it either. Unknown periods stay usable.
+    """
+    if rule_row.scope_id != scope.id:
+        raise ApiError(
+            422,
+            "rule_scope_mismatch",
+            f"rule {rule_row.rule_id} r{rule_row.revision} belongs to scope "
+            f"{rule_row.scope_id}, not {scope.id}",
+        )
+    if company.scope_id != scope.id:
+        raise ApiError(
+            422,
+            "company_scope_mismatch",
+            f"company {company.company_id} r{company.revision} belongs to scope "
+            f"{company.scope_id}, not {scope.id}",
+        )
+    profile = company.profile_json if isinstance(company.profile_json, dict) else {}
+    cost_period = profile.get("period_months")
+    scope_period = basis.get("period_months")
+    if (
+        isinstance(cost_period, int)
+        and isinstance(scope_period, int)
+        and cost_period != scope_period
+    ):
+        raise ApiError(
+            422,
+            "period_mismatch",
+            f"company {company.company_id} r{company.revision} costs {cost_period} months "
+            f"but scope {scope.id} runs {scope_period} months",
+        )
+
+
 def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     data = req.model_dump(mode="json")
     scope = _load_scope(session, str(data["scope_id"]))
@@ -155,6 +197,7 @@ def evaluate(session: Session, req: g.EvaluationRequest) -> dict[str, Any]:
     company = _load_company(session, str(data["company_id"]), int(data["company_revision"]))
     rule = rule_row.rule_json if isinstance(rule_row.rule_json, dict) else {}
     basis = scope.basis_json if isinstance(scope.basis_json, dict) else {}
+    _reject_crossed_context(scope, rule_row, company, basis)
     budget = Decimal(scope.budget_net_cents or 0) / 100
 
     discount = MO.parse_decimal(data["discount_rate"], field="discount_rate")

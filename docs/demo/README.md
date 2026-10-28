@@ -7,7 +7,7 @@ Ayuntamiento de Tías (Lanzarote).
 
 ## Ver en 2 minutos (sin instalar nada)
 
-Capturas regeneradas tras R01–R06 con `scripts/demo-shots`
+Capturas regeneradas el 28-oct-2026 (árbol con tour + malla) con `scripts/demo-shots`
 (base separada de la suite E2E, nombres legibles, UI asentada):
 tuteo, «Datos de ejemplo», comparar desde «Precio».
 
@@ -49,21 +49,21 @@ análisis + revisión manual + simular + comparar + exportar
 - Contratos API: `docs/API_CONTRACT.yaml`
 - Frontend (React, español claro, guía de voz): `apps/web/src/`,
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
-- Tests (contados el 27-oct-2026 en este árbol, ver
+- Tests (contados el 28-oct-2026 en este árbol, ver
   [verification-log](../verification-log.md)):
-  backend 322 (`pytest --collect-only`: 220 unit + 90
-  integración/contratos en puertas + 11 de revisión propia pendientes
-  de incluir en `verify.py` + 1 live opt-in excluido),
-  web 175 en 21 ficheros (`npm run test:unit`),
-  E2E 50 en 16 specs (`playwright --list`, herméticos).
-  Puertas completas en verde el 27-oct (`verify-final.log`).
+  backend 333 (220 unit + 113 integración/contratos),
+  web 202 en 25 ficheros (`npm run test:unit`),
+  E2E 62 en 20 specs (herméticos).
+  Puertas completas en verde el 28-oct
+  (`uv run python scripts/verify.py`, 10/10).
 
 ## Evidencia de calidad
 
 - Puertas locales (sin CI remota, por decisión del autor):
-  `python scripts/verify.py` → 10 puertas (deps, pytest unit,
+  `uv run python scripts/verify.py` → 10 puertas (deps, pytest unit,
   pytest integración+contratos, eslint, tsc, build, vitest, ruff,
-  mypy, Playwright): ALL CHECKS PASSED, exit 0, el 27-oct.
+  mypy, Playwright): ALL CHECKS PASSED, exit 0, el 28-oct
+  (tour + malla + contrato stress incluidos).
 - Log de verificación con evidencia real: [verification-log](../verification-log.md).
 - Auditoría UX externa aplicada: [ux-review](../ux-review.md).
 
@@ -75,7 +75,7 @@ análisis + revisión manual + simular + comparar + exportar
 - Sin Meta en vivo en el frontal (solo smoke backend); empresa y rivales
   sintéticos; sin predicción.
 - Histórico P1 aparcado; móvil solo "no rompe"; sin `LICENSE` aún (T32).
-- Sin vídeo grabado; sin envío (pendiente del autor).
+- Footage real sin narración ([footage-oro-20261028.webm](footage-oro-20261028.webm), flujo oro); vídeo narrado pendiente; sin envío (pendiente del autor).
 
 ## Qué feedback nos sirve
 

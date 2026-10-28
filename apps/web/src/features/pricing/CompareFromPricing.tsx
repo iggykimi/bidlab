@@ -41,11 +41,21 @@ export function CompareFromPricing({ workspace, scopeFilter, sessionReady }: Pro
     );
   }
   return (
-    <CompareSection
-      summaries={scenarioItems}
-      scoreMax={
-        workspace.pricing_rules[0] ? formatMaxPoints(workspace.pricing_rules[0].max_points) : "—"
-      }
-    />
+    <div className="grid gap-2">
+      <CompareSection
+        summaries={scenarioItems}
+        scoreMax={
+          workspace.pricing_rules[0] ? formatMaxPoints(workspace.pricing_rules[0].max_points) : "—"
+        }
+      />
+      <p className="text-sm">
+        <Link
+          to={`/tenders/${workspace.tender.id}?tab=informe`}
+          className="font-semibold text-primary underline hover:text-primary-ink"
+        >
+          Lleva una prueba al informe para decidir
+        </Link>
+      </p>
+    </div>
   );
 }

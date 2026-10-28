@@ -3,6 +3,17 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
+## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
+
+- Tour verificado + TourBar (?tour=1): E2E tour 2/2, runner unit 6/6.
+- Malla E2E 2/2. Contrato stress: 27 paths/29 ops/79 schemas/104
+  códigos, regen YAML/TS/py solo-aditiva, servicio a modelos g.
+- verify.py 10/10 exit 0: backend 333, web 202/25, E2E 62/20.
+- Capturas 01–08 regeneradas + inspeccionadas; footage oro real
+  (docs/demo/footage-oro-20261028.webm); guion actualizado.
+- US01–US13 auditadas en verification-log (12 PASS + US10 parcial
+  visible). T33 sigue in_progress (narración pendiente autor).
+
 ## Revisión R01–R06 (revision_50e07cf, 27-oct; cerrada, sin commit de R07)
 
 - R01: deep link ?prueba= selecciona al inicio; un clic posterior manda

@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion. Sin vídeo grabado. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion. Footage real sin narración: docs/demo/footage-oro-20261028.webm (flujo oro, 28-oct). Vídeo narrado de 180 s pendiente de grabar. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -136,7 +136,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
   frontal (G3 parcial: solo smoke real).
 - Empresa y rivales sintéticos; sin histórico que entrene ningún predictor.
 - Sin probabilidades de ganar ni CTA de «optimizar para ganar».
-- Sin tour guiado ni comparación animada: son propuestas, no existen en la app.
+- La visita guiada existe (?tour=1, fijada por tests/e2e/tour.spec.ts) pero no se usa en la narración; sin comparación animada: es propuesta, no existe en la app.
 - No se muestra instalación, claves ni recuperaciones no medidas.
 
 ## Evidencia por bloque (trazabilidad, no se lee en el vídeo)

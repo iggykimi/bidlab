@@ -306,7 +306,10 @@ export function SummaryTab({ workspace }: Props) {
                   : "Aún no guardas ninguna prueba."}
               </li>
               <li>
-                Decisión: {decisionEs(drafts.report.decision as Decision).toLowerCase()}.
+                Decisión:{" "}
+                {drafts.report.decision === null
+                  ? "aún sin decidir."
+                  : `${decisionEs(drafts.report.decision as Decision).toLowerCase()}.`}
                 {drafts.report.note
                   ? " Tienes una nota que aún no está en ningún informe."
                   : " Sin notas todavía."}

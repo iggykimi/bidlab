@@ -13,7 +13,10 @@
   [data-sonner-toaster],
   [data-testid="evidence-drawer"],
   [data-testid="evidence-scrim"],
-  iframe {
+  iframe,
+  section[aria-label="Escenarios guardados"],
+  section[aria-label="Nuevo informe"],
+  [aria-label="Comparar pruebas"] {
     display: none !important;
   }
 

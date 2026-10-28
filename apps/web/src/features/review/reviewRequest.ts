@@ -67,6 +67,10 @@ export interface ReviewFormInput {
   /** Protocol money ("118336.00") or null when the user left it blank. */
   budgetNet: string | null;
   periodMonths: number | null;
+  /** True = the user confirmed reference equals budget; false = custom. */
+  referenceSame: boolean;
+  /** Protocol money for a custom reference, or null when same as budget. */
+  referenceNet: string | null;
   /** Current scope basis: tax, unit and evidence carry over untouched. */
   existingBasis: PriceBasis;
   templateId: TemplateId;
@@ -79,28 +83,40 @@ export interface ReviewFormInput {
   expectedRevision: number;
   /** Next rule revision (1 for the first review; bump on later ones). */
   ruleRevision: number;
+  /** Live proposal claim keys the user confirmed (empty when none). */
+  approvedClaimKeys: string[];
   reason: string;
 }
 
 /**
- * Form state -> ReviewRequest payload. Claim approvals and requirement
- * trees stay empty: this manual review only approves budget + formula.
- * The anomaly policy carries source_kind "unknown": you typed these
- * values, no citation locates them in the pliego.
+ * Form state -> ReviewRequest payload. Requirement trees stay empty:
+ * this review approves budget + formula + the proposal claims you
+ * ticked. The anomaly policy carries source_kind "unknown": you typed
+ * these values, no citation locates them in the pliego.
  */
 export function buildReviewRequest(input: ReviewFormInput): ReviewRequest {
   const basis = input.existingBasis;
   const ruleId = `${input.tenderId}-rule-1`;
+  // P0-3: the reference is what the user confirmed on screen, never a
+  // silent copy of the budget or of the previous basis.
+  const referenceNet = input.referenceSame ? input.budgetNet : input.referenceNet;
+  const referenceKind = input.referenceSame
+    ? input.budgetNet !== null
+      ? "pbl"
+      : "unknown"
+    : input.referenceNet !== null
+      ? "custom"
+      : "unknown";
   return {
     expected_revision: input.expectedRevision,
-    approved_claim_keys: [],
+    approved_claim_keys: input.approvedClaimKeys,
     requirement_trees: [],
     scope_basis: {
       scope_id: input.scopeId,
       budget_net: input.budgetNet,
       ceiling_net: basis.ceiling_net,
-      scoring_reference_net: basis.scoring_reference_net ?? input.budgetNet,
-      reference_kind: basis.reference_kind !== "unknown" ? basis.reference_kind : input.budgetNet !== null ? "pbl" : "unknown",
+      scoring_reference_net: referenceNet,
+      reference_kind: referenceKind,
       currency: "EUR",
       unit: basis.unit,
       period_months: input.periodMonths,

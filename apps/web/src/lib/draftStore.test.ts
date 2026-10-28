@@ -76,7 +76,7 @@ describe("parseDraftStore", () => {
     const parsed = parseDraftStore(raw);
     expect(parsed.k?.pricing.h.discountPct).toBe(5);
     expect(parsed.k?.pricing.h.noRivals).toBe(false);
-    expect(parsed.k?.report.decision).toBe("study");
+    expect(parsed.k?.report.decision).toBeNull();
     expect(parsed.k?.report.selectedScenario).toBeNull();
   });
 

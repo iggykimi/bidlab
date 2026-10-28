@@ -266,6 +266,12 @@ function ReportDetail({
         Decisión: <strong data-testid="report-decision">{decisionEs(report.decision)}</strong> ·{" "}
         {formatFechaNormal(report.created_at)}
       </p>
+      <p data-testid="report-archive" className="text-muted">
+        Archivado el {formatFechaNormal(report.created_at)} · Fórmula{" "}
+        {report.scenario.input.pricing_rule_id} rev. {report.scenario.input.pricing_rule_revision} ·{" "}
+        Empresa rev. {report.scenario.input.company_revision} · Copia{" "}
+        {report.scenario.snapshot_sha256.slice(0, 12)}…
+      </p>
       <div>
         <h4 className="font-semibold">Tus notas</h4>
         <p className="whitespace-pre-wrap rounded-lg bg-surface p-3" data-testid="report-note">
@@ -319,7 +325,7 @@ export function ReportTab({ workspace }: Props) {
     scopeId: draftSession?.scope_id ?? "none",
     companyId: draftSession?.company_id ?? "none",
   });
-  const decision = drafts.report.decision as Decision;
+  const decision = drafts.report.decision as Decision | null;
   const note = drafts.report.note;
   const linkedScenario = params.get("prueba");
   // R01: ?prueba= is a one-shot deep link. It selects initially (only when
@@ -425,6 +431,10 @@ export function ReportTab({ workspace }: Props) {
       setExportError("Selecciona una prueba guardada antes de crear el informe.");
       return;
     }
+    if (decision === null) {
+      setExportError("Elige qué has decidido antes de crear el informe.");
+      return;
+    }
     const parsed = reportNoteSchema.safeParse(note);
     if (!parsed.success) {
       setExportError(parsed.error.issues[0]?.message ?? "Nota no válida");
@@ -523,9 +533,8 @@ export function ReportTab({ workspace }: Props) {
 
       <section aria-label="Nuevo informe" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Paso 2 · Decide y crea tu informe</h2>
-        <p className="mt-1 text-sm text-muted">
-          Tú decides. El informe recoge tu prueba, de dónde sale cada dato y lo que te falta por
-          comprobar.
+        <p className="mt-1 text-sm text-muted" data-testid="report-draft-state">
+          Borrador (sin archivar). Tú decides: elige una opción, escribe tu nota y crea el informe.
         </p>
         <fieldset className="mt-3">
           <legend className="text-sm font-medium">¿Qué has decidido?</legend>
@@ -593,8 +602,8 @@ export function ReportTab({ workspace }: Props) {
       </section>
 
       {reportsQuery.isError && (
-        <section aria-label="Informes" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Informes</h2>
+        <section aria-label="Informes archivados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold">Informes archivados</h2>
           <p role="alert" className="mt-2 text-sm text-error">
             No pudimos cargar tus informes.
           </p>
@@ -604,8 +613,8 @@ export function ReportTab({ workspace }: Props) {
         </section>
       )}
       {reportItems.length > 0 && (
-        <section aria-label="Informes" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Informes</h2>
+        <section aria-label="Informes archivados" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold">Informes archivados</h2>
           <ul className="mt-2 space-y-2">
             {reportItems.map((entry) => (
               <li key={entry.id}>

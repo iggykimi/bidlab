@@ -21,6 +21,7 @@ test("E12 hostile HTML is inert and missing bytes fail softly", async ({ page })
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__e12pwned)).toBeUndefined();
 
   await page.getByTestId("report-note-input").fill("<script>window.__e12pwned2=1</script>");
+  await page.getByRole("radio", { name: "Seguir estudiándola" }).check();
   await page.getByTestId("export-report").click();
   await expect(page.getByTestId("report-note")).toContainText("<script>window.__e12pwned2=1</script>");
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__e12pwned2)).toBeUndefined();

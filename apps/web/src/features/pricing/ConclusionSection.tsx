@@ -1,6 +1,7 @@
 // Frase de conclusión de la pestaña Precio. Se construye solo con datos
 // reales del resultado y tus hipótesis; sin rivales usa la variante corta.
 
+import { useEffect, useRef } from "react";
 import { Card } from "../../components/ui";
 import {
   discountPercentToRate,
@@ -9,6 +10,7 @@ import {
   formatPoints,
   parsePrecioInput,
 } from "../../lib/format";
+import { commitResult } from "../../lib/motion";
 import type { PricingState } from "./usePricingState";
 
 interface Props {
@@ -34,6 +36,26 @@ function cheapestRival(h: PricingState["h"]): Rival | null {
     if (Number(r.price) < Number(best.price)) best = r;
   }
   return best;
+}
+
+/** Conclusion text: fades only when a new committed result lands. */
+function CommittedConclusion({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const first = useRef(true);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    void commitResult(node, text);
+  }, [text]);
+  return (
+    <p ref={ref} data-testid="conclusion" className="text-lg font-semibold">
+      {text}
+    </p>
+  );
 }
 
 export function ConclusionSection({ state }: Props) {
@@ -110,9 +132,7 @@ export function ConclusionSection({ state }: Props) {
       {resultStale && (
         <p className="mb-1 text-sm text-muted">Cifras del cálculo anterior. Actualizando…</p>
       )}
-      <p data-testid="conclusion" className="text-lg font-semibold">
-        {sentences.join(" ")}
-      </p>
+      <CommittedConclusion text={sentences.join(" ")} />
     </Card>
   );
 }

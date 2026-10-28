@@ -25,6 +25,8 @@ export type MetadataEvidence = components["schemas"]["MetadataEvidence"];
 export type PriceBasis = components["schemas"]["PriceBasis"];
 export type PageText = components["schemas"]["PageText"];
 export type Citation = components["schemas"]["Citation"];
+export type ClaimProposal = components["schemas"]["ClaimProposal"];
+export type CitationProposal = components["schemas"]["CitationProposal"];
 export type RequirementNode = components["schemas"]["RequirementNode"];
 export type RequirementLeaf = components["schemas"]["RequirementLeaf"];
 export type RequirementGroup = components["schemas"]["RequirementGroup"];
@@ -297,6 +299,34 @@ export async function startAnalysis(
 
 export function getJob(jobId: string, signal?: AbortSignal): Promise<Job> {
   return getJson<Job>(`/jobs/${encodeURIComponent(jobId)}`, signal);
+}
+
+// Prueba de resistencia: malla de rebajas contra hipótesis rivales.
+// Tipos del contrato (docs/API_CONTRACT.yaml vía ./generated).
+
+export type StressHypothesisInput = components["schemas"]["StressHypothesisInput"];
+export type StressConstraintsInput = components["schemas"]["StressConstraints"];
+export type StressTestRequest = components["schemas"]["StressTestRequest"];
+export type StressCell = components["schemas"]["StressCell"];
+export type StressByDiscount = components["schemas"]["StressByDiscount"];
+export type StressSelection = components["schemas"]["StressSelection"];
+export type StressTestResult = components["schemas"]["StressTestResult"];
+
+export function runStress(
+  scopeId: string,
+  payload: StressTestRequest,
+  signal?: AbortSignal,
+): Promise<StressTestResult> {
+  return sendJson<StressTestResult>(
+    "POST",
+    `/scopes/${encodeURIComponent(scopeId)}/stress-tests`,
+    payload,
+    { signal },
+  );
+}
+
+export function getStress(stressId: string, signal?: AbortSignal): Promise<StressTestResult> {
+  return getJson<StressTestResult>(`/stress-tests/${encodeURIComponent(stressId)}`, signal);
 }
 
 /** Submit a manual review; the response is the new Workspace revision. */

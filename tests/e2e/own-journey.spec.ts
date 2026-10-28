@@ -115,6 +115,11 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await expect(page.getByTestId("analysis-status")).toContainText("Lista");
   await expect(page.getByText("Sin propuestas automáticas; revisa a mano.")).toBeVisible();
 
+  // P0-4: the analysis moved the revision under the seeded draft.
+  await expect(page.getByTestId("review-stale-base")).toBeVisible();
+  await page.getByTestId("review-rebase").click();
+  await expect(page.getByTestId("review-stale-base")).toHaveCount(0);
+
   // Manual review: budget prefilled from intake, then approve.
   await expect(page.getByTestId("review-budget")).toHaveValue(/50000/);
   await fillReviewForm(page, "49", "Reviso mi pliego a mano.");

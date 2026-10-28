@@ -23,6 +23,7 @@ import { loadSession } from "../../lib/session";
 import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { AnalysisTracker } from "./AnalysisTracker";
+import { ProposalClaims } from "./ProposalClaims";
 import { appendReviewHistory, loadReviewHistory } from "./reviewHistory";
 import {
   ANOMALY_COPY,
@@ -75,16 +76,29 @@ export function ReviewTab({ workspace }: Props) {
   const [, setCompanyTick] = useState(0);
 
   // Seed once from the workspace; edits and 409 refetches never reseed.
+  // Drafts from before baseRevision adopt the current revision silently.
   useEffect(() => {
-    if (draft.baseKey === null && basis !== null) {
+    if (basis === null) return;
+    if (draft.baseKey === null) {
+      const sameReference =
+        basis.scoring_reference_net === null || basis.scoring_reference_net === basis.budget_net;
       updateReview({
         baseKey: tender.id,
+        baseRevision: workspace.interpretation_revision,
         budgetNet: displayMoney(basis.budget_net),
         periodMonths: basis.period_months === null ? "" : String(basis.period_months),
+        referenceSame: sameReference,
+        referenceNet: sameReference ? "" : displayMoney(basis.scoring_reference_net),
       });
+    } else if (draft.baseRevision === null) {
+      updateReview({ baseRevision: workspace.interpretation_revision });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed-once guard via baseKey.
-  }, [draft.baseKey, tender.id]);
+  }, [draft.baseKey, draft.baseRevision, tender.id]);
+  const baseStale =
+    draft.baseKey !== null &&
+    draft.baseRevision !== null &&
+    draft.baseRevision !== workspace.interpretation_revision;
 
   if (!scope || !basis) {
     return (
@@ -117,9 +131,23 @@ export function ReviewTab({ workspace }: Props) {
     pointsProtocol === null || Number(pointsProtocol) <= 0
       ? "Escribe los puntos máximos, como 49."
       : null;
+  // P0-3: the scoring reference is confirmed on screen, never defaulted.
+  const referenceProtocol = draft.referenceSame
+    ? budgetProtocol
+    : draft.referenceNet.trim() === ""
+      ? null
+      : parsePrecioInput(draft.referenceNet.trim());
+  const referenceError =
+    !draft.referenceSame && (referenceProtocol === null || Number(referenceProtocol) <= 0)
+      ? "Escribe el importe de referencia."
+      : null;
   const reasonError = draft.reason.trim() === "" ? "Cuéntanos qué revisaste." : null;
   const valid =
-    budgetError === null && periodError === null && pointsError === null && reasonError === null;
+    budgetError === null &&
+    periodError === null &&
+    referenceError === null &&
+    pointsError === null &&
+    reasonError === null;
 
   function goTab(tab: string) {
     const next = new URLSearchParams(params);
@@ -147,17 +175,21 @@ export function ReviewTab({ workspace }: Props) {
           scopeId: activeScope.id,
           budgetNet: budgetProtocol,
           periodMonths: periodProtocol,
+          referenceSame: draft.referenceSame,
+          referenceNet: draft.referenceSame ? null : referenceProtocol,
           existingBasis: activeBasis,
           templateId,
           maxPoints: pointsProtocol,
           anomalyVariant,
           threeBidderAbsolute25: draft.threeBidder,
           percentageReductionOneThird: draft.oneThird,
-          expectedRevision: workspace.interpretation_revision,
+          expectedRevision: draft.baseRevision ?? workspace.interpretation_revision,
           ruleRevision: nextRuleRevision(workspace.pricing_rules, ruleId),
+          approvedClaimKeys: draft.approvedClaims,
           reason: draft.reason,
         })
       );
+      updateReview({ baseRevision: reviewed.interpretation_revision });
       await queryClient.invalidateQueries({ queryKey: ["workspace", tender.id] });
       appendReviewHistory({
         tenderId: tender.id,
@@ -206,6 +238,18 @@ export function ReviewTab({ workspace }: Props) {
 
       <AnalysisTracker workspace={workspace} />
 
+      <ProposalClaims
+        workspace={workspace}
+        approved={draft.approvedClaims}
+        onToggle={(key, checked) =>
+          updateReview({
+            approvedClaims: checked
+              ? [...draft.approvedClaims, key]
+              : draft.approvedClaims.filter((k) => k !== key),
+          })
+        }
+      />
+
       <Card aria-label="Revisión manual">
         <h2 className="text-lg font-semibold">¿Qué fórmula apruebas?</h2>
         <p className="mt-1 text-sm text-muted">
@@ -224,6 +268,22 @@ export function ReviewTab({ workspace }: Props) {
         {conflict && (
           <Alert tone="warn" className="mt-3" data-testid="review-conflict">
             La revisión avanzó mientras escribías. Tus datos siguen aquí: envía de nuevo.
+          </Alert>
+        )}
+        {baseStale && (
+          <Alert tone="warn" className="mt-3" data-testid="review-stale-base">
+            <p>La revisión avanzó desde que empezaste (base {draft.baseRevision}).</p>
+            <p className="mt-2">
+              <Button
+                variant="secondary"
+                data-testid="review-rebase"
+                onClick={() =>
+                  updateReview({ baseRevision: workspace.interpretation_revision })
+                }
+              >
+                Usar la revisión actual como base
+              </Button>
+            </p>
           </Alert>
         )}
         <form onSubmit={(e) => void handleSubmit(e)} noValidate aria-label="Formulario de revisión" className="mt-4 grid gap-4">
@@ -269,6 +329,60 @@ export function ReviewTab({ workspace }: Props) {
               </p>
             )}
           </div>
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold">
+              ¿Sobre qué importe reparte puntos tu pliego?
+            </legend>
+            <label className="flex items-start gap-2 rounded-lg border border-line p-3 text-sm">
+              <input
+                type="radio"
+                name="review-reference"
+                data-testid="review-reference-same"
+                checked={draft.referenceSame}
+                onChange={() => updateReview({ referenceSame: true })}
+                className="mt-1"
+              />
+              <span>
+                <strong>Sobre el presupuesto.</strong> La fórmula usa tu presupuesto de arriba.
+              </span>
+            </label>
+            <label className="flex items-start gap-2 rounded-lg border border-line p-3 text-sm">
+              <input
+                type="radio"
+                name="review-reference"
+                data-testid="review-reference-custom"
+                checked={!draft.referenceSame}
+                onChange={() => updateReview({ referenceSame: false })}
+                className="mt-1"
+              />
+              <span>
+                <strong>Sobre otro importe.</strong> Tu pliego nombra otra cifra.
+              </span>
+            </label>
+            {!draft.referenceSame && (
+              <div>
+                <label htmlFor="review-reference-net" className="block text-sm font-medium">
+                  Importe de referencia (€)
+                </label>
+                <input
+                  id="review-reference-net"
+                  data-testid="review-reference-net"
+                  type="text"
+                  autoComplete="off"
+                  inputMode={PRECIO_INPUT_MODE}
+                  value={draft.referenceNet}
+                  onChange={(e) => updateReview({ referenceNet: e.target.value })}
+                  aria-invalid={touched && referenceError !== null}
+                  className={INPUT_CLASS}
+                />
+                {touched && referenceError && (
+                  <p role="alert" className="mt-1 text-sm text-error">
+                    {referenceError}
+                  </p>
+                )}
+              </div>
+            )}
+          </fieldset>
           <fieldset className="grid gap-2">
             <legend className="text-sm font-semibold">¿Cómo reparte puntos tu pliego?</legend>
             {TEMPLATE_IDS.map((id) => (

@@ -1755,6 +1755,255 @@ paths:
         schema:
           $ref: '#/components/schemas/EntityId'
         example: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+  /api/v1/scopes/{scope_id}/stress-tests:
+    post:
+      operationId: run_stress_test
+      summary: Run stress mesh
+      description: Declared discount grid by rival hypotheses over the deterministic
+        evaluator with frozen context. Persists an integrity-hashed snapshot; unknown
+        cells never enter the selection and anomaly only warns.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StressTestResult'
+              examples:
+                example:
+                  summary: run_stress_test example
+                  value:
+                    id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+                    scope_id: tias-whole
+                    interpretation_revision: 1
+                    basis_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                    rule:
+                      id: tias-price-r1
+                      revision: 1
+                    company:
+                      id: company-demo
+                      base_revision: 1
+                    tested_candidates: 3
+                    tested_hypotheses: 1
+                    hypotheses_echo:
+                    - label: Base
+                    cells:
+                    - discount_rate: '0.05'
+                      hypothesis_label: Base
+                      price_net: '112419.20'
+                      score: '46.400000000000'
+                      profit_net: '32419.20'
+                      feasible: false
+                      reason: below_limits
+                    - discount_rate: '0.12'
+                      hypothesis_label: Base
+                      price_net: '104135.68'
+                      score: '49.000000000000'
+                      profit_net: '24135.68'
+                      feasible: true
+                      reason: meets_limits
+                    - discount_rate: '0.20'
+                      hypothesis_label: Base
+                      price_net: '94668.80'
+                      score: '49.000000000000'
+                      profit_net: '14668.80'
+                      feasible: true
+                      reason: meets_limits
+                    by_discount:
+                    - discount_rate: '0.05'
+                      worst_score: '46.400000000000'
+                      worst_profit_net: '32419.20'
+                      all_feasible: false
+                      comparable_count: 1
+                    - discount_rate: '0.12'
+                      worst_score: '49.000000000000'
+                      worst_profit_net: '24135.68'
+                      all_feasible: true
+                      comparable_count: 1
+                    - discount_rate: '0.20'
+                      worst_score: '49.000000000000'
+                      worst_profit_net: '14668.80'
+                      all_feasible: true
+                      comparable_count: 1
+                    selection:
+                      discount_rate: '0.12'
+                      worst_profit_net: '24135.68'
+                      worst_score: '49.000000000000'
+                      feasible_count: 2
+                    selection_reason: maximize worst profit among feasible tested
+                      discounts
+                    warnings: []
+                    created_at: '2026-10-26T00:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - stress
+      parameters:
+      - name: scope_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias-whole
+      - $ref: '#/components/parameters/XBidLabClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StressTestRequest'
+            examples:
+              example:
+                summary: run_stress_test example
+                value:
+                  pricing_rule_id: tias-price-r1
+                  pricing_rule_revision: 1
+                  company_id: company-demo
+                  company_revision: 1
+                  candidate_discounts:
+                  - '0.05'
+                  - '0.12'
+                  - '0.20'
+                  hypotheses:
+                  - label: Base
+                    cost_net: '80000.00'
+                    period_months: 24
+                    rival_a_net: '106502.40'
+                    rival_b_net: '112419.20'
+                    rival_set_complete: true
+                    independent_groups_assumed: true
+                  constraints:
+                    min_price_points: '47'
+                    min_profit_net: '8000.00'
+  /api/v1/stress-tests/{stress_id}:
+    get:
+      operationId: get_stress_test
+      summary: Get stress test
+      description: Integrity-checked stress snapshot by id; 404 stress_not_found when
+        absent, 500 snapshot_corrupt on hash mismatch.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StressTestResult'
+              examples:
+                example:
+                  summary: get_stress_test example
+                  value:
+                    id: a1b2c3d4e5f60718293a4b5c6d7e8f90
+                    scope_id: tias-whole
+                    interpretation_revision: 1
+                    basis_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                    rule:
+                      id: tias-price-r1
+                      revision: 1
+                    company:
+                      id: company-demo
+                      base_revision: 1
+                    tested_candidates: 3
+                    tested_hypotheses: 1
+                    hypotheses_echo:
+                    - label: Base
+                    cells:
+                    - discount_rate: '0.05'
+                      hypothesis_label: Base
+                      price_net: '112419.20'
+                      score: '46.400000000000'
+                      profit_net: '32419.20'
+                      feasible: false
+                      reason: below_limits
+                    - discount_rate: '0.12'
+                      hypothesis_label: Base
+                      price_net: '104135.68'
+                      score: '49.000000000000'
+                      profit_net: '24135.68'
+                      feasible: true
+                      reason: meets_limits
+                    - discount_rate: '0.20'
+                      hypothesis_label: Base
+                      price_net: '94668.80'
+                      score: '49.000000000000'
+                      profit_net: '14668.80'
+                      feasible: true
+                      reason: meets_limits
+                    by_discount:
+                    - discount_rate: '0.05'
+                      worst_score: '46.400000000000'
+                      worst_profit_net: '32419.20'
+                      all_feasible: false
+                      comparable_count: 1
+                    - discount_rate: '0.12'
+                      worst_score: '49.000000000000'
+                      worst_profit_net: '24135.68'
+                      all_feasible: true
+                      comparable_count: 1
+                    - discount_rate: '0.20'
+                      worst_score: '49.000000000000'
+                      worst_profit_net: '14668.80'
+                      all_feasible: true
+                      comparable_count: 1
+                    selection:
+                      discount_rate: '0.12'
+                      worst_profit_net: '24135.68'
+                      worst_score: '49.000000000000'
+                      feasible_count: 2
+                    selection_reason: maximize worst profit among feasible tested
+                      discounts
+                    warnings: []
+                    created_at: '2026-10-26T00:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - stress
+      parameters:
+      - name: stress_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: a1b2c3d4e5f60718293a4b5c6d7e8f90
 components:
   schemas:
     EntityId:
@@ -1839,6 +2088,7 @@ components:
       - pdf_too_large
       - pdf_too_many_pages
       - pdf_unreadable
+      - period_mismatch
       - price_not_positive
       - provider_failure
       - provider_not_configured
@@ -1861,6 +2111,9 @@ components:
       - scope_without_budget
       - snapshot_corrupt
       - stale_revision
+      - stress_constraints_invalid
+      - stress_cost_invalid
+      - stress_not_found
       - tender_not_found
       - too_many_nodes
       - too_many_ops
@@ -4238,6 +4491,271 @@ components:
       - entries
       - deltas
       - warnings
+      additionalProperties: false
+    PeriodMonths:
+      type: integer
+      minimum: 1
+    StressHypothesisInput:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        cost_net:
+          $ref: '#/components/schemas/Money'
+        period_months:
+          $ref: '#/components/schemas/PeriodMonths'
+        rival_a_net:
+          $ref: '#/components/schemas/Money'
+        rival_b_net:
+          $ref: '#/components/schemas/Money'
+        rival_set_complete:
+          type: boolean
+        independent_groups_assumed:
+          type: boolean
+      required:
+      - label
+      - cost_net
+      - period_months
+      - rival_a_net
+      - rival_b_net
+      - rival_set_complete
+      - independent_groups_assumed
+      additionalProperties: false
+    StressConstraints:
+      type: object
+      properties:
+        min_price_points:
+          $ref: '#/components/schemas/Decimal'
+        min_profit_net:
+          $ref: '#/components/schemas/Money'
+      required:
+      - min_price_points
+      - min_profit_net
+      additionalProperties: false
+    StressTestRequest:
+      type: object
+      properties:
+        pricing_rule_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_rule_revision:
+          type: integer
+          minimum: 1
+        company_id:
+          $ref: '#/components/schemas/EntityId'
+        company_revision:
+          type: integer
+          minimum: 1
+        candidate_discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Decimal'
+          minItems: 1
+          maxItems: 81
+        hypotheses:
+          type: array
+          items:
+            $ref: '#/components/schemas/StressHypothesisInput'
+          minItems: 1
+          maxItems: 9
+        constraints:
+          $ref: '#/components/schemas/StressConstraints'
+      required:
+      - pricing_rule_id
+      - pricing_rule_revision
+      - company_id
+      - company_revision
+      - candidate_discounts
+      - hypotheses
+      - constraints
+      additionalProperties: false
+    StressCell:
+      type: object
+      properties:
+        discount_rate:
+          $ref: '#/components/schemas/Decimal'
+        hypothesis_label:
+          type: string
+          minLength: 1
+          maxLength: 80
+        price_net:
+          anyOf:
+          - $ref: '#/components/schemas/Money'
+          - type: 'null'
+        score:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        profit_net:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        feasible:
+          type: boolean
+        reason:
+          type: string
+          maxLength: 80
+      required:
+      - discount_rate
+      - hypothesis_label
+      - price_net
+      - score
+      - profit_net
+      - feasible
+      - reason
+      additionalProperties: false
+    StressByDiscount:
+      type: object
+      properties:
+        discount_rate:
+          $ref: '#/components/schemas/Decimal'
+        worst_score:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        worst_profit_net:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        all_feasible:
+          type: boolean
+        comparable_count:
+          type: integer
+          minimum: 0
+      required:
+      - discount_rate
+      - worst_score
+      - worst_profit_net
+      - all_feasible
+      - comparable_count
+      additionalProperties: false
+    StressSelection:
+      type: object
+      properties:
+        discount_rate:
+          $ref: '#/components/schemas/Decimal'
+        worst_profit_net:
+          $ref: '#/components/schemas/Decimal'
+        worst_score:
+          $ref: '#/components/schemas/Decimal'
+        feasible_count:
+          type: integer
+          minimum: 1
+      required:
+      - discount_rate
+      - worst_profit_net
+      - worst_score
+      - feasible_count
+      additionalProperties: false
+    StressRuleRef:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityId'
+        revision:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - revision
+      additionalProperties: false
+    StressCompanyRef:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityId'
+        base_revision:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - base_revision
+      additionalProperties: false
+    StressHypothesisEcho:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 80
+      required:
+      - label
+      additionalProperties: false
+    StressTestResult:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityId'
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        interpretation_revision:
+          type: integer
+          minimum: 1
+        basis_sha256:
+          type: string
+          maxLength: 64
+        rule:
+          $ref: '#/components/schemas/StressRuleRef'
+        company:
+          $ref: '#/components/schemas/StressCompanyRef'
+        tested_candidates:
+          type: integer
+          minimum: 1
+        tested_hypotheses:
+          type: integer
+          minimum: 1
+        hypotheses_echo:
+          type: array
+          items:
+            $ref: '#/components/schemas/StressHypothesisEcho'
+          minItems: 1
+          maxItems: 9
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/StressCell'
+          minItems: 1
+          maxItems: 729
+        by_discount:
+          type: array
+          items:
+            $ref: '#/components/schemas/StressByDiscount'
+          minItems: 1
+          maxItems: 81
+        selection:
+          anyOf:
+          - $ref: '#/components/schemas/StressSelection'
+          - type: 'null'
+        selection_reason:
+          type: string
+          maxLength: 2000
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 30
+        created_at:
+          type: string
+          maxLength: 80
+      required:
+      - id
+      - scope_id
+      - interpretation_revision
+      - basis_sha256
+      - rule
+      - company
+      - tested_candidates
+      - tested_hypotheses
+      - hypotheses_echo
+      - cells
+      - by_discount
+      - selection
+      - selection_reason
+      - warnings
+      - created_at
       additionalProperties: false
   parameters:
     XBidLabClient:

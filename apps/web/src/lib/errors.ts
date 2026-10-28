@@ -28,7 +28,11 @@ export const ERROR_ES: Record<string, string> = {
   rule_revision_conflict: "Otra revisión se te adelantó. Recarga la licitación e inténtalo de nuevo.",
   basis_budget_invalid: "El presupuesto debe ser mayor que cero. Corrige el valor.",
   rule_expression_invalid: "La fórmula no es válida. Elige otra e inténtalo de nuevo.",
-  rule_scope_mismatch: "El ámbito no es de esta licitación. Recarga la página.",
+  rule_scope_mismatch: "Esa fórmula es de otra licitación. No mezclamos contextos: vuelve a la biblioteca y abre cada licitación por separado.",
+  company_scope_mismatch:
+    "Esa empresa es de otra licitación. No mezclamos contextos: crea tu empresa dentro de esta licitación.",
+  period_mismatch:
+    "El coste cubre unos meses distintos de los del contrato. Ajusta el periodo de tu empresa o del presupuesto.",
   invalid_response: "La aplicación devolvió una respuesta inesperada. Vuelve a intentarlo en unos segundos.",
 };
 

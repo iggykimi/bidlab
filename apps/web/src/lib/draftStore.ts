@@ -31,7 +31,8 @@ export interface PricingDraft {
 }
 
 export interface ReportDraft {
-  decision: string;
+  /** The user must choose; null means undecided (no pre-filled decision). */
+  decision: string | null;
   note: string;
   selectedScenario: string | null;
 }
@@ -48,14 +49,21 @@ export interface CompanyDraft {
 export interface ReviewDraft {
   /** Tender id this draft was seeded from; null until then. Never reseeds. */
   baseKey: string | null;
+  /** Interpretation revision this draft was seeded from; null until then. */
+  baseRevision: number | null;
   budgetNet: string;
   periodMonths: string;
+  /** True = reference equals the budget (explicit); false = custom amount. */
+  referenceSame: boolean;
+  referenceNet: string;
   templateId: string;
   maxPoints: string;
   anomalyVariant: string;
   threeBidder: boolean;
   oneThird: boolean;
   reason: string;
+  /** Live proposal claim keys the user confirmed; never pre-filled. */
+  approvedClaims: string[];
 }
 
 export interface ContextDrafts {
@@ -70,7 +78,7 @@ export function defaultPricingDraft(): PricingDraft {
 }
 
 export function defaultReportDraft(): ReportDraft {
-  return { decision: "study", note: "", selectedScenario: null };
+  return { decision: null, note: "", selectedScenario: null };
 }
 
 export function defaultCompanyDraft(): CompanyDraft {
@@ -80,14 +88,18 @@ export function defaultCompanyDraft(): CompanyDraft {
 export function defaultReviewDraft(): ReviewDraft {
   return {
     baseKey: null,
+    baseRevision: null,
     budgetNet: "",
     periodMonths: "",
+    referenceSame: true,
+    referenceNet: "",
     templateId: "proportional_inverse",
     maxPoints: "",
     anomalyVariant: "unsupported",
     threeBidder: false,
     oneThird: false,
     reason: "",
+    approvedClaims: [],
   };
 }
 
@@ -219,10 +231,14 @@ function sanitizeReviewDraft(value: unknown): ReviewDraft {
   const baseKey = shortText(raw.baseKey, MAX_SHORT);
   const templateId = shortText(raw.templateId, 32);
   const anomalyVariant = shortText(raw.anomalyVariant, 32);
+  const base = finiteNumber(raw.baseRevision);
   return {
     baseKey: baseKey && baseKey.length > 0 ? baseKey : null,
+    baseRevision: base !== null && Number.isInteger(base) && base >= 0 ? base : null,
     budgetNet: shortText(raw.budgetNet, MAX_PRICE) ?? "",
     periodMonths: shortText(raw.periodMonths, 16) ?? "",
+    referenceSame: flag(raw.referenceSame, true),
+    referenceNet: shortText(raw.referenceNet, MAX_PRICE) ?? "",
     templateId: templateId !== null && TEMPLATE_IDS.has(templateId) ? templateId : "proportional_inverse",
     maxPoints: shortText(raw.maxPoints, MAX_PRICE) ?? "",
     anomalyVariant:
@@ -230,6 +246,12 @@ function sanitizeReviewDraft(value: unknown): ReviewDraft {
     threeBidder: flag(raw.threeBidder, false),
     oneThird: flag(raw.oneThird, false),
     reason: shortText(raw.reason, 2000) ?? "",
+    approvedClaims: Array.isArray(raw.approvedClaims)
+      ? raw.approvedClaims
+          .slice(0, 80)
+          .map((k) => shortText(k, 80))
+          .filter((k): k is string => k !== null && k.length > 0)
+      : [],
   };
 }
 
@@ -252,7 +274,7 @@ function sanitizeDrafts(value: unknown): ContextDrafts {
       savedCopy: sanitizeSavedCopy(pricing.savedCopy),
     },
     report: {
-      decision: decision !== null && DECISIONS.has(decision) ? decision : "study",
+      decision: decision !== null && DECISIONS.has(decision) ? decision : null,
       note: shortText(report.note, MAX_NOTE) ?? "",
       selectedScenario: selected && selected.length > 0 ? selected : null,
     },

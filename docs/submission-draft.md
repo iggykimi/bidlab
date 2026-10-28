@@ -31,6 +31,8 @@ BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,33
 - Saves immutable scenarios (64-hex snapshot hash, survives reload). Compares 2–3 scenarios side by side with backend Decimal deltas (price, profit, points, cost per point) and plain-language trade-off/dominance verdicts.
 - Own-tender intake: manual tender creation plus PDF upload (validated, stored locally); company cost editing with revision-conflict handling.
 - Exports an HTML report with decision, note, pendings, hypotheses, sources, and rule ids. User note HTML is escaped. The export contains no secrets.
+- Guided tour (`?tour=1`): four real-DOM verified steps (load demo, 15 % rebate, save proof, draft decision); stops honestly at the first unverified step. Pinned by `tests/e2e/tour.spec.ts`.
+- Stress mesh: declared discount grid × rival hypotheses over the deterministic engine with frozen context; unknown cells never selected, anomaly only warns. Contracted (`/stress-tests`) and pinned by `tests/e2e/stress.spec.ts`.
 
 ## Meta models usage (only what really ran)
 
@@ -41,9 +43,9 @@ BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,33
 
 ## Verification (real runs, Windows)
 
-- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 27-oct-2026 (deps, pytest-unit, pytest-integration-contracts, lint, typecheck, build, test-unit, ruff, mypy, playwright-e2e).
-- Backend: 310 tests passing (220 unit + 90 integration/contracts), exit 0, observed 27-oct. Web: 146 unit tests passing (18 files, vitest exit 0, observed 27-oct). Ruff, mypy (44 files), tsc, eslint and vite build clean, observed 27-oct.
-- Playwright E2E: 39/39 green twice in a row (hermetic per-run storage), observed 27-oct. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 28-oct-2026 (deps, pytest-unit, pytest-integration-contracts, lint, typecheck, build, test-unit, ruff, mypy, playwright-e2e).
+- Backend: 333 tests passing (220 unit + 113 integration/contracts), exit 0, observed 28-oct. Web: 202 unit tests passing (25 files, vitest exit 0, observed 28-oct). Ruff, mypy, tsc, eslint and vite build clean, observed 28-oct.
+- Playwright E2E: 62/62 green (hermetic per-run storage), observed 28-oct. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2; final push pending confirmation (single push, CI-minutes budget).
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
@@ -56,7 +58,8 @@ BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,33
 | C02 | 10 % vs 15 %: same 49 points, 5,916.80 EUR profit gap | OBSERVED | `test_compare.py` golden + `compare.spec.ts` CMP-02 |
 | C03 | Minimal real Meta inference on record | OBSERVED (minimal) | `evidence/meta_smoke_status.json`, 2026-10-26T19:05:43Z |
 | C04 | Document → Meta extraction → reviewed rule → simulator, end to end in UI | NOT VERIFIED | Demo uses curated seed; live button reports E09 |
-| C05 | Guided tour and animated comparison in app | PROPOSED | Not implemented; do not script or claim |
+| C05 | Guided tour in app (?tour=1, verified steps) | OBSERVED | `tests/e2e/tour.spec.ts` + `apps/web/src/tour/` |
+| C10 | Animated comparison in app | PROPOSED | Not implemented; do not script or claim (repo-side id, 28-oct; not in UX CLAIMS.json) |
 | C06 | Work survives navigation and reload | OBSERVED | E07 + UX-01/UX-02 (drafts) + cost draft |
 | C07 | Commercial superiority or exclusive feature | NOT CLAIMED | No comparative test exists |
 | C08 | Win probability or optimal bid across all criteria | NOT CLAIMED | Engine covers price only; no predictor |
@@ -69,12 +72,12 @@ BidLab turns the real Spanish tender PAI Tías 2026/00006554N (net budget 118,33
 - Rule engine covers proportional-inverse + reviewed DSL templates only. Unsupported formulas yield score unknown.
 - "Nueva licitación" creates own tenders and stores PDFs (`intake.spec.ts`); one-click extraction-review from an upload is not wired yet.
 - Original PDFs are research copies, not redistributed (publication-manifest flags). The report embeds citations and links, not full private documents.
-- No video recorded yet. Duration, language, and format per official rules (NC).
+- Unnarrated real footage recorded 28-oct (`docs/demo/footage-oro-20261028.webm`, gold flow). Narrated ≤180 s video pending author. Duration, language, and format per official rules (NC).
 
 ## Links
 
 - Repo: https://github.com/iggykimi/bidlab (public, main).
-- Demo video (≤180 s target): NC (record from `docs/demo-script-180s.md` after author review).
+- Demo video (≤180 s target): NC (narrate over `docs/demo/footage-oro-20261028.webm` or re-record from `docs/demo-script-180s.md` after author review).
 - Live demo URL: NC — local-only app; no localhost URL presented as public.
 - Report sample: generated locally via Export (see E08), not hosted.
 - Submission portal: NC — no form URL invented; the author maps these fields to the real form.

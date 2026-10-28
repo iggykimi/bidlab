@@ -1,5 +1,5 @@
 # Demo de tres minutos y entrega
-La restricción de180segundos/repo público viene del dossier y se mantiene conservadoramente; cotejar bases aceptadas antes de enviar. La aplicación existe y corre offline; no hay vídeo grabado. Guion vigente: docs/demo-script-180s.md (R07, caso oro 10/15); runbook: docs/demo-runbook.md.
+La restricción de180segundos/repo público viene del dossier y se mantiene conservadoramente; cotejar bases aceptadas antes de enviar. La aplicación existe y corre offline; hay footage real sin narración (docs/demo/footage-oro-20261028.webm, 28-oct) y el vídeo narrado está pendiente. Guion vigente: docs/demo-script-180s.md (R07, caso oro 10/15); runbook: docs/demo-runbook.md.
 
 ## Escena y datos
 Caso real: PAI Tías2026/00006554N. PCAP original descargado,41páginas; presupuesto neto118336, bruto126619.52IGIC,49puntos precio. Citas: solvencia técnica p.6, fórmula p.10, anormalidad p.20. Perfil y costes90000 sintéticos («Pyme de ejemplo»: 80000+10000), rivalesA106502.40 yB110052.48 hipótesis.
@@ -32,7 +32,7 @@ No dedicar un minuto a instalación ni leer tablas enteras. Puede grabarse voz i
 4. Abrir1280×720, zoom100%; tras Cargar ejemplo, clic en Precio y comprobar que «Escribe tu rebaja (%)» cabe sin scroll (R06).
 5. Ensayo con E2Eycronómetro; exportar informe y comparar con fixtures/demo/expected.json (5/15/30%; caso10% fijado por CMP-02+R06+backend).
 6. Repetir desde limpio dos veces, incluyendouna ejecución sin Internet (vaciar localStorage: bidlab.session.v1, bidlab.drafts.v2). Guardar logs reales y captura de escritorio/móvil; commit solo con autorización.
-7. Grabar≤180s; no mostrar .env, claves, datos privados o ventanas de facturación. Verificar audio legible y vídeo exportado completo. Sin vídeo grabado a27-oct.
+7. Grabar≤180s; no mostrar .env, claves, datos privados o ventanas de facturación. Verificar audio legible y vídeo exportado completo. Footage real sin narración grabado el 28-oct; vídeo narrado pendiente.
 8. Mantener una grabación de respaldo y copia local de inputs; subir solo tras revisión del autor y permiso del portal de entrega.
 
 scripts/demo.py existe y es el arranque oficial de la demo. Las sondas tools/ son investigación congelada y se distinguen de ese arranque.

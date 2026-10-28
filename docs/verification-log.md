@@ -452,3 +452,82 @@ Puertas ejecutadas en este árbol (27-oct, `verify-final.log`):
   revisión manual sin análisis abre revisión 1 (backend).
 
 Candidatura NO enviada (pendiente autor).
+
+## Sesión 28-oct — tour + malla + contrato stress (Windows)
+
+Fecha: 2026-10-28. Commit base: e701fd5; árbol con 54 entradas sin
+commit ni push (pendiente autor). Entorno: Windows, Python 3.14.7
+(venv), datamodel-code-generator 0.86.0, openapi-typescript 7.13.0,
+Chromium Playwright.
+
+`uv run python scripts/verify.py` → ALL CHECKS PASSED, exit 0 (10/10):
+deps, pytest unit (220), pytest integración+contratos (113), eslint,
+tsc, build, vitest (202 en 25 ficheros), ruff, mypy, Playwright (62
+en 20 specs: tour 2/2, malla 2/2, own-journey 3/3, CMP-02 oro 10/15,
+E12, report-archive 4/4).
+Nota harness: el run completo imprimió ALL CHECKS PASSED pero el
+wrapper reportó exit 1 por artefacto PowerShell 5.1 (stderr→ErrorRecord
+contamina $?); re-run `--skip-e2e` dio exit 0 explícito y el E2E dio
+`62 passed` + `playwright-e2e: exit 0` en el mismo árbol.
+
+Correcciones con causa raíz (fallos heredados, no ocultados):
+- Plantilla informe: línea «Archivado» exigía scenario.input (2 tests)
+  → render condicional; «Empresa {id} rev.» unificado con pantalla.
+- Contrato: rutas stress fuera del contrato (1 test) → 11 esquemas +
+  2 ops + 4 códigos en tools/build_contract.py (27 paths/29 ops/79
+  schemas/104 códigos); regen YAML (+518), generated.py (+168),
+  generated.ts; rutas al patrón; servicio a modelos g; cliente TS
+  a alias generados. Solo adiciones en los tres regenerados.
+- E12: spec anterior al requisito de decisión → marca decisión
+  antes de exportar (mismas aserciones de seguridad).
+- report-archive: «Empresa rev. 1» absoluto frágil en almacenamiento
+  compartido → consistencia pantalla/HTML con rev extraída.
+- Lint: import sin usar en p0-context.spec.ts.
+
+Tour verificado + TourBar (?tour=1, 4 pasos DOM reales, E2E 2/2) y
+malla E2E 2/2. Fallos propios hallados por E2E y corregidos: assert
+de precio exacto, espera de estado en perform, setter nativo para
+inputs React, NBSP en regex.
+
+Capturas docs/demo/01–08 regeneradas (scripts/demo-shots, exit 0) e
+inspeccionadas 01/02/06/08: sin barra, sin restos de test, móvil
+sin roturas, oro 10 % legible.
+Footage real sin narración: docs/demo/footage-oro-20261028.webm
+(1.356.313 bytes, EBML ok, scripts/demo-video exit 0). Vídeo
+narrado de 180 s pendiente (autor). Guion actualizado.
+
+US01–US13 re-verificadas 28-oct (mapeo original en entradas T):
+
+| US | Evidencia 28-oct | Estado |
+|---|---|---|
+| US01 | E01/E09 + 01-resumen | PASS |
+| US02 | E02 p.6 + citas | PASS |
+| US03 | OR requisitos + E2E | PASS |
+| US04 | E03–E06 + CMP-02 | PASS |
+| US05 | E04 + T23 unknown | PASS |
+| US06 | Oráculos 30 % + avisos | PASS |
+| US07 | T24 trazas backend | PASS |
+| US08 | e07-e08 + drafts + R01–R04 | PASS |
+| US09 | report-archive 4/4 + plantilla | PASS |
+| US10 | smoke real + jobs; live frontal ausente (*) | PARTIAL |
+| US11 | límites PDF + E12 bytes | PASS |
+| US12 | history off + sin predictor | PASS |
+| US13 | E12 + offline guards + intake | PASS |
+
+(*) US10: adapter + jobs + smoke Meta real probados; sin extracción
+en vivo en el frontal, declarado en guion/runbook. Bloqueo visible,
+no éxito simulado.
+
+DoD P0 (PRD): 12 PASS + US10 parcial-visible; G3 smoke real;
+UI/API/export sin discrepancia (conformance + report-archive);
+oráculos verdes incl. stress A/B; build + Chromium verdes;
+instalación vía README + deps-python; ensayo 180 s con footage
+real, narración pendiente autor.
+
+Segundo run completo 28-oct: `uv run python scripts/verify.py`
+exit 0 explícito, 62/62 E2E (dos ensayos verdes en el mismo árbol).
+Footage probado con ffprobe: VP9 800×450, 15,12 s, 1.356.313 bytes;
+fotogramas t=3 s (Resumen Tías) y t=11 s (Precio «Demo 15»,
+100.585,60 €, 49 puntos) inspeccionados: app real, sin defectos.
+
+Candidatura NO enviada (pendiente autor). Sin commit/push.

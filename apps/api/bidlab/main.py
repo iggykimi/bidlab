@@ -17,6 +17,7 @@ from bidlab.api import (
     reports,
     review,
     scenarios,
+    stress,
     tenders,
 )
 from bidlab.api.errors import new_request_id, register_handlers
@@ -68,5 +69,6 @@ app.include_router(reports.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(review.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
+app.include_router(stress.router, prefix="/api/v1")
 
 # TODO(T19): serve apps/web/dist from / when built.

@@ -58,6 +58,8 @@ describe("buildReviewRequest", () => {
       scopeId: "t1-whole",
       budgetNet: "100000.00",
       periodMonths: 12,
+      referenceSame: true,
+      referenceNet: null,
       existingBasis: makeBasis(),
       templateId: "proportional_inverse",
       maxPoints: "49",
@@ -66,6 +68,7 @@ describe("buildReviewRequest", () => {
       percentageReductionOneThird: false,
       expectedRevision: 2,
       ruleRevision: 1,
+      approvedClaimKeys: [],
       reason: "  Revisado contra el pliego  ",
     });
     expect(payload.expected_revision).toBe(2);
@@ -108,6 +111,8 @@ describe("buildReviewRequest", () => {
       scopeId: "t1-whole",
       budgetNet: null,
       periodMonths: null,
+      referenceSame: true,
+      referenceNet: null,
       existingBasis: basis,
       templateId: "log_ratio",
       maxPoints: "10",
@@ -116,6 +121,7 @@ describe("buildReviewRequest", () => {
       percentageReductionOneThird: false,
       expectedRevision: 0,
       ruleRevision: 3,
+      approvedClaimKeys: [],
       reason: "Sin presupuesto conocido",
     });
     expect(payload.scope_basis?.tax_kind).toBe("VAT");
@@ -125,6 +131,78 @@ describe("buildReviewRequest", () => {
     expect(payload.pricing_rule?.template_id).toBe("log_ratio");
     expect(payload.pricing_rule?.anomaly_policy.variant).toBe("unsupported");
     expect(payload.pricing_rule?.revision).toBe(3);
+  });
+
+  it("P0-3: same-as-budget reference is confirmed, never defaulted", () => {
+    const basis = { ...makeBasis(), scoring_reference_net: "90000.00", reference_kind: "custom" as const };
+    const payload = buildReviewRequest({
+      tenderId: "t1",
+      scopeId: "t1-whole",
+      budgetNet: "100000.00",
+      periodMonths: 12,
+      referenceSame: true,
+      referenceNet: null,
+      existingBasis: basis,
+      templateId: "linear_discount",
+      maxPoints: "49",
+      anomalyVariant: "unsupported",
+      threeBidderAbsolute25: false,
+      percentageReductionOneThird: false,
+      expectedRevision: 0,
+      ruleRevision: 1,
+      approvedClaimKeys: [],
+      reason: "Confirmo referencia",
+    });
+    expect(payload.scope_basis?.scoring_reference_net).toBe("100000.00");
+    expect(payload.scope_basis?.reference_kind).toBe("pbl");
+  });
+
+  it("P0-3: custom reference flows with custom kind", () => {
+    const payload = buildReviewRequest({
+      tenderId: "t1",
+      scopeId: "t1-whole",
+      budgetNet: "100000.00",
+      periodMonths: 12,
+      referenceSame: false,
+      referenceNet: "110000.00",
+      existingBasis: makeBasis(),
+      templateId: "linear_discount",
+      maxPoints: "49",
+      anomalyVariant: "unsupported",
+      threeBidderAbsolute25: false,
+      percentageReductionOneThird: false,
+      expectedRevision: 0,
+      ruleRevision: 1,
+      approvedClaimKeys: [],
+      reason: "Referencia aparte",
+    });
+    expect(payload.scope_basis?.scoring_reference_net).toBe("110000.00");
+    expect(payload.scope_basis?.reference_kind).toBe("custom");
+  });
+
+  it("flows the user-confirmed claim keys, defaulting to none", () => {
+    const base = {
+      tenderId: "t1",
+      scopeId: "t1-whole",
+      budgetNet: "100000.00",
+      periodMonths: 12,
+      referenceSame: true,
+      referenceNet: null,
+      existingBasis: makeBasis(),
+      templateId: "proportional_inverse" as const,
+      maxPoints: "49",
+      anomalyVariant: "unsupported" as const,
+      threeBidderAbsolute25: false,
+      percentageReductionOneThird: false,
+      expectedRevision: 0,
+      ruleRevision: 1,
+      reason: "Claves",
+    };
+    expect(buildReviewRequest({ ...base, approvedClaimKeys: [] }).approved_claim_keys).toEqual([]);
+    expect(
+      buildReviewRequest({ ...base, approvedClaimKeys: ["presupuesto_base_licitacion"] })
+        .approved_claim_keys
+    ).toEqual(["presupuesto_base_licitacion"]);
   });
 });
 

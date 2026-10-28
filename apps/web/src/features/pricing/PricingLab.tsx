@@ -8,6 +8,7 @@ import { EvidenceDrawer } from "../evidence/EvidenceDrawer";
 import { isOwnTender } from "../review/ownTender";
 import { CompareFromPricing } from "./CompareFromPricing";
 import { ConclusionSection } from "./ConclusionSection";
+import { StressSection } from "./StressSection";
 import { CalculationSection, CurveSection } from "./CurveSection";
 import { DiscountSection, GroupReferencesSection, HypothesesForm } from "./HypothesesForm";
 import { KpiSection } from "./KpiSection";
@@ -48,6 +49,26 @@ export function PricingLab({ workspace }: Props) {
       <p role="status" className="rounded-xl bg-white p-4 shadow-sm">
         Carga el ejemplo desde la biblioteca para simular con la empresa de ejemplo.
       </p>
+    );
+  }
+  if (scope && session.scope_id !== scope.id) {
+    // P0-1: never price this scope with another context's company.
+    return (
+      <section aria-label="Precio bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold">¿Por qué no puedes simular?</h2>
+        <p className="mt-2 text-sm">
+          Tu sesión apunta a otra licitación. No mezclamos contextos: vuelve a la biblioteca y
+          abre esta licitación de nuevo.
+        </p>
+        <p className="mt-3 text-sm">
+          <Link
+            to="/"
+            className="font-semibold text-primary underline hover:text-primary-ink"
+          >
+            Volver a la biblioteca
+          </Link>
+        </p>
+      </section>
     );
   }
   if (!scope || !rule || rule.review_status !== "approved") {
@@ -108,6 +129,7 @@ export function PricingLab({ workspace }: Props) {
         scopeFilter={session?.scope_id ?? undefined}
         sessionReady={session !== null}
       />
+      <StressSection state={state} />
       <CostEditor
         companyId={companyId}
         tenderId={workspace.tender.id}

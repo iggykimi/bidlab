@@ -512,6 +512,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scopes/{scope_id}/stress-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run stress mesh
+         * @description Declared discount grid by rival hypotheses over the deterministic evaluator with frozen context. Persists an integrity-hashed snapshot; unknown cells never enter the selection and anomaly only warns.
+         */
+        post: operations["run_stress_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stress-tests/{stress_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get stress test
+         * @description Integrity-checked stress snapshot by id; 404 stress_not_found when absent, 500 snapshot_corrupt on hash mismatch.
+         */
+        get: operations["get_stress_test"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -526,7 +566,7 @@ export interface components {
          * @description Machine-readable failure code; the frontend maps known codes to Spanish copy.
          * @enum {string}
          */
-        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_not_pdf" | "upload_too_large" | "validation_error";
+        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "period_mismatch" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "stress_constraints_invalid" | "stress_cost_invalid" | "stress_not_found" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_not_pdf" | "upload_too_large" | "validation_error";
         Error: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -1129,6 +1169,79 @@ export interface components {
             entries: components["schemas"]["CompareEntry"][];
             deltas: components["schemas"]["CompareDelta"][];
             warnings: string[];
+        };
+        PeriodMonths: number;
+        StressHypothesisInput: {
+            label: string;
+            cost_net: components["schemas"]["Money"];
+            period_months: components["schemas"]["PeriodMonths"];
+            rival_a_net: components["schemas"]["Money"];
+            rival_b_net: components["schemas"]["Money"];
+            rival_set_complete: boolean;
+            independent_groups_assumed: boolean;
+        };
+        StressConstraints: {
+            min_price_points: components["schemas"]["Decimal"];
+            min_profit_net: components["schemas"]["Money"];
+        };
+        StressTestRequest: {
+            pricing_rule_id: components["schemas"]["EntityId"];
+            pricing_rule_revision: number;
+            company_id: components["schemas"]["EntityId"];
+            company_revision: number;
+            candidate_discounts: components["schemas"]["Decimal"][];
+            hypotheses: components["schemas"]["StressHypothesisInput"][];
+            constraints: components["schemas"]["StressConstraints"];
+        };
+        StressCell: {
+            discount_rate: components["schemas"]["Decimal"];
+            hypothesis_label: string;
+            price_net: components["schemas"]["Money"] | null;
+            score: components["schemas"]["Decimal"] | null;
+            profit_net: components["schemas"]["Decimal"] | null;
+            feasible: boolean;
+            reason: string;
+        };
+        StressByDiscount: {
+            discount_rate: components["schemas"]["Decimal"];
+            worst_score: components["schemas"]["Decimal"] | null;
+            worst_profit_net: components["schemas"]["Decimal"] | null;
+            all_feasible: boolean;
+            comparable_count: number;
+        };
+        StressSelection: {
+            discount_rate: components["schemas"]["Decimal"];
+            worst_profit_net: components["schemas"]["Decimal"];
+            worst_score: components["schemas"]["Decimal"];
+            feasible_count: number;
+        };
+        StressRuleRef: {
+            id: components["schemas"]["EntityId"];
+            revision: number;
+        };
+        StressCompanyRef: {
+            id: components["schemas"]["EntityId"];
+            base_revision: number;
+        };
+        StressHypothesisEcho: {
+            label: string;
+        };
+        StressTestResult: {
+            id: components["schemas"]["EntityId"];
+            scope_id: components["schemas"]["EntityId"];
+            interpretation_revision: number;
+            basis_sha256: string;
+            rule: components["schemas"]["StressRuleRef"];
+            company: components["schemas"]["StressCompanyRef"];
+            tested_candidates: number;
+            tested_hypotheses: number;
+            hypotheses_echo: components["schemas"]["StressHypothesisEcho"][];
+            cells: components["schemas"]["StressCell"][];
+            by_discount: components["schemas"]["StressByDiscount"][];
+            selection: components["schemas"]["StressSelection"] | null;
+            selection_reason: string;
+            warnings: string[];
+            created_at: string;
         };
     };
     responses: {
@@ -2320,6 +2433,84 @@ export interface operations {
                 };
                 content: {
                     "text/html": string;
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    run_stress_test: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+            };
+            path: {
+                /** @example tias-whole */
+                scope_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StressTestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StressTestResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    get_stress_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example a1b2c3d4e5f60718293a4b5c6d7e8f90 */
+                stress_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StressTestResult"];
                 };
             };
             400: components["responses"]["BadRequest"];

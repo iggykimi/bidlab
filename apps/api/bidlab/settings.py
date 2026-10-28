@@ -1,5 +1,6 @@
 """Effective configuration. Names follow .env.example; secrets never logged."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -37,7 +38,13 @@ class Settings(BaseSettings):
     def live_ready(self) -> bool:
         # An empty key never enables live; finding a key never flips demo mode.
         # NOTE: SecretStr is always truthy; unwrap before the emptiness check.
-        return self.bidlab_mode == "live" and bool(self.model_api_key.get_secret_value())
+        # The adapter reads META_API_URL from the process environment only,
+        # so live is ready only when the URL is there too.
+        return (
+            self.bidlab_mode == "live"
+            and bool(self.model_api_key.get_secret_value())
+            and bool(os.environ.get("META_API_URL"))
+        )
 
 
 @lru_cache

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { TourBar } from "../tour/TourBar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         {children}
         <Toaster position="bottom-right" toastOptions={{ duration: 4000 }} />
+        <TourBar />
       </ErrorBoundary>
     </QueryClientProvider>
   );

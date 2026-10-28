@@ -271,3 +271,16 @@ class IdempotencyRecord(Base):
     body_sha256: Mapped[str] = mapped_column(String, nullable=False)
     response_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     expires_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class StressTest(Base):
+    __tablename__ = "stress_test"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    scope_id: Mapped[str] = mapped_column(String(80), ForeignKey("scope.id"), nullable=False)
+    rule_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    rule_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    company_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    request_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    result_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    result_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
