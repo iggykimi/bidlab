@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-28T17:41:13.537270+00:00",
+  "gold": {
+    "kind": "manual_initial_gold",
+    "claims_total": 25
+  },
+  "split": {
+    "n_dev": 14,
+    "n_eval": 11
+  },
+  "critical_rule": "Error cr\u00edtico = miss (valor supported distinto del gold) en claim de importe (unidad EUR), periodo (months/years) o f\u00f3rmula (formula_denominator_ambiguity, logarithm_base). unsupported cuenta en el denominador con 0 puntos pero no es un valor err\u00f3neo, as\u00ed que nunca es cr\u00edtico.",
+  "modes": {
+    "text": {
+      "mode": "text",
+      "status": "measured",
+      "block_reason": null,
+      "extractor": "StubExtractor (fixture determinista offline, sin modelo ni red)",
+      "schema": "propuesta v1 \u2192 predicciones normalizadas (mismo mapper ambos modos)",
+      "n_eval": 11,
+      "n_hit": 0,
+      "n_miss": 0,
+      "n_unsupported": 11,
+      "accuracy": "0",
+      "critical_errors": [],
+      "latency_ms": {
+        "p50": 0.004,
+        "max": 0.009
+      },
+      "cost_micro_usd": 0,
+      "cost_reason": "fixture: StubExtractor no llama a la red; coste 0 micro-USD, sin tokens y sin reserva en el ledger (tokens null por convenci\u00f3n fixture/manual)",
+      "model": null,
+      "tokens": {
+        "prompt": null,
+        "completion": null,
+        "cached": null
+      },
+      "invocation_mode": "fixture"
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "status": "blocked",
+      "block_reason": "G3 bloqueado: sin credencial Meta verificada (gate live: provider_not_configured); modo h\u00edbrido no ejecutado, cero llamadas live",
+      "extractor": "LiveExtractor (texto + Meta live, payload h\u00edbrido T06)",
+      "schema": "propuesta v1 \u2192 predicciones normalizadas (mismo mapper ambos modos)",
+      "n_eval": 11,
+      "n_hit": null,
+      "n_miss": null,
+      "n_unsupported": null,
+      "accuracy": null,
+      "critical_errors": null,
+      "latency_ms": null,
+      "cost_micro_usd": null,
+      "cost_reason": "G3 bloqueado: sin credencial Meta verificada (gate live: provider_not_configured); modo h\u00edbrido no ejecutado, cero llamadas live",
+      "model": null,
+      "tokens": {
+        "prompt": null,
+        "completion": null,
+        "cached": null
+      },
+      "invocation_mode": null
+    }
+  },
+  "cases": [
+    {
+      "claim_id": "g15",
+      "field": "price_points",
+      "unit": "points",
+      "expected_value": "65",
+      "expected_review_state": "proposed_until_review",
+      "critical": false,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.009
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g16",
+      "field": "logarithm_base",
+      "unit": "dimensionless",
+      "expected_value": "10",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.009
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g17",
+      "field": "formula_denominator_ambiguity",
+      "unit": "status",
+      "expected_value": "blocked",
+      "expected_review_state": "blocked",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.009
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g18",
+      "field": "price_points",
+      "unit": "points",
+      "expected_value": "35",
+      "expected_review_state": "proposed_until_review",
+      "critical": false,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.007
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g19",
+      "field": "scoring_reference",
+      "unit": "reference",
+      "expected_value": "VEC",
+      "expected_review_state": "proposed_until_review",
+      "critical": false,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.007
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g20",
+      "field": "offer_includes_extension",
+      "unit": "boolean",
+      "expected_value": "true",
+      "expected_review_state": "proposed_until_review",
+      "critical": false,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.004
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g21",
+      "field": "net_budget",
+      "unit": "EUR",
+      "expected_value": "1457330.00",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.003
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g22",
+      "field": "initial_duration_years",
+      "unit": "years",
+      "expected_value": "1",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.003
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g23",
+      "field": "lot1_net_budget",
+      "unit": "EUR",
+      "expected_value": "775000.00",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.003
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g24",
+      "field": "lot2_net_budget",
+      "unit": "EUR",
+      "expected_value": "171074.38",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.003
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    },
+    {
+      "claim_id": "g25",
+      "field": "lot3_net_budget",
+      "unit": "EUR",
+      "expected_value": "35000.00",
+      "expected_review_state": "proposed_until_review",
+      "critical": true,
+      "text": {
+        "predicted_value": null,
+        "verdict": "unsupported",
+        "latency_ms": 0.003
+      },
+      "hybrid": {
+        "predicted_value": null,
+        "verdict": null,
+        "latency_ms": null
+      }
+    }
+  ],
+  "limitations": [
+    "n=11 claims eval en 4 expedientes held-out: muestra peque\u00f1a, sin potencia estad\u00edstica; leer solo como orden de magnitud.",
+    "Modo texto = fixture determinista offline (StubExtractor, sin modelo ni red): 0 aciertos esperados; mide el suelo del harness, no un extractor real.",
+    "Modo h\u00edbrido no ejecutado (G3 sin credencial): sin n\u00fameros live, sin ventaja atribuible a ning\u00fan modo.",
+    "Latencias del modo texto = llamadas locales al stub (sub-milisegundo t\u00edpico); no comparables con latencias de red.",
+    "Coste texto 0 micro-USD (sin llamadas); coste h\u00edbrido desconocido (null) hasta una ejecuci\u00f3n live con --allow-live."
+  ]
+}

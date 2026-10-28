@@ -69,6 +69,10 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
   + front 212 + E2E 70/70. Nota: el helper informó
   un SHA largo erróneo (prefijo 6f9ba9e correcto);
   merge con SHA verificado. Siguiente: PKG-T11.
+- 28-oct: PKG-T11 listo en worktree t11 (helper, pendiente merge
+  lead): comparativa texto (fixture 0/11 medido) vs híbrido
+  (blocked G3, nulls honestos) + artefacto + 14 tests; backend
+  472. El lead finalizará esta línea tras el merge.
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

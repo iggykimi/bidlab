@@ -9,7 +9,7 @@ import sys
 
 STEPS: list[tuple[str, str]] = [
     ("deps-python", "uv sync --frozen --all-packages"),
-    ("pytest-unit", "uv run pytest apps/api/tests/unit -q"),
+    ("pytest-unit", "uv run pytest apps/api/tests/unit apps/api/tests/evaluation -q"),
     (
         "pytest-integration-contracts",
         "uv run pytest apps/api/tests/integration apps/api/tests/contracts -q",
