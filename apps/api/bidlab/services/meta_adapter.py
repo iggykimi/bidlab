@@ -21,9 +21,11 @@ null; see :func:`extraction_json_schema`). The endpoint answers a
 chat-completions body; the proposal JSON lives in
 ``choices[0].message.content`` and is revalidated with Pydantic.
 Unparseable, truncated or refused answers are explicit typed failures,
-never silently replaced by a fixture. Single attempt, no retries: bounded
-spend by construction. Usage, when reported, feeds an estimated cost from
-the published Standard Spark rates so the budget guard in
+never silently replaced by a fixture. Failed live attempts keep their
+provider receipt (mode/model/id/usage/latency, parsed before proposal
+validation); timeouts stay ``uncertain``. Single attempt, no retries:
+bounded spend by construction. Usage, when reported, feeds an estimated
+cost from the published Standard Spark rates so the budget guard in
 ``bidlab.services.jobs`` keeps working; missing usage stays untracked,
 never zero-invented.
 
@@ -77,13 +79,41 @@ _COST_QUANTUM = Decimal("0.000001")
 _MAX_SCHEMA_DEPTH = 50
 
 
-class AdapterError(Exception):
-    """Typed extraction failure. Carries a contract-style code."""
+@dataclass(frozen=True)
+class Receipt:
+    """Provider receipt: what the transport reported, even on failure.
 
-    def __init__(self, code: str, message: str) -> None:
+    Parsed from the raw response body BEFORE the proposal is validated, so
+    a billed-but-invalid answer keeps mode/model/id/usage/latency
+    (PKG-T01). ``sent`` tells whether the request reached the network;
+    ``status`` is ``failed``, or ``uncertain`` when a timeout leaves the
+    provider side unknown (the attempt may still have been processed).
+    """
+
+    mode: str  # always "live": receipts only exist for live attempts
+    model: str | None  # requested model
+    provider_request_id: str | None
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    cached_tokens: int | None
+    estimated_cost_usd: str | None
+    latency_ms: int
+    status: str  # failed | uncertain
+    sent: bool
+
+
+class AdapterError(Exception):
+    """Typed extraction failure. Carries a contract-style code.
+
+    ``receipt`` keeps the provider receipt when the attempt reached the
+    network: usage survives even when the proposal is unusable (PKG-T01).
+    """
+
+    def __init__(self, code: str, message: str, receipt: Receipt | None = None) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
+        self.receipt = receipt
 
 
 class StubScenario(StrEnum):
@@ -356,6 +386,58 @@ def estimate_cost_usd(prompt_tokens: int | None, completion_tokens: int | None) 
     return str(cost.quantize(_COST_QUANTUM, rounding=ROUND_HALF_UP))
 
 
+def body_receipt(
+    body: Mapping[str, Any],
+    *,
+    latency_ms: int,
+    model_requested: str,
+    status: str = "failed",
+    sent: bool = True,
+) -> Receipt:
+    """Read the provider receipt out of a raw response body.
+
+    Defensive: any missing or mistyped usage field stays None instead of
+    failing the receipt itself. Call this before proposal validation so a
+    rejected proposal never erases a billed attempt.
+    """
+    usage = _as_dict(body.get("usage"))
+    details = _as_dict(usage.get("prompt_tokens_details"))
+    prompt_tokens = _as_non_negative_int(usage.get("prompt_tokens"))
+    completion_tokens = _as_non_negative_int(usage.get("completion_tokens"))
+    cached_tokens = _as_non_negative_int(details.get("cached_tokens"))
+    if cached_tokens is None:
+        cached_tokens = _as_non_negative_int(usage.get("cached_tokens"))
+    request_id = body.get("id", body.get("provider_request_id"))
+    return Receipt(
+        mode="live",
+        model=model_requested,
+        provider_request_id=(str(request_id)[:200] if request_id is not None else None),
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        cached_tokens=cached_tokens,
+        estimated_cost_usd=estimate_cost_usd(prompt_tokens, completion_tokens),
+        latency_ms=latency_ms,
+        status=status,
+        sent=sent,
+    )
+
+
+def _attempt_receipt(*, model_requested: str, latency_ms: int, status: str, sent: bool) -> Receipt:
+    """Receipt without provider data (transport failed before any usage)."""
+    return Receipt(
+        mode="live",
+        model=model_requested,
+        provider_request_id=None,
+        prompt_tokens=None,
+        completion_tokens=None,
+        cached_tokens=None,
+        estimated_cost_usd=None,
+        latency_ms=latency_ms,
+        status=status,
+        sent=sent,
+    )
+
+
 def _count_proposal_citations(proposal: Mapping[str, Any]) -> int:
     total = 0
     for key in ("claims", "requirements"):
@@ -483,45 +565,89 @@ class LiveExtractor:
                 },
                 timeout=self._timeout_s,
             )
+        except httpx.TimeoutException as exc:
+            latency_ms = int((time.monotonic() - started) * 1000)
+            raise AdapterError(
+                "provider_failure",
+                f"model call timed out: {exc}",
+                receipt=_attempt_receipt(
+                    model_requested=self._model,
+                    latency_ms=latency_ms,
+                    status="uncertain",
+                    sent=True,
+                ),
+            ) from exc
         except httpx.HTTPError as exc:
-            raise AdapterError("provider_failure", f"model call failed: {exc}") from exc
+            latency_ms = int((time.monotonic() - started) * 1000)
+            raise AdapterError(
+                "provider_failure",
+                f"model call failed: {exc}",
+                receipt=_attempt_receipt(
+                    model_requested=self._model,
+                    latency_ms=latency_ms,
+                    status="failed",
+                    sent=False,
+                ),
+            ) from exc
         latency_ms = int((time.monotonic() - started) * 1000)
         if response.status_code == 429:
-            raise AdapterError("provider_rate_limited", "model endpoint rate limited")
+            raise AdapterError(
+                "provider_rate_limited",
+                "model endpoint rate limited",
+                receipt=_attempt_receipt(
+                    model_requested=self._model,
+                    latency_ms=latency_ms,
+                    status="failed",
+                    sent=True,
+                ),
+            )
         if response.status_code >= 400:
             raise AdapterError(
-                "provider_failure", f"model endpoint answered {response.status_code}"
+                "provider_failure",
+                f"model endpoint answered {response.status_code}",
+                receipt=_attempt_receipt(
+                    model_requested=self._model,
+                    latency_ms=latency_ms,
+                    status="failed",
+                    sent=True,
+                ),
             )
         try:
             data = response.json()
         except ValueError as exc:
-            raise AdapterError("invalid_model_output", "model endpoint answered non-JSON") from exc
+            raise AdapterError(
+                "invalid_model_output",
+                "model endpoint answered non-JSON",
+                receipt=_attempt_receipt(
+                    model_requested=self._model,
+                    latency_ms=latency_ms,
+                    status="failed",
+                    sent=True,
+                ),
+            ) from exc
         body = _as_dict(data)
+        receipt = body_receipt(body, latency_ms=latency_ms, model_requested=self._model)
         try:
             proposal = parse_chat_response(body, validate=g.ExtractionProposal.model_validate)
         except ValidationError as exc:
             raise AdapterError(
-                "invalid_model_output", f"model output failed schema: {exc.error_count()}"
+                "invalid_model_output",
+                f"model output failed schema: {exc.error_count()}",
+                receipt=receipt,
             ) from exc
-        usage = _as_dict(body.get("usage"))
-        details = _as_dict(usage.get("prompt_tokens_details"))
-        prompt_tokens = _as_non_negative_int(usage.get("prompt_tokens"))
-        completion_tokens = _as_non_negative_int(usage.get("completion_tokens"))
-        cached_tokens = _as_non_negative_int(details.get("cached_tokens"))
-        if cached_tokens is None:
-            cached_tokens = _as_non_negative_int(usage.get("cached_tokens"))
-        request_id = body.get("id", body.get("provider_request_id"))
+        except AdapterError as exc:
+            raise AdapterError(exc.code, exc.message, receipt=receipt) from exc
         returned_model = body.get("model")
         return AdapterResult(
             proposal=proposal.model_dump(mode="json"),
             warnings=(),
             mode="live",
             model=self._model,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            cached_tokens=cached_tokens,
-            provider_request_id=(str(request_id)[:200] if request_id is not None else None),
-            estimated_cost_usd=estimate_cost_usd(prompt_tokens, completion_tokens),
+            prompt_tokens=receipt.prompt_tokens,
+            completion_tokens=receipt.completion_tokens,
+            cached_tokens=receipt.cached_tokens,
+            provider_request_id=receipt.provider_request_id,
+            estimated_cost_usd=receipt.estimated_cost_usd,
             latency_ms=latency_ms,
             status="ok",
             returned_model=(

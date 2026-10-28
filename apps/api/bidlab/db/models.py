@@ -1,4 +1,4 @@
-"""SQLAlchemy models. Mirror of schemas/schema.sql (17 tables)."""
+"""SQLAlchemy models. Mirror of schemas/schema.sql plus later migrations (20 tables)."""
 
 from __future__ import annotations
 
@@ -271,6 +271,39 @@ class IdempotencyRecord(Base):
     body_sha256: Mapped[str] = mapped_column(String, nullable=False)
     response_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     expires_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class ModelSpendAccount(Base):
+    __tablename__ = "model_spend_account"
+    __table_args__ = (
+        CheckConstraint("id = 1"),
+        CheckConstraint("held_micro_usd >= 0"),
+        CheckConstraint("spent_micro_usd >= 0"),
+    )
+    # Single row (id=1): running held/settled totals touched only by atomic
+    # single-statement updates in bidlab.services.budget.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    held_micro_usd: Mapped[int] = mapped_column(Integer, nullable=False)
+    spent_micro_usd: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class ModelSpendReservation(Base):
+    __tablename__ = "model_spend_reservation"
+    __table_args__ = (
+        CheckConstraint("amount_micro_usd > 0"),
+        CheckConstraint("actual_micro_usd IS NULL OR actual_micro_usd >= 0"),
+        CheckConstraint("state IN ('reserved','sent','uncertain','settled','released')"),
+        Index("ix_spend_reservation_job", "job_id"),
+    )
+    # Attempt key: the invocation id (``inv-<job>-a<attempt>``), unique per
+    # attempt. No FK to job: the hold is taken before the job row commits.
+    key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    job_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    amount_micro_usd: Mapped[int] = mapped_column(Integer, nullable=False)
+    state: Mapped[str] = mapped_column(String, nullable=False)
+    actual_micro_usd: Mapped[int | None] = mapped_column(Integer)
+    receipt: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class StressTest(Base):

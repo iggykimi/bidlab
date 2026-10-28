@@ -4,6 +4,8 @@ Single-process design: the run endpoint executes the job synchronously and
 returns its terminal state with 202. ``run_job`` is restart-safe: terminal
 jobs (except ``failed``) are returned as-is, and a ``running`` job whose
 lease expired may be reclaimed. Failed jobs may be retried as a new attempt.
+Live attempts reserve spend before the call and settle the reported cost
+(PKG-T02); only attempts that never reach the network release the hold.
 """
 
 from __future__ import annotations
@@ -15,13 +17,14 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 from sqlalchemy import func, select
+from sqlalchemy.engine import Connection, Engine
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
 from bidlab.schemas import generated as g
+from bidlab.services import budget as budget_service
 from bidlab.services import meta_adapter
 from bidlab.services import pdf as pdf_service
-from bidlab.settings import get_settings
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -112,14 +115,45 @@ def live_spend_usd(session: Session) -> Decimal:
     return total
 
 
+def _engine_of(session: Session) -> Engine:
+    bind = session.get_bind()
+    if isinstance(bind, Engine):
+        return bind
+    if isinstance(bind, Connection):
+        return bind.engine
+    msg = "database bind unavailable"
+    raise AssertionError(msg)
+
+
 def check_live_budget(session: Session) -> None:
-    """Fail closed when reported live spend reaches the configured budget."""
-    try:
-        budget = Decimal(get_settings().bidlab_meta_budget_usd)
-    except InvalidOperation:
-        budget = Decimal("0")
-    if live_spend_usd(session) >= budget:
+    """Fail closed when held + settled spend reaches the configured budget."""
+    engine = _engine_of(session)
+    cap = budget_service.budget_cap_micro_usd()
+    held_spend = budget_service.totals(engine, ceiling_micro=cap)
+    if held_spend["spent"] + held_spend["held"] >= held_spend["ceiling"]:
         raise ApiError(429, "budget_exhausted", "live model budget exhausted")
+
+
+def _settle_attempt(
+    engine: Engine,
+    key: str,
+    estimate_micro: int,
+    *,
+    sent: bool,
+    cost_usd: str | None,
+) -> None:
+    """Close the spend hold: settle the reported cost, estimate when unknown.
+
+    A sent attempt without reported usage settles at the estimate, never
+    zero; only attempts that never reached the network release the hold.
+    """
+    if not sent:
+        budget_service.release_before_send(engine, key)
+        return
+    # The adapter owns the transport: sending is only known after the fact.
+    budget_service.mark_sent(engine, key)
+    actual = estimate_micro if cost_usd is None else budget_service.usd_str_to_micro(cost_usd)
+    budget_service.settle(engine, key, actual_micro=actual, receipt=key)
 
 
 def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest) -> models.Job:
@@ -214,22 +248,23 @@ def _fail_job(
     mode: str,
     attempt: int,
     input_hash: str,
+    receipt: meta_adapter.Receipt | None = None,
 ) -> models.Job:
     session.add(
         models.ModelInvocation(
             id=f"inv-{job.id}-a{attempt}",
             job_id=job.id,
-            mode=mode,
-            model=None,
+            mode=receipt.mode if receipt is not None else mode,
+            model=receipt.model if receipt is not None else None,
             prompt_version=meta_adapter.PROMPT_VERSION,
             input_hash=input_hash,
-            provider_request_id=None,
-            prompt_tokens=None,
-            completion_tokens=None,
-            cached_tokens=None,
-            estimated_cost_usd=None,
-            latency_ms=0,
-            status="failed",
+            provider_request_id=(receipt.provider_request_id if receipt is not None else None),
+            prompt_tokens=receipt.prompt_tokens if receipt is not None else None,
+            completion_tokens=(receipt.completion_tokens if receipt is not None else None),
+            cached_tokens=receipt.cached_tokens if receipt is not None else None,
+            estimated_cost_usd=(receipt.estimated_cost_usd if receipt is not None else None),
+            latency_ms=receipt.latency_ms if receipt is not None else 0,
+            status=receipt.status if receipt is not None else "failed",
             created_at=_now().isoformat(),
         )
     )
@@ -339,6 +374,11 @@ def run_job(
     job.updated_at = _now().isoformat()
     _update_request(job, attempts=attempt)
     session.flush()
+    # Commit the claim before any spend reservation: the ledger runs on a
+    # separate short connection, which could never take its write lock while
+    # this session holds uncommitted writes. Crash-safe: the lease above lets
+    # another worker reclaim a job left running.
+    session.commit()
 
     pages = session.scalars(
         select(models.DocumentPage)
@@ -355,38 +395,84 @@ def run_job(
     ]
     input_hash = meta_adapter.pages_input_hash(inputs)
     run_started = _now().isoformat()
+    reservation_key: str | None = None
+    reservation_estimate = 0
     try:
         if adapter.is_live:
-            check_live_budget(session)
+            reservation_key = f"inv-{job.id}-a{attempt}"
+            reservation_estimate = budget_service.estimate_attempt_micro_usd(
+                sum(len(page.normalized_text) for page in inputs)
+            )
+            engine = _engine_of(session)
+            try:
+                budget_service.reserve(
+                    engine,
+                    key=reservation_key,
+                    job_id=job.id,
+                    amount_micro=reservation_estimate,
+                    ceiling_micro=budget_service.budget_cap_micro_usd(),
+                )
+            except budget_service.BudgetBlockedError as exc:
+                _fail_job(
+                    session,
+                    job,
+                    code="budget_exhausted",
+                    message="live model budget exhausted",
+                    mode="live",
+                    attempt=attempt,
+                    input_hash=input_hash,
+                )
+                # The request scope rolls back on 429: commit the failed job
+                # and its invocation first so the 429 keeps an auditable trace.
+                session.commit()
+                raise ApiError(429, "budget_exhausted", "live model budget exhausted") from exc
         result = adapter.extract(inputs)
-    except ApiError:
-        _fail_job(
-            session,
-            job,
-            code="budget_exhausted",
-            message="live model budget exhausted",
-            mode="live",
-            attempt=attempt,
-            input_hash=input_hash,
-        )
-        # The request scope rolls back on 429: commit the failed job and its
-        # invocation first so the 429 keeps an auditable trace.
-        session.commit()
-        raise
     except meta_adapter.AdapterError as exc:
+        receipt = exc.receipt
+        if reservation_key is not None:
+            _settle_attempt(
+                _engine_of(session),
+                reservation_key,
+                reservation_estimate,
+                sent=receipt is not None and receipt.sent,
+                cost_usd=receipt.estimated_cost_usd if receipt is not None else None,
+            )
+        mode = receipt.mode if receipt is not None else ("live" if adapter.is_live else "fixture")
         return _fail_job(
             session,
             job,
             code=exc.code,
             message=f"{exc.code}: {exc.message}",
-            mode="fixture",
+            mode=mode,
             attempt=attempt,
             input_hash=input_hash,
+            receipt=receipt,
+        )
+
+    if reservation_key is not None:
+        _settle_attempt(
+            _engine_of(session),
+            reservation_key,
+            reservation_estimate,
+            sent=True,
+            cost_usd=result.estimated_cost_usd,
         )
 
     try:
         proposal = g.ExtractionProposal.model_validate(result.proposal)
     except ValidationError as exc:
+        receipt = meta_adapter.Receipt(
+            mode=result.mode,
+            model=result.model,
+            provider_request_id=result.provider_request_id,
+            prompt_tokens=result.prompt_tokens,
+            completion_tokens=result.completion_tokens,
+            cached_tokens=result.cached_tokens,
+            estimated_cost_usd=result.estimated_cost_usd,
+            latency_ms=result.latency_ms,
+            status="failed",
+            sent=adapter.is_live,
+        )
         return _fail_job(
             session,
             job,
@@ -395,6 +481,7 @@ def run_job(
             mode=result.mode,
             attempt=attempt,
             input_hash=input_hash,
+            receipt=receipt,
         )
     proposal_data = proposal.model_dump(mode="json")
 

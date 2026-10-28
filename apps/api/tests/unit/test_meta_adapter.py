@@ -515,3 +515,88 @@ def test_provider_unreachable_from_offline_paths() -> None:
         source = Path(module.__file__).read_text(encoding="utf-8")
         for token in forbidden:
             assert token not in source, f"{name} must not reference {token}"
+
+
+def _live_adapter() -> meta_adapter.LiveExtractor:
+    return meta_adapter.LiveExtractor(
+        api_key="test-key", model="muse-spark-1.3", endpoint_url="https://meta.test/chat"
+    )
+
+
+def test_live_invalid_json_keeps_receipt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """PKG-T01/B01: billed-but-invalid answers keep mode/model/id/usage/latency."""
+    import httpx
+
+    body = _chat_body("{invalid-json")
+    body["usage"] = {"prompt_tokens": 12000, "completion_tokens": 3000}
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(200, body))
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        _live_adapter().extract(_pages())
+    assert exc.value.code == "invalid_model_output"
+    receipt = exc.value.receipt
+    assert receipt is not None
+    assert receipt.mode == "live"
+    assert receipt.model == "muse-spark-1.3"
+    assert receipt.provider_request_id == "chatcmpl-test-1"
+    assert receipt.prompt_tokens == 12000
+    assert receipt.completion_tokens == 3000
+    assert receipt.estimated_cost_usd == meta_adapter.estimate_cost_usd(12000, 3000)
+    assert receipt.latency_ms >= 0
+    assert receipt.status == "failed"
+    assert receipt.sent is True
+
+
+def test_live_timeout_is_uncertain(monkeypatch: pytest.MonkeyPatch) -> None:
+    """PKG-T01: a timeout may still have run server-side; usage stays null."""
+    import httpx
+
+    def _timeout(*args: object, **kwargs: object) -> object:
+        raise httpx.TimeoutException("read timed out")
+
+    monkeypatch.setattr(httpx, "post", _timeout)
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        _live_adapter().extract(_pages())
+    assert exc.value.code == "provider_failure"
+    receipt = exc.value.receipt
+    assert receipt is not None
+    assert receipt.status == "uncertain"
+    assert receipt.sent is True
+    assert receipt.prompt_tokens is None
+    assert receipt.completion_tokens is None
+    assert receipt.estimated_cost_usd is None
+    assert receipt.latency_ms >= 0
+
+
+def test_live_connect_error_marks_not_sent(monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+
+    def _refused(*args: object, **kwargs: object) -> object:
+        raise httpx.ConnectError("connection refused")
+
+    monkeypatch.setattr(httpx, "post", _refused)
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        _live_adapter().extract(_pages())
+    assert exc.value.code == "provider_failure"
+    receipt = exc.value.receipt
+    assert receipt is not None
+    assert receipt.status == "failed"
+    assert receipt.sent is False
+
+
+def test_body_receipt_ignores_mistyped_usage() -> None:
+    receipt = meta_adapter.body_receipt(
+        {"id": 123, "usage": {"prompt_tokens": True, "completion_tokens": -5}},
+        latency_ms=7,
+        model_requested="muse-spark-1.3",
+    )
+    assert receipt.provider_request_id == "123"
+    assert receipt.prompt_tokens is None
+    assert receipt.completion_tokens is None
+    assert receipt.estimated_cost_usd is None
+    assert receipt.latency_ms == 7
+
+
+def test_stub_failures_carry_no_receipt() -> None:
+    with pytest.raises(meta_adapter.AdapterError) as exc:
+        meta_adapter.StubExtractor(meta_adapter.StubScenario.REFUSAL).extract(_pages())
+    assert exc.value.receipt is None

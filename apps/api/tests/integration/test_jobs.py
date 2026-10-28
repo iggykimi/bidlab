@@ -1,5 +1,6 @@
 """I06 + T17: analysis run endpoint (202), job polling, stub honesty."""
 
+import json
 import socket
 from typing import Any
 
@@ -8,6 +9,7 @@ import pytest
 from bidlab.db import models
 from bidlab.db.session import get_engine
 from bidlab.schemas import generated as g
+from bidlab.services import budget as budget_service
 from bidlab.services import meta_adapter
 from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
@@ -245,3 +247,193 @@ def test_budget_exhaust_persists_failed_job(
     poll = demo_client.get(f"/api/v1/jobs/{job_id}")
     assert poll.status_code == 200
     assert poll.json()["status"] == "failed"
+
+
+def test_live_invalid_output_keeps_receipt(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T01/B01 fixed: the failed invocation keeps the live receipt."""
+    body = {
+        "id": "mock-response-no-network",
+        "model": "muse-spark-1.3",
+        "choices": [{"finish_reason": "stop", "message": {"content": "{invalid-json"}}],
+        "usage": {"prompt_tokens": 12000, "completion_tokens": 3000},
+    }
+    monkeypatch.setattr(
+        "bidlab.services.jobs.meta_adapter.select_adapter",
+        lambda mode: meta_adapter.LiveExtractor(
+            api_key="test-key",
+            model="muse-spark-1.3",
+            endpoint_url="https://meta.test/chat",
+        ),
+    )
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: httpx.Response(200, json=body))
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True),
+        headers=_headers("k-receipt"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "failed"
+    assert job.error_code is not None
+    assert job.error_code.root == "invalid_model_output"
+    with _db() as session:
+        invocation = session.scalars(
+            select(models.ModelInvocation).where(models.ModelInvocation.job_id == job.id.root)
+        ).one()
+        assert invocation.mode == "live"
+        assert invocation.model == "muse-spark-1.3"
+        assert invocation.provider_request_id == "mock-response-no-network"
+        assert invocation.prompt_tokens == 12000
+        assert invocation.completion_tokens == 3000
+        assert invocation.estimated_cost_usd == meta_adapter.estimate_cost_usd(12000, 3000)
+        assert invocation.latency_ms is not None
+        assert invocation.status == "failed"
+
+
+def _live_transport(monkeypatch: pytest.MonkeyPatch, post: object) -> None:
+    monkeypatch.setattr(
+        "bidlab.services.jobs.meta_adapter.select_adapter",
+        lambda mode: meta_adapter.LiveExtractor(
+            api_key="test-key",
+            model="muse-spark-1.3",
+            endpoint_url="https://meta.test/chat",
+        ),
+    )
+    monkeypatch.setattr(httpx, "post", post)
+
+
+def test_live_success_settles_reported_cost(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T02: a billed ok call settles its reported cost, not the estimate."""
+    proposal = (
+        meta_adapter.StubExtractor()
+        .extract([meta_adapter.PageInput("doc-tias-pcap", 1, "x")])
+        .proposal
+    )
+    body = {
+        "id": "mock-ok-no-network",
+        "model": "muse-spark-1.3",
+        "choices": [
+            {
+                "finish_reason": "stop",
+                "message": {"content": json.dumps(proposal)},
+            }
+        ],
+        "usage": {"prompt_tokens": 100, "completion_tokens": 50},
+    }
+    _live_transport(monkeypatch, lambda *a, **k: httpx.Response(200, json=body))
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True),
+        headers=_headers("k-settle-ok"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "needs_review"
+    key = f"inv-{job.id.root}-a1"
+    with _db() as session:
+        row = session.get(models.ModelSpendReservation, key)
+        assert row is not None
+        assert row.state == "settled"
+        assert row.actual_micro_usd == 338
+        assert row.receipt == key
+    totals = budget_service.totals(get_engine(), ceiling_micro=20_000_000)
+    assert totals["spent"] == 338
+    assert totals["held"] == 0
+
+
+def test_live_invalid_output_settles_reported_cost(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T02: invalid proposals still settle the billed usage (B01 cost)."""
+    body = {
+        "id": "mock-invalid-no-network",
+        "model": "muse-spark-1.3",
+        "choices": [{"finish_reason": "stop", "message": {"content": "{invalid-json"}}],
+        "usage": {"prompt_tokens": 12000, "completion_tokens": 3000},
+    }
+    _live_transport(monkeypatch, lambda *a, **k: httpx.Response(200, json=body))
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True),
+        headers=_headers("k-settle-invalid"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "failed"
+    key = f"inv-{job.id.root}-a1"
+    with _db() as session:
+        row = session.get(models.ModelSpendReservation, key)
+        assert row is not None
+        assert row.state == "settled"
+        assert row.actual_micro_usd == 27750
+    assert budget_service.totals(get_engine(), ceiling_micro=20_000_000)["spent"] == 27750
+
+
+def test_live_timeout_settles_estimate_as_uncertain(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T02 acceptance: sent-but-unknown never settles as zero."""
+
+    def _timeout(*args: object, **kwargs: object) -> object:
+        raise httpx.TimeoutException("read timed out")
+
+    _live_transport(monkeypatch, _timeout)
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True),
+        headers=_headers("k-settle-timeout"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "failed"
+    assert job.error_code is not None
+    assert job.error_code.root == "provider_failure"
+    key = f"inv-{job.id.root}-a1"
+    with _db() as session:
+        invocation = session.get(models.ModelInvocation, key)
+        assert invocation is not None
+        assert invocation.status == "uncertain"
+        row = session.get(models.ModelSpendReservation, key)
+        assert row is not None
+        assert row.state == "settled"
+        assert row.actual_micro_usd == row.amount_micro_usd
+        assert row.actual_micro_usd > 0
+
+
+def test_live_unsent_attempt_releases_hold(
+    demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PKG-T02: failures before the network free the reservation."""
+
+    class _NotSent:
+        is_live = True
+
+        def extract(self, pages: object) -> object:
+            raise meta_adapter.AdapterError("bad_request", "pages rejected")
+
+    monkeypatch.setattr(
+        "bidlab.services.jobs.meta_adapter.select_adapter",
+        lambda mode: _NotSent(),
+    )
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis",
+        json=_body(mode="live", allow_remote_processing=True),
+        headers=_headers("k-release"),
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "failed"
+    key = f"inv-{job.id.root}-a1"
+    with _db() as session:
+        row = session.get(models.ModelSpendReservation, key)
+        assert row is not None
+        assert row.state == "released"
+        invocation = session.get(models.ModelInvocation, key)
+        assert invocation is not None
+        assert invocation.mode == "live"
+    totals = budget_service.totals(get_engine(), ceiling_micro=20_000_000)
+    assert (totals["spent"], totals["held"]) == (0, 0)

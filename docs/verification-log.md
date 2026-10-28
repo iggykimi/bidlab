@@ -531,3 +531,56 @@ fotogramas t=3 s (Resumen Tías) y t=11 s (Precio «Demo 15»,
 100.585,60 €, 49 puntos) inspeccionados: app real, sin defectos.
 
 Candidatura NO enviada (pendiente autor). Sin commit/push.
+
+## Plan Integral PKG-T01 + PKG-T02 — recibos live y reserva (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 31c0e8d. Entorno: Windows,
+Python 3.14 (venv), SQLite WAL. Sin red (mocks de transporte;
+0 llamadas reales).
+
+Reproducción B01–B05 contra checkout real con la sonda del
+paquete (`evidencia/probe_backend.py`, exit 0): B01
+mode=fixture + tokens null; B02 6/6 procesadas sin avisos;
+B03 sin tope de salida; B04 solo inspección; B05 callback
+152,3 ms. Idénticos a `evidencia/backend-probes.json`.
+
+PKG-T01 (recibo antes de validar): `Receipt` en
+`services/meta_adapter.py` (mode/model/id/usage/coste/
+latencia/sent/failed|uncertain); `AdapterError` lo porta;
+`LiveExtractor` lo extrae del body crudo antes de validar
+propuesta; timeout → uncertain + sent; error de conexión →
+failed + not-sent; `_fail_job` persiste el recibo.
+PKG-T02 (reserva atómica): `services/budget.py` nuevo
+(micro-USD enteros), tablas `model_spend_account` (fila
+única) + `model_spend_reservation` (migración 0005,
+upgrade/downgrade probados, head único); admisión en un
+`UPDATE` condicional en sentencia única (sin `IMMEDIATE`,
+no portable en pysqlite/SQLAlchemy); `run_job` reserva
+antes de red y liquida tras ella (coste informado, o
+estimación si falta uso; solo lo no-enviado libera);
+`check_live_budget` sobre el ledger; commit del claim
+running antes de reservar (anti-interbloqueo SQLite,
+crash-safe por lease).
+
+Desviaciones documentadas del paquete: `uncertain` se
+liquida de inmediato por la estimación (fail-closed, sin
+endpoint de reconciliación en P0); `mark_uncertain` queda
+para reconciliación futura + tests.
+
+Evidencia:
+- Backend: unit 237 + integración/contratos 118 = 355
+  passed (22 nuevos: ledger 12 incl. concurrencia a 2
+  hilos, adapter 5, jobs integración 5), exit 0.
+- `ruff check apps/api/bidlab/ apps/api/migrations/`,
+  `ruff format --check apps/api/`, `mypy
+  apps/api/bidlab` (47 ficheros): verdes.
+- Migración: tablas + seed (1,0,0) + version 0005
+  verificados tras downgrade -1 → upgrade head.
+- Re-sondeo post-fix (sonda sin asserts del viejo
+  comportamiento): B01 recorded_mode=live,
+  tokens 12000/3000, coste 0.027750 (FIXED); B02/B03/B05
+  sin cambios (pendientes PKG-T04/T06/T03); B04 de la
+  sonda es texto estático del paquete, no medición.
+- Tests heredados intactos: 429 budget_exhausted con job
+  failed + invocation live, fixture modes, live_spend
+  3.75, envelope {model,messages,response_format}.

@@ -26,6 +26,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - Siguiente: reproducir B01–B05 en checkout real, empezar
   PKG-T01 + PKG-T02. Paquete (zip + extraído + HTML) queda
   untracked hasta que el autor diga si se versiona.
+- 28-oct: B01–B05 reproducidos; PKG-T01 + PKG-T02 hechos
+  (recibos live, ledger micro-USD, migración 0005);
+  backend 355 verdes. Siguiente: PKG-T03 (jobs async).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 
