@@ -6,6 +6,12 @@ Usuario inicial: responsable técnico/comercial de pyme que conoce su coste y pu
 
 Éxito P0: en menos de tres minutos de recorrido, el usuario identifica un requisito pendiente, compara dos precios y dos escenarios, entiende una alerta condicional y exporta las fuentes y cálculos. El tiempo de procesamiento inicial de un PDF no forma parte de esos tres minutos; la demo declara los datos ya revisados.
 
+## Estado implementado (2026-10-28, HEAD 4f1cc61; código presente, PASS/FAIL en verification-log)
+
+Verificado en código (sin ejecutar E2E en este pase, luego sin juicio de aceptación por historia): semilla Tías curada (`fixtures/demo/`, `services/seed.py` idempotente), workspace con revisión, Pricing Lab con hipótesis explícitas, escenarios/compare/stress persistidos, informe HTML reproducible (`services/templates/report.html.jinja`), jobs con worker en proceso, ledger de gasto con techo `BIDLAB_META_BUDGET_USD`, radar de consistencia (`Workspace.consistency`), render de páginas versionado (`bidlab-render-1`) y harness de evaluación offline (`scripts/score_extraction.py`, `scripts/compare_extraction.py`; gold de 25 claims + split dev/eval en `evidence/evaluation_split.json`).
+
+Añadido sobre la tabla P0 y visible en contrato/código: malla de estrés (`StressTest`, `StressByDiscount.price_net/max_cost_net`), comparador de escenarios y de modos de extracción, radar de incoherencias, observaciones v2 con adaptador live de gate honesto (503 sin clave/URL) y render versionado. Siguen sin implementar (P1): histórico descriptivo (sin endpoint `historical-*`) e importación ZIP/ETL de producto.
+
 ## Alcance y prioridades
 | Nivel | Funciones |
 |---|---|
@@ -59,7 +65,7 @@ Backend autoritativo; debounce 150 ms, AbortController y contador de petición. 
 “Margen mínimo” es objetivo del usuario, no criterio de solvencia o adjudicación. Coste sintético se anuncia junto al KPI. Evitar CTA “optimizar para ganar”; CTA “Comparar escenarios”.
 
 ### Evidencia
-Drawer accesible: documento, página física PDF desde 1, etiqueta impresa si existe, cita y revisión. PDF.js con assets locales; enlace Ver documento original y descarga. Zoom, siguiente/anterior y vuelta al hallazgo. Texto alternativo si render falla. No usar iframe al portal PLACSP.
+Drawer accesible: documento, página física PDF desde 1, etiqueta impresa si existe, cita y revisión. Visor con texto (`GET /documents/{id}/pages/{n}`) e imagen PNG (`.../image`, render `bidlab-render-1`) servidos por el backend, sin PDF.js en `apps/web`; enlace Ver documento original y descarga. Zoom, siguiente/anterior y vuelta al hallazgo. Texto alternativo si render falla. No usar iframe al portal PLACSP.
 
 ### Informe
 Página imprimible con los mismos datos de un escenario guardado. Decisión manual “Seguir estudiando / Preparar oferta / Descartar”, comentario y pendientes; no decisión asignada por IA. No incluye precios reales de competidores no públicos ni promesa de ganar.

@@ -1,5 +1,5 @@
 # Arquitectura implementable
-Estado: diseño cerrado para P0; los comandos de arranque/test de producto de este documento deberán ser implementados por Muse. No se afirma que ya funcionen.
+Estado: diseño cerrado para P0 (implementado 2026-10-28, HEAD 4f1cc61; ver «Mapa real implementado»).
 
 ## ADR y stack
 | ADR | Decisión | Motivo y límite |
@@ -7,13 +7,15 @@ Estado: diseño cerrado para P0; los comandos de arranque/test de producto de es
 | A01 | Monorepo Python + TypeScript | Equipo de una persona, dominio numérico Python y UI rica. Contrato REST versionado. |
 | A02 | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, SQLite | Un proceso, WAL, foreign_keys=ON, busy_timeout=5000. Sin Redis/Celery/Postgres. Revisiones append-only. |
 | A03 | Node 22.12+; React, TypeScript strict, Vite, Tailwind, componentes Radix/shadcn, Recharts | D: usar versiones estables compatibles que el agente resuelva y fije el primer día; no “latest” durante CI. Vite documenta Node 20.19+/22.12+. Un package-lock.json y uv.lock reproducibles. |
-| A04 | pypdf + pdfplumber para extracción local; PDF.js para visor | No hacer depender producto de PyMuPDF utilizado en la investigación sin revisar su licencia AGPL/comercial. pypdf no es OCR ni renderizador. |
+| A04 | pypdf + pdfplumber para extracción local; PDF.js para visor | No hacer depender producto de PyMuPDF utilizado en la investigación sin revisar su licencia AGPL/comercial. pypdf no es OCR ni renderizador. [Ver nota A04-2026-10-28 bajo la tabla.] | —texto con pypdf (`services/pdf.py`, `EXTRACTOR_VERSION="bidlab-pdf-1"`), render con PyMuPDF (`services/render.py`, `bidlab-render-1`) y visor con PNG del backend (usado por `EvidenceDrawer.tsx`); sin pdfplumber en dependencias y sin PDF.js en `apps/web` (cero menciones). La cautela de licencia sobre PyMuPDF del diseño previo queda como decisión pendiente de registrar antes de publicar. pypdf sigue sin ser OCR ni renderizador.
 | A05 | Plantillas y AST JSON restringido; Decimal | Fórmulas aisladas de red/IA. P0 una plantilla aprobada; gramática acotada extensible. |
 | A06 | Meta Spark 1.3 estándar, Chat Completions con texto paginado y JSON schema | Una sola familia de endpoint para extracción P0. PDF/vision opcional y segmentada si hace falta, no requisito de demo. Sin embeddings ni vector DB. |
 | A07 | Import offline + fixture curado real | Sin crawler nacional ni fetch de URLs arbitrarias desde la UI. P1 procesa ZIP local. |
 | A08 | Servir build web desde FastAPI en 127.0.0.1:8000 | Un origen en demo. Vite 5173 y proxy /api solo en desarrollo. No exposición a LAN ni cloud sin revisión de autenticación. |
 | A09 | Jobs persistidos, un worker en el proceso | Extracción puede durar minutos. Recuperación explícita; no hacer pasar una función BackgroundTasks sin persistencia por cola durable. |
 | A10 | Sin modelo predictivo | Datos disponibles no identifican la distribución competitiva. Estadística descriptiva independiente del simulador. |
+
+> Nota A04-2026-10-28: implementado con otra pila —texto con pypdf (`services/pdf.py`, `EXTRACTOR_VERSION="bidlab-pdf-1"`), render con PyMuPDF (`services/render.py`, `bidlab-render-1`) y visor con PNG del backend (usado por `EvidenceDrawer.tsx`); sin pdfplumber en dependencias y sin PDF.js en `apps/web` (cero menciones). La cautela de licencia sobre PyMuPDF del diseño previo queda como decisión pendiente de registrar antes de publicar. pypdf sigue sin ser OCR ni renderizador.
 
 Tecnologías son elecciones, no afirmaciones de “más reciente”. El agente registra versiones resueltas en docs/environment.md, verifica licencias directas/transitivas y actualiza solo por incompatibilidad o vulnerabilidad relevante. Referencias primarias: [FastAPI](https://fastapi.tiangolo.com/), [SQLAlchemy](https://docs.sqlalchemy.org/en/20/), [Vite](https://vite.dev/guide/), [pypdf](https://pypdf.readthedocs.io/), [Playwright](https://playwright.dev/docs/intro), [PDF.js](https://mozilla.github.io/pdf.js/).
 
@@ -125,6 +127,21 @@ tools/                      [sondas de este paquete]
 ~~~
 Las llaves indican varios archivos a crear, no nombres literales con comas. El árbol no es una lista de implementaciones ya existentes.
 
+## Mapa real implementado (2026-10-28, HEAD 4f1cc61)
+
+Verificado listando `apps/api/bidlab/`, `apps/web/src/`, `scripts/` y `fixtures/`. Difiere del árbol de diseño previo en estos nombres:
+
+- `api/`: capabilities, companies, deps, documents, errors, health, jobs, reports, review, scenarios, stress, tenders (registrados en `main.py` con prefijo `/api/v1`). No existe `api/analysis.py`: el análisis vive en `POST /tenders/{id}/analysis` (202 + `Location`, en `api/jobs.py`) más `services/jobs.py`.
+- `schemas/`: common, generated (OpenAPI), observations (observaciones v2, PKG-T07). Sin `schemas/{tender,extraction,company,scenario,report}.py` separados.
+- `domain/`: money, eligibility, expressions, groups, scoring, anomaly. Sin `statistics.py` (histórico descriptivo es P1, no implementado).
+- `services/`: budget, companies, compare, consistency, demo, eligibility, evaluation, extraction_compare, extraction_eval, idempotency, intake, jobs, meta_adapter, pdf, render, reports, review, scenarios, seed, stress, worker, workspace, más `templates/report.html.jinja`. Sin paquetes `adapters/`, `jobs/`, `ingestion/` ni `prompts/`, y sin `db/repositories.py` ni `services/{document_pipeline,citations,extraction}.py`: el adaptador Meta y el stub viven en `services/meta_adapter.py`, el worker en `services/worker.py`, y no hay ETL de producto (solo la sonda de investigación `tools/probe_placsp.py`).
+- `db/`: session, models (20 clases; ver DATA_MODELS). Migraciones `0001`–`0006` en `apps/api/migrations/versions/`.
+- Web real: `features/` contiene company, evidence, intake, library, pricing, report, requirements, review y workspace (sobre las seis previstas existen además company, intake y review). Sin `public/pdfjs/`: el visor usa texto e imagen PNG servidos por el backend.
+- Scripts reales: `scripts/dev.py`, `demo.py --reset-demo`, `verify.py [--skip-e2e]`, `seed_demo.py`, `inspect_meta.py`, más `compare_extraction.py` y `score_extraction.py` (harness de evaluación offline, PKG-T10/T11).
+- `fixtures/demo/` contiene manifest, tender, company, interpretation, review y expected `.json` (coincide con el diseño); no existe `fixtures/synthetic/`.
+
+Flujo implementado (rutas con prefijo `/api/v1`): coincide con el §Flujo principal salvo prefijo, más `POST /scopes/{id}/stress-tests` (malla de estrés persistida), `POST /scenarios/compare`, `GET /documents/{id}/pages/{n}/image` (render versionado `bidlab-render-1`, DPI 72–300, defecto 150) y `GET /jobs/{id}` (poll de análisis). `Workspace` incluye `consistency` (radar de incoherencias, PKG-T20).
+
 ## Contratos internos exactos
 ~~~python
 # Especificación de firmas, no implementación
@@ -143,6 +160,8 @@ EvaluationContext contiene scope aprobado, regla/revisión, empresa/revisión y 
 1. Upload streaming a archivo temporal privado; verificar firma %PDF-, MIME permitido y lector real; 20 MiB, 120 páginas, sin cifrado, sin portfolio/adjuntos ejecutables. UUID interno, nombre de usuario solo para display escapado. Hash antes de procesar. Duplicado por hash/tender devuelve referencia existente.
 2. Parser en subprocess con timeout 30 s y límites disponibles del SO. Linux: CPU/memoria/proceso; Windows: timeout y límites de tamaño, documentar diferencia y usar Job Object si se incorpora. No afirmar aislamiento fuerte de PDF si solo hay timeout.
 3. pypdf extract_text por página física; pdfplumber como segunda lectura para tabla/fórmula si el texto falla. Guardar extractores/versión y texto original; normalización separada. Página con <80 caracteres útiles => low_text/needs_review, no requisito ausente.
+
+> Nota 2026-10-28: solo pypdf implementado (`services/pdf.py`); sin segunda lectura pdfplumber. Normalización implementada: `nfkc-noshyphen-collapse-1`.
 4. Indexar todas las páginas hasta límite, sin recortar silenciosamente las finales. Dividir en lotes de ≤10 páginas y ≤25.000 caracteres, preservando document_id, hash, page_number y marcadores. Recuperación por encabezados/regex solo para focalizar; una pasada de cobertura revisa todas las páginas.
 5. Llamadas Meta sin herramientas, con developer prompt que trata documentos como datos no confiables, instrucciones de no inferir y esquema fijo. Tareas: datos económicos/criterios, requisitos/obligaciones, fechas. Deduplicar hallazgos por clave y evidencia, sin usar un segundo LLM como árbitro exclusivo.
 6. Cada propuesta incluye valor bruto, valor normalizado nullable, unidad, notas, citas y ambigüedad. El LLM no fija reviewed=true ni compila código.
@@ -174,10 +193,14 @@ El adaptador limita la salida con max_completion_tokens=6000, documentado para C
 
 Retry de transporte: 3 intentos totales para 429/5xx/timeout, backoff 1,2 s+jitter y Retry-After limitado a 30 s; presupuesto reservado en cada intento, 400/401/403 no se reintentan. SDK retries desactivados para evitar multiplicación. Un retry después de timeout puede facturar una llamada anterior: registrar como coste incierto. Concurrencia de inferencia 1 en P0. Tokens/latencia/estado del proveedor sin texto completo ni razonamiento privado en logs.
 
+Implementación (`services/meta_adapter.py`, `services/budget.py`, `settings.py`): el endpoint live exige `META_API_URL` con la URL completa en el entorno del proceso además de `MODEL_API_KEY` y `BIDLAB_MODE=live` (`settings.live_ready`); la URL oficial es `https://api.meta.ai/v1/chat/completions`. El contrato de respuesta es observaciones v2 (`schemas/observations.py`, `SCHEMA_VERSION="2.0-proposal"`) adaptadas a la propuesta v1; el techo de gasto es `BIDLAB_META_BUDGET_USD` con ledger atómico en micro-USD.
+
 ## Jobs, errores y persistencia
 Job: queued → running → succeeded | needs_review | failed | cancelled. Un worker consume SQLite con lease; al arrancar marca jobs running sin worker como failed:interrupted. No hace llamadas remotas repetidas tras un reinicio sin acción explícita. El usuario puede reintentar como job nuevo; Idempotency-Key evita duplicación por doble clic.
 
-POST analysis devuelve 202 + Location /jobs/:id. Poll 1 s al principio y 3 s después; timeout UI no cancela la ejecución a escondidas. Job tiene progreso por páginas/lotes, no porcentaje de “certeza”. Límite 1 running y 5 queued; 429 local con Retry-After. La DB nunca permanece bloqueada durante HTTP ni parsing.
+Implementación (`services/jobs.py` + `services/worker.py`): un hilo demonio con cola FIFO (`WORKER_ID="worker-1"`), claim compare-and-swap con columna `generation` (migración 0006), lease de 10 min (`LEASE_MINUTES=10`); al arrancar reencola jobs encolados o con lease expirado.
+
+POST analysis devuelve 202 + Location /jobs/:id. Poll 1 s al principio y 3 s después; timeout UI no cancela la ejecución a escondidas. Job tiene progreso por páginas/lotes, no porcentaje de “certeza”. La DB nunca permanece bloqueada durante HTTP ni parsing. (El «límite 1 running y 5 queued» del diseño previo no existe en código: un solo worker reclama jobs sin cupo de admisión; el único 429 implementado es `budget_exhausted`.)
 
 Errores JSON comunes: code, message, request_id, details (sin traceback). HTTP 409 stale_revision o rule_unapproved; 422 domain_validation; 413 upload_too_large; 415 unsupported_media; 503 provider_not_configured; 502 provider_failure. Unknown matemático es 200 con status unknown y motivos, no cero ni NaN. Fallo de infraestructura no se disfraza como unknown jurídico.
 
@@ -200,7 +223,7 @@ request_id en respuesta y logs JSON; job_id, stage, elapsed_ms, status, tokens y
 Guardar command, timestamp, exit code, commit/hashes y ruta de evidencia de cada check en verification-log.md. Revisiones y cambios de coste en audit_event con actor local explícito y motivo. Sin analytics remoto.
 
 ## Arranque y Windows
-El agente implementa scripts Python multiplataforma: python scripts/dev.py, python scripts/demo.py --reset-demo, python scripts/verify.py. No depender de make, bash o Docker. uv sync --frozen y npm ci; build sirve assets desde FastAPI. Reseteo afecta exclusivamente DB de demo identificada, no storage privado.
+Scripts Python multiplataforma implementados: `python scripts/dev.py`, `python scripts/demo.py --reset-demo`, `python scripts/verify.py [--skip-e2e]` (orquesta: deps-python `uv sync --frozen --all-packages`, pytest unit+evaluation, pytest integration+contracts, npm lint/typecheck/build/test:unit, ruff, mypy y playwright-e2e salvo `--skip-e2e`). No depender de make, bash o Docker. `uv sync --frozen --all-packages` y `npm ci`; servir el build web desde FastAPI sigue pendiente (`main.py` conserva `TODO(T19)`). Reseteo afecta exclusivamente DB de demo identificada, no storage privado.
 
 Documentar dos terminales si dev.py falla y registrar prueba real en Windows; ejecutar en Linux no cuenta como Windows PASS. La demo offline exige dependencias ya instaladas y assets/browser disponibles: “sin Internet durante ejecución” no significa instalación nueva sin descargas.
 

@@ -3,6 +3,8 @@ Ventana de trabajo prevista:26oct–4nov2026; fecha pública de entrega4nov21:00
 
 Baseline estimado: **58 h de tareas P0 +10 h de contingencia =68 h de trabajo efectivo**. P1 añade8,5h y se descarta si amenaza el ensayo. Son estimaciones de ingeniería con asistencia de agentes, no horas garantizadas ni tiempo autónomo ilimitado. examples/tasks.csv contiene38tareas de0,5–3h, dependencias y aceptación. El tiempo de llamadas de agentes no elimina revisión, integración ni derechos.
 
+> Nota 2026-10-28: este plan es el calendario histórico de la ventana 26oct–4nov (`examples/tasks.csv` verificado: 38 tareas); la aplicación ya existe en HEAD 4f1cc61 (API + web + E2E implementados). El plan no se reescribe; el estado real de verificación vive en `docs/verification-log.md` y `docs/task-board.md` (del lead).
+
 ## Días y gates
 | Fecha | Resultado verificable |
 |---|---|

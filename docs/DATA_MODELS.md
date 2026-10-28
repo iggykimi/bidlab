@@ -13,12 +13,15 @@ Autoridad de transporte: API_CONTRACT.yaml (OpenAPI 3.1). Autoridad de persisten
 | InterpretationRevision | tender + revision | Propuesta estructurada, hallazgos, requisitos y revisión. Append-only. |
 | PricingRuleRevision | rule_id + revision | Scope, plantilla, AST derivado, anormalidad y aprobación. |
 | CompanyRevision | company_id + revision | Costes y evidencias con horizonte. No modifica escenarios previos. |
-| HistoricalAward | snapshot + result_index | Resultado observado, ligado a scope cuando es resoluble. |
+| HistoricalAward | snapshot + result_index (tabla eliminada por migración 0003; la clase persiste en `db/models.py` sin lectores) | Resultado observado, ligado a scope cuando es resoluble. |
 | Scenario | id inmutable | Inputs y resultado con versiones y hashes exactos. |
 | Report | id inmutable | Escenario y decisión humana, pendientes y HTML imprimible. |
 | Job | id + lease | Trabajo asíncrono persistido y recuperable. |
 | ModelInvocation | id/job | Origen live/fixture/manual; tokens y coste solo cuando reales. |
 | AuditEvent | id, actor, motivo | Revisión o edición, valores previo/nuevo y fecha. |
+| StressTest | id inmutable | Malla declarada descuentos×hipótesis con request/resultado y sha. |
+| ModelSpendAccount | fila única id=1 | Totales held/spent en micro-USD del ledger atómico (techo `BIDLAB_META_BUDGET_USD`). |
+| ModelSpendReservation | clave de intento | Reserva por intento live: reserved/sent/uncertain/settled/released. |
 
 Un lote puede tener más de un resultado histórico por versiones o contratos; no suponer un único ganador. El MVP excluye adjudicación parcial no resoluble de estadísticas. No almacenar propuestas confidenciales de competidores como histórico.
 
@@ -93,23 +96,25 @@ Procedencia: neto desde XML original; bruto/duración/VEC desde XML y PCAP p.8�
 Empresa inicial: “Pyme de ejemplo”, synthetic=true; scope tias-whole; 24 meses; direct_cost=80000.00 y overhead=10000.00; min margin rate=0.10. No son costes reales del servicio ni recomendación económica. Perfil sin certificados de experiencia => requisito técnico unknown. El ejemplo puede añadir evidencia sintética expresamente etiquetada para demostrar el resultado met, sin presentarla como documento auténtico.
 
 ## Árbol de requisitos
-Un nodo group usa AND/OR y children; un leaf usa company_field, operator, threshold, unit, review_status y evidence_ids. Profundidad máxima 5 y 80 hojas. Comparación automática solo con campo y periodo/unidad revisados; manual produce unknown hasta anotación sustentada.
+Un nodo group usa AND/OR y children; un leaf usa company_field, operator, threshold, unit, review_status y evidence_ids. Límites implementados: `MAX_TREE_DEPTH=32` en `domain/eligibility.py` (compartido por los walkers; `tests/unit/test_tree_depth.py`), `children` máx 20 por grupo y `requirements` máx 80 nodos de nivel superior en contrato. El «profundidad máxima 5» del diseño previo no se implementó. Comparación automática solo con campo y periodo/unidad revisados; manual produce unknown hasta anotación sustentada.
 
 Tías solvencia económica, PCAP p.5–6: OR(turnover≥295840, seguro profesional≥295840, patrimonio/alternativa del apartado c revisada). El texto de c menciona patrimonio o ratio: si no puede formalizarse en la unidad correcta, leaf manual. No simplificarlo a “necesita facturar 295.840” ni interpretar ratio como euros.
 Solvencia técnica p.6: importe anual acumulado en año de mayor ejecución de últimos tres años ≥207088, con naturaleza similar y acreditación. La condición de similaridad requiere revisión; no basta coincidencia de CPV o cifra.
 Perfiles/experiencia p.6–7: mantener condiciones separadas y certificados pendientes; no evaluar solo una cifra global.
 
 ## API: semántica adicional
-API_CONTRACT contiene 22 paths / 24 operaciones, con respuestas concretas y errores. capabilities es /api/v1/capabilities (se sustituye la ruta preliminar /meta/capabilities del dossier). Evaluate no persiste y no invoca Meta; saveScenario reevalúa y persiste.
+API_CONTRACT contiene 28 paths / 30 operaciones (contado 2026-10-28 con regex sobre `docs/API_CONTRACT.yaml`; el «22/24» del diseño previo está desactualizado), con respuestas concretas y errores. capabilities es /api/v1/capabilities (se sustituye la ruta preliminar /meta/capabilities del dossier). Evaluate no persiste y no invoca Meta; saveScenario reevalúa y persiste. Sobre el diseño previo el contrato añade: jobs, stress-tests, scenarios/compare, eligibility/check, page image y ready. `Workspace` incluye `consistency: ConsistencyReport` (radar PKG-T20) y `StressByDiscount` incluye `price_net` y `max_cost_net` (techo `money.cost_ceiling`).
 
 Idempotency-Key requerido para crear analysis/scenario/report/demo session. Guardar clave+hash de cuerpo+resultado 24 h: misma clave y cuerpo devuelve el mismo recurso; distinto cuerpo =>409. expected_revision evita lost updates. Con nueva revisión incompatible =>409 stale_revision, nunca recalcular un informe antiguo silenciosamente.
 
 ReviewRequest admite propuesta corregida y árboles; el servidor valida cada cambio según su objetivo, recalcula AST y añade auditoría. Campos id/revision/review_status aportados por cliente no sustituyen la secuencia/actor del servidor. Regla unsupported puede persistirse bloqueada y verse, no ejecutarse.
 
-GET historical-awards retorna availability=disabled/insufficient/descriptive. Disabled es respuesta válida P0. Ninguna respuesta usa “win_probability”. El endpoint PDF entrega Content-Disposition attachment por defecto; el visor recibe bytes mediante fetch local y PDF.js.
+Histórico (P1, no implementado 2026-10-28: ningún path `historical-*` existe en el contrato): cuando exista, `GET historical-awards` retornará availability=disabled/insufficient/descriptive, siendo disabled respuesta válida P0. Ninguna respuesta usa “win_probability”. El endpoint PDF entrega Content-Disposition attachment por defecto; el visor recibe texto por `GET /documents/{id}/pages/{n}` e imagen PNG por `.../image` (render `bidlab-render-1`), sin PDF.js en `apps/web`.
 
 ## Persistencia y migraciones
 schemas/schema.sql es DDL inicial ejecutable en SQLite y refleja las relaciones esenciales. Alembic genera migración equivalente y verifica roundtrip en DB vacía. JSON guarda snapshots tipados, no un almacén sin validación. Alembic no ejecuta schema.sql adicionalmente sobre las mismas tablas.
+
+Cadena implementada (`apps/api/migrations/versions/`, 0001→0006): 0001 esquema inicial equivalente a `schema.sql` (17 tablas); 0002 índices `ix_citation_document`, `ix_rule_revision_scope`; 0003 elimina `historical_award`; 0004 crea `stress_test`; 0005 crea `model_spend_account` + `model_spend_reservation` (PKG-T02); 0006 añade `job.generation` (PKG-T03). Esquema migrado efectivo: 19 tablas; `db/models.py` declara 20 clases (incluye `HistoricalAward` residual).
 
 Cada copia demo tiene DB/ruta separada. Bloqueo de publicación por fichero en publication-manifest; no arrastrar storage/.sqlite ni .env a git. Guardar fixture curado permite arrancar desde cero sin reimportar toda España.
 

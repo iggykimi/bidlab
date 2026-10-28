@@ -1,6 +1,8 @@
 # Auditoría de fuentes y viabilidad
 Fecha de consulta: **2026-10-26, Europe/Madrid**. El dossier adjunto es la hipótesis inicial; este paquete lo sustituye en las decisiones técnicas que concreta. Verificado documentalmente no significa probado con cuenta propia.
 
+> Nota 2026-10-28 (no reescribe la auditoría del día 26): G4 «app PENDIENTE» y G5 «No existe app ni vídeo» están desactualizados —la app está implementada en HEAD 4f1cc61—; G3 sigue BLOCKED en este worktree (cero llamadas Meta ejecutadas aquí, sin credencial). Los estados VD/VE/D/NC/I describen la investigación del día 26 y se conservan intactos.
+
 ## Estados
 - **VD**: contenido oficial leído y contrastado.
 - **VE**: experimento ejecutado; evidencia local y hash.
