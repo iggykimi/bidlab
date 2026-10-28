@@ -256,84 +256,91 @@ a[href^="http"]::after {
     padding-top: 0;
   }
 
-  /* Workhead + steps sidebar + base block (plates 02-07). */
-  .crumbs {
-    color: var(--color-muted);
-    font-size: 0.889rem;
-  }
-  .crumbs a {
-    color: var(--color-primary);
-  }
+  /* Workhead + steps sidebar + base block (plates 02-07, mock exact).
+   * The app keeps its tablist pattern (tests/tour/axe pin it): the step
+   * buttons nest in li elements, so the two li rules below carry the
+   * grid/flex item behaviour the mock puts on the buttons directly. */
   .workhead {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 8px 0 24px;
+    margin-bottom: 28px;
   }
-  .workhead h1 {
-    margin: 0;
-    font-size: 1.65rem;
-    line-height: 1.25;
+  .workhead .eyebrow {
+    margin-top: 24px;
   }
-  .workhead .sub {
-    color: var(--color-muted);
-    margin: 6px 0 0;
+  .workhead .small {
+    margin: 4px 0 0;
+  }
+  .backrow a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--color-primary);
+    padding: 10px 18px;
+    font-size: 0.889rem;
+    font-weight: 650;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+  .backrow a:hover {
+    filter: brightness(0.95);
   }
   .workgrid {
     display: grid;
-    grid-template-columns: 216px 1fr;
-    gap: 32px;
+    grid-template-columns: 216px minmax(0, 1fr);
+    gap: 40px;
     align-items: start;
   }
   .steps {
-    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+  .steps ul {
+    display: grid;
+    gap: 10px;
     margin: 0;
     padding: 0;
+    list-style: none;
   }
-  .steps li {
-    margin: 0 0 6px;
+  .steps li > button {
+    width: 100%;
   }
-  .steps a,
-  .steps .step {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
+  .steps button {
+    text-align: left;
     color: var(--color-muted);
-    text-decoration: none;
-    min-height: 48px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    min-height: 68px;
+    padding: 10px 18px;
+    font-size: 0.889rem;
+    font-weight: 650;
+    line-height: 1.4;
   }
-  .steps .now {
+  .steps button:hover {
+    filter: brightness(0.95);
+  }
+  .steps button[aria-current="step"] {
     background: var(--color-soft);
     color: var(--color-primary);
-    font-weight: 700;
   }
   .stepnum {
+    margin-right: 14px;
+    color: var(--color-primary);
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
   }
-  .base {
-    margin-top: 24px;
-    font-size: 1rem;
+  .steps .base {
+    padding: 20px 18px;
+    font-size: 0.889rem;
   }
-  .base h2 {
-    font-size: 1rem;
-    margin: 0 0 8px;
+  .steps .base p {
+    margin: 8px 0 0;
   }
-  .base ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .base li {
-    margin: 6px 0;
-    color: var(--color-muted);
-  }
-  .base li.ok {
-    color: var(--color-green);
+  .steps .base .tag,
+  .steps .base [data-testid="demo-badge"] {
+    margin-top: 8px;
   }
 
   /* Surfaces, benefit, notices, tags. */
@@ -760,6 +767,43 @@ a[href^="http"]::after {
    * bar Licitaciones link (same destination) stays visible. */
   .backrow {
     display: none;
+  }
+  .workhead {
+    margin-bottom: 16px;
+  }
+  .workhead .eyebrow {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  .workhead h1 {
+    font-size: 1.2rem;
+    max-width: 36ch;
+    margin-bottom: 8px;
+  }
+  .steps {
+    display: block;
+    margin-bottom: 0;
+  }
+  .steps ul {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 24px;
+    padding-bottom: 8px;
+    gap: 4px;
+  }
+  .steps li {
+    flex: 0 0 auto;
+  }
+  .steps button {
+    min-height: 48px;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  .steps .base {
+    display: none;
+  }
+  .stepnum {
+    margin-right: 8px;
   }
   .benefit .big {
     font-size: 2.25rem;
