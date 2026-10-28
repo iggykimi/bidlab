@@ -67,12 +67,12 @@ export function KpiSection({ workspace, state }: Props) {
     <section
       aria-label="Indicadores"
       aria-busy={pending || resultStale}
-      className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2"
     >
       {resultStale && (
         <p
           data-testid="stale-result"
-          className="rounded-lg border border-alert bg-warn-bg p-2 text-sm sm:col-span-2 xl:col-span-4"
+          className="rounded-lg border border-alert bg-warn-bg p-2 text-sm sm:col-span-2"
         >
           Actualizando con tu último cambio… Estas cifras son del cálculo anterior.
         </p>

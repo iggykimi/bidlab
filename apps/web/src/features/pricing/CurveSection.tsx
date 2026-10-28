@@ -33,7 +33,7 @@ export function CurveSection({ state }: CurveProps) {
   const { result, ruleCitations, openEvidence, h, pending, error, inputsValid, requestCount } = state;
   return (
     <Card aria-label="Curva precio-puntos">
-      <h2 className="text-lg font-semibold">Curva precio-puntos</h2>
+      <h2>Curva precio-puntos</h2>
       {!result && (
         <p className="mt-2 text-sm">
           {inputsValid ? "Calculando tu resultado…" : "Corrige los valores marcados para ver la curva."}
@@ -83,7 +83,7 @@ export function CalculationSection({ workspace, state }: CalcProps) {
     result?.score.status === "defined" && result.score.value !== null && best !== null;
   return (
     <Card aria-label="¿Cómo sale tu resultado?">
-      <h2 className="text-lg font-semibold">¿Cómo sale tu resultado?</h2>
+      <h2>¿Cómo sale tu resultado?</h2>
       {!result && (
         <p className="mt-2 text-sm">
           {inputsValid ? "Calculando tu resultado…" : "Corrige los valores marcados para ver el cálculo."}

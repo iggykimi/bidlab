@@ -115,7 +115,7 @@ export function HypothesesForm({ state }: Props) {
   const impuesto = nombreImpuesto(state.scope?.basis.tax_kind ?? "unknown");
   return (
     <Card aria-label="Prueba con precios de rivales">
-      <h2 className="text-lg font-semibold">Prueba con precios de rivales</h2>
+      <h2>Prueba con precios de rivales</h2>
       <p className="mt-1 text-sm text-muted">Empiezan inventados. Pon los que creas probables.</p>
       <label className="mt-3 flex items-start gap-2 text-sm">
         <input
@@ -286,7 +286,7 @@ export function GroupReferencesSection({ state }: Props) {
   const { h, result, anomalyCitations, openEvidence } = state;
   return (
     <Card aria-label="Referencias de oferta sospechosa por grupo">
-      <h2 className="text-lg font-semibold">Referencias por grupo</h2>
+      <h2>Referencias por grupo</h2>
       {!result && <p className="mt-2 text-sm">Calculando tu resultado…</p>}
       {result && (
         <div data-testid="group-references" className="mt-2 grid gap-3 text-sm">

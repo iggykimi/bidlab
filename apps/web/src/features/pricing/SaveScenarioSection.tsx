@@ -39,7 +39,7 @@ export function AssumptionsSection({ state }: StateOnly) {
   const internalWarnings = warnings.filter((w) => warningEs(w) === null);
   return (
     <Card aria-label="Supuestos">
-      <h2 className="text-lg font-semibold">Supuestos declarados</h2>
+      <h2>Supuestos declarados</h2>
       {!result && <p className="mt-2 text-sm">Calculando tu resultado…</p>}
       {result && (
         <ul data-testid="assumptions" className="mt-2 list-disc space-y-1 pl-5 text-sm">
@@ -81,7 +81,7 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
   const rawCode = errorCodeOnly(saveRawError);
   return (
     <Card aria-label="¿Guardas esta prueba?">
-      <h2 className="text-lg font-semibold">¿Guardas esta prueba?</h2>
+      <h2>¿Guardas esta prueba?</h2>
       <label className="mt-2 block text-sm">
         <span className="font-medium">Nombre de tu prueba</span>
         <input

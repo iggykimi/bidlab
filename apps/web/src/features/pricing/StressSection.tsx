@@ -282,7 +282,7 @@ export function StressSection({ state }: Props) {
 
   return (
     <Card aria-label="Prueba de resistencia" data-testid="stress-section">
-      <h2 className="text-lg font-semibold">Prueba de resistencia</h2>
+      <h2>Prueba de resistencia</h2>
       <p className="mt-1 text-sm text-muted">
         Prueba hasta 81 rebajas contra 9 hipótesis rivales. Te decimos cuál aguanta tus límites.
       </p>

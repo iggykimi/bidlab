@@ -27,7 +27,7 @@ export function CompareFromPricing({ workspace, scopeFilter, sessionReady }: Pro
   if (scenariosQuery.isError) {
     return (
       <Card aria-label="Comparar pruebas">
-        <h2 className="text-lg font-semibold">¿Qué prueba te conviene más?</h2>
+        <h2>¿Qué prueba te conviene más?</h2>
         <p className="mt-2 text-sm">
           No pudimos cargar tus pruebas aquí.{" "}
           <Link

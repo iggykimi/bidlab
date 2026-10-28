@@ -29,8 +29,8 @@ export function PricingLab({ workspace }: Props) {
   if (!session || !companyId) {
     if (own) {
       return (
-        <section aria-label="Precio bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">¿Por qué no puedes simular?</h2>
+        <section aria-label="Precio bloqueado" className="surface">
+          <h2>¿Por qué no puedes simular?</h2>
           <p className="mt-2 text-sm">
             Aún no creas tu empresa. Sin tus costes no hay nada que calcular.
           </p>
@@ -54,8 +54,8 @@ export function PricingLab({ workspace }: Props) {
   if (scope && session.scope_id !== scope.id) {
     // P0-1: never price this scope with another context's company.
     return (
-      <section aria-label="Precio bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-        <h2 className="text-lg font-semibold">¿Por qué no puedes simular?</h2>
+      <section aria-label="Precio bloqueado" className="surface">
+        <h2>¿Por qué no puedes simular?</h2>
         <p className="mt-2 text-sm">
           Tu sesión apunta a otra licitación. No mezclamos contextos: vuelve a la biblioteca y
           abre esta licitación de nuevo.
@@ -74,8 +74,8 @@ export function PricingLab({ workspace }: Props) {
   if (!scope || !rule || rule.review_status !== "approved") {
     if (own) {
       return (
-        <section aria-label="Precio bloqueado" className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">¿Por qué no puedes simular?</h2>
+        <section aria-label="Precio bloqueado" className="surface">
+          <h2>¿Por qué no puedes simular?</h2>
           <p className="mt-2 text-sm">
             Aún no apruebas la fórmula de puntos. Revísala primero y vuelve aquí.
           </p>
@@ -107,10 +107,14 @@ export function PricingLab({ workspace }: Props) {
   }
 
   return (
-    <div className="grid gap-4">
-      <DiscountSection state={state} />
-      <KpiSection workspace={workspace} state={state} />
-      <ConclusionSection state={state} />
+    <div className="stack">
+      <div className="twocol">
+        <DiscountSection state={state} />
+        <div className="stack">
+          <KpiSection workspace={workspace} state={state} />
+          <ConclusionSection state={state} />
+        </div>
+      </div>
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="grid min-w-0 content-start gap-4 lg:col-span-8 [&>*]:min-w-0">
           <CurveSection state={state} />
