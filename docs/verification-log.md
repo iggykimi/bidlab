@@ -619,3 +619,31 @@ Evidencia:
   honesto en AnalysisTracker; lógica intacta).
 - 409 job_running retirado (claim devuelve None);
   código sigue permitido en contrato.
+
+## Plan Integral PKG-T04 — cobertura de páginas (28-oct, Windows)
+
+Fecha: 2026-10-28. Commit base: 4cf5c8b. Entorno: Windows,
+Python 3.14 (venv), Chromium Playwright. Sin red.
+
+`pdf.coverage()` nuevo (puro, adaptado de la referencia):
+físico/usable/entregado por página, sin confundirlos;
+vacía → no cuenta + `empty_text_not_coverage`;
+duplicadas/fuera de manifiesto/totales inválidos →
+ValueError; imágenes pendientes de PKG-T05. `jobs`:
+processed = usable (B02), warnings de cobertura en job,
+bloque `coverage` en manifest, requires_attention fuerza
+needs_review. `workspace`: warnings de cobertura en
+get_workspace (llegan a la revisión). Render: filas
+accionables primero + resumen de faltantes por
+documento. Sin cambio de contrato (warnings/manifest
+son libres).
+
+Evidencia:
+- Backend: unit 251 + integración/contratos 122 = 373
+  passed, exit 0 (8 tests coverage incl. truncado,
+  missing, duplicados, overflow; B02 corregido:
+  6 vacías → processed 0/41 + needs_review +
+  warnings en job, manifest y workspace).
+- `ruff check/mypy` verdes en pdf/jobs/workspace.
+- E2E completa 62/62 (tracker muestra warnings;
+  ninguna aserción exacta de warnings rota).

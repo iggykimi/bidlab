@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db import models
+from bidlab.services import pdf as pdf_service
 
 RIGHTS_MAP = {
     "research_only": "research_only",
@@ -169,11 +170,40 @@ def get_workspace(session: Session, tender_id: str, mode: str) -> dict[str, Any]
         payload, doc_warnings = document_to_dict(doc)
         documents.append(payload)
         warnings.extend(doc_warnings)
+    doc_ids = [doc.id for doc in docs]
+    if doc_ids:
+        page_rows = session.scalars(
+            select(models.DocumentPage)
+            .where(models.DocumentPage.document_id.in_(doc_ids))
+            .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
+        ).all()
+        by_doc: dict[str, list[models.DocumentPage]] = {}
+        for row in page_rows:
+            by_doc.setdefault(row.document_id, []).append(row)
+        for doc in docs:
+            report = pdf_service.coverage(
+                {doc.id: doc.pages_count},
+                [
+                    pdf_service.CoveragePage(
+                        document_id=row.document_id,
+                        physical_page=row.page_number,
+                        text=row.normalized_text,
+                        flags=tuple(
+                            str(key)
+                            for key, value in (
+                                row.flags_json.items() if isinstance(row.flags_json, dict) else []
+                            )
+                            if value
+                        ),
+                    )
+                    for row in by_doc.get(doc.id, [])
+                ],
+            )
+            warnings.extend(pdf_service.coverage_warning_lines(report, limit=3))
     raw_claims = proposal.get("claims", [])
     claims = raw_claims if isinstance(raw_claims, list) else []
     tree = reviewed.get("requirements_tree")
     requirements = [tree] if isinstance(tree, dict) else []
-    doc_ids = [doc.id for doc in docs]
     citations: list[dict[str, Any]] = []
     if doc_ids:
         rows = session.scalars(

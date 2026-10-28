@@ -408,6 +408,7 @@ class AttemptOutcome:
     input_hash: str
     run_started: str
     live: bool
+    coverage: dict[str, Any]
     result: meta_adapter.AdapterResult | None = None
     error: meta_adapter.AdapterError | None = None
     budget_blocked: bool = False
@@ -482,6 +483,9 @@ def execute_attempt(
             .where(models.DocumentPage.document_id.in_(claim.doc_ids))
             .order_by(models.DocumentPage.document_id, models.DocumentPage.page_number)
         ).all()
+        docs = session.scalars(
+            select(models.Document).where(models.Document.id.in_(claim.doc_ids))
+        ).all()
         inputs = tuple(
             meta_adapter.PageInput(
                 document_id=page.document_id,
@@ -489,6 +493,24 @@ def execute_attempt(
                 normalized_text=page.normalized_text,
             )
             for page in pages
+        )
+        coverage = pdf_service.coverage(
+            {doc.id: doc.pages_count for doc in docs},
+            [
+                pdf_service.CoveragePage(
+                    document_id=page.document_id,
+                    physical_page=page.page_number,
+                    text=page.normalized_text,
+                    flags=tuple(
+                        str(key)
+                        for key, value in (
+                            page.flags_json.items() if isinstance(page.flags_json, dict) else []
+                        )
+                        if value
+                    ),
+                )
+                for page in pages
+            ],
         )
     input_hash = meta_adapter.pages_input_hash(inputs)
     run_started = _now().isoformat()
@@ -501,6 +523,7 @@ def execute_attempt(
                 input_hash=input_hash,
                 run_started=run_started,
                 live=claim.mode == "live",
+                coverage=coverage,
                 error=meta_adapter.AdapterError(exc.code, exc.message),
             )
     live = adapter.is_live
@@ -524,6 +547,7 @@ def execute_attempt(
                 input_hash=input_hash,
                 run_started=run_started,
                 live=True,
+                coverage=coverage,
                 budget_blocked=True,
             )
     try:
@@ -543,12 +567,18 @@ def execute_attempt(
             input_hash=input_hash,
             run_started=run_started,
             live=live,
+            coverage=coverage,
             error=exc,
         )
     if live:
         _settle_attempt(engine, key, estimate, sent=True, cost_usd=result.estimated_cost_usd)
     return AttemptOutcome(
-        inputs=inputs, input_hash=input_hash, run_started=run_started, live=live, result=result
+        inputs=inputs,
+        input_hash=input_hash,
+        run_started=run_started,
+        live=live,
+        coverage=coverage,
+        result=result,
     )
 
 
@@ -671,6 +701,9 @@ def _publish_success(
         doc_sha256=doc_sha256,
     )
     job_warnings.extend(citation_warnings)
+    # Delivery problems (empty/truncated/missing pages) warn here and force
+    # review; they also persist in the manifest coverage block below.
+    job_warnings.extend(pdf_service.coverage_warning_lines(outcome.coverage))
 
     new_revision = current_revision(session, job.tender_id) + 1
     session.add(
@@ -733,7 +766,14 @@ def _publish_success(
     job.result_revision = new_revision
     job.error_code = None
     job.updated_at = _now().isoformat()
-    _update_request(job, processed=len(pages), warnings=job_warnings, manifest=manifest)
+    usable_pages = outcome.coverage.get("usable_text", len(pages))
+    manifest["coverage"] = outcome.coverage
+    _update_request(
+        job,
+        processed=int(usable_pages) if isinstance(usable_pages, int) else len(pages),
+        warnings=job_warnings,
+        manifest=manifest,
+    )
     session.flush()
 
 

@@ -536,3 +536,56 @@ def test_worker_start_requeues_orphans(demo_client: TestClient) -> None:
     worker_service.start()
     terminal = _poll_terminal(demo_client, "job-orphan-1")
     assert terminal["status"] == "needs_review"
+
+
+def test_empty_pages_count_zero_and_force_review(demo_client: TestClient) -> None:
+    """PKG-T04/B02 fixed: empty rows are not readable text; review forced."""
+    with _db() as session:
+        rows = session.scalars(select(models.DocumentPage)).all()
+        assert len(rows) == 6
+        for row in rows:
+            row.raw_text = ""
+            row.normalized_text = ""
+            row.flags_json = {}
+        session.commit()
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k-empty")
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    assert job.status == "queued"
+    terminal = _poll_terminal(demo_client, job.id.root)
+    assert terminal["status"] == "needs_review"
+    assert terminal["processed_pages"] == 0
+    assert terminal["total_pages"] == 41
+    assert any("no_extractable_text" in warning for warning in terminal["warnings"])
+    with _db() as session:
+        stored = session.get(models.Job, job.id.root)
+        assert stored is not None
+        manifest = stored.request_json["manifest"]
+        assert manifest["coverage"]["usable_text"] == 0
+        assert manifest["coverage"]["not_submitted"] == 41
+        assert manifest["coverage"]["requires_attention"] is True
+    workspace = demo_client.get("/api/v1/tenders/tias/workspace")
+    assert workspace.status_code == 200
+    assert any("no_extractable_text" in warning for warning in workspace.json()["warnings"])
+
+
+def test_truncated_page_warns_in_result_and_review(demo_client: TestClient) -> None:
+    """PKG-T04: text_truncated is usable (counts) but warns everywhere."""
+    with _db() as session:
+        row = session.scalars(select(models.DocumentPage)).first()
+        assert row is not None
+        row.flags_json = {"text_truncated": True}
+        session.commit()
+    res = demo_client.post(
+        "/api/v1/tenders/tias/analysis", json=_body(), headers=_headers("k-trunc")
+    )
+    assert res.status_code == 202
+    job = g.Job.model_validate(res.json())
+    terminal = _poll_terminal(demo_client, job.id.root)
+    assert terminal["processed_pages"] == 6
+    assert any("text_truncated" in warning for warning in terminal["warnings"])
+    workspace = demo_client.get("/api/v1/tenders/tias/workspace")
+    assert workspace.status_code == 200
+    assert any("text_truncated" in warning for warning in workspace.json()["warnings"])

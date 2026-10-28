@@ -32,6 +32,9 @@ DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 - 28-oct: PKG-T03 hecho (worker in-process, claim CAS,
   fence, migración 0006); backend 363 + E2E 7/7 verdes.
   Siguiente: PKG-T04 (cobertura de páginas).
+- 28-oct: PKG-T04 hecho (coverage usable/entregado,
+  warnings job+workspace, manifest); backend 373 +
+  E2E 62/62 verdes. Siguiente: PKG-T05 (render).
 
 ## Sesión 28-oct (tour + malla + contrato; sin commit, pendiente autor)
 

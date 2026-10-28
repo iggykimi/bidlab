@@ -48,6 +48,127 @@ class CitationMatch:
     normalized_end: int | None
 
 
+@dataclass(frozen=True)
+class CoveragePage:
+    """One stored page row, as delivery coverage sees it."""
+
+    document_id: str
+    physical_page: int
+    text: str
+    flags: tuple[str, ...] = ()
+
+
+# Flags that deserve a human-visible warning. Stored informational flags
+# (for example ``curated_excerpt_only``) stay on the page entry but never
+# warn: only delivery problems and truncation do.
+WARNING_FLAGS = frozenset(
+    {
+        "page_missing",
+        "no_extractable_text",
+        "empty_text_not_coverage",
+        "not_submitted",
+        "text_truncated",
+    }
+)
+
+
+def coverage(expected_pages: dict[str, int], pages: list[CoveragePage]) -> dict[str, object]:
+    """Server-derived delivery coverage over a document manifest.
+
+    Adapted from the Plan Integral reference: physical presence, usable
+    text and submission are reported per page and NEVER conflated. An
+    empty page row is not readable text (``empty_text_not_coverage``);
+    duplicates, out-of-manifest pages and invalid totals raise
+    ``ValueError`` instead of guessing. Text is always submitted when its
+    row exists; images arrive with PKG-T05, so ``image_submitted`` stays
+    False until then.
+    """
+    known: dict[tuple[str, int], CoveragePage] = {}
+    for page in pages:
+        total = expected_pages.get(page.document_id)
+        if total is None or not 1 <= page.physical_page <= total:
+            msg = "page is outside the document manifest"
+            raise ValueError(msg)
+        key = (page.document_id, page.physical_page)
+        if key in known:
+            msg = "duplicate physical page"
+            raise ValueError(msg)
+        known[key] = page
+    manifest: list[dict[str, object]] = []
+    warnings: list[dict[str, object]] = []
+    for doc_id, total in expected_pages.items():
+        if not isinstance(total, int) or isinstance(total, bool) or total < 1:
+            msg = "invalid total"
+            raise ValueError(msg)
+        for number in range(1, total + 1):
+            stored = known.get((doc_id, number))
+            usable = stored is not None and bool(stored.text.strip())
+            text_sent = bool(stored is not None and usable)
+            flags = list(stored.flags) if stored else ["page_missing"]
+            if stored is not None and not usable and "no_extractable_text" not in flags:
+                flags.append("no_extractable_text")
+            if stored is not None and not usable:
+                flags.append("empty_text_not_coverage")
+            if not text_sent:
+                flags.append("not_submitted")
+            if [flag for flag in flags if flag in WARNING_FLAGS]:
+                warnings.append({"document_id": doc_id, "physical_page": number, "flags": flags})
+            manifest.append(
+                {
+                    "document_id": doc_id,
+                    "physical_page": number,
+                    "page_available": stored is not None,
+                    "usable_text_available": usable,
+                    "text_submitted": text_sent,
+                    "image_submitted": False,
+                    "semantic_review": "pending",
+                    "flags": flags,
+                }
+            )
+    return {
+        "expected": len(manifest),
+        "available": sum(1 for entry in manifest if entry["page_available"]),
+        "usable_text": sum(1 for entry in manifest if entry["usable_text_available"]),
+        "text_submitted": sum(1 for entry in manifest if entry["text_submitted"]),
+        "image_submitted": 0,
+        "not_submitted": sum(1 for entry in manifest if not entry["text_submitted"]),
+        "requires_attention": bool(warnings),
+        "warnings": warnings,
+        "pages": manifest,
+    }
+
+
+def coverage_warning_lines(report: dict[str, object], limit: int = 4) -> list[str]:
+    """Render coverage warnings as human-readable lines, capped.
+
+    Actionable rows (empty/truncated) come first, one line each; missing
+    physical pages collapse into a per-document summary so curated
+    excerpts never drown the real problems.
+    """
+    entries = report.get("warnings")
+    if not isinstance(entries, list):
+        return []
+    rows = [entry for entry in entries if isinstance(entry, dict)]
+    present = [entry for entry in rows if "page_missing" not in entry["flags"]]
+    missing = [entry for entry in rows if "page_missing" in entry["flags"]]
+    lines = [
+        f"document {entry['document_id']} p.{entry['physical_page']}: {', '.join(entry['flags'])}"
+        for entry in present
+    ]
+    if len(lines) > limit:
+        lines = [
+            *lines[:limit],
+            f"... and {len(lines) - limit} more pages need attention",
+        ]
+    missing_by_doc: dict[str, int] = {}
+    for entry in missing:
+        doc_id = str(entry["document_id"])
+        missing_by_doc[doc_id] = missing_by_doc.get(doc_id, 0) + 1
+    for doc_id in sorted(missing_by_doc):
+        lines.append(f"document {doc_id}: {missing_by_doc[doc_id]} physical pages not delivered")
+    return lines
+
+
 def normalize_text(raw: str) -> str:
     """NFKC, drop soft hyphens, collapse all whitespace to single spaces."""
     text = unicodedata.normalize("NFKC", raw).replace(chr(0xAD), "")
