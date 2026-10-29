@@ -1,7 +1,7 @@
 import { useEffect, useRef, useTransition } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { getWorkspace } from "../../api/client";
+import { getWorkspace, listTenderReports, listTenderScenarios } from "../../api/client";
 import { DemoBadge } from "../../components/DemoBadge";
 import { Skeleton } from "../../components/Skeleton";
 import { Alert } from "../../components/ui";
@@ -78,6 +78,26 @@ export function WorkspacePage() {
     queryKey: ["workspace", tenderId],
     queryFn: ({ signal }) => getWorkspace(tenderId, signal),
   });
+  const queryClient = useQueryClient();
+
+  // Zeigarnik/H1: real progress on the steps that accumulate work (saved
+  // pruebas, created informes). Totals only (pageSize 1); hidden at zero.
+  const badgeSession = loadSession();
+  const badgeScope = badgeSession?.tender_id === tenderId ? badgeSession.scope_id : undefined;
+  const scenarioCountQuery = useQuery({
+    queryKey: ["stepCounts", tenderId, badgeScope ?? "none", "scenarios"],
+    queryFn: ({ signal }) =>
+      listTenderScenarios(tenderId, { scopeId: badgeScope, pageSize: 1, signal }),
+    enabled: tenderId !== "" && badgeScope !== undefined,
+  });
+  const reportCountQuery = useQuery({
+    queryKey: ["stepCounts", tenderId, badgeScope ?? "none", "reports"],
+    queryFn: ({ signal }) =>
+      listTenderReports(tenderId, { scopeId: badgeScope, pageSize: 1, signal }),
+    enabled: tenderId !== "" && badgeScope !== undefined,
+  });
+  const scenarioTotal = scenarioCountQuery.data?.total ?? 0;
+  const reportTotal = reportCountQuery.data?.total ?? 0;
 
   // Own tenders gain the Revisar step between Requisitos and Precio.
   const own = workspaceQuery.data ? isOwnTender(workspaceQuery.data.tender) : false;
@@ -87,6 +107,7 @@ export function WorkspacePage() {
   function selectTab(id: TabId) {
     // Focus stays on the tab itself (APG roving); the panel effect below skips.
     skipPanelFocusRef.current = true;
+    void queryClient.invalidateQueries({ queryKey: ["stepCounts", tenderId] });
     startTransition(() => {
       const next = new URLSearchParams(params);
       next.set("tab", id);
@@ -220,6 +241,16 @@ export function WorkspacePage() {
                     {i + 1}
                   </span>{" "}
                   {t.label}
+                  {t.id === "precio" && scenarioTotal > 0 && (
+                    <span className="stepcount" aria-hidden="true">
+                      ({scenarioTotal})
+                    </span>
+                  )}
+                  {t.id === "informe" && reportTotal > 0 && (
+                    <span className="stepcount" aria-hidden="true">
+                      ({reportTotal})
+                    </span>
+                  )}
                 </button>
               </li>
             ))}

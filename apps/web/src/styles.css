@@ -348,6 +348,17 @@ a[href^="http"]::after {
     color: var(--color-primary);
     font-variant-numeric: tabular-nums;
   }
+  .stepcount {
+    margin-left: 8px;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .req-group th {
+    text-align: left;
+    background: var(--color-primary-soft);
+    padding: 6px 8px;
+    font-size: 12px;
+  }
   .steps .base {
     padding: 20px 18px;
     font-size: 0.889rem;

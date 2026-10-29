@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -242,9 +242,6 @@ export function RequirementsTab({ workspace }: Props) {
                 Dónde lo pone el pliego de condiciones (PCAP)
               </th>
               <th scope="col" className="border-b border-border p-2">
-                Apartado
-              </th>
-              <th scope="col" className="border-b border-border p-2">
                 Cuánto te piden
               </th>
               <th scope="col" className="border-b border-border p-2">
@@ -258,17 +255,30 @@ export function RequirementsTab({ workspace }: Props) {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-4 text-center text-muted">
+                <td colSpan={5} className="p-4 text-center text-muted">
                   Esta licitación aún no tiene requisitos revisados.
                 </td>
               </tr>
             )}
-            {rows.map(({ leaf, groupLabel, groupOperator }) => {
+            {rows.map(({ leaf, groupLabel, groupOperator }, index) => {
               const item = verdictById.get(leaf.id);
               const citations = citationsForLeaf(workspace, leaf);
               const apartado = groupLabel;
+              // Miller/H6 chunking: one band per criterion group; the old
+              // Apartado column moves here so rows stop repeating it.
+              const prevGroup = index === 0 ? null : (rows[index - 1]?.groupLabel ?? null);
+              const showGroup = groupLabel !== "" && groupLabel !== prevGroup;
               return (
-                <tr key={leaf.id} data-testid={requirementTestId(leaf.id)} data-requirement-id={leaf.id}>
+                <Fragment key={leaf.id}>
+                {showGroup && (
+                  <tr className="req-group">
+                    <th scope="rowgroup" colSpan={5}>
+                      {groupLabel}
+                      {groupOperator === "OR" ? " (basta con cumplir una)" : ""}
+                    </th>
+                  </tr>
+                )}
+                <tr data-testid={requirementTestId(leaf.id)} data-requirement-id={leaf.id}>
                   <td className="border-b border-line p-2 font-medium">{leaf.label}</td>
                   <td className="border-b border-line p-2">
                     {citations.length === 0 ? (
@@ -289,7 +299,6 @@ export function RequirementsTab({ workspace }: Props) {
                       </span>
                     )}
                   </td>
-                  <td className="border-b border-line p-2">{apartado || "—"}</td>
                   <td className="tnum border-b border-line p-2">
                     {umbralEs(leaf.threshold, leaf.unit)}
                   </td>
@@ -331,6 +340,7 @@ export function RequirementsTab({ workspace }: Props) {
                     )}
                   </td>
                 </tr>
+                </Fragment>
               );
             })}
           </tbody>

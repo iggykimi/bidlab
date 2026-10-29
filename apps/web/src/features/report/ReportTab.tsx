@@ -444,6 +444,7 @@ export function ReportTab({ workspace }: Props) {
     try {
       const created = await createReport(selectedScenario, decision, parsed.data);
       await queryClient.invalidateQueries({ queryKey: ["tenderReports", workspace.tender.id] });
+      await queryClient.invalidateQueries({ queryKey: ["stepCounts", workspace.tender.id] });
       setSelectedReport(created.id);
       toast.success("Informe creado. Puedes descargarlo o previsualizarlo.");
     } catch (err) {

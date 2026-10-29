@@ -239,6 +239,7 @@ export function usePricingState(workspace: Workspace): PricingState {
       });
       // R03: the Informe list must show this copy without a reload.
       await queryClient.invalidateQueries({ queryKey: ["tenderScenarios", workspace.tender.id] });
+      await queryClient.invalidateQueries({ queryKey: ["stepCounts", workspace.tender.id] });
     } catch (err) {
       setSaveError(errorEs(err, "No pudimos guardar tu prueba. Vuelve a intentarlo en unos segundos."));
       setSaveRawError(errorCode(err));

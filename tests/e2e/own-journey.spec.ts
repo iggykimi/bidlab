@@ -133,6 +133,8 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await page.getByTestId("scenario-name").fill("Propia diez");
   await page.getByTestId("save-scenario").click();
   await expect(page.getByText("Prueba «Propia diez» guardada.")).toBeVisible();
+  // Zeigarnik/H1: the Precio step counts saved pruebas without a reload.
+  await expect(page.getByRole("tab", { name: "Precio" })).toContainText("(1)");
   const href = await page.getByRole("link", { name: "Verla en el informe" }).getAttribute("href");
   const savedId = new URL(href ?? "", "http://x/").searchParams.get("prueba");
   expect(savedId, "saved prueba id in link").toBeTruthy();
@@ -155,6 +157,8 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await page.getByTestId("export-report").click();
   await expect(page.getByTestId("report-detail")).toBeVisible();
   expect(exportedId, "exported scenario is the own one").toBe(savedId);
+  // Zeigarnik/H1: the Informe step counts created informes without a reload.
+  await expect(page.getByRole("tab", { name: "Informe" })).toContainText("(1)");
 
   await page.reload();
   await expect(page.getByTestId("tender-title")).toContainText(title);
