@@ -20,6 +20,37 @@ function lineaDocumento(kind: string, pages: number): string {
   return `${pages} páginas · ${que}`;
 }
 
+/**
+ * Dónde ha mirado la revisión (BL-V2-07). Cuenta citas y páginas distintas
+ * por documento desde el workspace; no inventa cobertura.
+ */
+function CoverageCard({ workspace }: Props) {
+  const lines = workspace.documents.map((doc) => {
+    const cites = workspace.citations.filter((c) => c.document_id === doc.id);
+    const pages = new Set(cites.map((c) => c.page_number));
+    return { doc, cites: cites.length, pages: pages.size };
+  });
+  const totalCites = lines.reduce((n, line) => n + line.cites, 0);
+  return (
+    <section aria-label="Cobertura de la revisión" data-testid="coverage-card">
+      <h2 className="font-semibold">Dónde hemos mirado</h2>
+      <p className="mt-1 text-sm text-muted">
+        {totalCites === 0
+          ? "Aún no hay citas: nada revisado todavía."
+          : `${totalCites} ${totalCites === 1 ? "cita" : "citas"} en total.`}
+      </p>
+      <ul className="mt-2 grid gap-1 text-sm">
+        {lines.map(({ doc, cites, pages }) => (
+          <li key={doc.id}>
+            {doc.display_name}: {cites} {cites === 1 ? "cita" : "citas"} en {pages}{" "}
+            {pages === 1 ? "página" : "páginas"} de {doc.pages_count}.
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function EvidenceTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
   // BL-V2-04: the scroll hint shows only when the table truly overflows.
@@ -77,7 +108,8 @@ export function EvidenceTab({ workspace }: Props) {
         aria-label="Dónde lo dice el pliego"
         className="surface"
       >
-        <h2>Dónde lo dice el pliego</h2>
+      <CoverageCard workspace={workspace} />
+        <h2 className="mt-4">Dónde lo dice el pliego</h2>
         <p className="mt-1 text-sm text-muted">
           Cada cifra respaldada enlaza con la página del pliego donde aparece. «Copiado tal
           cual» quiere decir que la cita reproduce el pliego palabra por palabra.

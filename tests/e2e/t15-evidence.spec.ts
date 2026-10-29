@@ -54,6 +54,10 @@ test.describe("T15 desktop 1280x720", () => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
     await openTab(page, "Citas");
+    // BL-V2-07: coverage counts come from the workspace, never invented.
+    const coverage = page.getByTestId("coverage-card");
+    await expect(coverage).toContainText("9 citas en total");
+    await expect(coverage).toContainText("9 citas en 6 páginas de 41");
     let imageRequests = 0;
     page.on("request", (req) => {
       if (req.url().includes("/documents/") && req.url().endsWith("/image")) imageRequests += 1;
