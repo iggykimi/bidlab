@@ -80,13 +80,13 @@ análisis + revisión manual + simular + comparar + exportar
 - Frontend (React, español claro, guía de voz): `apps/web/src/`,
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
 - Tests (contados el 29-oct-2026 en este árbol, ver
-  [verification-log](../verification-log.md)):
-  backend 557 + 2 skipped (unit + evaluation + integración/contratos),
-  web 252 en 33 ficheros (`npm run test:unit`),
-  E2E 85 herméticos (Chromium, loopback).
+  [verification-log](../verification-log.md), código @`c179813`):
+  backend 565 passed + 1 skipped + 1 deselected (live opt-in),
+  web 259 en 33 ficheros (`npm run test:unit`),
+  E2E 98 herméticos (Chromium, loopback; 2 pasadas verdes).
   Puertas completas en verde el 29-oct
-  (`python scripts/verify.py`, 10/10) + dos ensayos
-  limpios R1+R2.
+  (`python scripts/verify.py`, 10/10, exit 0) + dos ensayos
+  limpios R1+R2 (V2).
 
 ## Evidencia de calidad
 

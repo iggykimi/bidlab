@@ -12,6 +12,16 @@ BidLab helps small businesses turn complex public tenders into **traceable prici
 
 **Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [QA results](docs/QA_REPORT_V2.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
 
+### What makes BidLab different
+
+| Capability | Why it matters |
+|---|---|
+| **Document → traceable requirement** | Page citations and source provenance are visible; a citation is not the same as an approved requirement. |
+| **Human-in-the-loop validation** | Unreviewed rules and missing company data cannot silently become authoritative. |
+| **Decimal-based pricing simulator** | The economic engine computes bid price, points, conditional anomaly flags and scenario comparisons in Python. |
+| **Sensitivity and Pareto analysis** | Users see trade-offs under explicitly declared hypotheses, not guessed competitor distributions. |
+| **Reproducible decisions** | Immutable scenario snapshots and source-linked reports preserve what was evaluated. |
+
 ### Try the curated offline demo
 
 Requires Python 3.13+, `uv`, Node 22+ and `npm`.

@@ -1504,3 +1504,35 @@ extras §24, export A-B, filtros/criticidad sin contrato.
 Vídeo, sesiones y candidatura: autor. Detalle por ID en
 docs/CHANGELOG_IMPLEMENTACION_V2.md; informe §22.6 en
 el cierre del issue #3.
+## V3 issue #4 (29-oct-2026, Windows, lead)
+
+Commits main: 04828fb (P0-01/P0-05) + c361ebe (P0-02/P0-03) +
+956dcbe (P0-04) + def2793 (P1-01) + ad69683 (P1-03) +
+66adb86 (P1-02) + 6d6028e (P1-05) + 0ec778d (P1-01 frontera) +
+c179813 (P1-04) + P1-06 docs (guion v5, CHANGELOG_V3, cifras).
+
+Gates @c179813 (exit 0 observado): verify.py ALL CHECKS
+PASSED 10/10 (deps, pytest unit, pytest integ+contratos,
+eslint, tsc, build, vitest, ruff, mypy, e2e); backend
+565 passed + 1 skipped (symlink, preexistente) + 1
+deselected (live opt-in); vitest 259/33; E2E 98/98 en DOS
+pasadas (85 base + 13 V3: stress dup/minimapa, curva 7,
+trail 4); axe serious+ 0 (5 pestanas x 1440/390, qa-visual
+6/6); shots.spec 4/4 (01-10 regen) + v3-shots 5/5 (matriz
+40 PNG); primera pasada verify exit 1 con cola truncada
+por pipe (detalle perdido), rerun + E2E independiente
+verdes: inestabilidad no reproducida, se registra.
+Contrato regen exact-repro: builder sin diff en base;
+hypothesis_index +5/-0 YAML, +1 TS, +1 py (mas timestamp),
+ejemplo frontera 2 lineas; sin cambio de schema la 2a vez.
+
+Visual: s1/s2/s3/s4-320/s5/s6-320/s7 inspeccionados a ojo
+(sin colisiones; s5 revelo motivo frontera inexacto ->
+0ec778d; 320/extremos/zoom-equivalente fijados por E2E).
+docs/v2-shots restaurado intacto tras regen accidental.
+
+BLOQUEADO: live Meta (sin clave/admision/saldo, 0 llamadas);
+video 180 s + clip hero (autor); Lighthouse sin medir (no se
+publica numero). Detalle por ID en
+docs/CHANGELOG_IMPLEMENTACION_V3.md; decisiones en
+docs/DECISION_LOG_V3.md; informe de cierre en el issue #4.

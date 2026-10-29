@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion v4 (29-oct, post issue #3). Literales «» re-verificados contra código/tests @264712f: arranque same-origin real (§18.9), aviso curado «El documento original no se incluye…», notas de cámara V2 (rastro en bloque 2, frontera en bloque 6). Footage-oro-20261028.webm anterior al V2 (UI sin rastro/frontera): sirve como metraje base parcial; regrabación pendiente del autor junto al vídeo narrado de 180 s. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v5 (29-oct, post issue #4 V3). Literales «» re-verificados contra código/tests @HEAD-V3 (ver Evidencia): spotlight «Guarda dos pruebas…» en carga fresca, duelo editorial tras comparar, banner «Resultado anterior» en malla, proof trail de 4 estados en drawer. Desvíos honestos del storyboard §9 del prompt V3: sensibilidad/malla SÍ entra (bloque 8); bloque técnico NO entra en 180 s —vive en REVIEWER_GUIDE + verification-log—; desconocidos (E06) queda como tag opcional en bloque 7. Footage-oro-20261028.webm anterior al V2: solo metraje base parcial; regrabación pendiente del autor junto al vídeo narrado de 180 s. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -33,7 +33,7 @@ rebajar de más? Compruébalo.»
 
 ## Bloque 2 — Origen real (15–40s)
 
-Pantalla: Resumen `/tenders/tias?tab=resumen`. Insignia «Datos de ejemplo»,
+Pantalla: Resumen `/tenders/tias?tab=resumen`. Spotlight «Guarda dos pruebas para compararlas aquí.» (carga fresca: aún no hay veredicto; el veredicto aparece tras el bloque 6 y se ve en el cierre). Insignia «Datos de ejemplo»,
 aviso «Datos de ejemplo. Los precios de los rivales y tu coste son inventados
 para que puedas probar.», «Lo esencial»: «Presupuesto de salida» 118.336 €
 sin IGIC (126.619,52 € con IGIC), «El precio da hasta 49 puntos.»,
@@ -51,13 +51,13 @@ cifras vienen de una semilla revisada a mano.»
 
 Pantalla: pestaña «Requisitos». Fila «Servicios similares año mayor ejecución
 ≥ 207.088,00 €»: «Por verificar». Clic en «Ver página 6 en el pliego» →
-«Página 6 de 41»: la semilla no trae imagen, así que se ve el aviso
+«Página 6 de 41»: rastro «Fuente · p. 6» + «Revisión · sin uso en fórmula» (esta cita no alimenta la fórmula: el rastro lo dice, no lo inventa). La semilla no trae imagen, así que se ve el aviso
 «El documento original no se incluye en este ejemplo. Coteja con el texto de abajo.» y la cita con
 207.088 como texto rotulado. «Cerrar» antes del siguiente bloque
 [NO SE LEE: el drawer devuelve el foco al botón; no finjas una imagen
 que no existe].
 Narración: «Este requisito queda pendiente. La empresa no acredita el umbral
-y la cita está en la página 6. Sin imagen, BidLab lo dice y enseña el texto
+y la cita está en la página 6. El rastro dice que no alimenta la fórmula. Sin imagen, BidLab lo dice y enseña el texto
 rotulado. No inventa certificados.»
 
 ## Bloque 4 — Coste e hipótesis (60–80s)
@@ -90,10 +90,7 @@ Pantalla: «¿Guardas esta prueba?» → «Guardar esta prueba» («Prueba
 «¿Qué prueba te conviene más?» → marcar ambas → «Comparar»:
 «Puedes compararlas: comparten contexto.», delta «-5916,80 €»,
 ««Demo 10» conserva 5916,80 € más de beneficio con los mismos puntos.»
-[NO SE LEE: la comparación vive en la bandeja «Comparar pruebas», también
-disponible en «Informe»; no hay vista animada lado a lado. Bajo el delta
-aparece «Frontera de decisión» con «Demo 10» en la frontera: no lo narres
-o menciónalo en 5 s quitándolos del bloque 8 opcional.]
+[NO SE LEE: tras «Comparar» se ve el duelo editorial lado a lado («Demo 10» frente a «Demo 15», mismas cifras de la tabla) y «Frontera de decisión» con «Demo 10» en la frontera y «Demo 15» dominada «con los mismos puntos». Plano del duelo 3 s, sin narración extra; sin animación.]
 Narración: «Guardamos ambas pruebas y las comparamos. Mismos supuestos, mismo
 contexto. El 10 % conserva 5916,80 euros más con los mismos puntos.»
 
@@ -106,15 +103,20 @@ Pantalla: «Escribe tu rebaja (%)» de vuelta a 5. Rival A: 106502.40 →
 Narración: «¿Y si el rival supuesto oferta menos? Tus puntos bajan a 43,8.
 La conclusión cambia con la hipótesis. Por eso cada escenario declara las
 suyas.»
+[NO SE LEE: tag opcional E06 (5 s, quitar del silencio final si falta tiempo): desmarcar «Tomar estos como todos los rivales» → «Sin determinar», remarcar.]
 
-## Bloque 8 — Desconocidos (140–158s)
+## Bloque 8 — Malla y resultado anterior (140–158s)
 
-Pantalla: desmarcar «Tomar estos como todos los rivales» → «Tus puntos por
-precio» «Sin determinar». «Tu oferta» y «Tu beneficio» intactos. Volver a
-marcar al final. [NO SE LEE: bloque opcional; si falta tiempo, salta al
-bloque 9.]
-Narración: «Si no declaras todos los rivales, no inventamos sus ofertas. Los
-puntos quedan sin determinar. Tu precio y tu beneficio siguen visibles.»
+Pantalla: «Prueba de resistencia»: rellenar solo «Tu coste sin impuestos»
+(80000,00; el resto va por defecto: 81 rebajas, hipótesis «Base»).
+«Probar la malla» → «Qué rebajas siguen siendo viables…» + conclusión que
+nombra la rebaja que aguanta. Cambiar «Beneficio mínimo» → banner
+«Resultado anterior: has cambiado las entradas después de esta malla. Vuelve
+a probarla.» antes del título «Resultado anterior: recalcula»; «Aplicar esta
+rebaja» queda deshabilitado. [NO SE LEE: no abras la tabla densa en cámara;
+si falta tiempo, salta al bloque 9.]
+Narración: «Probamos 81 rebajas contra tu hipótesis. Si cambias una entrada,
+el resultado viejo se marca y no se deja aplicar hasta recalcular.»
 
 ## Bloque 9 — Guarda y cierra (158–180s)
 
@@ -122,8 +124,9 @@ Pantalla: pestaña «Informe». «Paso 1 · Abre una prueba guardada» → «Abr
 prueba Demo 10»: «Copia (SHA-256)» de 64 hex, «Supuestos», «Lo que te falta
 por comprobar», «Fuentes». «Paso 2 · Decide y crea tu informe»: «Preparar
 oferta», nota, «Crear informe» → «Decisión: Preparar oferta». «Descargar
-HTML» (`bidlab-informe-<fecha>.html`). Cierre en «Resumen» con insignia
-«Datos de ejemplo».
+HTML» (`bidlab-informe-<fecha>.html`). Cierre en «Resumen»: spotlight con
+««Demo 10» conserva 5916,80 € más de beneficio con los mismos puntos.» +
+insignia «Datos de ejemplo».
 Narración: «Abrimos la prueba: valores, copia y fuentes. Tú tomas la decisión
 y el informe la conserva con tus notas. Entiende la regla, compara y guarda.»
 
@@ -149,7 +152,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
   frontal (G3 parcial: solo smoke real).
 - Empresa y rivales sintéticos; sin histórico que entrene ningún predictor.
 - Sin probabilidades de ganar ni CTA de «optimizar para ganar».
-- La visita guiada existe (?tour=1, fijada por tests/e2e/tour.spec.ts) pero no se usa en la narración; sin comparación animada: es propuesta, no existe en la app.
+- La visita guiada existe (?tour=1, fijada por tests/e2e/tour.spec.ts) pero no se usa en la narración; duelo editorial sí existe (lado a lado, sin animación).
 - No se muestra instalación, claves ni recuperaciones no medidas.
 
 ## Evidencia por bloque (trazabilidad, no se lee en el vídeo)
@@ -174,7 +177,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
 - Números esperados 5/15/30 %: fixtures/demo/expected.json (90000.00 =
   80000 + 10000 de company.json «Pyme de ejemplo»; casos 5/15/30 %;
   anomalía a 30 %); caso 10 % fijado por CMP-02 + R06 + backend, no por expected.json.
-- Puertas globales: suite 85/85 + backend 557 + web 252 en verde
-  el 29-oct (@264712f; ver docs/verification-log.md, post-issue #3);
+- Puertas globales: suite 98/98 (2 pasadas) + backend 565 + web 259 en verde
+  el 29-oct (código @c179813; ver docs/verification-log.md, post-issue #4);
   re-ejecutar `python scripts/verify.py` tras cualquier cambio posterior
   antes de grabar.
