@@ -60,6 +60,70 @@ function hypothesisLabels(result: StressTestResult): string[] {
   return labels;
 }
 
+/**
+ * Rebajas × hipótesis como tabla de calor (BL-V2-06). Cada celda lleva texto
+ * ("Cumple" / motivo), nunca solo color; los detalles por hipótesis siguen
+ * debajo con las cifras. Los datos son las celdas del resultado.
+ */
+function StressHeatmap({ result }: { result: StressTestResult }) {
+  const labels = hypothesisLabels(result);
+  const discounts = result.by_discount.map((row) => row.discount_rate);
+  const cellFor = (rate: string, label: string) =>
+    result.cells.find((c) => c.discount_rate === rate && c.hypothesis_label === label) ?? null;
+  return (
+    <div
+      className="table-scroll overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="Mapa de la malla, desplázate horizontalmente"
+    >
+      <table className="w-full border-collapse text-sm" data-testid="stress-heatmap">
+        <caption className="py-2 text-left font-semibold">
+          Mapa de la malla: rebajas por hipótesis
+        </caption>
+        <thead>
+          <tr className="text-left">
+            <th scope="col" className="border-b border-border p-2">
+              Rebaja
+            </th>
+            {labels.map((label) => (
+              <th key={label} scope="col" className="border-b border-border p-2">
+                {label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {discounts.map((rate) => (
+            <tr key={rate}>
+              <th scope="row" className="tnum border-b border-line p-2 text-left">
+                {rateToDiscountPercent(rate)} %
+              </th>
+              {labels.map((label) => {
+                const cell = cellFor(rate, label);
+                return (
+                  <td key={label} className="border-b border-line p-2">
+                    {cell === null ? (
+                      <span className="text-muted">Sin probar</span>
+                    ) : cell.feasible ? (
+                      <Badge tone="live">Cumple</Badge>
+                    ) : (
+                      <span>
+                        <Badge tone="neutral">No cumple</Badge>{" "}
+                        <span className="text-muted">{reasonEs(cell.reason)}</span>
+                      </span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function StressSection({ state }: Props) {
   const { scope, rule, companyId, companyRevision, h, setField } = state;
   const scopePeriod = scope?.basis.period_months ?? null;
@@ -568,6 +632,7 @@ export function StressSection({ state }: Props) {
             </Alert>
           )}
 
+          <StressHeatmap result={result} />
           <div className="overflow-x-auto">
             <table className="tnum w-full text-sm">
               <caption className="py-2 text-left font-semibold">Peor caso por rebaja</caption>

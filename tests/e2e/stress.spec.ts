@@ -126,6 +126,12 @@ test("editing inputs after a run marks it stale and blocks apply", async ({ page
   });
   await expect(section.getByTestId("stress-stale-input")).toHaveCount(0);
   await expect(section.getByTestId("stress-apply")).toBeEnabled();
+  // BL-V2-06: heatmap mirrors the same cells with text, never color alone.
+  const heatmap = section.getByTestId("stress-heatmap");
+  await expect(heatmap).toBeVisible();
+  await expect(heatmap).toContainText("Mapa de la malla");
+  await expect(heatmap.getByRole("columnheader", { name: "Base" })).toBeVisible();
+  await expect(heatmap.getByRole("rowheader", { name: "5 %", exact: true })).toBeVisible();
 
   await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("9000");
   await expect(section.getByTestId("stress-stale-input")).toContainText("Vuelve a probarla");
