@@ -38,3 +38,6 @@ BidLab_Plan_Maestro_Meta_2026-10-28.html
 
 # skills installer local links (regenerable)
 .claude/
+
+# Local tool hooks (machine-specific paths)
+.codex/
