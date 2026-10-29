@@ -62,8 +62,8 @@
 
 | Shot | SHA-256 | Shows |
 |---|---|---|
-| evidence/jury/u1-expert-state.png | 9CAEE8AC59C40FF7C41FA489898EF6541D99AC5DC722814CBFDB0DC566A95D71 | Resumen with backend verdict after saving the 10/15 pair |
-| evidence/jury/u2-compare-10v15.png | 9CF4C33EC919675B95F2525FBF239D4EA8E3BC62F9C9C894140E86FF8ABAFE0F | Informe compare executed: hero + frontier (10 vs 15) |
+| evidence/jury/u1-expert-state.png | 32FEE564FC160D056CFB5918B69E258314CA0205ABFC7898C48AA93D9BF5893F | Resumen with backend verdict after saving the 10/15 pair |
+| evidence/jury/u2-compare-10v15.png | 395C137554958B1EE5B267884D3A4DD1E759ED21C3003E50C1D0BFA736ECF34F | Informe compare results: table + frontier + duel (10 vs 15, re-captured V6: V5 shot showed the form) |
 | evidence/jury/S07-long-partial-p8.png | 6E63FD2F3D8428ECCC2F8230A37ADC31D81A51A572E46ABA63C1B59D63A0125F | S07 page 8: late relevant value (partial coverage) |
 | evidence/jury/S08-injection-p1.png | B3488D0B08B2E501916A5DFF70FA899D5C85BC3239A943F8116A89F3556729A7 | S08 page 1: injection text + real 50000.00 datum |
 | evidence/jury/S04-lots-p1.png | 54C09C79750FB72C5247054F543F19557D32346D1FFA2518D86353236BC512B6 | S04 page 1: lots table |
