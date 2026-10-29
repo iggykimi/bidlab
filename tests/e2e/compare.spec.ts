@@ -47,6 +47,17 @@ test("CMP-01 two saved scenarios compare with backend deltas", async ({ page }) 
   await expect(hero.getByRole("link", { name: "Explorar comparación" })).toHaveAttribute("href", /tab=informe/);
   await expect(hero.getByRole("link", { name: "Ver regla de precio" })).toHaveAttribute("href", /tab=revisar/);
   await expect(hero.getByRole("link", { name: "Abrir evidencia" })).toHaveAttribute("href", /tab=evidencia/);
+  // BL-V3 P1-01: duelo editorial lado a lado con dos pruebas.
+  // (Las pestañas desmontan: se vuelve a marcar y comparar.)
+  await page.getByRole("tab", { name: "Informe" }).click();
+  await page.getByRole("checkbox", { name: "Comparar CMP base 5" }).check();
+  await page.getByRole("checkbox", { name: "Comparar CMP base 15" }).check();
+  await page.getByTestId("compare-run").click();
+  const duel = page.getByTestId("compare-duel");
+  await expect(duel).toBeVisible();
+  await expect(duel).toContainText("CMP base 5");
+  await expect(duel).toContainText("CMP base 15");
+  await expect(duel).toContainText("de 49");
   expect(guard.blocked()).toBe(0);
 });
 
@@ -137,6 +148,8 @@ test("CMP-04 compare hero follows the selected pair", async ({ page }) => {
   const before = await hero.textContent();
   await pairs.nth(1).check();
   await expect(hero).not.toHaveText(before ?? "");
+  // BL-V3 P1-01: con tres pruebas no hay duelo (la tabla manda).
+  await expect(page.getByTestId("compare-duel")).toHaveCount(0);
   expect(guard.blocked()).toBe(0);
 });
 

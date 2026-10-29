@@ -389,6 +389,11 @@ def _indicator(
         return "same_price_score", (
             f"«{base.name}» y «{other.name}» tienen el mismo precio y los mismos puntos."
         )
+    if ds == 0 and dp == 0:
+        # Same economics through different prices: state the tie, never "more".
+        return "same_price_score", (
+            f"«{base.name}» y «{other.name}» tienen los mismos puntos y el mismo beneficio."
+        )
     if ds == 0:
         winner = other.name if dp > 0 else base.name
         return "higher_profit_same_score", (

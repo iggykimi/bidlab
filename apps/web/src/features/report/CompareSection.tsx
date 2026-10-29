@@ -111,6 +111,47 @@ function EntryRow({ entry, maxHint }: { entry: CompareEntry; maxHint: string }) 
   );
 }
 
+/**
+ * V3 P1-01: lectura editorial del duelo con exactamente dos pruebas.
+ * Mismas cifras de la tabla (formato solo), lado a lado, sin narrativa nueva.
+ */
+function DuelCards({ entries, maxHint }: { entries: CompareEntry[]; maxHint: string }) {
+  if (entries.length !== 2) return null;
+  return (
+    <div className="duel" data-testid="compare-duel">
+      {entries.map((e) => (
+        <div key={e.scenario_id} className="rounded-lg border border-line p-3">
+          <p className="font-semibold">{e.name}</p>
+          <dl className="mt-1 grid gap-1 text-sm">
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Rebaja</dt>
+              <dd className="tnum">{formatPercent(e.discount_rate)}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Precio</dt>
+              <dd className="tnum">{formatEurosExact(e.price_net)}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Beneficio</dt>
+              <dd className="tnum">
+                {e.profit_net !== null ? formatSignedEurosExact(e.profit_net) : "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Puntos</dt>
+              <dd className="tnum">
+                {e.score_status === "defined" && e.score_value !== null
+                  ? `${formatPoints1(e.score_value)} de ${maxHint}`
+                  : "Sin determinar"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreMax: string }) {
   const names = new Map(result.entries.map((e) => [e.scenario_id, e.name]));
   // BL-V2-08: with 3 scenarios the backend returns 2 pairs; the hero never
@@ -156,6 +197,7 @@ function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreM
           ) : null}
         </div>
       )}
+      <DuelCards entries={result.entries} maxHint={scoreMax} />
       {result.warnings.length > 0 && (
         <ul className="list-disc space-y-1 pl-5 text-sm text-alert">
           {result.warnings.map((w) => (

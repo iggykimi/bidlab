@@ -17,6 +17,18 @@ function verdictTone(verdict: FrontierEntry["verdict"]): "live" | "neutral" | "d
   return "demo";
 }
 
+/**
+ * V3 P1-01: una anómala fuera de la frontera "requiere revisión" (presunción),
+ * nunca se presenta como excluida legalmente. Solo presentación: el motivo
+ * backend junto a la insignia lo explica.
+ */
+function verdictLabel(entry: FrontierEntry): string {
+  if (entry.verdict === "excluida" && entry.anomaly_status === "possible_justification_required") {
+    return "Requiere revisión";
+  }
+  return VERDICT_ES[entry.verdict];
+}
+
 function EntryRow({ entry }: { entry: FrontierEntry }) {
   return (
     <tr>
@@ -24,7 +36,7 @@ function EntryRow({ entry }: { entry: FrontierEntry }) {
         <strong>{entry.name}</strong>
       </td>
       <td className="border-b border-line p-2">
-        <Badge tone={verdictTone(entry.verdict)}>{VERDICT_ES[entry.verdict]}</Badge>
+        <Badge tone={verdictTone(entry.verdict)}>{verdictLabel(entry)}</Badge>
       </td>
       <td className="tnum border-b border-line p-2">
         {entry.profit_net !== null ? formatSignedEurosExact(entry.profit_net) : "—"}
@@ -80,7 +92,7 @@ export function DecisionFrontier({ scenarioIds }: { scenarioIds: string[] }) {
               >
                 <p>
                   <strong>{entry.name}</strong> ·{" "}
-                  <Badge tone={verdictTone(entry.verdict)}>{VERDICT_ES[entry.verdict]}</Badge>
+                  <Badge tone={verdictTone(entry.verdict)}>{verdictLabel(entry)}</Badge>
                 </p>
                 <p className="mt-1">{entry.motivo}</p>
               </li>

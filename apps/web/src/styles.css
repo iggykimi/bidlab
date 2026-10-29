@@ -1335,6 +1335,18 @@ a[href^="http"]::after {
   color: var(--color-primary);
 }
 
+/* Compare duel (BL-V3 P1-01): two entries side by side, stacked on narrow. */
+.duel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .duel {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Coverage strip (BL-V2-07): every page shown, cited ones stand out. */
 .coverage-strip {
   display: flex;
