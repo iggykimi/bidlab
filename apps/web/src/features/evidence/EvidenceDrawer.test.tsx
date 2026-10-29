@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import type { Citation, Workspace } from "../../api/client";
 import { EvidenceDrawer } from "./EvidenceDrawer";
@@ -17,7 +18,9 @@ function render(mode: Workspace["mode"]): string {
   } as Workspace;
   return renderToStaticMarkup(
     <QueryClientProvider client={client}>
-      <EvidenceDrawer workspace={workspace} target={{ citation }} onClose={() => undefined} />
+      <MemoryRouter>
+        <EvidenceDrawer workspace={workspace} target={{ citation }} onClose={() => undefined} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -28,6 +31,15 @@ describe("evidence source identity", () => {
     expect(html).toContain("Documento que has incorporado a esta licitación.");
     expect(html).toContain("Confirma cada dato antes de usarlo.");
     expect(html).not.toContain("Documento de consulta del ejemplo revisado.");
+  });
+
+  it("shows an honest proof trail without inventing rule use", () => {
+    const html = render("demo");
+    expect(html).toContain("evidence-trail");
+    expect(html).toContain("Fuente");
+    expect(html).toContain("sin uso en f\u00f3rmula");
+    expect(html).toContain("sin f\u00f3rmula");
+    expect(html).toContain("no alimenta ning\u00fan c\u00e1lculo");
   });
 
   it("keeps the curated example label separate from an uploaded source", () => {

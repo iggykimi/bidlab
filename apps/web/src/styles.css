@@ -509,6 +509,18 @@ a[href^="http"]::after {
       transparent 1px 5px
     );
   }
+  /* BL-V3 P1-05: proof trail, compact wrapping row of state chips. */
+  .proof-trail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .proof-trail li {
+    margin: 0;
+  }
   /* U2: compare hero, backend motivo verbatim. */
   .compare-hero {
     background: var(--color-primary-soft);

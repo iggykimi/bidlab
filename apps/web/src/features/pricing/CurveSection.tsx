@@ -84,7 +84,7 @@ export function CalculationSection({ workspace, state }: CalcProps) {
   const scoreDefined =
     result?.score.status === "defined" && result.score.value !== null && best !== null;
   return (
-    <Card aria-label="¿Cómo sale tu resultado?">
+    <Card id="tu-calculo" aria-label="¿Cómo sale tu resultado?" tabIndex={-1}>
       <h2>¿Cómo sale tu resultado?</h2>
       {!result && (
         <p className="mt-2 text-sm">

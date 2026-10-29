@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { API_BASE, installOfflineGuard, loadDemo, openTab, takeConsoleFailures } from "./helpers";
+import { API_BASE, installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
 
 // T15 dato-fuente en revisión: la imagen exacta cuando existe, texto
 // rotulado cuando no; cerrar devuelve el foco; cita localizada y
@@ -343,6 +343,93 @@ test.describe("T15 mobile 390x844", () => {
     await page.getByRole("button", { name: "Cerrar" }).click();
     await expect(drawer).toBeHidden();
     await expect(opener).toBeFocused();
+    expect(guard.blocked()).toBe(0);
+  });
+});
+test.describe("V3 proof trail", () => {
+  test("rule-linked citation shows its exact journey and navigates", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+    await openPricing(page);
+    await page.getByRole("button", { name: /Puntos por precio/ }).first().click();
+    const drawer = page.getByTestId("evidence-drawer");
+    await expect(drawer).toBeVisible();
+    const trail = drawer.getByTestId("evidence-trail");
+    await expect(trail.getByTestId("evidence-trail-fuente")).toContainText("Fuente \u00b7 p. 10");
+    await expect(trail.getByTestId("evidence-trail-revision")).toContainText(
+      "Revisi\u00f3n \u00b7 aprobada (rev. 1)"
+    );
+    await expect(trail.getByTestId("evidence-trail-regla")).toContainText(
+      "Regla \u00b7 m\u00e1x. 49 puntos"
+    );
+    await expect(trail.getByTestId("evidence-trail-decision")).toContainText(
+      "Decisi\u00f3n \u00b7 alimenta el c\u00e1lculo"
+    );
+    await trail.getByTestId("evidence-trail-revision").click();
+    await expect(page).toHaveURL(/tab=revisar/);
+    await expect(drawer).toBeHidden();
+    expect(guard.blocked()).toBe(0);
+  });
+
+  test("decision chip lands on the calculation it feeds", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+    await openPricing(page);
+    await page.getByRole("button", { name: /Puntos por precio/ }).first().click();
+    const drawer = page.getByTestId("evidence-drawer");
+    await expect(drawer).toBeVisible();
+    await drawer.getByTestId("evidence-trail-decision").click();
+    await expect(page).toHaveURL(/tab=precio/);
+    await expect(drawer).toBeHidden();
+    await expect(page.locator("#tu-calculo")).toBeVisible();
+    expect(guard.blocked()).toBe(0);
+  });
+
+  test("unused citation stays honest and fuente scrolls to the quote", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+    await openTab(page, "Requisitos");
+    await page.getByRole("button", { name: /Ver página 6 en el pliego/ }).first().click();
+    const drawer = page.getByTestId("evidence-drawer");
+    await expect(drawer).toBeVisible();
+    const trail = drawer.getByTestId("evidence-trail");
+    await expect(trail.getByTestId("evidence-trail-fuente")).toContainText("Fuente \u00b7 p. 6");
+    await expect(trail.getByTestId("evidence-trail-revision")).toContainText("sin uso en f\u00f3rmula");
+    await expect(trail.getByTestId("evidence-trail-regla")).toContainText("sin f\u00f3rmula");
+    await expect(trail.getByTestId("evidence-trail-decision")).toContainText(
+      "no alimenta ning\u00fan c\u00e1lculo"
+    );
+    const region = drawer.locator('[aria-label="Contenido de la cita, desplázate verticalmente"]');
+    await region.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await trail.getByTestId("evidence-trail-fuente").click();
+    const inView = await drawer.getByTestId("evidence-quote").evaluate((el) => {
+      const host = el.closest('[role="region"]');
+      if (!(host instanceof HTMLElement)) return false;
+      const r = el.getBoundingClientRect();
+      const f = host.getBoundingClientRect();
+      return r.top >= f.top - 1 && r.bottom <= f.bottom + 1;
+    });
+    expect(inView).toBe(true);
+    expect(guard.blocked()).toBe(0);
+  });
+});
+
+test.describe("V3 proof trail mobile 390x844", () => {
+  test.use({ viewport: { width: 390, height: 568 } });
+
+  test("trail wraps without global overflow", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+    await openTab(page, "Citas");
+    await page.getByRole("button", { name: /Ver página \d+ de / }).first().click();
+    const drawer = page.getByTestId("evidence-drawer");
+    await expect(drawer).toBeVisible();
+    const trail = drawer.getByTestId("evidence-trail");
+    await expect(trail.locator("li")).toHaveCount(4);
+    const overflowX = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth
+    );
+    expect(overflowX).toBeLessThanOrEqual(1);
     expect(guard.blocked()).toBe(0);
   });
 });

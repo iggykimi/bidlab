@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { clsx } from "clsx";
 import {
   ApiError,
@@ -13,6 +14,7 @@ import {
 import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
 import { textoEs } from "../../lib/citationNames";
+import { formatMaxPoints } from "../../lib/format";
 import { highlight } from "../../lib/motion";
 
 export interface EvidenceTarget {
@@ -50,6 +52,19 @@ function minuscula(s: string): string {
 /** Whitespace-insensitive comparison for the quote/page-text dedupe. */
 function normalizado(s: string): string {
   return s.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * BL-V3 P1-05: proof trail for one citation. Every state derives from
+ * workspace data — never invented. The model-proposal stage has no
+ * per-citation link in the contract (CitationProposal carries no id),
+ * so the trail shows the four exact stages: located quote, human
+ * review of the rules using it, the rule itself, and engine use.
+ */
+function reviewEs(status: string): string {
+  if (status === "approved") return "aprobada";
+  if (status === "blocked") return "bloqueada";
+  return "pendiente de ti";
 }
 
 /**
@@ -142,7 +157,30 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const quoteRef = useRef<HTMLElement>(null);
   const doc = workspace.documents.find((d) => d.id === citation.document_id) ?? null;
+  const navigate = useNavigate();
+  const usingRules = (workspace.pricing_rules ?? []).filter(
+    (r) =>
+      r.evidence_ids.includes(citation.id) ||
+      r.anomaly_policy.evidence_ids.includes(citation.id)
+  );
+  const worstReview = usingRules.some((r) => r.review_status === "blocked")
+    ? "blocked"
+    : usingRules.some((r) => r.review_status === "pending")
+      ? "pending"
+      : "approved";
+  const feedsEngine = usingRules.some((r) => r.review_status === "approved");
+  const singleRule = usingRules.length === 1 ? usingRules[0] : null;
 
+  function scrollToQuote() {
+    quoteRef.current?.scrollIntoView({ block: "nearest" });
+  }
+
+  // Trail navigation: a cross-tab move unmounts the drawer with its tab;
+  // a same-tab move (Precio -> Precio#tu-calculo) needs an explicit close.
+  function go(to: string) {
+    navigate(to);
+    requestClose();
+  }
   const requestClose = useCallback(() => {
     if (exitTimer.current !== null) return;
     setClosing(true);
@@ -256,6 +294,72 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         role="region"
         aria-label="Contenido de la cita, desplázate verticalmente"
       >
+        <nav aria-label="Rastro de la cita" data-testid="evidence-trail" className="mb-3">
+          <ol className="proof-trail">
+            <li>
+              <Button
+                variant="chip"
+                data-testid="evidence-trail-fuente"
+                onClick={scrollToQuote}
+                aria-label={`Fuente: cita localizada en la página ${citation.page_number}`}
+              >
+                Fuente · p. {citation.page_number}
+              </Button>
+            </li>
+            <li>
+              <Button
+                variant="chip"
+                data-testid="evidence-trail-revision"
+                onClick={() => go("?tab=revisar")}
+                aria-label={
+                  usingRules.length === 0
+                    ? "Revisión: esta cita no se usa en ninguna fórmula"
+                    : `Revisión humana: ${reviewEs(worstReview)}`
+                }
+              >
+                Revisión ·{" "}
+                {usingRules.length === 0
+                  ? "sin uso en fórmula"
+                  : singleRule !== null && singleRule !== undefined
+                    ? `${reviewEs(worstReview)} (rev. ${singleRule.revision})`
+                    : `${usingRules.length} fórmulas · ${reviewEs(worstReview)}`}
+              </Button>
+            </li>
+            <li>
+              <Button
+                variant="chip"
+                data-testid="evidence-trail-regla"
+                onClick={() => go("?tab=revisar")}
+                aria-label={
+                  singleRule === null || singleRule === undefined
+                    ? "Regla: sin fórmula asociada"
+                    : `Regla: máximo ${formatMaxPoints(singleRule.max_points)} puntos`
+                }
+              >
+                Regla ·{" "}
+                {singleRule !== null && singleRule !== undefined
+                  ? `máx. ${formatMaxPoints(singleRule.max_points)} puntos`
+                  : usingRules.length === 0
+                    ? "sin fórmula"
+                    : `${usingRules.length} fórmulas`}
+              </Button>
+            </li>
+            <li>
+              <Button
+                variant="chip"
+                data-testid="evidence-trail-decision"
+                onClick={() => go("?tab=precio#tu-calculo")}
+                aria-label={
+                  feedsEngine
+                    ? "Decisión: este dato alimenta el cálculo"
+                    : "Decisión: este dato no alimenta ningún cálculo"
+                }
+              >
+                Decisión · {feedsEngine ? "alimenta el cálculo" : "no alimenta ningún cálculo"}
+              </Button>
+            </li>
+          </ol>
+        </nav>
         <div className="mb-3 rounded-lg bg-surface p-3" data-testid="evidence-provenance">
           <h3 className="font-semibold">De dónde sale esta cita</h3>
           <p className="mt-1 text-sm">
