@@ -176,10 +176,13 @@ def run_stress(session: Session, scope_id: str, payload: g.StressTestRequest) ->
     anomaly_hits = 0
     non_comparable_labels: set[str] = set()
     for discount in discounts:
-        for h, cost in hyps:
+        # BL-V3 P1-03 (BL-FIX-02): cells carry their hypothesis position so
+        # two hypotheses sharing a label stay separate downstream.
+        for hyp_index, (h, cost) in enumerate(hyps):
             cell: dict[str, Any] = {
                 "discount_rate": discount,
                 "hypothesis_label": h.label,
+                "hypothesis_index": hyp_index,
                 "price_net": None,
                 "score": None,
                 "profit_net": None,

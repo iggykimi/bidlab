@@ -1286,6 +1286,7 @@ export interface components {
         StressCell: {
             discount_rate: components["schemas"]["Decimal"];
             hypothesis_label: string;
+            hypothesis_index: number;
             price_net: components["schemas"]["Money"] | null;
             score: components["schemas"]["Decimal"] | null;
             profit_net: components["schemas"]["Decimal"] | null;

@@ -78,6 +78,16 @@ def test_oracle_b_no_selection_without_lowering_limits(seeded_client: TestClient
     assert all(c["feasible"] is False for c in body["cells"])
 
 
+def test_duplicate_labels_keep_distinct_indices(seeded_client: TestClient) -> None:
+    body = _run(
+        seeded_client,
+        _request([_hyp("Igual", "80000.00"), _hyp("Igual", "90000.00")], "40", "1000.00"),
+    )
+    assert body["tested_hypotheses"] == 2
+    assert sorted({c["hypothesis_index"] for c in body["cells"]}) == [0, 1]
+    assert {c["hypothesis_label"] for c in body["cells"]} == {"Igual"}
+
+
 def test_unknown_cells_never_win(seeded_client: TestClient) -> None:
     body = _run(
         seeded_client,

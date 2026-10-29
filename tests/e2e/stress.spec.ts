@@ -136,6 +136,16 @@ test("editing inputs after a run marks it stale and blocks apply", async ({ page
   await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("9000");
   await expect(section.getByTestId("stress-stale-input")).toContainText("Vuelve a probarla");
   await expect(section.getByTestId("stress-apply")).toBeDisabled();
+  // BL-V3 P1-03: the stale banner renders before the conclusion title.
+  const order = await section.evaluate((el) => {
+    const banner = el.querySelector('[data-testid="stress-stale-input"]');
+    const sel = el.querySelector('[data-testid="stress-selection"]');
+    if (!(banner instanceof Element) || !(sel instanceof Element)) return "missing";
+    return banner.compareDocumentPosition(sel) & Node.DOCUMENT_POSITION_FOLLOWING
+      ? "banner-first"
+      : "selection-first";
+  });
+  expect(order).toBe("banner-first");
   // The old grid stays visible as history, with its timestamp.
   await expect(section.getByTestId("stress-selection")).toContainText("cumple tus límites");
   await expect(section.getByTestId("stress-computed-at")).toContainText("Calculada el");
@@ -163,4 +173,66 @@ test("selection shows the cost ceiling with its disclaimers", async ({ page }) =
     section.getByText("No es una probabilidad ni una predicción de rivales")
   ).toBeVisible();
   await expect(section.getByRole("columnheader", { name: "Tu coste máximo" })).toBeVisible();
+});
+
+// BL-V3 P1-03 (BL-FIX-02): two hypotheses sharing a label render as two
+// columns and two detail blocks; equal labels must not collapse the mesh.
+test("duplicate hypothesis labels do not collapse the mesh", async ({ page }) => {
+  test.setTimeout(120_000);
+  await installOfflineGuard(page);
+  const section = await openStress(page);
+  await section.getByLabel("Rebaja inicial en tanto por ciento").fill("5");
+  await section.getByLabel("Rebaja final en tanto por ciento").fill("15");
+  await section.getByLabel("Paso de la malla en tanto por ciento").fill("5");
+  await section.getByLabel("Etiqueta").nth(0).fill("Duplicada");
+  await section.getByLabel("Tu coste sin impuestos en \u20ac (coma o punto)").nth(0).fill("80000,00");
+  await section.getByLabel("Periodo en meses").nth(0).fill("24");
+  await section.getByLabel("Rival A \u00b7 precio sin impuestos en \u20ac").nth(0).fill("110000,00");
+  await section.getByLabel("Rival B \u00b7 precio sin impuestos en \u20ac").nth(0).fill("115000,00");
+  await section.getByRole("button", { name: "A\u00f1adir hip\u00f3tesis" }).click();
+  await section.getByLabel("Etiqueta").nth(1).fill("Duplicada");
+  await section.getByLabel("Tu coste sin impuestos en \u20ac (coma o punto)").nth(1).fill("90000,00");
+  await section.getByLabel("Periodo en meses").nth(1).fill("24");
+  await section.getByLabel("Rival A \u00b7 precio sin impuestos en \u20ac").nth(1).fill("100000,00");
+  await section.getByLabel("Rival B \u00b7 precio sin impuestos en \u20ac").nth(1).fill("105000,00");
+  await section.getByLabel("Puntos por precio m\u00ednimos").fill("40");
+  await section.getByLabel("Beneficio m\u00ednimo en \u20ac (coma o punto)").fill("1000");
+  await section.getByTestId("stress-run").click();
+  const heatmap = section.getByTestId("stress-heatmap");
+  await expect(heatmap).toBeVisible({ timeout: 60_000 });
+  await expect(heatmap.getByRole("columnheader", { name: "Duplicada" })).toHaveCount(2);
+  await expect(section.locator("details summary", { hasText: "Duplicada" })).toHaveCount(2);
+});
+// BL-V3 P1-03: with 4 hypotheses the heatmap opens as a 3-column minimap;
+// the dense detail opens on demand while the worst-case table stays complete.
+test("heatmap minimap expands to all hypotheses on demand", async ({ page }) => {
+  test.setTimeout(120_000);
+  await installOfflineGuard(page);
+  const section = await openStress(page);
+  await section.getByLabel("Rebaja inicial en tanto por ciento").fill("5");
+  await section.getByLabel("Rebaja final en tanto por ciento").fill("15");
+  await section.getByLabel("Paso de la malla en tanto por ciento").fill("5");
+  await section.getByRole("button", { name: "A\u00f1adir hip\u00f3tesis" }).click();
+  await section.getByRole("button", { name: "A\u00f1adir hip\u00f3tesis" }).click();
+  await section.getByRole("button", { name: "A\u00f1adir hip\u00f3tesis" }).click();
+  for (let i = 0; i < 4; i++) {
+    await section.getByLabel("Etiqueta").nth(i).fill(`Mini ${i + 1}`);
+    await section.getByLabel("Tu coste sin impuestos en \u20ac (coma o punto)").nth(i).fill("80000,00");
+    await section.getByLabel("Periodo en meses").nth(i).fill("24");
+    await section.getByLabel("Rival A \u00b7 precio sin impuestos en \u20ac").nth(i).fill("110000,00");
+    await section.getByLabel("Rival B \u00b7 precio sin impuestos en \u20ac").nth(i).fill("115000,00");
+  }
+  await section.getByLabel("Puntos por precio m\u00ednimos").fill("40");
+  await section.getByLabel("Beneficio m\u00ednimo en \u20ac (coma o punto)").fill("1000");
+  await section.getByTestId("stress-run").click();
+  const heatmap = section.getByTestId("stress-heatmap");
+  await expect(heatmap).toBeVisible({ timeout: 60_000 });
+  await expect(heatmap.locator("thead th")).toHaveCount(4);
+  const more = section.getByTestId("stress-heatmap-more");
+  await expect(more).toContainText("Ver las 4 hipótesis");
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await more.click();
+  await expect(heatmap.locator("thead th")).toHaveCount(5);
+  await expect(more).toContainText("Ver solo 3 hipótesis");
+  await expect(section.getByTestId("stress-row-0.0500")).toBeVisible();
 });

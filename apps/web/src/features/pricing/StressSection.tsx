@@ -7,6 +7,7 @@ import {
   getStress,
   isAbort,
   runStress,
+  type StressCell,
   type StressHypothesisInput,
   type StressTestResult,
 } from "../../api/client";
@@ -51,75 +52,109 @@ interface HypothesisDraft {
 const inputCls = "tnum mt-1 w-full rounded-lg border border-border px-3 py-2 text-base";
 const labelCls = "block text-sm";
 
-/** Etiquetas de hipótesis en orden de aparición en las celdas. */
-function hypothesisLabels(result: StressTestResult): string[] {
-  const labels: string[] = [];
-  for (const cell of result.cells) {
-    if (!labels.includes(cell.hypothesis_label)) labels.push(cell.hypothesis_label);
-  }
-  return labels;
+/**
+ * Hipótesis en orden de entrada, duplicadas incluidas. BL-V3 P1-03
+ * (BL-FIX-02): la identidad es la posición, nunca la etiqueta.
+ */
+interface HypothesisHead {
+  index: number;
+  label: string;
+}
+
+function hypothesisHeads(result: StressTestResult): HypothesisHead[] {
+  return result.hypotheses_echo.map((h, index) => ({ index, label: h.label }));
+}
+
+/** Visible header: duplicate labels gain their position so columns differ. */
+function headLabel(head: HypothesisHead, heads: HypothesisHead[]): string {
+  const dup = heads.filter((x) => x.label === head.label).length > 1;
+  return dup ? `${head.label} (${head.index + 1})` : head.label;
 }
 
 /**
  * Rebajas × hipótesis como tabla de calor (BL-V2-06). Cada celda lleva texto
  * ("Cumple" / motivo), nunca solo color; los detalles por hipótesis siguen
  * debajo con las cifras. Los datos son las celdas del resultado.
+ * BL-V3 P1-03: minimapa de 3 hipótesis con detalle por demanda, búsqueda
+ * por índice (O(1) por celda) y leyenda con texto.
  */
 function StressHeatmap({ result }: { result: StressTestResult }) {
-  const labels = hypothesisLabels(result);
+  const heads = hypothesisHeads(result);
   const discounts = result.by_discount.map((row) => row.discount_rate);
-  const cellFor = (rate: string, label: string) =>
-    result.cells.find((c) => c.discount_rate === rate && c.hypothesis_label === label) ?? null;
+  const cells = useMemo(() => {
+    const map = new Map<string, StressCell>();
+    for (const c of result.cells) map.set(`${c.discount_rate}|${c.hypothesis_index}`, c);
+    return map;
+  }, [result.cells]);
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? heads : heads.slice(0, 3);
   return (
-    <div
-      className="table-scroll overflow-x-auto"
-      tabIndex={0}
-      role="region"
-      aria-label="Mapa de la malla, desplázate horizontalmente"
-    >
-      <table className="w-full border-collapse text-sm" data-testid="stress-heatmap">
-        <caption className="py-2 text-left font-semibold">
-          Mapa de la malla: rebajas por hipótesis
-        </caption>
-        <thead>
-          <tr className="text-left">
-            <th scope="col" className="border-b border-border p-2">
-              Rebaja
-            </th>
-            {labels.map((label) => (
-              <th key={label} scope="col" className="border-b border-border p-2">
-                {label}
+    <div>
+      <div
+        className="table-scroll overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Mapa de la malla, desplázate horizontalmente"
+      >
+        <table className="w-full border-collapse text-sm" data-testid="stress-heatmap">
+          <caption className="py-2 text-left font-semibold">
+            Mapa de la malla: rebajas por hipótesis
+          </caption>
+          <thead>
+            <tr className="text-left">
+              <th scope="col" className="border-b border-border p-2">
+                Rebaja
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {discounts.map((rate) => (
-            <tr key={rate}>
-              <th scope="row" className="tnum border-b border-line p-2 text-left">
-                {rateToDiscountPercent(rate)} %
-              </th>
-              {labels.map((label) => {
-                const cell = cellFor(rate, label);
-                return (
-                  <td key={label} className="border-b border-line p-2">
-                    {cell === null ? (
-                      <span className="text-muted">Sin probar</span>
-                    ) : cell.feasible ? (
-                      <Badge tone="live">Cumple</Badge>
-                    ) : (
-                      <span>
-                        <Badge tone="neutral">No cumple</Badge>{" "}
-                        <span className="text-muted">{reasonEs(cell.reason)}</span>
-                      </span>
-                    )}
-                  </td>
-                );
-              })}
+              {visible.map((head) => (
+                <th key={head.index} scope="col" className="border-b border-border p-2">
+                  {headLabel(head, heads)}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {discounts.map((rate) => (
+              <tr key={rate}>
+                <th scope="row" className="tnum border-b border-line p-2 text-left">
+                  {rateToDiscountPercent(rate)} %
+                </th>
+                {visible.map((head) => {
+                  const cell = cells.get(`${rate}|${head.index}`) ?? null;
+                  return (
+                    <td key={head.index} className="border-b border-line p-2">
+                      {cell === null ? (
+                        <span className="text-muted">Sin probar</span>
+                      ) : cell.feasible ? (
+                        <Badge tone="live">Cumple</Badge>
+                      ) : (
+                        <span>
+                          <Badge tone="neutral">No cumple</Badge>{" "}
+                          <span className="text-muted">{reasonEs(cell.reason)}</span>
+                        </span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        Leyenda: «Cumple» supera tus límites en esa hipótesis; «No cumple» dice el motivo.
+      </p>
+      {heads.length > 3 && (
+        <div className="mt-2">
+          <Button
+            variant="secondary"
+            data-testid="stress-heatmap-more"
+            aria-expanded={showAll}
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll ? "Ver solo 3 hipótesis" : `Ver las ${heads.length} hipótesis`}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -368,6 +403,7 @@ export function StressSection({ state }: Props) {
 
   const ready = scope !== null && rule !== null && companyId !== null && companyRevision !== undefined;
   const selection = result?.selection ?? null;
+  const heads = useMemo(() => (result ? hypothesisHeads(result) : []), [result]);
   // Backend ceiling for the selected rebate: lookup only, no frontend math.
   const ceilingRow =
     result && selection
@@ -438,7 +474,7 @@ export function StressSection({ state }: Props) {
       <div className="mt-2 grid gap-3">
         {drafts.map((d, i) => (
           <fieldset key={d.key} className="grid gap-3 rounded-lg border border-border p-3">
-            <legend className="px-1 text-sm font-semibold">Hipótesis {i + 1}</legend>
+            <legend className="px-1 text-sm font-semibold">Hipótesis {i + 1} (supuesto)</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className={labelCls}>
                 <span className="font-medium">Etiqueta</span>
@@ -472,7 +508,7 @@ export function StressSection({ state }: Props) {
                 />
               </label>
               <label className={labelCls}>
-                <span className="font-medium">Rival A · precio sin impuestos en €</span>
+                <span className="font-medium">Rival A · precio sin impuestos en € (supuesto)</span>
                 <input
                   type="text"
                   inputMode={PRECIO_INPUT_MODE}
@@ -482,7 +518,7 @@ export function StressSection({ state }: Props) {
                 />
               </label>
               <label className={labelCls}>
-                <span className="font-medium">Rival B · precio sin impuestos en €</span>
+                <span className="font-medium">Rival B · precio sin impuestos en € (supuesto)</span>
                 <input
                   type="text"
                   inputMode={PRECIO_INPUT_MODE}
@@ -499,7 +535,7 @@ export function StressSection({ state }: Props) {
                 onChange={(e) => updateDraft(d.key, { complete: e.target.checked })}
                 className="mt-1"
               />
-              <span>Tomar estos como todos los rivales</span>
+              <span>Tomar estos como todos los rivales (supuesto)</span>
             </label>
             <label className="flex items-start gap-2 text-sm">
               <input
@@ -508,7 +544,7 @@ export function StressSection({ state }: Props) {
                 onChange={(e) => updateDraft(d.key, { groups: e.target.checked })}
                 className="mt-1"
               />
-              <span>Cada rival es de una empresa distinta</span>
+              <span>Cada rival es de una empresa distinta (supuesto)</span>
             </label>
             {drafts.length > 1 && (
               <div>
@@ -574,8 +610,25 @@ export function StressSection({ state }: Props) {
 
       {result && (
         <div className="mt-4 grid gap-3">
+          <p className="text-sm font-semibold">
+            Qué rebajas siguen siendo viables bajo las hipótesis introducidas
+          </p>
+          {stale && (
+            <Alert tone="warn" data-testid="stress-stale">
+              Resultado anterior: la regla o tu empresa cambió después de esta malla. Vuelve a
+              probarla.
+            </Alert>
+          )}
+          {!stale && inputStale && (
+            <Alert tone="warn" data-testid="stress-stale-input">
+              Resultado anterior: has cambiado las entradas después de esta malla. Vuelve a
+              probarla.
+            </Alert>
+          )}
           <div>
-            <h3 className="text-sm font-semibold">Tu conclusión</h3>
+            <h3 className="text-sm font-semibold">
+              {stale || inputStale ? "Resultado anterior: recalcula" : "Tu conclusión"}
+            </h3>
             {selection ? (
               <p data-testid="stress-selection" className="mt-1 text-lg font-semibold">
                 La rebaja del {formatPercent(selection.discount_rate)} cumple tus límites en{" "}
@@ -623,17 +676,6 @@ export function StressSection({ state }: Props) {
               </Button>
             </p>
           </div>
-
-          {stale && (
-            <Alert tone="warn" data-testid="stress-stale">
-              La regla o tu empresa cambió después de esta malla. Vuelve a probarla.
-            </Alert>
-          )}
-          {!stale && inputStale && (
-            <Alert tone="warn" data-testid="stress-stale-input">
-              Has cambiado las entradas después de esta malla. Vuelve a probarla.
-            </Alert>
-          )}
 
           <StressHeatmap result={result} />
           <div className="overflow-x-auto">
@@ -700,10 +742,10 @@ export function StressSection({ state }: Props) {
           <div>
             <h3 className="text-sm font-semibold">Detalle por hipótesis</h3>
             <div className="mt-2 grid gap-2">
-              {hypothesisLabels(result).map((label) => (
-                <details key={label} className="rounded-lg border border-border p-3">
+              {heads.map((head) => (
+                <details key={head.index} className="rounded-lg border border-border p-3">
                   <summary className="flex min-h-[48px] cursor-pointer items-center text-sm font-semibold">
-                    {label}
+                    {headLabel(head, heads)}
                   </summary>
                   <div className="overflow-x-auto">
                     <table className="tnum mt-2 w-full text-sm">
@@ -728,10 +770,10 @@ export function StressSection({ state }: Props) {
                       </thead>
                       <tbody>
                         {result.cells
-                          .filter((c) => c.hypothesis_label === label)
+                          .filter((c) => c.hypothesis_index === head.index)
                           .map((c) => (
                             <tr
-                              key={`${c.hypothesis_label}-${c.discount_rate}`}
+                              key={`${c.hypothesis_index}-${c.discount_rate}`}
                               className="border-b border-border"
                             >
                               <td className="py-2 pr-4">{formatPercent(c.discount_rate)}</td>

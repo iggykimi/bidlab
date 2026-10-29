@@ -1946,6 +1946,7 @@ paths:
                     cells:
                     - discount_rate: '0.05'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '112419.20'
                       score: '46.400000000000'
                       profit_net: '32419.20'
@@ -1953,6 +1954,7 @@ paths:
                       reason: below_limits
                     - discount_rate: '0.12'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '104135.68'
                       score: '49.000000000000'
                       profit_net: '24135.68'
@@ -1960,6 +1962,7 @@ paths:
                       reason: meets_limits
                     - discount_rate: '0.20'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '94668.80'
                       score: '49.000000000000'
                       profit_net: '14668.80'
@@ -2091,6 +2094,7 @@ paths:
                     cells:
                     - discount_rate: '0.05'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '112419.20'
                       score: '46.400000000000'
                       profit_net: '32419.20'
@@ -2098,6 +2102,7 @@ paths:
                       reason: below_limits
                     - discount_rate: '0.12'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '104135.68'
                       score: '49.000000000000'
                       profit_net: '24135.68'
@@ -2105,6 +2110,7 @@ paths:
                       reason: meets_limits
                     - discount_rate: '0.20'
                       hypothesis_label: Base
+                      hypothesis_index: 0
                       price_net: '94668.80'
                       score: '49.000000000000'
                       profit_net: '14668.80'
@@ -4962,6 +4968,10 @@ components:
           type: string
           minLength: 1
           maxLength: 80
+        hypothesis_index:
+          type: integer
+          minimum: 0
+          maximum: 8
         price_net:
           anyOf:
           - $ref: '#/components/schemas/Money'
@@ -4982,6 +4992,7 @@ components:
       required:
       - discount_rate
       - hypothesis_label
+      - hypothesis_index
       - price_net
       - score
       - profit_net
