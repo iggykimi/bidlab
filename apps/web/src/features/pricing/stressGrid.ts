@@ -2,7 +2,7 @@
 // (tanto por ciento) a tipos de protocolo ("0.0500"). Sin cifras
 // calculadas; este módulo solo construye la lista de candidatas.
 
-import { discountPercentToRate } from "../../lib/format";
+import { discountPercentToRate, parsePrecioInput } from "../../lib/format";
 import { DISCOUNT_MAX, DISCOUNT_MIN } from "../../lib/validation";
 
 export const STRESS_MAX_CANDIDATES = 81;
@@ -39,6 +39,94 @@ export function buildCandidateDiscounts(
     if (!rates.includes(rate)) rates.push(rate);
   }
   return { rates };
+}
+
+/** Puntos mínimos normalizados (punto decimal, 4 decimales). Null si no sirve. */
+export function normPoints(raw: string): string | null {
+  const clean = raw.trim().replace(",", ".");
+  if (!/^\d+(\.\d{1,4})?$/.test(clean)) return null;
+  const n = Number(clean);
+  return Number.isFinite(n) ? clean : null;
+}
+
+/** Periodo en meses 1-120. Null si no sirve. */
+export function normPeriod(raw: string): number | null {
+  if (!/^\d+$/.test(raw.trim())) return null;
+  const n = Number(raw.trim());
+  return Number.isInteger(n) && n >= 1 && n <= 120 ? n : null;
+}
+
+export interface StressDraftLike {
+  label: string;
+  cost: string;
+  period: string;
+  rivalA: string;
+  rivalB: string;
+  complete: boolean;
+  groups: boolean;
+}
+
+/**
+ * Clave canónica de las entradas de una malla (BL-V2-01). Orden de claves
+ * fijo y valores normalizados: el JSON es canónico por construcción.
+ * Devuelve null si algún campo no normaliza (borrador inválido).
+ */
+export function stressInputKey(args: {
+  scopeId: string | null;
+  ruleId: string | null;
+  ruleRevision: number | null;
+  companyId: string | null;
+  companyRevision: number | null | undefined;
+  rates: string[] | null;
+  drafts: StressDraftLike[];
+  minPoints: string;
+  minProfit: string;
+}): string | null {
+  if (
+    args.scopeId === null ||
+    args.ruleId === null ||
+    args.ruleRevision === null ||
+    args.companyId === null ||
+    args.companyRevision === null ||
+    args.companyRevision === undefined ||
+    args.rates === null
+  ) {
+    return null;
+  }
+  const hyps: unknown[] = [];
+  for (const d of args.drafts) {
+    const label = d.label.trim();
+    const cost = parsePrecioInput(d.cost);
+    const period = normPeriod(d.period);
+    const rivalA = parsePrecioInput(d.rivalA);
+    const rivalB = parsePrecioInput(d.rivalB);
+    if (label === "" || cost === null || period === null || rivalA === null || rivalB === null) {
+      return null;
+    }
+    hyps.push({
+      label,
+      cost_net: cost,
+      period_months: period,
+      rival_a_net: rivalA,
+      rival_b_net: rivalB,
+      rival_set_complete: d.complete,
+      independent_groups_assumed: d.groups,
+    });
+  }
+  const points = normPoints(args.minPoints);
+  const profit = parsePrecioInput(args.minProfit);
+  if (points === null || profit === null) return null;
+  return JSON.stringify({
+    scope: args.scopeId,
+    rule: args.ruleId,
+    ruleRevision: args.ruleRevision,
+    company: args.companyId,
+    companyRevision: args.companyRevision,
+    rates: args.rates,
+    hypotheses: hyps,
+    minPoints: points,
+    minProfit: profit,
+  });
 }
 
 /** Tipo de protocolo ("0.0500") a tanto por ciento (5). Null si no sirve. */

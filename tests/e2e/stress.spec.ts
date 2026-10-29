@@ -107,6 +107,34 @@ test("company change marks the grid stale with its timestamp", async ({ page }) 
   await restorePristineCompany(page.request);
 });
 
+test("editing inputs after a run marks it stale and blocks apply", async ({ page }) => {
+  test.setTimeout(120_000);
+  await installOfflineGuard(page);
+  const section = await openStress(page);
+  await section.getByLabel("Rebaja inicial en tanto por ciento").fill("5");
+  await section.getByLabel("Rebaja final en tanto por ciento").fill("15");
+  await section.getByLabel("Paso de la malla en tanto por ciento").fill("5");
+  await section.getByLabel("Tu coste sin impuestos en € (coma o punto)").fill("80000,00");
+  await section.getByLabel("Periodo en meses").fill("24");
+  await section.getByLabel("Rival A · precio sin impuestos en €").fill("110000,00");
+  await section.getByLabel("Rival B · precio sin impuestos en €").fill("115000,00");
+  await section.getByLabel("Puntos por precio mínimos").fill("40");
+  await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("1000");
+  await section.getByTestId("stress-run").click();
+  await expect(section.getByTestId("stress-selection")).toContainText("cumple tus límites", {
+    timeout: 60_000,
+  });
+  await expect(section.getByTestId("stress-stale-input")).toHaveCount(0);
+  await expect(section.getByTestId("stress-apply")).toBeEnabled();
+
+  await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("9000");
+  await expect(section.getByTestId("stress-stale-input")).toContainText("Vuelve a probarla");
+  await expect(section.getByTestId("stress-apply")).toBeDisabled();
+  // The old grid stays visible as history, with its timestamp.
+  await expect(section.getByTestId("stress-selection")).toContainText("cumple tus límites");
+  await expect(section.getByTestId("stress-computed-at")).toContainText("Calculada el");
+});
+
 test("selection shows the cost ceiling with its disclaimers", async ({ page }) => {
   test.setTimeout(120_000);
   await installOfflineGuard(page);

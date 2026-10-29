@@ -4,6 +4,7 @@ import {
   isGridOk,
   rateToDiscountPercent,
   stressDetailsEs,
+  stressInputKey,
 } from "./stressGrid";
 
 describe("buildCandidateDiscounts", () => {
@@ -87,3 +88,59 @@ describe("stressDetailsEs", () => {
     expect(stressDetailsEs([])).toEqual([]);
   });
 });
+
+describe("stressInputKey", () => {
+  const base = {
+    scopeId: "tias-whole",
+    ruleId: "rule-1",
+    ruleRevision: 2,
+    companyId: "company-demo",
+    companyRevision: 1,
+    rates: ["0.0500", "0.1000"],
+    drafts: [
+      {
+        label: "Base",
+        cost: "80000,00",
+        period: "24",
+        rivalA: "110000,00",
+        rivalB: "115000,00",
+        complete: true,
+        groups: true,
+      },
+    ],
+    minPoints: "40",
+    minProfit: "1000",
+  };
+
+  it("is stable for identical normalized inputs", () => {
+    const a = stressInputKey(base);
+    expect(a).not.toBeNull();
+    // "1000" and "1000,00" normalize to the same protocol figure.
+    expect(stressInputKey({ ...base, minProfit: "1000,00" })).toBe(a);
+    expect(stressInputKey({ ...base })).toBe(a);
+  });
+
+  it("changes when any field drifts", () => {
+    const a = stressInputKey(base);
+    expect(stressInputKey({ ...base, minProfit: "9000" })).not.toBe(a);
+    expect(stressInputKey({ ...base, minPoints: "41" })).not.toBe(a);
+    expect(stressInputKey({ ...base, rates: ["0.0500"] })).not.toBe(a);
+    expect(
+      stressInputKey({
+        ...base,
+        drafts: [{ ...base.drafts[0]!, rivalA: "1", complete: false }],
+      })
+    ).not.toBe(a);
+    expect(stressInputKey({ ...base, ruleRevision: 3 })).not.toBe(a);
+    expect(stressInputKey({ ...base, companyRevision: 2 })).not.toBe(a);
+  });
+
+  it("returns null for invalid drafts or missing context", () => {
+    expect(stressInputKey({ ...base, scopeId: null })).toBeNull();
+    expect(stressInputKey({ ...base, minPoints: "abc" })).toBeNull();
+    expect(
+      stressInputKey({ ...base, drafts: [{ ...base.drafts[0]!, label: "  " }] })
+    ).toBeNull();
+  });
+});
+

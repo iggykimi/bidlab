@@ -25,8 +25,11 @@ import {
   STRESS_MAX_HYPOTHESES,
   buildCandidateDiscounts,
   isGridOk,
+  normPeriod,
+  normPoints,
   rateToDiscountPercent,
   stressDetailsEs,
+  stressInputKey,
 } from "./stressGrid";
 import type { PricingState } from "./usePricingState";
 
@@ -47,19 +50,6 @@ interface HypothesisDraft {
 
 const inputCls = "tnum mt-1 w-full rounded-lg border border-border px-3 py-2 text-base";
 const labelCls = "block text-sm";
-
-function normPoints(raw: string): string | null {
-  const clean = raw.trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,4})?$/.test(clean)) return null;
-  const n = Number(clean);
-  return Number.isFinite(n) ? clean : null;
-}
-
-function normPeriod(raw: string): number | null {
-  if (!/^\d+$/.test(raw.trim())) return null;
-  const n = Number(raw.trim());
-  return Number.isInteger(n) && n >= 1 && n <= 120 ? n : null;
-}
 
 /** Etiquetas de hipótesis en orden de aparición en las celdas. */
 function hypothesisLabels(result: StressTestResult): string[] {
@@ -98,6 +88,10 @@ export function StressSection({ state }: Props) {
   const [rawError, setRawError] = useState<string | null>(null);
   const [result, setResult] = useState<StressTestResult | null>(null);
   const [applied, setApplied] = useState(false);
+  // BL-V2-01: canonical key of the inputs that produced `result`. The grid
+  // stays visible as history when drafts drift, but never as current.
+  const [submittedKey, setSubmittedKey] = useState<string | null>(null);
+  const latestSeq = useRef(0);
 
   const grid = useMemo(
     () => buildCandidateDiscounts(Number(fromPct), Number(toPct), Number(stepPct)),
@@ -202,6 +196,19 @@ export function StressSection({ state }: Props) {
     setError(null);
     setRawError(null);
     setPending(true);
+    const seq = latestSeq.current + 1;
+    latestSeq.current = seq;
+    const requestKey = stressInputKey({
+      scopeId: scope.id,
+      ruleId: rule.id,
+      ruleRevision: rule.revision,
+      companyId,
+      companyRevision,
+      rates: built.rates,
+      drafts,
+      minPoints,
+      minProfit,
+    });
     try {
       const res = await runStress(scope.id, {
         pricing_rule_id: rule.id,
@@ -215,10 +222,13 @@ export function StressSection({ state }: Props) {
           min_profit_net: built.minProfitOk,
         },
       });
+      if (seq !== latestSeq.current) return;
       setResult(res);
+      setSubmittedKey(requestKey);
     } catch (err: unknown) {
-      if (isAbort(err)) return;
+      if (isAbort(err) || seq !== latestSeq.current) return;
       setResult(null);
+      setSubmittedKey(null);
       const lines = err instanceof ApiError ? stressDetailsEs(err.details) : [];
       setError(
         lines.length > 0
@@ -227,7 +237,7 @@ export function StressSection({ state }: Props) {
       );
       setRawError(errorCode(err));
     } finally {
-      setPending(false);
+      if (seq === latestSeq.current) setPending(false);
     }
   }
 
@@ -236,18 +246,48 @@ export function StressSection({ state }: Props) {
     setError(null);
     setRawError(null);
     setPending(true);
+    const seq = latestSeq.current + 1;
+    latestSeq.current = seq;
     try {
-      setResult(await getStress(result.id));
+      const res = await getStress(result.id);
+      if (seq !== latestSeq.current) return;
+      setResult(res);
     } catch (err: unknown) {
-      if (isAbort(err)) return;
+      if (isAbort(err) || seq !== latestSeq.current) return;
       setError(errorEs(err, "No pudimos recargar tu prueba. Vuelve a intentarlo en unos segundos."));
       setRawError(errorCode(err));
     } finally {
-      setPending(false);
+      if (seq === latestSeq.current) setPending(false);
     }
   }
 
+  // The result freezes its rule/company; a newer revision invalidates it.
+  const stale =
+    result !== null &&
+    rule !== null &&
+    companyId !== null &&
+    companyRevision !== undefined &&
+    (result.rule.id !== rule.id ||
+      result.rule.revision !== rule.revision ||
+      result.company.id !== companyId ||
+      result.company.base_revision !== companyRevision);
+
+  const currentKey = stressInputKey({
+    scopeId: scope?.id ?? null,
+    ruleId: rule?.id ?? null,
+    ruleRevision: rule?.revision ?? null,
+    companyId,
+    companyRevision,
+    rates: isGridOk(grid) ? grid.rates : null,
+    drafts,
+    minPoints,
+    minProfit,
+  });
+  // Drafts drifted after the run (or turned invalid): history, not current.
+  const inputStale = result !== null && submittedKey !== null && currentKey !== submittedKey;
+
   function handleApply() {
+    if (stale || inputStale) return;
     const rate = result?.selection?.discount_rate;
     if (!rate) return;
     const pct = rateToDiscountPercent(rate);
@@ -269,16 +309,6 @@ export function StressSection({ state }: Props) {
     result && selection
       ? (result.by_discount.find((r) => r.discount_rate === selection.discount_rate) ?? null)
       : null;
-  // The result freezes its rule/company; a newer revision invalidates it.
-  const stale =
-    result !== null &&
-    rule !== null &&
-    companyId !== null &&
-    companyRevision !== undefined &&
-    (result.rule.id !== rule.id ||
-      result.rule.revision !== rule.revision ||
-      result.company.id !== companyId ||
-      result.company.base_revision !== companyRevision);
 
   return (
     <Card aria-label="Prueba de resistencia" data-testid="stress-section">
@@ -532,6 +562,11 @@ export function StressSection({ state }: Props) {
               La regla o tu empresa cambió después de esta malla. Vuelve a probarla.
             </Alert>
           )}
+          {!stale && inputStale && (
+            <Alert tone="warn" data-testid="stress-stale-input">
+              Has cambiado las entradas después de esta malla. Vuelve a probarla.
+            </Alert>
+          )}
 
           <div className="overflow-x-auto">
             <table className="tnum w-full text-sm">
@@ -657,10 +692,14 @@ export function StressSection({ state }: Props) {
           {selection && (
             <div className="grid gap-2">
               <div className="flex flex-wrap items-center gap-3">
-                <Button data-testid="stress-apply" onClick={handleApply}>
+                <Button
+                  data-testid="stress-apply"
+                  onClick={handleApply}
+                  disabled={stale || inputStale}
+                >
                   Aplicar esta rebaja
                 </Button>
-                {applied && (
+                {applied && !stale && !inputStale && (
                   <p role="status" className="text-sm">
                     Ya tienes esa rebaja en el simulador.
                   </p>
