@@ -8,10 +8,10 @@ and fix the related documents before coding.
 
 ## Current product
 
-React/TypeScript/Vite UI (Tailwind v4 CSS, hand-rolled SVG charts) +
-FastAPI backend, domain logic in pure Python (Decimal), SQLite WAL
-single process on loopback. PDF text via pypdf, page renders via
-PyMuPDF served as backend PNGs (no PDF.js, no recharts at runtime).
+React/TypeScript/Vite UI (Tailwind v4 CSS, curve charts via recharts 3,
+lazy-loaded with their section) + FastAPI backend, domain logic in pure
+Python (Decimal), SQLite WAL single process on loopback. PDF text via
+pypdf, page renders via PyMuPDF served as backend PNGs (no PDF.js).
 Meta document adapter is opt-in backend code; the offline demo needs
 no keys. See `docs/ARCHITECTURE.md` (CURRENT IMPLEMENTATION is
 authoritative) and `docs/REVIEWER_GUIDE.md` for the honest state.

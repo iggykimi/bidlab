@@ -5,8 +5,10 @@ Estado: diseño cerrado para P0 (implementado 2026-10-28, HEAD 4f1cc61; ver «Ma
 
 This section wins over the historical ADR table below. Frontend: React 19 +
 TypeScript strict + Vite + Tailwind v4 (CSS-first, no config file) +
-react-router + TanStack Query + sonner + zod; charts are hand-rolled SVG
-(`recharts` sits unused in devDependencies). No Radix/shadcn. PDF: text via
+react-router + TanStack Query + sonner + zod; price/points curves via
+recharts 3 (declared in devDependencies, bundled by Vite, lazy-loaded
+with CurveSection; hatch and plateau markers live in the same SVG).
+No Radix/shadcn. PDF: text via
 pypdf (`EXTRACTOR_VERSION="bidlab-pdf-1"`), page renders via PyMuPDF
 (`bidlab-render-1`) served as backend PNGs; no pdfplumber, no PDF.js in
 `apps/web`. Backend: FastAPI + Pydantic v2 + SQLAlchemy 2 + SQLite WAL,
