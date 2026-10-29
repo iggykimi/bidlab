@@ -61,6 +61,27 @@ def test_golden_compare_10_vs_15(seeded_client: TestClient) -> None:
     assert "con los mismos puntos" in delta["indicator_motivo"]
 
 
+def test_frontier_rejects_mixed_contexts(seeded_client: TestClient) -> None:
+    """BL-V2-05/Q02-F: scenarios from different hypotheses never share a frontier."""
+    twin_id = _save(seeded_client, "Frontera base", _input(), "fro-1")
+    unspecified = _input()
+    unspecified["rivals"] = {
+        "state": "unspecified",
+        "complete": False,
+        "group_membership_confirmed": False,
+        "own_group_id": None,
+        "offers": [],
+    }
+    other_id = _save(seeded_client, "Frontera otra hipótesis", unspecified, "fro-2")
+    res = seeded_client.post(
+        "/api/v1/scenarios/frontier",
+        json={"scenario_ids": [twin_id, other_id]},
+        headers=COMPARE_HEADERS,
+    )
+    assert res.status_code == 422, res.text
+    assert res.json()["code"] == "frontier_not_comparable"
+
+
 def test_compare_max_three_and_min_two_enforced(seeded_client: TestClient) -> None:
     for body in (
         {"scenario_ids": ["a", "b", "c", "d"], "primary_id": "a"},
