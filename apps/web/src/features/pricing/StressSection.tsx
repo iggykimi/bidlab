@@ -20,7 +20,7 @@ import {
   formatPoints1,
   parsePrecioInput,
 } from "../../lib/format";
-import { errorCodeOnly, reasonEs } from "./sources";
+import { errorCodeOnly, reasonEs, selectionReasonEs } from "./sources";
 import {
   STRESS_MAX_HYPOTHESES,
   buildCandidateDiscounts,
@@ -494,7 +494,7 @@ export function StressSection({ state }: Props) {
                 Ninguna rebaja cumple tus límites en todas las hipótesis.
               </p>
             )}
-            <p className="mt-1 text-xs text-muted">{result.selection_reason}</p>
+            <p className="mt-1 text-xs text-muted">{selectionReasonEs(result.selection_reason)}</p>
             {ceilingRow !== null &&
               ceilingRow.price_net !== null &&
               ceilingRow.max_cost_net !== null && (

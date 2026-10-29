@@ -95,6 +95,18 @@ export function errorCodeOnly(raw: string | null): string | null {
   return cut === -1 ? raw : raw.slice(0, cut);
 }
 
+/** Stress selection reason -> Spanish label. Unknown codes pass through. */
+export function selectionReasonEs(reason: string): string {
+  switch (reason) {
+    case "maximize worst profit among feasible tested discounts":
+      return "Elegimos la rebaja probada con mayor beneficio en el peor caso.";
+    case "no tested discount meets the limits under every hypothesis":
+      return "Ninguna rebaja probada cumple los límites en todas las hipótesis.";
+    default:
+      return reason;
+  }
+}
+
 /** Anomaly status -> Spanish label. Unknown codes stay "Sin determinar". */
 export function anomalyEs(status: string): string {
   switch (status) {

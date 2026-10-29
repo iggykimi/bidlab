@@ -12,6 +12,7 @@ import {
   parseStatusEs,
   reasonEs,
   rightsStatusEs,
+  selectionReasonEs,
   variableEs,
 } from "./sources";
 
@@ -113,6 +114,16 @@ describe("sources", () => {
     expect(anomalyEs("not_flagged_under_assumptions")).toBe("No, en este supuesto");
     expect(anomalyEs("not_applicable")).toBe("No aplicable");
     expect(anomalyEs("unknown")).toBe("Sin determinar");
+  });
+
+  it("translates stress selection reasons to Spanish", () => {
+    expect(selectionReasonEs("maximize worst profit among feasible tested discounts")).toBe(
+      "Elegimos la rebaja probada con mayor beneficio en el peor caso."
+    );
+    expect(selectionReasonEs("no tested discount meets the limits under every hypothesis")).toBe(
+      "Ninguna rebaja probada cumple los límites en todas las hipótesis."
+    );
+    expect(selectionReasonEs("future_reason")).toBe("future_reason");
   });
 
   it("translates evidence codes to Spanish", () => {
