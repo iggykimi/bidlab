@@ -7,7 +7,7 @@ El LLM propone estructura y citas; la aritmética, la elegibilidad y la
 anormalidad viven en dominio puro. Dinero y puntos en `Decimal`, API con
 strings, sin fórmulas autoritativas en el frontend.
 (Sin CI remota ni badge: por decisión del autor, las puertas son locales
-vía `scripts/verify.py`; sin push sin su autorización.)
+vía `scripts/verify.py`.)
 
 Caso P0: **2026/00006554N** (asistencia técnica del PAI de Tías),
 PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
@@ -33,7 +33,7 @@ Pack para revisores (capturas, guía de 5 minutos, límites honestos):
 
 ## Requisitos previos
 
-| Herramienta | Mínimo | Verificado (Windows, 26-oct-2026) |
+| Herramienta | Mínimo | Verificado (Windows, 29-oct-2026) |
 |---|---|---|
 | Python | >= 3.12 (`pyproject.toml`) | 3.14.7 |
 | uv | reciente con workspaces | 0.12.5 |
@@ -135,13 +135,14 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 `npm run build`, `npm run test:unit`, `ruff check .`,
 `mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
 
-Estado a 28-oct-2026 (contado en este árbol; detalle y comandos
+Estado a 29-oct-2026 (contado en este árbol; detalle y comandos
 en [verification-log](docs/verification-log.md)):
 
-- Backend: 502 tests (unit + evaluation + integración/contratos).
-  Web: 216 en 28 ficheros (`npm run test:unit`, verde).
-  E2E: 72 tests herméticos (Chromium, loopback).
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@a8fef2c, 28-oct).
+- Backend: 550 recogidos, 548 en verde + 2 skipped (live opt-in +
+  symlink sin permiso en Windows).
+  Web: 236 en 31 ficheros (`npm run test:unit`, verde).
+  E2E: 77 tests herméticos (Chromium, loopback).
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@7af9417, 29-oct).
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
@@ -152,6 +153,9 @@ en [verification-log](docs/verification-log.md)):
   Paquete integral: extracción con recibos live, gold humano +
   harness de control offline; comparación real texto/híbrido pendiente (T11), imagen exacta de página (T15),
   radar de incoherencias (T20), techo de coste con paridad motor (T21).
+  Revisión 29-oct (issue #1, @7af9417): recibos/reservas/guardas backend,
+  UI servida en el mismo origen, presets demo, composición coste/beneficio
+  y `demo_story` reproducible (4 escenarios + 4 informes + comparación).
   Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
   sin envío.

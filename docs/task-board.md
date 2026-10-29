@@ -3,6 +3,21 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
+## Integración issue #1 · 29-oct (lead, en main @7af9417)
+
+- ZIP BidLab_Codigo_Revisado_2026-10-29: base exacta 1a53b6a,
+  MANIFEST 412/412 OK, parche 3443 líneas leído entero,
+  `git apply` limpio, 54/54 idéntico a `codigo/`.
+- Fixes integrador: separadores URL en web.py (Windows),
+  ref colgada ARCHITECTURE, exención exacta srcdoc+sandbox
+  en report-archive, single-flight get_engine + dispose
+  alembic/demo_story (carrera de hilos probada con gc).
+- Gates 29-oct: backend 548+2skip, vitest 236, E2E 77/77,
+  demo-shots 4/4, demo_story MATCH 4/4 ×2 runs, visual
+  desktop + móvil 390. Sin Meta en vivo (G3 blocked).
+- Docu actualizada: README, demo/README, guion v3 (2
+  literales), launch-plan, submission-draft, tablero.
+
 ## Plan Integral Meta 28-oct (leído ENTERO 93/93 + HTML; goal nuevo activo)
 
 - Paquete BidLab_Plan_Integral_Meta_2026-10-28 verificado (MANIFEST

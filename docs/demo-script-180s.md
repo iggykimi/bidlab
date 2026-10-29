@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion v2 (28-oct, post PKG-T15). Literales «» re-verificados contra código/tests @4f1cc61: 100+ citas vigentes, ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v3 (29-oct, post issue #1). Literales «» re-verificados contra código/tests @7af9417: citas vigentes salvo las dos marcadas v3 (aviso de imagen, línea de coste), ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -48,7 +48,7 @@ cifras vienen de una semilla revisada a mano.»
 Pantalla: pestaña «Requisitos». Fila «Servicios similares año mayor ejecución
 ≥ 207.088,00 €»: «Por verificar». Clic en «Ver página 6 en el pliego» →
 «Página 6 de 41»: la semilla no trae imagen, así que se ve el aviso
-«Esta página no tiene imagen. Coteja con el texto de abajo.» y la cita con
+«No pudimos mostrar la imagen. Coteja con el texto de abajo.» (v3: literal nuevo) y la cita con
 207.088 como texto rotulado. «Cerrar» antes del siguiente bloque
 [NO SE LEE: el drawer devuelve el foco al botón; no finjas una imagen
 que no existe].
@@ -60,7 +60,7 @@ rotulado. No inventa certificados.»
 
 Pantalla: pestaña «Precio». «¿Cuánto quieres rebajar?» con «Escribe tu rebaja
 (%)». Resumen de coste: «Pyme de ejemplo», directos 80.000,00 €, indirectos
-10.000,00 €; línea de beneficio: «Es un dato inventado.» «Prueba con precios
+10.000,00 €; línea de beneficio: «Es un dato de ejemplo.» (v3: literal nuevo) «Prueba con precios
 de rivales»: A 106.502,40 €, B 110.052,48 €, «Tomas estos como todos los
 rivales.» [NO SE LEE: muestra el coste declarado; no teclees un coste nuevo
 en cámara.]
@@ -124,8 +124,8 @@ y el informe la conserva con tus notas. Entiende la regla, compara y guarda.»
 ## Recorrido propio (evidencia local, fuera de los 180 s)
 
 No sale en el vídeo por tiempo. Probado E2E 4/4 (tests/e2e/own-journey.spec.ts,
-R05 ×4 incluido recarga-sin-duplicar, en verde el 28-oct
-dentro de la suite 72/72): «Nueva licitación» →
+R05 ×4 incluido recarga-sin-duplicar, en verde el 29-oct
+dentro de la suite 77/77): «Nueva licitación» →
 «¿Qué licitación quieres dar de alta?» → «¿Quieres añadir el pliego en PDF?»
 → «¿Quién eres en esta licitación?» → pestaña «Revisar» (insignia
 «Tus datos»): «¿Pides propuestas automáticas?» → seguidor con «Estado:»
@@ -168,7 +168,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
 - Números esperados 5/15/30 %: fixtures/demo/expected.json (90000.00 =
   80000 + 10000 de company.json «Pyme de ejemplo»; casos 5/15/30 %;
   anomalía a 30 %); caso 10 % fijado por CMP-02 + R06 + backend, no por expected.json.
-- Puertas globales: suite 72/72 + backend 502 + web 216 en verde
-  el 28-oct (@a8fef2c; ver docs/verification-log.md PKG-T19, post-paquete T20/T21);
+- Puertas globales: suite 77/77 + backend 548 + web 236 en verde
+  el 29-oct (@7af9417; ver docs/verification-log.md, post-issue #1);
   re-ejecutar `python scripts/verify.py` tras cualquier cambio posterior
-  antes de grabar (el 10/10 citado es post-paquete).
+  antes de grabar (el 10/10 citado es post-issue #1).

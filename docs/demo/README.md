@@ -7,7 +7,7 @@ Ayuntamiento de Tías (Lanzarote).
 
 ## Ver en 2 minutos (sin instalar nada)
 
-Capturas regeneradas el 28-oct-2026 (post-paquete T20/T21) con
+Capturas regeneradas el 29-oct-2026 (post-issue #1) con
 `npx playwright test -c scripts/demo-shots/playwright.shots.config.ts`
 (base separada de la suite E2E, nombres legibles, UI asentada):
 tuteo, «Datos de ejemplo», comparar desde «Precio», drawer con
@@ -54,12 +54,12 @@ análisis + revisión manual + simular + comparar + exportar
 - Contratos API: `docs/API_CONTRACT.yaml`
 - Frontend (React, español claro, guía de voz): `apps/web/src/`,
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
-- Tests (contados el 28-oct-2026 en este árbol, ver
+- Tests (contados el 29-oct-2026 en este árbol, ver
   [verification-log](../verification-log.md)):
-  backend 502 (unit + evaluation + integración/contratos),
-  web 216 en 28 ficheros (`npm run test:unit`),
-  E2E 72 herméticos (Chromium, loopback).
-  Puertas completas en verde el 28-oct
+  backend 548 + 2 skipped (unit + evaluation + integración/contratos),
+  web 236 en 31 ficheros (`npm run test:unit`),
+  E2E 77 herméticos (Chromium, loopback).
+  Puertas completas en verde el 29-oct
   (`python scripts/verify.py`, 10/10) + dos ensayos
   limpios R1+R2.
 
@@ -68,7 +68,7 @@ análisis + revisión manual + simular + comparar + exportar
 - Puertas locales (sin CI remota, por decisión del autor):
   `uv run python scripts/verify.py` → 10 puertas (deps, pytest unit,
   pytest integración+contratos, eslint, tsc, build, vitest, ruff,
-  mypy, Playwright): ALL CHECKS PASSED, exit 0, el 28-oct
+  mypy, Playwright): ALL CHECKS PASSED, exit 0, el 29-oct
   (tour + malla + contrato stress incluidos).
 - Log de verificación con evidencia real: [verification-log](../verification-log.md).
 - Auditoría UX externa aplicada: [ux-review](../ux-review.md).
