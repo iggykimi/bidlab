@@ -1,7 +1,19 @@
 # Arquitectura implementable
 Estado: diseño cerrado para P0 (implementado 2026-10-28, HEAD 4f1cc61; ver «Mapa real implementado»).
 
-## ADR y stack
+## CURRENT IMPLEMENTATION (authoritative, 29-oct-2026)
+
+This section wins over the historical ADR table below. Frontend: React 19 +
+TypeScript strict + Vite + Tailwind v4 (CSS-first, no config file) +
+react-router + TanStack Query + sonner + zod; charts are hand-rolled SVG
+(`recharts` sits unused in devDependencies). No Radix/shadcn. PDF: text via
+pypdf (`EXTRACTOR_VERSION="bidlab-pdf-1"`), page renders via PyMuPDF
+(`bidlab-render-1`) served as backend PNGs; no pdfplumber, no PDF.js in
+`apps/web`. Backend: FastAPI + Pydantic v2 + SQLAlchemy 2 + SQLite WAL,
+single Uvicorn on loopback; build served same-origin at 127.0.0.1:8000.
+Meta: Chat Completions adapter, opt-in, currently blocked (no credential).
+
+## ADR y stack (historical; see CURRENT IMPLEMENTATION above)
 | ADR | Decisión | Motivo y límite |
 |---|---|---|
 | A01 | Monorepo Python + TypeScript | Equipo de una persona, dominio numérico Python y UI rica. Contrato REST versionado. |

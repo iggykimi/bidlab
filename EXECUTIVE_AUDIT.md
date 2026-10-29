@@ -1,71 +1,44 @@
-# BidLab — dictamen y guía de arranque
-**Investigación cerrada el 26 de octubre de 2026.** El proyecto conserva la idea del dossier: de un pliego a una decisión de oferta. Se entrega un paquete de doce especificaciones y evidencia reproducible para desarrollar después con Muse Code. No se ha implementado la aplicación.
+# BidLab — executive status (living document)
 
-## Dictamen
-**Viable como laboratorio de decisiones con una licitación real, fuentes y matemáticas verificables.** La extracción documental por sí sola no diferencia el producto. El núcleo debe ser el Pricing Lab, donde precio, costes, puntos y presunción de anormalidad cambian bajo hipótesis explícitas y dejan una traza exportable.
+> **Product IMPLEMENTED.** This file replaced the 26-oct research snapshot
+> (preserved byte-identical at [docs/archive/EXECUTIVE_AUDIT_2026-10-26.md](docs/archive/EXECUTIVE_AUDIT_2026-10-26.md)).
+> Start here: [README.md](README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
 
-No hay una base demostrada para estimar probabilidades de ganar. El histórico se mantiene descriptivo y condicionado a comparabilidad; se recorta antes que la calidad del simulador o la demo.
+**Checked:** 2026-10-29 · **Verified commit:** `c1befab` (V2 gates green;
+V3 figures land with the V3 QA update) · **Mode:** local-first demo + opt-in Meta adapter.
 
-## Qué se ha probado realmente
+## Verdict
 
-| Prueba | Resultado |
-|---|---|
-| Feed oficial PLACSP | Descargado y parseado: 68 expedientes distintos, 33 registros de resultado. |
-| Campos de ofertas | Número recibido presente en 33/33 resultados; mínimo/máximo en 13/33. No es una lista completa de ofertas rivales. |
-| Pares presupuesto/adjudicación | 22 candidatos estructurales; siguen sujetos a revisión semántica. Se revisaron cuatro pares de dos expedientes, sin considerarlos un grupo estadístico homogéneo. |
-| ZIP oficial 2012 | 16 MB comprimidos, 38 ficheros Atom; 19.000 entradas y 11.262 IDs distintos. Las 7.738 versiones adicionales confirman la necesidad de deduplicar. |
-| Documentos | Cinco PCAP y un PPT descargados, con URLs y SHA-256. Tres fórmulas examinadas también visualmente. |
-| Evidencias de página | 25 citas del gold inicial localizadas en sus páginas mediante pypdf. Esto no es una tasa de precisión de Meta. |
-| Contratos y matemáticas | OpenAPI 3.1 validada: 22 rutas, 24 operaciones y 51 esquemas; SQL de 17 tablas ejecutado; ejemplos tipados y oráculos independientes comprobados. |
-| Meta real | Bloqueado por falta de MODEL_API_KEY. No se enviaron solicitudes ni se inventó consumo. |
+BidLab is a working decision lab: from a real tender document to a traceable,
+human-reviewed bid decision. The deterministic Python engine (Decimal) computes
+price, economic points, conditional anomaly flags and scenario comparisons;
+the AI layer proposes structure and page citations but never the arithmetic.
+Curated demo figures are hand-reviewed seeds, never presented as live extraction.
 
-Los archivos originales del feed/ZIP cambiantes están identificados por hash. El paquete incluye CSV/JSON de la sonda reciente, resumen del ZIP y copias documentales de investigación; no redistribuye los 246 MB descomprimidos del ZIP.
+## Current capabilities
 
-## Caso de producto elegido
-**2026/00006554N — asistencia técnica del PAI de Tías.** Presupuesto inicial neto: 118.336 EUR; presupuesto con IGIC: 126.619,52 EUR; duración inicial: 24 meses; valor estimado: 295.840 EUR. No son magnitudes intercambiables.
+1. **Library + workspace** over the real Tías tender 2026/00006554N (49 price points).
+2. **Pricing Lab**: discount simulator, price/points curve, stress mesh, Pareto frontier.
+3. **Evidence**: page-localized citations with provenance; citation ≠ approved rule.
+4. **Human review gates**: pending rules block points; unknown stays null, never zero.
+5. **Reports**: immutable scenario snapshots + printable HTML with sources and assumptions.
 
-El PCAP asigna 49 puntos al precio y usa proporción inversa en su página PDF 10. La regla de anormalidad está en la página 20. El requisito de experiencia técnica de la página 6 permite mostrar un pendiente real sin inventar certificados de la empresa ficticia.
+## Status table
 
-Con coste **sintético** de 90.000 EUR y rivales **hipotéticos** de 106.502,40 y 110.052,48:
+| Area | State | Evidence |
+|---|---|---|
+| App (API + web + E2E) | IMPLEMENTED | Repo tree; `scripts/verify.py` 10/10 |
+| Golden case 10/15 (49,0 + 5.916,80 €) | VERIFIED LOCALLY | `test_compare.py`, `compare.spec.ts`, `demo_story.py` MATCH |
+| QA figures 557/252/85 | VERIFIED LOCALLY | `docs/QA_REPORT_V2.md` @`264712f` |
+| Meta smoke (minimal inference) | VERIFIED LOCALLY | `evidence/meta_smoke_status.json` (26-oct) |
+| Live end-to-end extraction | BLOCKED EXTERNAL | No key/admission/balance; 0 live calls (`docs/META_EVIDENCE_V2.md`) |
+| Demo video / submission | BLOCKED EXTERNAL | Author's; script v4 ready |
+| Win prediction, multi-user SaaS, CI badge | NOT CLAIMED | Explicitly out of scope |
 
-| Baja propia | Precio neto | Beneficio hipotético | Puntos económicos condicionados |
-|---|---:|---:|---:|
-| 5% | 112.419,20 | 22.419,20 | 46,4211 / 49 |
-| 15% | 100.585,60 | 10.585,60 | 49,0000 / 49 |
-| 30% | 82.835,20 | −7.164,80 | 49,0000 / 49 |
+## Limits
 
-El último tramo hace visible que bajar más puede consumir margen sin mejorar puntos en ese escenario. Los otros 51 puntos no se inventan. La presunción de anormalidad significa posible justificación, no exclusión automática.
+Synthetic company costs and rival bids in the demo; unknown tolerated as null;
+anomaly is a presumption (possible justification), never an automatic exclusion;
+originals not redistributed; loopback + SQLite single process, no public auth.
 
-## Hallazgos que han cambiado el diseño
-
-- Varios resultados de un expediente no se dividen por su presupuesto total. Se detectaron ratios engañosos por adjudicación parcial sin lote resoluble.
-- El PCAP de marketing puntúa sobre VEC y su anexo incorpora prórroga; su base no está reconciliada. Queda como ejemplo bloqueado.
-- El PCAP de Alfresco imprime un denominador con glifo 0 mientras define O como oferta. La interpretación logarítmica se prueba matemáticamente, pero no se aprueba automáticamente para ese expediente.
-- La API PDF de Meta limita texto a las primeras 100 páginas e imágenes a las primeras 50. El diseño extrae y segmenta por página localmente.
-- Muse Code y la app tienen credenciales y modalidades de facturación distintas. No se presupone que una suscripción del CLI cubra inferencia de la app.
-- El portal publica Disallow: / en robots. Se descarta crawler HTML; se usan recursos oficiales expresamente publicados, cache y archivos locales.
-
-## Reglas del evento y créditos
-Se recuperó el texto público de [Official Rules / Waiver](https://cerebralvalley.ai/e/meta-ai-developer-hackathon/waiver) desde el JSON entregado por la web, aunque su vista textual mostraba Loading. La rúbrica pondera impacto 30%, herramientas Meta 25%, ejecución 20% y demo 25%; Indie permite hasta cuatro personas.
-
-Los 150 USD están anunciados para seleccionados y requieren claim válido. Se leyó el PDF específico de Credit Terms: regula cuenta, cobro posterior al agotamiento y vigencia. Existe una discrepancia con el resumen del waiver sobre duración del crédito; debe comprobarse la versión aceptada y el saldo real. No se ha reclamado crédito ni aceptado condiciones por el participante.
-
-Repositorio público, máximo de tres minutos y ventana exacta de nueva autoría se mantienen como restricciones conservadoras del dossier; no se han localizado como requisitos detallados en el texto recuperado. El portal sin sesión no permitió verificar todos los campos de entrega.
-
-La fecha pública de cierre es 4 de noviembre a las 21:00 ET, equivalente al **5 de noviembre de 2026 a las 03:00 en Madrid**. Objetivo interno: 4 de noviembre a las 18:00 CET.
-
-## Paquete de implementación
-El ZIP contiene PRD con trece historias verificables, arquitectura y árbol de módulos, OpenAPI, modelos y SQL, motor matemático/DSL, estrategia unitaria/integración/Playwright, 38 tareas, presupuesto, guion de 180 segundos, AGENTS.md y MUSE_GOAL.md. Incluye sondas, fuentes exactas, gold inicial y ejemplos de contratos.
-
-Stack decidido: React/TypeScript/Vite y FastAPI/Pydantic/SQLite; dominio Python puro con Decimal; PDF local y Meta como adaptador. Sin base vectorial, multiusuario o despliegue cloud inicial. Estimación P0: **58 horas más 10 de contingencia**; P1 opcional añade 8,5 horas.
-
-El agente comienza por entorno, acceso y contratos; después entrega el recorrido completo de Tías. Se permite lead más dos helpers cuando Muse los soporte, con worktrees separados y verificación del integrador. No se depende de workflows o mensajería disponibles en una plataforma concreta.
-
-## Lo que sigue pendiente
-
-1. Admisión del participante, versión de reglas aceptada y claim/saldo real.
-2. Smoke y extracción real con Meta; sin esto no declarar completa la integración del hackathon.
-3. Revisión por documento antes de publicar originales. Las copias de investigación no conceden una licencia general sobre anexos, fotos o logos.
-4. Implementación, pytest/Playwright/build, ensayo offline y grabación del vídeo. Están especificados, no ejecutados.
-
-Para empezar, copiar el árbol del ZIP a la raíz de un repo nuevo, conservar AGENTS.md y pegar el comando exacto de docs/MUSE_GOAL.md. El archivo incluye el prompt inicial, checkpoints y condiciones para pausar ante bloqueos sin fingir éxito.
+Historical research, event rules and credit notes: see the archived snapshot above.

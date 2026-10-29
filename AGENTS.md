@@ -1,51 +1,99 @@
-# BidLab — instrucciones para Muse Code
+# BidLab — coding-agent notes
 
-## Objetivo y autoridad
-Implementa el producto decidido, sin reabrir ideación. Lee íntegros README y docs/SOURCE_AUDIT.md, DATA_FEASIBILITY.md, PRD.md, ARCHITECTURE.md, DATA_MODELS.md, RULE_ENGINE.md, TEST_STRATEGY.md, MILESTONES.md, DEMO_SUBMISSION.md, MUSE_GOAL.md y API_CONTRACT.yaml. Todos esos archivos, salvo README, están en docs/.
+Maintenance guide for agents working on this repo. It governs code work;
+it is not material for any jury. Precedence: PRD for scope, RULE_ENGINE
+for math and states, API_CONTRACT for transport, DATA_MODELS/SQL for
+persistence, SOURCE_AUDIT for verified facts. On conflict, log a decision
+and fix the related documents before coding.
 
-Este repo contiene diseño, evidencia de investigación Y la aplicación implementada (API + web + E2E). Alcance P0: ejemplo revisado (Tías, caso oro 10/15) + recorrido propio completo offline (alta + PDF + empresa + análisis + revisión manual + simular + comparar + exportar). Precedencia: PRD para alcance; RULE_ENGINE para matemática y estados; API_CONTRACT para transporte; DATA_MODELS/SQL para persistencia; SOURCE_AUDIT para hechos verificados. Ante conflicto, registra una decisión y corrige los documentos relacionados antes de codificar.
+## Current product
 
-## Primeras acciones
-Inspecciona git status, entorno, muse --version y capacidades/modelo/saldo accesibles, sin mostrar secretos. No ejecutes muse init sobre este archivo. Crea docs/environment.md, task-board.md y blockers.md. No marques G0 ni G3 como resueltos por leer documentación.
+React/TypeScript/Vite UI (Tailwind v4 CSS, hand-rolled SVG charts) +
+FastAPI backend, domain logic in pure Python (Decimal), SQLite WAL
+single process on loopback. PDF text via pypdf, page renders via
+PyMuPDF served as backend PNGs (no PDF.js, no recharts at runtime).
+Meta document adapter is opt-in backend code; the offline demo needs
+no keys. See `docs/ARCHITECTURE.md` (CURRENT IMPLEMENTATION is
+authoritative) and `docs/REVIEWER_GUIDE.md` for the honest state.
 
-G1/G2 ya tienen pruebas locales de descarga: comprueba hashes, no repitas descargas masivas. Caso P0: Tías 2026/00006554N, neto 118336.00, 24 meses, 49 puntos, PCAP p.10 y p.20. Adapta la investigación a una semilla con revisión identificada. La extracción Meta real está pendiente de clave; no presentes un fixture como ejecución live.
+P0 scope (done, keep green): reviewed Tías example (golden 10/15 case)
++ full own-tender offline journey (create + PDF + company + analysis +
+manual review + simulate + compare + export).
 
-## Límites no negociables
+## Code paths and ownership
 
-- No chatbot RAG como producto principal, vector DB, predictor de ganar ni recopilación de precios confidenciales actuales.
-- El LLM propone estructura y citas; aritmética, elegibilidad y anormalidad viven en dominio Python puro.
-- Dinero, ratios y puntos en Decimal; API con strings; importes persistidos en céntimos. El frontend no tiene otra fórmula autoritativa.
-- No eval, exec ni código del LLM. Solo plantillas y AST con whitelist y límites. La propia oferta participa en mejor precio y medias según la política.
-- Cita localizada y revisión semántica son estados distintos. Regla o scope pendientes bloquean puntos. Unknown usa null, nunca cero.
-- Anormalidad es presunción condicional o posible justificación; nunca exclusión automática por ese motivo. No aplicar art.85 universalmente ni mezclar variantes de PCAP.
-- Sin todas las ofertas reales, los escenarios son hipótesis declaradas. No presentar adjudicaciones como distribución de rivales. No fabricar muestras o métricas.
-- Preservar documento, fuente, versión, hash y página. Sin crawler del portal: recursos oficiales expresamente publicados o upload local.
-- No secretos en frontend, logs o fixtures; no documentos privados en Contributor. MODEL_API_KEY pertenece a la app y META_API_KEY al CLI.
-- Demo offline rotulada Datos de ejemplo (Tus datos en licitaciones propias). Sin animaciones o registros ficticios de API. Tokens null para fixture/manual.
-- Sin Meta en vivo en el frontal (solo smoke backend); empresa y rivales sintéticos; sin predicción.
-- No publicar originales, repo, hosting ni enviar candidatura sin autorización final del autor. Sin CI remota ni push sin su autorización explícita. Preparar antes todo lo revisable. No contactar organizadores o terceros por cuenta propia.
+- `apps/api/bidlab/domain/` + `services/evaluation.py`: deterministic
+  engine. `services/`: jobs, compare, stress, frontier, render, intake.
+- `apps/api/bidlab/api/`: routes; `docs/API_CONTRACT.yaml` is generated
+  from `tools/build_contract.py` (never hand-edit generated files).
+- `apps/web/src/features/`: `workspace`, `pricing`, `report`, `review`,
+  `evidence`, `intake`, `company`, `library`. Styles in `styles.css`.
+- `tests/e2e/`: hermetic Playwright specs (loopback-only guard).
+- `scripts/`: `verify.py` (gates), `demo.py`, `demo_story.py`,
+  `bench_pdf_intake.py`, `compare_extraction.py`, `demo-shots/`.
+- `docs/`: specs + `verification-log.md`, `QA_REPORT_V*.md`,
+  `DECISION_LOG_V*.md`, `META_EVIDENCE_V*.md`, `CHANGELOG_IMPLEMENTACION_V*.md`.
 
-## Implementación y autonomía
-Sigue ARCHITECTURE y OpenAPI. Resuelve versiones compatibles y fija uv.lock/package-lock al principio; no cambies latest cada día. Un proceso Uvicorn y SQLite WAL, sin cloud inicial. Scripts Python multiplataforma; Docker no obligatorio.
+## Verify commands
 
-Trabaja por tareas de 0,5–3 h. Prioriza el vertical slice completo y la demo desde el primer día. Se permiten commits locales claros cuando el prompt de arranque los autorice; no amend/reset destructivo de trabajo ajeno. Cambios pequeños vinculados a criterios, sin funciones P2 para cubrir casos raros.
+```sh
+python scripts/verify.py            # all gates; exit 0 = green
+python -m pytest apps/api -p no:warnings
+npm run test:unit -w apps/web -- --run
+npm run lint && npm run typecheck && npm run build -w apps/web
+python -m ruff check . && python -m ruff format --check .
+python -m mypy apps/api
+```
 
-No hagas entrevistas sobre preferencias inferibles. Pregunta solo por acceso o secretos imposibles de verificar y decisiones irreversibles/finales no autorizadas. Ante bloqueo externo, documenta y continúa tareas independientes. Dos intentos acotados; ningún bucle infinito.
+Run focused tests per change, then the full gate before finishing.
+Log runs in `docs/verification-log.md` (date, command, exit code,
+commit, evidence). FAIL is FAIL; BLOCKED/SKIPPED are not PASS. Never
+change oracles or tests to hide bugs. A video only exists once recorded.
 
-## Agentes y workflows
-Se autoriza usar helpers y workflows de Muse Code si están habilitados en esta instalación. Máximo lead más dos helpers activos; presupuesto compartido. El lead controla contrato, DB e integración. Helper de dominio y helper de frontend con áreas aisladas; verificador de lectura o segundo pase tras integrar.
+## Non-negotiable invariants
 
-No inventes funciones de workflow JS ni comandos de plugin. Descubre documentación y capacidades reales del build. Si no hay workflows, usa subagentes disponibles o ejecución secuencial. En Windows puede faltar session messaging; no lo conviertas en dependencia. Cada escritor usa un worktree desde commit conocido, con ownership sin colisiones; lectores pueden compartir copia. Integra y verifica secuencialmente.
+- No RAG chatbot as the product, no vector DB, no win predictor, no
+  collection of current confidential prices.
+- The LLM proposes structure and citations; arithmetic, eligibility and
+  abnormality live in pure Python. No `eval`/`exec`/LLM code: templates
+  and whitelisted AST only. Money, ratios and points in Decimal; API
+  speaks strings; amounts persisted in cents. The frontend holds no
+  authoritative formula and never recomputes one.
+- Localized citation and semantic review are distinct states. Pending
+  rule or scope blocks points. Unknown is null, never zero.
+- Anomaly is a conditional presumption (possible justification), never
+  an automatic exclusion. Never apply art.85 universally or mix PCAP
+  variants.
+- Without all real offers, scenarios are declared hypotheses. Never
+  present awards as a rival distribution; never fabricate samples.
+- Preserve document, source, version, hash and page. No portal crawler:
+  expressly published official resources or local upload only.
+- No secrets in frontend, logs or fixtures. `MODEL_API_KEY` belongs to
+  the app runtime, `META_API_KEY` to the CLI environment.
+- Offline demo labelled Datos de ejemplo (Tus datos on own tenders).
+  No fake API animations or logs. Tokens null for fixture/manual.
+- No live Meta in the UI (backend smoke only); synthetic company and
+  rivals; no prediction, no automatic legal exclusion.
 
-El lead revisa pruebas, no acepta un PASS de otro agente sin evidencia. No cerrar /goal por autoveredicto: comprobar requisito por requisito.
+## Work protocol
 
-## Pruebas y evidencia
-Implementa los scripts de TEST_STRATEGY. Ejecuta checks pertinentes por bloque y suite final completa. Mantén docs/verification-log.md con fecha, comando, exit code, commit y evidencia. Corrige FAIL; BLOCKED/SKIPPED no son PASS. No cambies oráculos o tests para ocultar bugs.
+- Inspect `git status`, HEAD, current tests and docs before editing.
+  Minimal diffs tied to acceptance criteria; no second TS engine.
+- Regenerate real UI screenshots for visual changes
+  (`scripts/demo-shots/`); never commit mockups as captures.
+- Keep docs consistent: no test figures without commit, no live claims
+  without receipts, no stale root documents contradicting the build.
+- Ask only for unverifiable access/secrets and unauthorized irreversible
+  decisions. On external blockers, document and continue independently.
+- Spending needs the author's applicable balance; never enable extra
+  payments to unblock. Pause before any agreed ceiling.
 
-Cubrir U01–U26, I01–I14 y E01–E12; build, lint, tipos, pytest y Chromium; inspección visual de escritorio y móvil; dos ensayos limpios offline. Smoke Meta opt-in con clave y consumo acotado. No atribuir prueba Windows a una ejecución Linux.
+## Commits and publishing
 
-## Presupuesto y terminación
-Techos propuestos: app 20 USD y desarrollo 90 USD, solo si el autor confirma saldo aplicable; en otro caso, limitar al saldo real. No habilitar pagos extra o Contributor para evitar un bloqueo. Registrar consumo real y reintentos inciertos; consultar /usage/dashboard después de cada ronda de agentes. Pausar antes del techo.
-
-P0 completo solo si US01–US13 y DoD se verifican, G3 real acredita la integración Meta, la demo offline es estable y el informe conserva fuentes. Falta de admisión, bases, derechos o clave se declara como bloqueo externo, nunca como cumplimiento. Entrega final: tabla PASS/FAIL/BLOCKED, comandos reales, limitaciones, README desde limpio, guion de 180 s y borrador de candidatura. Un vídeo solo existe cuando realmente se ha grabado.
-
+- Standing author order: commit and push per wave on `main`
+  (see `docs/DECISION_LOG_V2.md` D-V2-8). Clear local commits; never
+  amend/reset others' work. Tags, releases, hosting, originals and the
+  candidacy itself need the author's explicit final authorization.
+- Never contact organizers or third parties on your own. Report
+  PASS/FAIL/BLOCKED with real commands, limits and debts; do not
+  self-score.
