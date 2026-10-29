@@ -578,8 +578,11 @@ export function StressSection({ state }: Props) {
             <h3 className="text-sm font-semibold">Tu conclusión</h3>
             {selection ? (
               <p data-testid="stress-selection" className="mt-1 text-lg font-semibold">
-                La rebaja del {formatPercent(selection.discount_rate)} cumple tus límites en las{" "}
-                {selection.feasible_count} hipótesis. En el peor caso sacas{" "}
+                La rebaja del {formatPercent(selection.discount_rate)} cumple tus límites en{" "}
+                {(ceilingRow?.comparable_count ?? result.tested_hypotheses) === 1
+                  ? "1 hipótesis"
+                  : `las ${ceilingRow?.comparable_count ?? result.tested_hypotheses} hipótesis`}
+                . En el peor caso sacas{" "}
                 {formatPoints1(selection.worst_score)} puntos por precio y{" "}
                 {formatEurosExact(selection.worst_profit_net)} de beneficio.
               </p>

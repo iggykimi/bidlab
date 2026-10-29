@@ -42,7 +42,7 @@ test("narrow grid runs, selects and applies a rebate", async ({ page }) => {
   await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("1000");
   await section.getByTestId("stress-run").click();
   const selection = section.getByTestId("stress-selection");
-  await expect(selection).toContainText("cumple tus límites", { timeout: 60_000 });
+  await expect(selection).toContainText("cumple tus límites en 1 hipótesis", { timeout: 60_000 });
   await expect(section.getByTestId("stress-row-0.0500")).toBeVisible();
   const text = await selection.textContent();
   const match = text?.match(/del ([\d,]+)\s%/);
@@ -93,7 +93,7 @@ test("company change marks the grid stale with its timestamp", async ({ page }) 
   await section.getByLabel("Beneficio mínimo en € (coma o punto)").fill("1000");
   await section.getByTestId("stress-run").click();
   const selection = section.getByTestId("stress-selection");
-  await expect(selection).toContainText("cumple tus límites", { timeout: 60_000 });
+  await expect(selection).toContainText("cumple tus límites en 1 hipótesis", { timeout: 60_000 });
   await expect(section.getByTestId("stress-computed-at")).toContainText("Calculada el");
   await expect(section.getByTestId("stress-stale")).toHaveCount(0);
 
