@@ -1,5 +1,40 @@
 # BidLab — licitación real, revisión trazable, Pricing Lab determinista
 
+### From public tender requirements to defensible bid decisions.
+
+BidLab helps small businesses turn complex public tenders into **traceable pricing decisions**. It connects page-cited document evidence, explicit business assumptions and human review to a **deterministic Python scoring engine**. The AI layer can propose structured information; it never invents the financial arithmetic.
+
+![BidLab pricing interface showing a curated tender example](docs/demo/02-precio.png)
+
+> **Same 49/49 price points. €5,916.80 more hypothetical profit.**
+>
+> In our curated Tías public-tender example, a 10% and a 15% discount obtain the same economic points **under stated synthetic cost and rival-bid assumptions**. The 10% scenario retains €5,916.80 more hypothetical profit. This demonstrates a scenario-specific trade-off, not an estimate of the probability of winning.
+
+**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [QA results](docs/QA_REPORT_V2.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
+
+### Try the curated offline demo
+
+Requires Python 3.13+, `uv`, Node 22+ and `npm`.
+
+```bash
+uv sync --all-packages
+npm install
+npm run build
+python scripts/demo.py
+```
+
+Open **http://127.0.0.1:8000/**. The curated offline demonstration does **not** require API keys. The full Spanish README below describes development setup, environment configuration and verification commands.
+
+### AI and transparency
+
+BidLab contains an opt-in Meta Model API integration and a deterministic offline demonstration. **The curated data must not be described as the output of a live Meta extraction.** The project documents one historical minimal Meta inference smoke test separately from any end-to-end live document extraction. See [Meta evidence](docs/META_EVIDENCE_V2.md) for what has and has not been verified.
+
+*Current scope: a local-first research/demo application, not a public multi-user SaaS. Competitor prices and company costs in the curated example are synthetic; no winning-probability prediction or automatic legal exclusion is claimed.*
+
+---
+
+## Versión en español
+
 BidLab ayuda a una pyme a decidir si pujar: biblioteca de licitaciones,
 matriz de requisitos con citas localizadas en página, y Pricing Lab con
 puntos, anomalía y curva calculados por un motor determinista en Python.
