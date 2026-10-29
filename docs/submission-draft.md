@@ -49,10 +49,10 @@ Current document-extraction state (28-oct):
 
 ## Verification (real runs, Windows)
 
-- Backend: 548 passing + 2 skipped (live opt-in + Windows symlink), 550 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @7af9417. Ruff check + format clean, mypy 109 files clean, observed 29-oct.
-- Web: 236 vitest passing (31 files), eslint + tsc exit 0, vite build OK, observed 29-oct @7af9417.
-- Playwright E2E: 77/77 green (hermetic per-run storage), observed 29-oct @7af9417. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @7af9417. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
+- Backend: 548 passing + 2 skipped (live opt-in + Windows symlink), 550 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @4b44ec9 (sin cambios desde 7af9417). Ruff check + format clean, mypy 109 files clean, observed 29-oct.
+- Web: 237 vitest passing (31 files), eslint + tsc exit 0, vite build OK, observed 29-oct @4b44ec9. Novedades RC: cabecera compacta (U1), hero comparador (U2), procedencia en drawer (U3), motivos de malla en español (U6).
+- Playwright E2E: 78/78 green (hermetic per-run storage), observed 29-oct @4b44ec9. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @4b44ec9. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2 (26-oct); current pushes not forced through CI per author order.
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.

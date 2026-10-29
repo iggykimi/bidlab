@@ -1444,3 +1444,31 @@ Gates finales Windows (exit 0 observado):
   v-req, v-mobile.
 Sin Meta en vivo (G3 sigue blocked: sin clave). Vídeo y
 sesiones de usabilidad siguen pendientes del autor.
+
+## 2026-10-29 · Issue #2 P0 (U1/U2/U3/U6) + RC (lead, Windows)
+
+Paquete BIDLAB_AUDITORIA_Y_PROMPT_2026-10-29 leído entero
+(LEER_PRIMERO + diagnóstico + prompt 1390 líneas). Sin
+MANIFEST (nada que verificar). Fase 0: HEAD bd307c9 limpio;
+MODEL_API_KEY/META_API_URL ausentes → G0/M1/T1 BLOCKED
+externos (autor). D-ISSUE2-1: orden vigente del autor
+(siempre commit y push) prevalece sobre la regla 4 del
+prompt (mismo criterio que D28-2).
+
+Commits: 3e2172b (U1 cabecera) + fb0ea17 (U2 hero) +
+73340fc (U3 procedencia) + 4b44ec9 (U6 motivos) + RC.
+
+Gates @4b44ec9 (exit 0 observado): verify.py --skip-e2e ALL
+CHECKS PASSED; backend 548+2skip (550); vitest 237/31;
+tsc/eslint/build OK; ruff + mypy 109 OK; E2E 78/78 (77 +
+CMP-03); demo-shots 4/4 (9 PNG regen, 02+07
+inspeccionadas); demo_story 8/8 MATCH vs ZIP#1.
+Visual /tmp: u1-workhead, u1-details, u1-pricing-fold,
+u2-hero, u3-drawer.
+
+Aparcados con motivo en RELEASE_CANDIDATE_20261029.md:
+U4/U5/D1 (P1), U7/W1/Pareto (P2/P1), B1 (NO CHANGE),
+D2 (requiere live), R1 (autor). Nota §24: el motivo
+usa 5916,80 (backend), no 5.916,80; test corregido al
+texto real. Sin Meta en vivo (G3 blocked). Vídeo,
+sesiones y candidatura: autor.
