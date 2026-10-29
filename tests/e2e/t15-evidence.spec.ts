@@ -54,15 +54,22 @@ test.describe("T15 desktop 1280x720", () => {
     const guard = await installOfflineGuard(page);
     await loadDemo(page);
     await openTab(page, "Citas");
+    let imageRequests = 0;
+    page.on("request", (req) => {
+      if (req.url().includes("/documents/") && req.url().endsWith("/image")) imageRequests += 1;
+    });
     const opener = page.getByRole("button", { name: /Ver página \d+ de / }).first();
     await opener.click();
     const drawer = page.getByTestId("evidence-drawer");
     await expect(drawer).toBeVisible();
-    // The curated seed has no render: labeled text, never a fake preview.
-    await expect(page.getByTestId("evidence-image-missing")).toContainText(
-      "No pudimos mostrar la imagen"
+    // The curated seed has no render: labeled text, never a fake preview,
+    // and no doomed image request is attempted (BL-V2-04).
+    await expect(page.getByTestId("evidence-image-curated")).toContainText(
+      "El documento original no se incluye en este ejemplo"
     );
     await expect(page.getByTestId("evidence-image")).toHaveCount(0);
+    await expect(page.getByTestId("evidence-image-missing")).toHaveCount(0);
+    expect(imageRequests, "doomed image requests").toBe(0);
     await expect(page.getByTestId("evidence-provenance")).toContainText(
       "Copia revisada del ejemplo"
     );
@@ -78,6 +85,116 @@ test.describe("T15 desktop 1280x720", () => {
     await page.keyboard.press("Escape");
     await expect(drawer).toBeHidden();
     await expect(opener).toBeFocused();
+    // BL-V2-04: the scroll hint matches measured overflow, nothing else.
+    const tableOverflows = await page.evaluate(() => {
+      const region = document.querySelector(
+        '[aria-label="Tabla de citas, desplázate horizontalmente"]'
+      );
+      if (!(region instanceof HTMLElement)) return null;
+      return region.scrollWidth > region.clientWidth + 2;
+    });
+    expect(tableOverflows, "measured overflow").not.toBeNull();
+    await expect(page.getByTestId("citations-scroll-hint")).toHaveCount(
+      tableOverflows === true ? 1 : 0
+    );
+    expect(guard.blocked()).toBe(0);
+  });
+
+  test("T15 image load failure shows a real error with retry", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    const tag = uniqueTag();
+    const title = `Cotejo propio ${tag}`;
+
+    await page.goto("/");
+    await page.getByTestId("nueva-licitacion").click();
+    await page.getByTestId("intake-title").fill(title);
+    await page.getByTestId("intake-external-id").fill(`T15/${tag}`);
+    await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");
+    await page.getByTestId("intake-pbl-net").fill("50000");
+    await page.getByTestId("intake-period").fill("24");
+    await page.getByTestId("intake-submit").click();
+    await page.getByTestId("intake-file").setInputFiles({
+      name: "pliego.pdf",
+      mimeType: "application/pdf",
+      buffer: twoPagePdf(`Precio neto: 50000.00 euros (${tag})`, `Plazo: 24 meses (${tag})`),
+    });
+    await page.getByTestId("intake-upload").click();
+    await expect(page.getByTestId("intake-open")).toBeVisible();
+    await page.getByTestId("intake-open").click();
+    await page.getByTestId("intake-skip-company").click();
+    await expect(page.getByTestId("tender-title")).toContainText(title);
+    const tenderId = page.url().split("/tenders/")[1]?.split(/[?#]/)[0];
+    expect(tenderId, "tender id in URL").toBeTruthy();
+
+    // Corrected-proposal review quoting the real page text, so the stored
+    // citation is located exactly on the rendered upload.
+    const ws = await page.request.get(`${API_BASE}/tenders/${tenderId}/workspace`);
+    expect(ws.ok()).toBe(true);
+    const docId = (await ws.json()).documents[0].id as string;
+    const pageRes = await page.request.get(`${API_BASE}/documents/${docId}/pages/1`);
+    expect(pageRes.ok()).toBe(true);
+    const excerpt = ((await pageRes.json()).normalized_text as string).trim().slice(0, 600);
+    expect(excerpt.length).toBeGreaterThan(10);
+    const review = await page.request.post(`${API_BASE}/tenders/${tenderId}/reviews`, {
+      headers: { "X-BidLab-Client": "local-ui", "Idempotency-Key": `t15-${tag}` },
+      data: {
+        expected_revision: 0,
+        approved_claim_keys: [],
+        requirement_trees: [],
+        scope_basis: null,
+        pricing_rule: null,
+        corrected_proposal: {
+          schema_version: "1.0",
+          claims: [
+            {
+              key: "pbl_net",
+              raw_value: "50000.00",
+              normalized_value: "50000.00",
+              unit: "EUR",
+              citations: [{ document_id: docId, page_number: 1, verbatim_excerpt: excerpt }],
+              confidence: "high",
+              status: "proposed",
+              notes: [],
+            },
+          ],
+          requirements: [],
+          pricing_formula: {
+            formula_literal: null,
+            template_hint: "unsupported",
+            max_points: null,
+            variables: [],
+            citations: [],
+            ambiguities: [],
+          },
+          anomaly_text: null,
+          anomaly_citations: [],
+          unread_pages: [],
+          warnings: [],
+        },
+        actor: "e2e-t15",
+        reason: "Cotejo imagen-texto.",
+      },
+    });
+    expect(review.ok()).toBe(true);
+    await page.reload();
+    await openTab(page, "Citas");
+    // Fail the render fetch once: content exists, the image does not load.
+    await page.route("**/documents/*/pages/*/image", (route) => route.abort());
+    const opener = page.getByRole("button", { name: /Ver página 1 de / }).first();
+    await opener.click();
+    const drawer = page.getByTestId("evidence-drawer");
+    await expect(drawer).toBeVisible();
+    await expect(page.getByTestId("evidence-image-missing")).toContainText(
+      "No se ha podido cargar la vista previa"
+    );
+    await expect(page.getByTestId("evidence-image-retry")).toBeVisible();
+    await page.unroute("**/documents/*/pages/*/image");
+    await page.getByTestId("evidence-image-retry").click();
+    const img = page.getByTestId("evidence-image");
+    await expect(img).toBeVisible();
+    expect(await img.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(
+      0
+    );
     expect(guard.blocked()).toBe(0);
   });
 
@@ -203,8 +320,8 @@ test.describe("T15 mobile 390x844", () => {
     await opener.click();
     const drawer = page.getByTestId("evidence-drawer");
     await expect(drawer).toBeVisible();
-    await expect(page.getByTestId("evidence-image-missing")).toContainText(
-      "No pudimos mostrar la imagen"
+    await expect(page.getByTestId("evidence-image-curated")).toContainText(
+      "El documento original no se incluye en este ejemplo"
     );
     await expect(page.getByTestId("evidence-image")).toHaveCount(0);
     const overflowX = await page.evaluate(

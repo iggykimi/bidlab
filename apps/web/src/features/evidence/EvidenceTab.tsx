@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Workspace } from "../../api/client";
 import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
@@ -22,6 +22,18 @@ function lineaDocumento(kind: string, pages: number): string {
 
 export function EvidenceTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
+  // BL-V2-04: the scroll hint shows only when the table truly overflows.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => setOverflows(el.scrollWidth > el.clientWidth + 2);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [workspace.citations.length]);
 
   return (
     <div className="grid gap-4 [&>*]:min-w-0">
@@ -70,8 +82,13 @@ export function EvidenceTab({ workspace }: Props) {
           Cada cifra respaldada enlaza con la página del pliego donde aparece. «Copiado tal
           cual» quiere decir que la cita reproduce el pliego palabra por palabra.
         </p>
-        <p className="mt-2 text-sm">Desliza a la derecha para ver más →</p>
+        {overflows && (
+          <p className="mt-2 text-sm" data-testid="citations-scroll-hint">
+            Desliza a la derecha para ver más →
+          </p>
+        )}
         <div
+          ref={scrollRef}
           className="table-scroll mt-2 overflow-x-auto"
           tabIndex={0}
           role="region"

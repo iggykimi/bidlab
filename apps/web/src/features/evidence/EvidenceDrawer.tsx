@@ -53,19 +53,44 @@ function normalizado(s: string): string {
 }
 
 /**
- * Exact page render with an explicit labeled fallback (T15). The caller keys
- * by document+page so navigation remounts with fresh state. A 404 (document
- * never rendered) unmounts the img and names the text below as the source;
- * nothing renders a fake preview.
+ * Exact page render with explicit states (T15, BL-V2-04). The caller keys by
+ * document+page so navigation remounts with fresh state.
+ * - contentOk === false (curated demo, no redistributed PDF): no <img> is
+ *   attempted; the curated notice names the text below as the source.
+ * - contentOk === true: the render is attempted; a load failure shows a
+ *   real error with retry. Nothing renders a fake preview.
  */
-function PageImage({ documentId, page }: { documentId: string; page: number }) {
+function PageImage({
+  documentId,
+  page,
+  contentOk,
+}: {
+  documentId: string;
+  page: number;
+  contentOk: boolean | null;
+}) {
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
+  const [attempt, setAttempt] = useState(0);
+  if (contentOk === false) {
+    return (
+      <section aria-label="Imagen de la página" className="mt-4">
+        <h3 className="font-semibold">Imagen de la página</h3>
+        <p role="status" data-testid="evidence-image-curated" className="mt-2 text-sm">
+          El documento original no se incluye en este ejemplo. Coteja con el texto de abajo.
+        </p>
+      </section>
+    );
+  }
   return (
     <section aria-label="Imagen de la página" className="mt-4">
       <h3 className="font-semibold">Imagen de la página</h3>
-      {state === "loading" && <p className="mt-2 text-sm">Cargando imagen…</p>}
-      {state !== "missing" && (
+      {contentOk === null && <p className="mt-2 text-sm">Comprobando disponibilidad…</p>}
+      {contentOk === true && state === "loading" && (
+        <p className="mt-2 text-sm">Cargando imagen…</p>
+      )}
+      {contentOk === true && state !== "missing" && (
         <img
+          key={attempt}
           src={documentPageImageUrl(documentId, page)}
           alt={`Imagen exacta de la página ${page} del pliego`}
           data-testid="evidence-image"
@@ -74,10 +99,24 @@ function PageImage({ documentId, page }: { documentId: string; page: number }) {
           className={state === "ready" ? "mt-2 w-full rounded-lg border border-line" : "hidden"}
         />
       )}
-      {state === "missing" && (
-        <p role="status" data-testid="evidence-image-missing" className="mt-2 text-sm">
-          No pudimos mostrar la imagen. Coteja con el texto de abajo.
-        </p>
+      {contentOk === true && state === "missing" && (
+        <div className="mt-2 grid gap-2">
+          <p role="status" data-testid="evidence-image-missing" className="text-sm">
+            No se ha podido cargar la vista previa. La cita sigue disponible abajo.
+          </p>
+          <div>
+            <Button
+              variant="secondary"
+              data-testid="evidence-image-retry"
+              onClick={() => {
+                setAttempt((a) => a + 1);
+                setState("loading");
+              }}
+            >
+              Reintentar
+            </Button>
+          </div>
+        </div>
       )}
     </section>
   );
@@ -296,6 +335,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
           key={`${citation.document_id}-${page}`}
           documentId={citation.document_id}
           page={page}
+          contentOk={contentQuery.data?.ok ?? null}
         />
 
         <section aria-label="Texto de la página" className="mt-4">
