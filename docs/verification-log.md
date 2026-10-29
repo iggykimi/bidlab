@@ -1546,9 +1546,9 @@ Manifiesto 27/27 integro (hash + bytes); self-check del pack
 anchors exactos y --apply sobre arbol limpio @28f2f54.
 
 Commits main: 5a30563 (PR-1 META-01) + 92d1374 (PR-2 copy) +
-1f0a922 (PR-3 docs) + d40112d (PR-4 eval) + <freeze> (PR-6).
+1f0a922 (PR-3 docs) + d40112d (PR-4 eval) + 5a5ee35 (PR-6).
 
-Gates @<freeze> (exit 0 observado): verify.py ALL CHECKS
+Gates @5a5ee35 (exit 0 observado): verify.py ALL CHECKS
 PASSED 10/10 (deps, pytest unit+eval, pytest integ+contratos,
 eslint, tsc, build, vitest, ruff, mypy, e2e); backend 588
 passed + 1 skipped (symlink, preexistente, Windows) sobre
@@ -1577,3 +1577,20 @@ reglas = plan citado + preflight propio; nada afirmado como
 re-leido. Video 180 s + candidatura: autor. Detalle por PR
 en docs/CHANGELOG_IMPLEMENTACION_V5.md; informe S22.6 en
 el cierre del issue #5.
+Adenda auditoria SS0-19 (29-oct, lead, sobre 5a5ee35): Lote-0 S9.3
+ejecutado: page_selection <=6 por caso cubre todo el gold (S07 6/8
+con p8; S06 0 chars texto, conservada para render); semantica gold
+leida (lotes scope A/B, prórrogas nunca 36 inicial, S11 neto solo,
+S03 dos candidatos + conflicto, S12 sin formula inventada).
+Self-check del pack re-verde tras aplicar: 16 passed PACK_ONLY_PASS
+(stderr solo FutureWarning fitz). Enlaces relativos: 0 rotos en
+README.md, README_EN.md, REVIEWER_GUIDE.md, submission-draft.md.
+Check S11.2: sin textos viejos (No live Meta/E2E 85) salvo citas
+historicas etiquetadas; consentimiento: texto exacto nuevo, logica
+useLive intacta, checkbox nativo en <label> (teclado por
+construccion; sin E2E dedicado: tampoco existia para el texto
+viejo). Frases literales S11.1/S11.2 anadidas (rama sin-live) +
+cifras V5 en README/EN/guia/audit/demo. OPT-01 DESCARTADO con
+motivo; S14 sin cambios invasivos (0.0.0.0 ausente, loopback ok).
+Clon limpio @5a5ee35: uv sync/npm ci/chromium exit 0 + verify.py
+ALL CHECKS PASSED 10/10 (vitest 260/33, E2E 98/98), exit 0.

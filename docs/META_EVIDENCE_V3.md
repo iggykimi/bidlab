@@ -5,7 +5,7 @@ in `evidence/private/`.
 
 ## Current status
 
-- Repository HEAD: `<freeze>` (V5 freeze commit; V2 smoke stays separate).
+- Repository HEAD: `5a5ee35` (V5 freeze commit; V2 smoke stays separate).
 - Execution date (UTC): 2026-10-29 (presence check; no inference run).
 - Status: BLOCKED / NOT RUN.
 - Model/endpoint in code: muse-spark-1.3 / Meta Model API Chat Completions.

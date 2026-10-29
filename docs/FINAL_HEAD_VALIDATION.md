@@ -2,7 +2,7 @@
 
 - Date/time UTC: 2026-10-29 20:51 (gates); freeze commit SHA below.
 - Branch: main.
-- Full HEAD: `<freeze>` (this file lands in the freeze commit).
+- Full HEAD: `5a5ee35602a4d23038000a5de5af5f413a7081d7` (this file lands in the freeze commit).
 - Git state at freeze: clean (`git status --short` empty, `git diff --check` exit 0).
 - Python 3.14.7 / uv 0.12.5 / Node v26.3.0 / npm 12.0.2 / Playwright 1.64.1 (Chromium, Windows).
 - `python scripts/verify.py`: exit 0, ALL CHECKS PASSED 10/10 (backend 588+1s, vitest 260/33, E2E 98/98).
