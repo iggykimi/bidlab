@@ -48,6 +48,22 @@ def _run(client: TestClient, payload: dict[str, Any]) -> dict[str, Any]:
     return res.json()  # type: ignore[no-any-return]
 
 
+def test_full_mesh_81_by_9_counts_and_indexes(seeded_client: TestClient) -> None:
+    """BL-V3 P1-04 (§8): high-content mesh fills the 729-cell ceiling."""
+    payload = _request(
+        [_hyp(f"H{i + 1}", "80000.00") for i in range(9)], "40", "1000.00"
+    )
+    payload["candidate_discounts"] = [f"{i * 0.005:.4f}" for i in range(81)]
+    body = _run(seeded_client, payload)
+    assert body["tested_candidates"] == 81
+    assert body["tested_hypotheses"] == 9
+    assert len(body["cells"]) == 729
+    assert len(body["by_discount"]) == 81
+    assert sorted({c["hypothesis_index"] for c in body["cells"]}) == list(range(9))
+    assert body["selection"] is not None
+    assert body["selection_reason"] != ""
+
+
 def test_oracle_a_selects_12_percent(seeded_client: TestClient) -> None:
     body = _run(seeded_client, _request([_hyp("Base", "80000.00")], "47", "8000.00"))
     assert body["tested_candidates"] == 3

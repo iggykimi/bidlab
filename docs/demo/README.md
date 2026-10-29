@@ -7,12 +7,13 @@ Ayuntamiento de Tías (Lanzarote).
 
 ## Ver en 2 minutos (sin instalar nada)
 
-Capturas regeneradas el 29-oct-2026 (post-issue #1) con
-`npx playwright test -c scripts/demo-shots/playwright.shots.config.ts`
+Capturas 01–10 regeneradas el 29-oct-2026 (post-V3, issue #4) con
+`npx playwright test -c scripts/demo-shots/playwright.shots.config.ts shots.spec`
 (base separada de la suite E2E, nombres legibles, UI asentada):
-tuteo, «Datos de ejemplo», comparar desde «Precio», drawer con
-aviso honesto sin imagen (T15), radar con ejemplo sintético (T20, 09)
-y techo de coste en la malla (T21, 10).
+01/03/06/07/10 cambiaron con la UI V3 (spotlight, meseta, duelo,
+proof trail, banner de malla); 02/04/05/08/09 salieron byte-idénticas.
+El estado pre-V3 se conserva en [v3-before/](v3-before/)
+(copiado antes de regenerar, sin retocar).
 
 | Pantalla | Qué demuestra |
 |---|---|
@@ -29,6 +30,30 @@ y techo de coste en la malla (T21, 10).
 
 ![Resumen](01-resumen.png)
 ![Precio](02-precio.png)
+
+## Matriz V3 (§8): 8 escenas × 5 anchos
+
+Capturada el 29-oct-2026 con
+`npx playwright test -c scripts/demo-shots/playwright.shots.config.ts v3-shots`
+(misma semilla demo, almacenamiento fresco por ejecución, nombres por ancho).
+Cada escena se asienta (fuentes, red, toasts) antes de capturar; la fila
+«Gráfica y Pareto» del prompt se desdobla en s4/s5 para no recortar.
+
+| Escena | 1440 | 1024 | 768 | 390 | 320 | Qué demuestra |
+|---|---|---|---|---|---|---|
+| s1 biblioteca/CTA | [png](v3/1440/s1-lib.png) | [png](v3/1024/s1-lib.png) | [png](v3/768/s1-lib.png) | [png](v3/390/s1-lib.png) | [png](v3/320/s1-lib.png) | Primer CTA sin scroll; estado vacío honesto |
+| s2 hero | [png](v3/1440/s2-hero.png) | [png](v3/1024/s2-hero.png) | [png](v3/768/s2-hero.png) | [png](v3/390/s2-hero.png) | [png](v3/320/s2-hero.png) | Veredicto spotlight con la pareja oro |
+| s3 precio | [png](v3/1440/s3-pricing.png) | [png](v3/1024/s3-pricing.png) | [png](v3/768/s3-pricing.png) | [png](v3/390/s3-pricing.png) | [png](v3/320/s3-pricing.png) | Simulador + hero comparador + duelo |
+| s4 curva | [png](v3/1440/s4-curva.png) | [png](v3/1024/s4-curva.png) | [png](v3/768/s4-curva.png) | [png](v3/390/s4-curva.png) | [png](v3/320/s4-curva.png) | Meseta, leyenda HTML, sin solapes |
+| s5 frontera | [png](v3/1440/s5-frontera.png) | [png](v3/1024/s5-frontera.png) | [png](v3/768/s5-frontera.png) | [png](v3/390/s5-frontera.png) | [png](v3/320/s5-frontera.png) | Pareto con motivos exactos |
+| s6 malla | [png](v3/1440/s6-malla.png) | [png](v3/1024/s6-malla.png) | [png](v3/768/s6-malla.png) | [png](v3/390/s6-malla.png) | [png](v3/320/s6-malla.png) | Banner «resultado anterior» antes de la conclusión |
+| s7 evidencia | [png](v3/1440/s7-evidencia.png) | [png](v3/1024/s7-evidencia.png) | [png](v3/768/s7-evidencia.png) | [png](v3/390/s7-evidencia.png) | [png](v3/320/s7-evidencia.png) | Drawer + proof trail de 4 estados |
+| s8 estado | [png](v3/1440/s8-estado.png) | [png](v3/1024/s8-estado.png) | [png](v3/768/s8-estado.png) | [png](v3/390/s8-estado.png) | [png](v3/320/s8-estado.png) | Error honesto (coste vacío bloquea la malla) |
+
+Revisadas a ojo: sin colisiones de etiquetas, sin scroll horizontal global
+(fijado además por E2E en 320/390/640/1280), drawer usable a 320.
+El zoom 200% se equivale a 640 CSS px (ver `tests/e2e/curve-v3.spec.ts`).
+Vacío/carga además del error: cubiertos por E2E, no por foto.
 
 ## Probar en 5 minutos
 
