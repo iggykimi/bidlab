@@ -95,3 +95,36 @@ test("CMP-03 pricing compare hero shows 10 vs 15 backend delta", async ({ page }
   await expect(hero).toContainText(/mismos puntos/);
   expect(guard.blocked()).toBe(0);
 });
+
+// BL-V2-08: with 3 scenarios the hero follows the chosen pair, never an
+// arbitrary first delta.
+test("CMP-04 compare hero follows the selected pair", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  await openPricing(page);
+
+  for (const [discount, name] of [
+    ["10", "CMP par 10"],
+    ["15", "CMP par 15"],
+    ["20", "CMP par 20"],
+  ]) {
+    await page.getByTestId("discount-input").fill(discount);
+    await page.getByTestId("scenario-name").fill(name);
+    await page.getByTestId("save-scenario").click();
+    await expect(page.getByText(`Prueba «${name}» guardada.`)).toBeVisible();
+  }
+
+  await page.getByRole("checkbox", { name: "Comparar CMP par 10" }).check();
+  await page.getByRole("checkbox", { name: "Comparar CMP par 15" }).check();
+  await page.getByRole("checkbox", { name: "Comparar CMP par 20" }).check();
+  await page.getByTestId("compare-run").click();
+
+  const hero = page.getByTestId("decision-comparison-hero");
+  await expect(hero).toBeVisible();
+  const pairs = page.getByRole("radio", { name: /frente a/ });
+  await expect(pairs).toHaveCount(2);
+  const before = await hero.textContent();
+  await pairs.nth(1).check();
+  await expect(hero).not.toHaveText(before ?? "");
+  expect(guard.blocked()).toBe(0);
+});

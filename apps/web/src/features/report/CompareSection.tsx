@@ -112,7 +112,13 @@ function EntryRow({ entry, maxHint }: { entry: CompareEntry; maxHint: string }) 
 
 function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreMax: string }) {
   const names = new Map(result.entries.map((e) => [e.scenario_id, e.name]));
-  const hero = result.deltas[0] ?? null;
+  // BL-V2-08: with 3 scenarios the backend returns 2 pairs; the hero never
+  // pins an arbitrary first pair — the user picks which pair it tells.
+  const [pairIdx, setPairIdx] = useState(0);
+  const idx = result.deltas.length === 0 ? 0 : Math.min(pairIdx, result.deltas.length - 1);
+  const hero = result.deltas[idx] ?? null;
+  const pairLabel = (d: CompareDelta): string =>
+    `«${names.get(d.other_id) ?? d.other_id}» frente a «${names.get(d.base_id) ?? d.base_id}»`;
   return (
     <div className="mt-3 grid gap-3" data-testid="compare-result">
       <p className="text-sm font-semibold" role="status">
@@ -120,6 +126,24 @@ function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreM
         {result.status === "partial" && "Comparación parcial: revisa los avisos."}
         {result.status === "no_comparable" && "No puedes compararlas como si fueran el mismo caso."}
       </p>
+      {result.deltas.length > 1 && (
+        <fieldset>
+          <legend className="text-sm font-semibold">Par destacado en el titular</legend>
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {result.deltas.map((d, i) => (
+              <label key={`${d.base_id}:${d.other_id}`} className="flex min-h-[48px] items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="compare-hero-pair"
+                  checked={i === idx}
+                  onChange={() => setPairIdx(i)}
+                />
+                {pairLabel(d)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       {hero !== null && (
         <div className="compare-hero" data-testid="decision-comparison-hero">
           <p className="text-lg font-bold">{hero.indicator_motivo}</p>
