@@ -87,6 +87,34 @@ export function splitFlaggedRuns(rows: { price: number; flagged: boolean }[]): F
   return { runs, isolated: rows.filter((r) => r.flagged && !inRun(r.price)).map((r) => r.price) };
 }
 
+export interface Plateau {
+  price: number;
+  rawPrice: string;
+  score: number;
+}
+
+/**
+ * Price from which more discount keeps the max score, or null. Rows arrive
+ * in display order (price ascending): the plateau is a leading run of 2+
+ * at the max, anchored at the lowest tested price. Lookup only over
+ * backend points — no score is computed here. Covered by curveFlags.test.ts.
+ */
+export function findPlateau(
+  rows: { price: number; rawPrice: string; score: number | null }[]
+): Plateau | null {
+  const defined = rows.filter((r) => r.score !== null);
+  if (defined.length < 2) return null;
+  const max = defined.reduce((m, r) => Math.max(m, r.score as number), -Infinity);
+  let end = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i]?.score !== max) break;
+    end = i;
+  }
+  if (end < 1) return null;
+  const start = rows[end] as { price: number; rawPrice: string; score: number | null };
+  return { price: start.price, rawPrice: start.rawPrice, score: max };
+}
+
 // Shared axes/tooltip config (recharts needs direct <XAxis>/<Tooltip>
 // children, so the sharing unit is props objects, not components).
 const CHART_MARGIN = { top: 24, right: 24, bottom: 28, left: 8 };
@@ -188,10 +216,24 @@ export function CurveChart({
   );
   const scoreLabelAbove =
     ownScoreNum !== null && maxNum !== null && maxNum > 0 && ownScoreNum <= maxNum * 0.15;
+  const scoreDotHigh =
+    ownScoreNum !== null && maxNum !== null && maxNum > 0 && ownScoreNum > maxNum * 0.66;
+  // BL-V3 P1-02: nudge the own label inside the plot when the dot hugs
+  // an edge (0%/40% extremes at 320px clipped it). Drawing only.
+  const priceSpan = last.price - first.price;
+  const nearRightEdge =
+    ownPriceNum !== null && priceSpan > 0 && (last.price - ownPriceNum) / priceSpan < 0.08;
+  const nearLeftEdge =
+    ownPriceNum !== null && priceSpan > 0 && (ownPriceNum - first.price) / priceSpan < 0.08;
+  const ownDx = nearRightEdge ? -28 : nearLeftEdge ? 28 : 0;
   const profitLabelAbove =
     ownProfitNum !== null &&
     profitMax > profitMin &&
     ownProfitNum <= profitMin + (profitMax - profitMin) * 0.12;
+  const profitDotHigh =
+    ownProfitNum !== null &&
+    profitMax > profitMin &&
+    ownProfitNum > profitMin + (profitMax - profitMin) * 0.66;
 
   // Contiguous flagged runs (≥2 points) hatch; isolated flagged points
   // get dots, otherwise lone points were invisible on the curve.
@@ -211,10 +253,18 @@ export function CurveChart({
       deltaClause = ` — ${formatEurosExact(String(delta))} más que el rival más barato`;
     }
   }
+  const plateau = findPlateau(rows);
+  // BL-V3 P1-02: the plateau sentence renders only when the backend
+  // points sustain it; otherwise the title stays neutral.
+  const plateauClause =
+    plateau !== null
+      ? ` A partir de ${formatEurosHeadline(plateau.rawPrice)}, más rebaja no mejora los puntos.`
+      : "";
   const pointsTitle =
-    ownScore !== null
+    (ownScore !== null
       ? `A ${formatEurosHeadline(ownPrice)} consigues ${formatPoints(ownScore, ownMax)}${deltaClause}.`
-      : `A ${formatEurosHeadline(ownPrice)} tus puntos están sin determinar${deltaClause}.`;
+      : `A ${formatEurosHeadline(ownPrice)} tus puntos están sin determinar${deltaClause}.`) +
+    plateauClause;
   const profitTitle =
     (ownProfit !== null
       ? `${formatSignedEurosExact(ownProfit)} a tu rebaja del ${formatPercent(discountRate)}`
@@ -225,7 +275,9 @@ export function CurveChart({
     flaggedCount > 0
       ? `, ${flaggedCount} en zona sospechosa`
       : "";
-  const scoreAria = `Curva precio-puntos, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}${flaggedClause}. Tu oferta ${formatEurosHeadline(ownPrice)}: ${ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}`;
+  const plateauAria =
+    plateau !== null ? `, meseta desde ${formatEurosHeadline(plateau.rawPrice)}` : "";
+  const scoreAria = `Curva precio-puntos, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}${flaggedClause}${plateauAria}. Tu oferta ${formatEurosHeadline(ownPrice)}: ${ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}`;
   const profitAria = `Curva precio-beneficio, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}${flaggedClause}. Tu oferta ${formatEurosHeadline(ownPrice)}: beneficio ${ownProfit !== null ? formatSignedEurosExact(ownProfit) : "sin determinar"}`;
 
   return (
@@ -252,12 +304,24 @@ export function CurveChart({
             <li>
               <span className="curve-legend-line" aria-hidden="true" /> Puntos por precio
             </li>
+            {maxNum !== null && (
+              <li>
+                <span className="curve-legend-max" aria-hidden="true" /> M\u00e1x.{" "}
+                {formatMaxPoints(ownMax)} puntos
+              </li>
+            )}
             <li>
               <span className="curve-legend-dot" aria-hidden="true" /> Tu oferta
             </li>
             <li>
               <span className="curve-legend-rival" aria-hidden="true" /> Rivales supuestos
             </li>
+            {plateau !== null && (
+              <li>
+                <span className="curve-legend-plateau" aria-hidden="true" /> Meseta: más rebaja no
+                suma puntos
+              </li>
+            )}
             {flaggedCount > 0 && (
               <li>
                 <span className="curve-legend-hatch" aria-hidden="true" /> Zona de aviso: oferta
@@ -279,7 +343,7 @@ export function CurveChart({
                     <line x1="0" y1="0" x2="0" y2="8" stroke="var(--color-alert)" strokeWidth="1" />
                   </pattern>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
                 <XAxis {...PRICE_X_AXIS} />
                 <YAxis
                   tick={AXIS_TICK}
@@ -316,7 +380,6 @@ export function CurveChart({
                     y={maxNum}
                     stroke="var(--color-primary)"
                     strokeDasharray="4 4"
-                    label={{ value: `Máx. ${formatMaxPoints(ownMax)} puntos`, position: "insideTopLeft", fontSize: 14 }}
                   />
                 )}
                 {validRivals.map((r, i) => (
@@ -324,6 +387,7 @@ export function CurveChart({
                     key={r.label}
                     x={Number(r.norm)}
                     stroke="var(--color-muted)"
+                    strokeOpacity={0.55}
                     strokeDasharray="4 4"
                     label={{
                       value: r.label,
@@ -342,6 +406,16 @@ export function CurveChart({
                   connectNulls={false}
                   isAnimationActive={false}
                 />
+                {plateau !== null && (
+                  <ReferenceDot
+                    x={plateau.price}
+                    y={plateau.score}
+                    r={7}
+                    fill="var(--color-white)"
+                    stroke="var(--color-primary)"
+                    strokeWidth={2}
+                  />
+                )}
                 {ownPriceNum !== null && ownScoreNum !== null && (
                   <ReferenceDot
                     x={ownPriceNum}
@@ -352,6 +426,8 @@ export function CurveChart({
                     label={{
                       value: "Tu oferta",
                       position: scoreLabelAbove ? "top" : "bottom",
+                      offset: scoreDotHigh ? 24 : 5,
+                      dx: ownDx,
                       fontSize: 14,
                     }}
                   />
@@ -374,10 +450,19 @@ export function CurveChart({
           </p>
         ) : (
           <>
+          <ul className="curve-legend" data-testid="curve-legend-profit">
+            <li>
+              <span className="curve-legend-profit" aria-hidden="true" /> Beneficio
+            </li>
+            <li>
+              <span className="curve-legend-zero" aria-hidden="true" /> Equilibrio (
+              {formatEurosHeadline("0")})
+            </li>
+          </ul>
           <div className="h-56 sm:h-64" role="img" aria-label={profitAria} aria-describedby="curve-table">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={CHART_MARGIN}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
                 <XAxis {...PRICE_X_AXIS} />
                 <YAxis
                   tick={AXIS_TICK}
@@ -390,18 +475,15 @@ export function CurveChart({
                 <ReferenceLine
                   y={0}
                   stroke="var(--color-muted)"
+                  strokeOpacity={0.55}
                   strokeDasharray="4 4"
-                  label={{
-                    value: `Equilibrio (${formatEurosHeadline("0")})`,
-                    position: "insideBottomRight",
-                    fontSize: 14,
-                  }}
                 />
                 {validRivals.map((r, i) => (
                   <ReferenceLine
                     key={r.label}
                     x={Number(r.norm)}
                     stroke="var(--color-muted)"
+                    strokeOpacity={0.55}
                     strokeDasharray="4 4"
                     label={{
                       value: r.label,
@@ -430,6 +512,8 @@ export function CurveChart({
                     label={{
                       value: "Tu oferta",
                       position: profitLabelAbove ? "top" : "bottom",
+                      offset: profitDotHigh ? 24 : 5,
+                      dx: ownDx,
                       fontSize: 14,
                     }}
                   />

@@ -463,6 +463,21 @@ a[href^="http"]::after {
     width: 28px;
     border-top: 3px solid var(--color-primary);
   }
+  .curve-legend-max {
+    display: inline-block;
+    width: 28px;
+    border-top: 3px dashed var(--color-primary);
+  }
+  .curve-legend-profit {
+    display: inline-block;
+    width: 28px;
+    border-top: 3px solid var(--color-chart-profit);
+  }
+  .curve-legend-zero {
+    display: inline-block;
+    width: 28px;
+    border-top: 3px dashed var(--color-muted);
+  }
   .curve-legend-dot {
     display: inline-block;
     width: 12px;
@@ -474,6 +489,14 @@ a[href^="http"]::after {
     display: inline-block;
     width: 28px;
     border-top: 3px dashed var(--color-muted);
+  }
+  .curve-legend-plateau {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+    background: var(--color-white);
   }
   .curve-legend-hatch {
     display: inline-block;
