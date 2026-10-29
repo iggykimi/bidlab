@@ -166,14 +166,19 @@ def render_html(report: dict[str, Any], mode: str, doc_names: dict[str, str] | N
     )
 
 
-def _document_names(session: Session, scenario: dict[str, Any]) -> dict[str, str]:
+def _document_names(session: Session, scenario_id: str) -> dict[str, str]:
     """Document id -> display name for the report Fuentes block (ids stay fallback)."""
-    context = scenario.get("context", {})
-    tender_id = context.get("tender_id") if isinstance(context, dict) else None
-    if not isinstance(tender_id, str) or not tender_id:
+    row = session.get(models.Scenario, scenario_id)
+    if row is None:
+        return {}
+    scope = session.get(models.Scope, row.scope_id)
+    if scope is None:
         return {}
     rows = session.execute(
-        select(models.Document).where(models.Document.tender_id == tender_id)
+        select(models.Document).where(models.Document.tender_id == scope.tender_id)
+    ).scalars()
+    rows = session.execute(
+        select(models.Document).where(models.Document.tender_id == scope.tender_id)
     ).scalars()
     return {row.id: row.display_name for row in rows}
 
@@ -196,7 +201,7 @@ def create_report(session: Session, scenario_id: str, decision: str, note: str) 
     settings = get_settings()
     html_abs = settings.storage_path / html_rel
     html_abs.parent.mkdir(parents=True, exist_ok=True)
-    names = _document_names(session, scenario)
+    names = _document_names(session, scenario_id)
     html_abs.write_text(
         render_html(payload, settings.bidlab_mode, doc_names=names), encoding="utf-8"
     )

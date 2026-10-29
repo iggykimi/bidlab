@@ -306,3 +306,18 @@ test("R05 reload keeps the analysis run without a second call", async ({ page })
   expect(posts).toBe(1);
   expect(guard.blocked()).toBe(0);
 });
+// V6 F10: an own tender without a company is still your data, never the demo.
+test("R05 own tender without company keeps the Tus datos badge", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  const tag = uniqueTag();
+  const title = `Sin empresa ${tag}`;
+
+  await createTenderToStep2(page, title, `NCO/${tag}`, "60000", "12");
+  await page.getByTestId("intake-skip").click();
+  await page.getByTestId("intake-skip-company").click();
+
+  await expect(page.getByTestId("tender-title")).toContainText(title);
+  await expect(page.getByTestId("demo-badge")).toContainText("Tus datos");
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  expect(guard.blocked()).toBe(0);
+});

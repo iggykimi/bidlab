@@ -193,9 +193,12 @@ export function WorkspacePage() {
   const tender = workspace.tender;
   const session = loadSession();
   const mode = session?.tender_id === tender.id ? session.mode : workspace.mode;
+  // Badge/banner describe data origin: an own tender is never example data,
+  // even before any manual session exists (no company yet).
+  const badgeMode = own && mode === "demo" ? "manual" : mode;
   const scope = tender.scopes[0] ?? null;
 
-  const eyebrowMode = modeLabel(mode);
+  const eyebrowMode = modeLabel(badgeMode);
   return (
     <main id="main" className="wrap" tabIndex={-1}>
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:bg-white focus:p-2">
@@ -246,7 +249,7 @@ export function WorkspacePage() {
         </details>
       </div>
 
-      {mode === "demo" && (
+      {badgeMode === "demo" && (
         <p data-testid="demo-banner" className="mb-2 rounded-lg border border-alert bg-warn-bg p-2 text-sm">
           Datos de ejemplo. Los precios de los rivales y tu coste son inventados para que puedas probar.
         </p>
@@ -294,7 +297,7 @@ export function WorkspacePage() {
             <strong>Base del análisis</strong>
             {mode ? (
               <p>
-                <DemoBadge mode={mode} />
+                <DemoBadge mode={badgeMode} />
               </p>
             ) : null}
             {scope ? <p className="muted">Ámbito: {scope.label}</p> : null}

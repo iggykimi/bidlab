@@ -106,6 +106,7 @@ def test_report_with_html_sources(seeded_client: TestClient) -> None:
     assert "112.419,20" in html.text
     assert report["scenario"]["snapshot_sha256"] in html.text
     assert "207.088" in html.text
+    assert "Pliego de cl" in html.text  # seeded doc name, not the raw id
     assert "<b>esc</b>" not in html.text  # user note is escaped
     assert "Demo curada" in html.text
     assert "Detalle del cálculo" in html.text
