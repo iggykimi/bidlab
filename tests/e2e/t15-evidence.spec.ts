@@ -302,12 +302,20 @@ test.describe("T15 desktop 1280x720", () => {
     // Localized citation (machine) and semantic review (human) stay apart:
     // approving the claim never rewrites the localization state.
     await openTab(page, "Revisar");
+    // BL-V2-09: contadores reales e identidad de propuesta.
+    await expect(page.getByTestId("claim-counters")).toContainText(
+      "1 propuesta · 0 confirmadas · 1 por verificar."
+    );
+    await expect(page.getByText("propuesta 1 de 1")).toBeVisible();
     const state = page.getByTestId("claim-review-state-pbl_net");
     await expect(state).toContainText("Por verificar");
     const citeLine = page.getByText("Cita (copiado tal cual)");
     await expect(citeLine).toBeVisible();
     await page.getByTestId("claim-approve-pbl_net").check();
     await expect(state).toContainText("Lo confirmas");
+    await expect(page.getByTestId("claim-counters")).toContainText(
+      "1 propuesta · 1 confirmada · 0 por verificar."
+    );
     await expect(citeLine).toContainText("Cita (copiado tal cual)");
     expect(guard.blocked()).toBe(0);
   });

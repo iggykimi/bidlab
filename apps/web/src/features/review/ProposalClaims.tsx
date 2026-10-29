@@ -32,14 +32,20 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
   const claims: ClaimProposal[] = workspace.claims ?? [];
   if (claims.length === 0) return null;
   const stored: Citation[] = workspace.citations ?? [];
+  const confirmed = claims.filter((c) => approved.includes(c.key)).length;
+  const pending = claims.length - confirmed;
   return (
     <Card aria-label="Propuestas automáticas">
       <h2>¿Qué datos confirmas?</h2>
       <p className="mt-1 text-sm text-muted">
         La máquina leyó tu documento. Marca solo lo que esté bien; lo demás se queda fuera.
       </p>
+      <p className="mt-1 text-sm" data-testid="claim-counters">
+        {claims.length} {claims.length === 1 ? "propuesta" : "propuestas"} · {confirmed}{" "}
+        {confirmed === 1 ? "confirmada" : "confirmadas"} · {pending} por verificar.
+      </p>
       <ul className="mt-3 grid gap-3">
-        {claims.map((claim) => {
+        {claims.map((claim, index) => {
           const checked = approved.includes(claim.key);
           const confirmable = canConfirmClaim(claim, stored, workspace.documents);
           const statusNote = claimStatusEs(claim.status);
@@ -56,6 +62,10 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
                 />
                 <span>
                   <strong>{claimLabel(claim.key)}</strong>
+                  <span className="text-muted">
+                    {" "}
+                    · propuesta {index + 1} de {claims.length}
+                  </span>
                   {claim.normalized_value !== null && claim.normalized_value !== undefined
                     ? `: ${String(claim.normalized_value)}${claim.unit ? ` ${claim.unit}` : ""}`
                     : claim.raw_value !== null && claim.raw_value !== undefined
