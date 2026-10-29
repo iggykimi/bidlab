@@ -1682,6 +1682,95 @@ paths:
                   - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
                   - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1e
                   primary_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+  /api/v1/scenarios/frontier:
+    post:
+      operationId: decision_frontier
+      summary: Pareto frontier
+      description: Pareto classification of 2-3 saved scenarios over frozen economics
+        (Decimal, pure). Requires one shared context (422 frontier_not_comparable
+        otherwise); unknown figures and anomaly-flagged scenarios are excluded with
+        a motivo. Nothing is persisted.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrontierResult'
+              examples:
+                example:
+                  summary: decision_frontier example
+                  value:
+                    scenario_ids:
+                    - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+                    - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1e
+                    context:
+                      tender_id: tias
+                      scope_id: tias-whole
+                      budget_net: '118336.00'
+                      rule_id: tias-price-r1
+                      rule_revision: 1
+                      company_id: company-demo
+                      company_revision: 1
+                      rivals_fingerprint: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                      rivals_count: 2
+                    entries:
+                    - scenario_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+                      name: Baja 15%
+                      verdict: dominada
+                      motivo: '«Baja 15%» queda dominada por «Baja 10%»: menos beneficio
+                        y puntos en este caso.'
+                      profit_net: '10585.60'
+                      score_value: '49.000000000000'
+                      anomaly_status: not_flagged_under_assumptions
+                    - scenario_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1e
+                      name: Baja 10%
+                      verdict: en_frontera
+                      motivo: '«Baja 10%» está en la frontera: ninguna otra prueba
+                        la supera en beneficio y puntos a la vez.'
+                      profit_net: '16502.40'
+                      score_value: '49.000000000000'
+                      anomaly_status: not_flagged_under_assumptions
+                    warnings: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - scenarios
+      parameters:
+      - $ref: '#/components/parameters/XBidLabClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FrontierRequest'
+            examples:
+              example:
+                summary: decision_frontier example
+                value:
+                  scenario_ids:
+                  - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
+                  - 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1e
   /api/v1/reports:
     post:
       operationId: create_report
@@ -4701,6 +4790,89 @@ components:
       - context
       - entries
       - deltas
+      - warnings
+      additionalProperties: false
+    FrontierRequest:
+      type: object
+      properties:
+        scenario_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+          minItems: 2
+          maxItems: 3
+      required:
+      - scenario_ids
+      additionalProperties: false
+    FrontierEntry:
+      type: object
+      properties:
+        scenario_id:
+          $ref: '#/components/schemas/EntityId'
+        name:
+          type: string
+          maxLength: 200
+        verdict:
+          type: string
+          enum:
+          - en_frontera
+          - dominada
+          - excluida
+        motivo:
+          type: string
+          maxLength: 1000
+        profit_net:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        score_value:
+          anyOf:
+          - $ref: '#/components/schemas/Decimal'
+          - type: 'null'
+        anomaly_status:
+          type: string
+          enum:
+          - unknown
+          - not_applicable
+          - possible_justification_required
+          - not_flagged_under_assumptions
+      required:
+      - scenario_id
+      - name
+      - verdict
+      - motivo
+      - profit_net
+      - score_value
+      - anomaly_status
+      additionalProperties: false
+    FrontierResult:
+      type: object
+      properties:
+        scenario_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityId'
+          minItems: 2
+          maxItems: 3
+        context:
+          $ref: '#/components/schemas/CompareContext'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FrontierEntry'
+          minItems: 2
+          maxItems: 3
+        warnings:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+          minItems: 0
+          maxItems: 30
+      required:
+      - scenario_ids
+      - context
+      - entries
       - warnings
       additionalProperties: false
     PeriodMonths:

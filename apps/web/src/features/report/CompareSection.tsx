@@ -11,6 +11,7 @@ import {
   type ScenarioSummary,
 } from "../../api/client";
 import { Button, Card } from "../../components/ui";
+import { DecisionFrontier } from "./DecisionFrontier";
 import {
   formatEurosExact,
   formatFechaNormal,
@@ -182,6 +183,12 @@ function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreM
           </tbody>
         </table>
       </div>
+      {result.status === "comparable" && (
+        <DecisionFrontier
+          key={result.entries.map((e) => e.scenario_id).join(":")}
+          scenarioIds={result.entries.map((e) => e.scenario_id)}
+        />
+      )}
       {result.deltas.map((d) => (
         <DeltaBlock
           key={`${d.base_id}:${d.other_id}`}

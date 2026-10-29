@@ -48,6 +48,9 @@ export type ScenarioList = components["schemas"]["ScenarioList"];
 export type ReportSummary = components["schemas"]["ReportSummary"];
 export type ReportList = components["schemas"]["ReportList"];
 export type CompareRequest = components["schemas"]["CompareRequest"];
+export type FrontierRequest = components["schemas"]["FrontierRequest"];
+export type FrontierResult = components["schemas"]["FrontierResult"];
+export type FrontierEntry = components["schemas"]["FrontierEntry"];
 export type CompareResult = components["schemas"]["CompareResult"];
 export type CompareEntry = components["schemas"]["CompareEntry"];
 export type CompareDelta = components["schemas"]["CompareDelta"];
@@ -235,6 +238,13 @@ export function compareScenarios(
   signal?: AbortSignal,
 ): Promise<CompareResult> {
   return sendJson<CompareResult>("POST", "/scenarios/compare", payload, { signal });
+}
+
+export function decisionFrontier(
+  payload: FrontierRequest,
+  signal?: AbortSignal,
+): Promise<FrontierResult> {
+  return sendJson<FrontierResult>("POST", "/scenarios/frontier", payload, { signal });
 }
 
 export function createTender(payload: TenderCreate, signal?: AbortSignal): Promise<Tender> {

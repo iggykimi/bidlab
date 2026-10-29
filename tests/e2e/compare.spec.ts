@@ -128,3 +128,30 @@ test("CMP-04 compare hero follows the selected pair", async ({ page }) => {
   await expect(hero).not.toHaveText(before ?? "");
   expect(guard.blocked()).toBe(0);
 });
+
+// BL-V2-05: the frontier classifies 10/15 from backend Decimal dominance.
+test("CMP-05 frontier puts 10 ahead of 15 with backend motivos", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  await openPricing(page);
+
+  for (const [discount, name] of [
+    ["10", "CMP front 10"],
+    ["15", "CMP front 15"],
+  ]) {
+    await page.getByTestId("discount-input").fill(discount);
+    await page.getByTestId("scenario-name").fill(name);
+    await page.getByTestId("save-scenario").click();
+    await expect(page.getByText(`Prueba «${name}» guardada.`)).toBeVisible();
+  }
+
+  await page.getByRole("checkbox", { name: "Comparar CMP front 10" }).check();
+  await page.getByRole("checkbox", { name: "Comparar CMP front 15" }).check();
+  await page.getByTestId("compare-run").click();
+
+  const frontier = page.getByTestId("frontier-result");
+  await expect(frontier).toBeVisible();
+  await expect(frontier).toContainText("«CMP front 10» está en la frontera");
+  await expect(frontier).toContainText("«CMP front 15» queda dominada");
+  expect(guard.blocked()).toBe(0);
+});

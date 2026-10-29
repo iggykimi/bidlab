@@ -472,6 +472,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scenarios/frontier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pareto frontier
+         * @description Pareto classification of 2-3 saved scenarios over frozen economics (Decimal, pure). Requires one shared context (422 frontier_not_comparable otherwise); unknown figures and anomaly-flagged scenarios are excluded with a motivo. Nothing is persisted.
+         */
+        post: operations["decision_frontier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports": {
         parameters: {
             query?: never;
@@ -1218,6 +1238,26 @@ export interface components {
             context: components["schemas"]["CompareContext"];
             entries: components["schemas"]["CompareEntry"][];
             deltas: components["schemas"]["CompareDelta"][];
+            warnings: string[];
+        };
+        FrontierRequest: {
+            scenario_ids: components["schemas"]["EntityId"][];
+        };
+        FrontierEntry: {
+            scenario_id: components["schemas"]["EntityId"];
+            name: string;
+            /** @enum {string} */
+            verdict: "en_frontera" | "dominada" | "excluida";
+            motivo: string;
+            profit_net: components["schemas"]["Decimal"] | null;
+            score_value: components["schemas"]["Decimal"] | null;
+            /** @enum {string} */
+            anomaly_status: "unknown" | "not_applicable" | "possible_justification_required" | "not_flagged_under_assumptions";
+        };
+        FrontierResult: {
+            scenario_ids: components["schemas"]["EntityId"][];
+            context: components["schemas"]["CompareContext"];
+            entries: components["schemas"]["FrontierEntry"][];
             warnings: string[];
         };
         PeriodMonths: number;
@@ -2407,6 +2447,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompareResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    decision_frontier: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FrontierRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrontierResult"];
                 };
             };
             400: components["responses"]["BadRequest"];

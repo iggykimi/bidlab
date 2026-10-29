@@ -9,6 +9,7 @@ from bidlab.api import deps
 from bidlab.api.errors import ERROR_RESPONSES
 from bidlab.schemas import generated as g
 from bidlab.services import compare as compare_service
+from bidlab.services import decision_frontier as frontier_service
 from bidlab.services import evaluation as evaluation_service
 from bidlab.services import idempotency
 from bidlab.services import scenarios as scenarios_service
@@ -86,3 +87,19 @@ def compare_scenarios(
     ids = [str(item) for item in data["scenario_ids"]]
     compared = compare_service.compare_scenarios(db, ids, str(data["primary_id"]))
     return g.CompareResult.model_validate(compared)
+
+
+@router.post(
+    "/scenarios/frontier", response_model=g.FrontierResult, operation_id="decision_frontier"
+)
+def decision_frontier(
+    payload: g.FrontierRequest,
+    db: Annotated[Session, Depends(deps.get_db)],
+    _guard: Annotated[None, Depends(deps.require_local_client)],
+) -> g.FrontierResult:
+    # Pure computation over frozen snapshots (no persistence), so no
+    # Idempotency-Key: nothing to deduplicate.
+    data = payload.model_dump(mode="json")
+    ids = [str(item) for item in data["scenario_ids"]]
+    result = frontier_service.frontier_for(db, ids)
+    return g.FrontierResult.model_validate(result)
