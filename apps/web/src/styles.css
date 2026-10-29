@@ -442,6 +442,12 @@ a[href^="http"]::after {
     padding: 8px 0;
     font-size: 0.889rem;
   }
+  /* U2: compare hero, backend motivo verbatim. */
+  .compare-hero {
+    background: var(--color-primary-soft);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
   .workhead .small {
     margin: 4px 0 0;
   }

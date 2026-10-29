@@ -118,6 +118,11 @@ export function PricingLab({ workspace }: Props) {
           <ConclusionSection state={state} />
         </div>
       </div>
+      <CompareFromPricing
+        workspace={workspace}
+        scopeFilter={session?.scope_id ?? undefined}
+        sessionReady={session !== null}
+      />
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="grid min-w-0 content-start gap-4 lg:col-span-8 [&>*]:min-w-0">
           <CurveSection state={state} />
@@ -131,11 +136,6 @@ export function PricingLab({ workspace }: Props) {
           <IdentifiersDetails scope={scope} rule={rule} state={state} />
         </div>
       </div>
-      <CompareFromPricing
-        workspace={workspace}
-        scopeFilter={session?.scope_id ?? undefined}
-        sessionReady={session !== null}
-      />
       <StressSection state={state} />
       <CostEditor
         companyId={companyId}

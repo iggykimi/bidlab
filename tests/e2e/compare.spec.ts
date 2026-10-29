@@ -67,3 +67,31 @@ test("CMP-02 golden 10 vs 15 keeps 49 points with higher profit", async ({ page 
   await expect(result).toContainText("con los mismos puntos");
   expect(guard.blocked()).toBe(0);
 });
+
+// U2: el hero del comparador en Precio muestra el delta del backend (10/15).
+test("CMP-03 pricing compare hero shows 10 vs 15 backend delta", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  await openPricing(page);
+
+  await page.getByTestId("discount-input").fill("10");
+  await expect(page.getByTestId("economic-score")).toContainText("49,0 de 49");
+  await page.getByTestId("scenario-name").fill("CMP hero 10");
+  await page.getByTestId("save-scenario").click();
+  await expect(page.getByText("Prueba «CMP hero 10» guardada.")).toBeVisible();
+
+  await page.getByTestId("discount-input").fill("15");
+  await page.getByTestId("scenario-name").fill("CMP hero 15");
+  await page.getByTestId("save-scenario").click();
+  await expect(page.getByText("Prueba «CMP hero 15» guardada.")).toBeVisible();
+
+  await page.getByRole("checkbox", { name: "Comparar CMP hero 10" }).check();
+  await page.getByRole("checkbox", { name: "Comparar CMP hero 15" }).check();
+  await page.getByTestId("compare-run").click();
+
+  const hero = page.getByTestId("decision-comparison-hero");
+  await expect(hero).toBeVisible();
+  await expect(hero).toContainText("5916,80");
+  await expect(hero).toContainText(/mismos puntos/);
+  expect(guard.blocked()).toBe(0);
+});

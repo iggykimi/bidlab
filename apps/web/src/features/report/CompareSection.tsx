@@ -112,6 +112,7 @@ function EntryRow({ entry, maxHint }: { entry: CompareEntry; maxHint: string }) 
 
 function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreMax: string }) {
   const names = new Map(result.entries.map((e) => [e.scenario_id, e.name]));
+  const hero = result.deltas[0] ?? null;
   return (
     <div className="mt-3 grid gap-3" data-testid="compare-result">
       <p className="text-sm font-semibold" role="status">
@@ -119,6 +120,14 @@ function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreM
         {result.status === "partial" && "Comparación parcial: revisa los avisos."}
         {result.status === "no_comparable" && "No puedes compararlas como si fueran el mismo caso."}
       </p>
+      {hero !== null && (
+        <div className="compare-hero" data-testid="decision-comparison-hero">
+          <p className="text-lg font-bold">{hero.indicator_motivo}</p>
+          {hero.dominance_motivo ? (
+            <p className="mt-1 text-sm text-muted">{hero.dominance_motivo}</p>
+          ) : null}
+        </div>
+      )}
       {result.warnings.length > 0 && (
         <ul className="list-disc space-y-1 pl-5 text-sm text-alert">
           {result.warnings.map((w) => (
