@@ -451,7 +451,9 @@ def _doc_row(pages_count: int = 8, doc_id: str = "d1") -> models.Document:
 
 def _publish_fixtures(
     session: Session, *, live: bool, pages: int, empty_text: bool = False, tag: str = ""
-) -> tuple[models.Job, jobs_service.AttemptClaim, jobs_service.AttemptOutcome, meta_adapter.AdapterResult]:
+) -> tuple[
+    models.Job, jobs_service.AttemptClaim, jobs_service.AttemptOutcome, meta_adapter.AdapterResult
+]:
     job_id = f"job-test-1{tag}"
     doc_id = f"d1{tag}"
     row = _job_row("queued")

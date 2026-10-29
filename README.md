@@ -10,7 +10,7 @@ BidLab helps small businesses turn complex public tenders into **traceable prici
 >
 > In our curated Tías public-tender example, a 10% and a 15% discount obtain the same economic points **under stated synthetic cost and rival-bid assumptions**. The 10% scenario retains €5,916.80 more hypothetical profit. This demonstrates a scenario-specific trade-off, not an estimate of the probability of winning.
 
-**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [V3 validation](docs/CHANGELOG_IMPLEMENTACION_V3.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
+**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [V3 validation](docs/CHANGELOG_IMPLEMENTACION_V3.md) · [V5 validation](docs/CHANGELOG_IMPLEMENTACION_V5.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
 
 ### What makes BidLab different
 
@@ -37,7 +37,7 @@ Open **http://127.0.0.1:8000/**. The curated offline demonstration does **not** 
 
 ### AI and transparency
 
-BidLab contains an opt-in Meta Model API integration and a deterministic offline demonstration. **The curated data must not be described as the output of a live Meta extraction.** The project documents one historical minimal Meta inference smoke test separately from any end-to-end live document extraction. See [Meta evidence](docs/META_EVIDENCE_V2.md) for what has and has not been verified.
+BidLab contains an opt-in Meta Model API integration and a deterministic offline demonstration. **The curated data must not be described as the output of a live Meta extraction.** The project documents one historical minimal Meta inference smoke test separately from any end-to-end live document extraction. Live document extraction: not yet verified; opt-in implementation exists. See [Meta evidence](docs/META_EVIDENCE_V2.md) for what has and has not been verified, and [generation 0/12](docs/META_EVIDENCE_V3.md) for the current blocked run.
 
 *Current scope: a local-first research/demo application, not a public multi-user SaaS. Competitor prices and company costs in the curated example are synthetic; no winning-probability prediction or automatic legal exclusion is claimed.*
 

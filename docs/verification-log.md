@@ -1536,3 +1536,44 @@ video 180 s + clip hero (autor); Lighthouse sin medir (no se
 publica numero). Detalle por ID en
 docs/CHANGELOG_IMPLEMENTACION_V3.md; decisiones en
 docs/DECISION_LOG_V3.md; informe de cierre en el issue #4.
+## V5 issue #5 (29-oct-2026, Windows, lead)
+
+Pack: BIDLAB_IMPLEMENTACION_TOTAL_META_2026.zip, SHA-256
+4469799A057AC5134D251BEADAEF293B5C495EDED685FE0CAF96D2130A6400BC.
+Manifiesto 27/27 integro (hash + bytes); self-check del pack
+16 passed PACK_ONLY_PASS reproducido antes de editar; plan
+1080 lineas + 8 parches leidos enteros; applier dry-run 14/14
+anchors exactos y --apply sobre arbol limpio @28f2f54.
+
+Commits main: 5a30563 (PR-1 META-01) + 92d1374 (PR-2 copy) +
+1f0a922 (PR-3 docs) + d40112d (PR-4 eval) + <freeze> (PR-6).
+
+Gates @<freeze> (exit 0 observado): verify.py ALL CHECKS
+PASSED 10/10 (deps, pytest unit+eval, pytest integ+contratos,
+eslint, tsc, build, vitest, ruff, mypy, e2e); backend 588
+passed + 1 skipped (symlink, preexistente, Windows) sobre
+589 recolectados (unit+eval 423+1s, integ+contr 165+0);
+vitest 260/33; E2E 98/98 incl. qa-visual 6/6 (axe serious+ 0);
+ruff check + format limpios (E501 en test añadido por PR-2,
+corregido partiendo la anotacion, 4 +++-); mypy exit 0.
+Self-check del pack re-verde tras aplicar (16 PASS).
+
+Corpus PR-4: 12/12 PDFs + gold committeados, autoverificado
+en generacion + spot-check 11/11 texto + S06 raster 0 chars;
+scorer 4/4; template 12/12 blocked (fuera de git).
+Preflight PR-1: esquema real 23 props, depth 3 (limites
+5000/10/120000/5000/10), dentro de build_hybrid_request.
+Jury shots: 6 PNG frescas con SHA en FINAL_HEAD_VALIDATION
+(2 UI Playwright 1280x720 + 4 corpus PyMuPDF 150dpi).
+
+BLOQUEADO: live Meta 0/12 (sin META_API_KEY/MODEL_API_KEY,
+sin META_CONFIRM_LIVE, sin presupuesto; presencia 29-oct,
+valores jamas impresos); refusal sin clave cubierto por
+test_execute_live_without_key_fails_attempt (verde).
+Re-verificacion S1.2 (29-oct): developers.facebook.com y
+developers.meta.com NO responden desde este entorno
+(HEAD->404, GET->conexion cortada; github.com si funciona):
+reglas = plan citado + preflight propio; nada afirmado como
+re-leido. Video 180 s + candidatura: autor. Detalle por PR
+en docs/CHANGELOG_IMPLEMENTACION_V5.md; informe S22.6 en
+el cierre del issue #5.

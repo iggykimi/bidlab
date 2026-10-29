@@ -84,6 +84,9 @@ análisis + revisión manual + simular + comparar + exportar
   backend 565 passed + 1 skipped + 1 deselected (live opt-in),
   web 259 en 33 ficheros (`npm run test:unit`),
   E2E 98 herméticos (Chromium, loopback; 2 pasadas verdes).
+- V5 (29-oct-2026, ver [verification-log](../verification-log.md) §V5):
+  backend 588 passed + 1 skipped, web 260 en 33 ficheros,
+  E2E 98 (incl. qa-visual/axe 6/6), verify.py 10/10 exit 0.
   Puertas completas en verde el 29-oct
   (`python scripts/verify.py`, 10/10, exit 0) + dos ensayos
   limpios R1+R2 (V2).

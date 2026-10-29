@@ -23,8 +23,8 @@ Tender teams face a difficult trade-off: **How much bid margin should we sacrifi
 | How is evidence distinguished from approval? | [EvidenceDrawer.tsx](../apps/web/src/features/evidence/EvidenceDrawer.tsx), [domain rules](RULE_ENGINE.md), [architecture](ARCHITECTURE.md) |
 | How are late/stale stress results handled? | [StressSection.tsx](../apps/web/src/features/pricing/StressSection.tsx) and its unit/E2E tests |
 | What architectural tradeoffs were chosen? | [Architecture](ARCHITECTURE.md) and [V2](DECISION_LOG_V2.md) / [V3](DECISION_LOG_V3.md) decision logs |
-| What did the project actually test? | [V2 QA report](QA_REPORT_V2.md), [V3 changelog](CHANGELOG_IMPLEMENTACION_V3.md) and [verification log](verification-log.md) |
-| What really ran on Meta? | [Meta evidence](META_EVIDENCE_V2.md), including explicit unverified paths |
+| What did the project actually test? | [V2 QA report](QA_REPORT_V2.md) (historical), [V5 changelog](CHANGELOG_IMPLEMENTACION_V5.md) (current) and [verification log](verification-log.md) |
+| What really ran on Meta? | [Meta evidence V2](META_EVIDENCE_V2.md) (smoke) + [generation 0/12](META_EVIDENCE_V3.md) (current, blocked), including explicit unverified paths |
 
 > **Documentation note:** the 26-oct `EXECUTIVE_AUDIT` research snapshot is
 > preserved at [docs/archive/EXECUTIVE_AUDIT_2026-10-26.md](archive/EXECUTIVE_AUDIT_2026-10-26.md);
@@ -42,6 +42,7 @@ Every important README claim traces to a source, not to marketing language.
 | Stale stress | `stressInputKey` + sequence state | out-of-order request tests | input changes need rerun |
 | QA V2 | `docs/QA_REPORT_V2.md` | commands + SHA | local run, no remote CI |
 | V3 visual | `docs/CHANGELOG_IMPLEMENTACION_V3.md` + `docs/demo/v3/` | E2E + shots + axe gate | no Lighthouse measured |
+| V5 Meta close | `docs/CHANGELOG_IMPLEMENTACION_V5.md` + `docs/FINAL_HEAD_VALIDATION.md` | verify 10/10 + corpus 12 + preflight | live 0/12 blocked, no key |
 | Meta | documented live/smoke evidence | receipts with model + request ID | live doc extraction unproven |
 | Security | loopback bind, validations | API tests | no SaaS auth implied |
 
@@ -70,7 +71,7 @@ Open http://127.0.0.1:8000/. The curated demonstration should start without Mode
 python scripts/verify.py
 ```
 
-The [V2 QA report](QA_REPORT_V2.md) reports its recorded Windows build/commit figures; the [V3 changelog](CHANGELOG_IMPLEMENTACION_V3.md) reports the current ones (backend, vitest, E2E, gates) with SHAs. These are **project-reported results**, not independently reproduced claims here. Re-run on the final submitted checkout, preserve real exit codes and update figures if they changed.
+The [V2 QA report](QA_REPORT_V2.md) reports its recorded Windows build/commit figures; the [V5 changelog](CHANGELOG_IMPLEMENTACION_V5.md) reports the current ones (backend, vitest, E2E, gates) with SHAs ([V3 changelog](CHANGELOG_IMPLEMENTACION_V3.md) is historical). These are **project-reported results**, not independently reproduced claims here. Re-run on the final submitted checkout, preserve real exit codes and update figures if they changed.
 
 ## Meta usage — precise boundary
 

@@ -33,10 +33,17 @@ opt-in (`MODEL_API_KEY`, see README.md Configuración).
 python scripts/verify.py            # all gates; exit 0 = green
 ```
 
-Historical local QA runs are documented in [verification-log](docs/verification-log.md)
-and [V3 changelog](docs/CHANGELOG_IMPLEMENTACION_V3.md). Results must be
+Local QA runs are documented in [verification-log](docs/verification-log.md),
+current in the [V5 changelog](docs/CHANGELOG_IMPLEMENTACION_V5.md)
+([V3 changelog](docs/CHANGELOG_IMPLEMENTACION_V3.md) is historical). Results must be
 rerun and linked to the final submitted HEAD; historical counts are not
 a certification of later commits.
+
+**Meta evidence:** The own-tender analysis supports opt-in Muse Spark 1.3
+through Meta Model API. Our published results distinguish provider
+connectivity from offline fixtures; end-to-end document extraction is
+still unverified; every quantitative claim is linked to a run and commit
+([generation 0/12](docs/META_EVIDENCE_V3.md)).
 
 ## Honest limits
 
