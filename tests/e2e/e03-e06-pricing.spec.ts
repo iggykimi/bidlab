@@ -68,6 +68,9 @@ test("E05 own 30 percent raises a conditional presumption", async ({ page }) => 
   await expect(page.getByRole("img", { name: /Curva precio-puntos/ })).toHaveAccessibleName(
     /zona sospechosa/
   );
+  // BL-V2-03: axis title + hatch meaning live in HTML, not colliding SVG.
+  await expect(page.getByTestId("curve-legend")).toContainText("Zona de aviso");
+  await expect(page.getByText("Tu precio de oferta (€)").first()).toBeVisible();
   await expect(page.locator("main")).not.toContainText(/excluida/i);
   expect(guard.blocked()).toBe(0);
 });

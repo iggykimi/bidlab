@@ -442,6 +442,50 @@ a[href^="http"]::after {
     padding: 8px 0;
     font-size: 0.889rem;
   }
+  /* BL-V2-03: external chart legend (text carries meaning). */
+  .curve-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    font-size: 0.889rem;
+  }
+  .curve-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .curve-legend-line {
+    display: inline-block;
+    width: 28px;
+    border-top: 3px solid var(--color-primary);
+  }
+  .curve-legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  .curve-legend-rival {
+    display: inline-block;
+    width: 28px;
+    border-top: 3px dashed var(--color-muted);
+  }
+  .curve-legend-hatch {
+    display: inline-block;
+    width: 28px;
+    height: 14px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-alert) 0 1px,
+      transparent 1px 5px
+    );
+  }
   /* U2: compare hero, backend motivo verbatim. */
   .compare-hero {
     background: var(--color-primary-soft);

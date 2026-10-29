@@ -89,7 +89,7 @@ export function splitFlaggedRuns(rows: { price: number; flagged: boolean }[]): F
 
 // Shared axes/tooltip config (recharts needs direct <XAxis>/<Tooltip>
 // children, so the sharing unit is props objects, not components).
-const CHART_MARGIN = { top: 24, right: 24, bottom: 56, left: 8 };
+const CHART_MARGIN = { top: 24, right: 24, bottom: 28, left: 8 };
 
 const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
   type: "number",
@@ -98,7 +98,6 @@ const PRICE_X_AXIS: ComponentProps<typeof XAxis> = {
   tick: { fontSize: 14 },
   tickFormatter: (v: number): string => formatEurosCompact(String(v)),
   minTickGap: 48,
-  label: { value: "Tu precio de oferta (€)", position: "insideBottom", offset: 30 },
 };
 
 const AXIS_TICK = { fontSize: 14 };
@@ -248,6 +247,24 @@ export function CurveChart({
             Sin determinar
           </p>
         ) : (
+          <>
+          <ul className="curve-legend" data-testid="curve-legend">
+            <li>
+              <span className="curve-legend-line" aria-hidden="true" /> Puntos por precio
+            </li>
+            <li>
+              <span className="curve-legend-dot" aria-hidden="true" /> Tu oferta
+            </li>
+            <li>
+              <span className="curve-legend-rival" aria-hidden="true" /> Rivales supuestos
+            </li>
+            {flaggedCount > 0 && (
+              <li>
+                <span className="curve-legend-hatch" aria-hidden="true" /> Zona de aviso: oferta
+                sospechosa
+              </li>
+            )}
+          </ul>
           <div className="h-56 sm:h-64" role="img" aria-label={scoreAria} aria-describedby="curve-table">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={CHART_MARGIN}>
@@ -278,7 +295,6 @@ export function CurveChart({
                     x1={run.x1}
                     x2={run.x2}
                     fill="url(#anomaly-hatch)"
-                    label={{ value: "Oferta sospechosa", position: "insideBottom", fontSize: 14 }}
                   />
                 ))}
                 {isolatedFlagged.map(
@@ -343,6 +359,8 @@ export function CurveChart({
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-1 text-center text-sm text-muted">Tu precio de oferta (€)</p>
+          </>
         )}
       </figure>
       <figure>
@@ -355,6 +373,7 @@ export function CurveChart({
             Sin determinar
           </p>
         ) : (
+          <>
           <div className="h-56 sm:h-64" role="img" aria-label={profitAria} aria-describedby="curve-table">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={CHART_MARGIN}>
@@ -418,6 +437,8 @@ export function CurveChart({
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="mt-1 text-center text-sm text-muted">Tu precio de oferta (€)</p>
+          </>
         )}
       </figure>
       <details data-testid="curve-table" id="curve-table">
