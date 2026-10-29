@@ -39,6 +39,8 @@ const REASON_ES: Record<string, string> = {
   unsupported_variant: "caso de oferta sospechosa sin regla implementada",
   unsupported_percentage_reduction: "reducción de un tercio no implementada",
   percentage_reduction_unsupported: "reducción de un tercio no implementada",
+  meets_limits: "cumple los límites en esta hipótesis",
+  below_limits: "no llega a los límites en esta hipótesis",
 };
 
 /** Backend reason code -> Spanish label. Unknown codes pass through. */
@@ -155,6 +157,19 @@ const PARSE_STATUS_ES: Record<string, string> = {
 /** Document parse status -> Spanish label. Unknown codes pass through. */
 export function parseStatusEs(status: string): string {
   return PARSE_STATUS_ES[status] ?? status;
+}
+
+/** Backend stress warnings -> plain Spanish; unknown shapes pass through. */
+export function stressWarningEs(warning: string): string {
+  const flagged = /^presumption flagged in (\d+) cells \(informative only, never excludes\)$/.exec(
+    warning
+  );
+  if (flagged) return `Oferta sospechosa en ${flagged[1]} celdas (solo informativo, nunca excluye).`;
+  const hypo = /^hypothesis '([^']+)': some cells are not comparable and never enter the selection$/.exec(
+    warning
+  );
+  if (hypo) return `Hipótesis «${hypo[1]}»: algunas celdas no son comparables y nunca entran en la elección.`;
+  return warning;
 }
 
 /** Match a source hash to the tender snapshot or a workspace document. */

@@ -270,12 +270,17 @@ function ReportDetail({
         Decisión: <strong data-testid="report-decision">{decisionEs(report.decision)}</strong> ·{" "}
         {formatFechaNormal(report.created_at)}
       </p>
-      <p data-testid="report-archive" className="text-muted">
-        Archivado el {formatFechaNormal(report.created_at)} · Fórmula{" "}
-        {report.scenario.input.pricing_rule_id} rev. {report.scenario.input.pricing_rule_revision} ·{" "}
-        Empresa rev. {report.scenario.input.company_revision} · Copia{" "}
-        {report.scenario.snapshot_sha256.slice(0, 12)}…
-      </p>
+      <div data-testid="report-archive" className="text-muted">
+        Archivado el {formatFechaNormal(report.created_at)}.
+        <details className="mt-1 rounded-lg border border-border bg-surface">
+          <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+            Detalles técnicos
+          </summary>
+          <p className="tnum border-t border-border px-3 py-2 text-xs">
+            Fórmula {report.scenario.input.pricing_rule_id} rev. {report.scenario.input.pricing_rule_revision} · Empresa rev. {report.scenario.input.company_revision} · Copia {report.scenario.snapshot_sha256.slice(0, 12)}…
+          </p>
+        </details>
+      </div>
       <div>
         <h4 className="font-semibold">Tus notas</h4>
         <p className="whitespace-pre-wrap rounded-lg bg-surface p-3" data-testid="report-note">

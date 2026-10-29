@@ -103,7 +103,7 @@ def test_report_with_html_sources(seeded_client: TestClient) -> None:
         "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
     )
     assert html.headers["X-Content-Type-Options"] == "nosniff"
-    assert "112419.20" in html.text
+    assert "112.419,20" in html.text
     assert report["scenario"]["snapshot_sha256"] in html.text
     assert "207.088" in html.text
     assert "<b>esc</b>" not in html.text  # user note is escaped
@@ -235,6 +235,48 @@ def test_report_template_v2_honesty() -> None:
     assert "Análisis en vivo" in live
     demo = reports_service.render_html(_unfinished_report("unknown"), "demo")
     assert "no extracción en vivo" in demo
+
+
+def _finished_report() -> dict[str, Any]:
+    rep = _unfinished_report("defined")
+    rep["scenario"]["result"].update(
+        {
+            "price_net": "100585.60",
+            "cost_net": "90000.00",
+            "profit_net": "10585.60",
+            "margin_rate": "0.10523971622",
+            "score": {"value": "49.000000000000", "status": "defined", "max_points": "49"},
+            "anomaly": {"status": "not_flagged_under_assumptions"},
+        }
+    )
+    rep["decision"] = "prepare"
+    return rep
+
+
+def test_report_template_paints_plain_spanish() -> None:
+    """V6 F2: decision/fechas/cifras/estados en espanol llano, exactos."""
+    html = reports_service.render_html(_finished_report(), "demo")
+    assert "Preparar oferta" in html
+    assert "100.585,60 €" in html
+    assert "90.000,00 €" in html
+    assert "49,0 de 49" in html
+    assert "10,5 %" in html
+    assert "Margen sobre ventas" in html
+    assert "No, en este supuesto" in html
+    assert "26 de octubre de 2026, 00:00 (UTC)" in html
+    assert "redondeados a 1 decimal" in html
+    assert "prepare" not in html
+    assert "100585.60" not in html
+    assert "not_flagged_under_assumptions" not in html
+
+
+def test_report_template_uses_document_names_when_given() -> None:
+    html = reports_service.render_html(
+        _finished_report(), "demo", doc_names={"d": "Pliego de Tías"}
+    )
+    assert "Pliego de Tías" in html
+    fallback = reports_service.render_html(_finished_report(), "demo")
+    assert "Documento d," in fallback
 
 
 def test_report_html_path_roundtrip(seeded_client: TestClient) -> None:

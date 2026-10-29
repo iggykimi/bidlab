@@ -21,7 +21,7 @@ import {
   formatPoints1,
   parsePrecioInput,
 } from "../../lib/format";
-import { errorCodeOnly, reasonEs, selectionReasonEs } from "./sources";
+import { errorCodeOnly, reasonEs, selectionReasonEs, stressWarningEs } from "./sources";
 import {
   STRESS_MAX_HYPOTHESES,
   buildCandidateDiscounts,
@@ -733,7 +733,7 @@ export function StressSection({ state }: Props) {
               <h3 className="text-sm font-semibold">Avisos</h3>
               <ul data-testid="stress-warnings" className="mt-1 list-disc space-y-1 pl-5 text-sm">
                 {result.warnings.map((w, i) => (
-                  <li key={`${i}-${w}`}>{w}</li>
+                  <li key={`${i}-${w}`}>{stressWarningEs(w)}</li>
                 ))}
               </ul>
             </div>

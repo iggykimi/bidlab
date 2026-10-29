@@ -117,8 +117,8 @@ test("archive screen, HTML and print match", async ({ page }) => {
   expect(html.ok()).toBe(true);
   const body = await html.text();
   for (const needle of [
-    "106502.40",
-    "prepare",
+    "106.502,40",
+    "Preparar oferta",
     "Nota de archivo.",
     "Archivado el",
     "tias-price-r1 rev. 1",

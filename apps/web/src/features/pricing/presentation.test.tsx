@@ -2,9 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
-import type { EvaluationResult, Workspace } from "../../api/client";
+import type { CurvePoint, EvaluationResult, Workspace } from "../../api/client";
 import { ConclusionSection } from "./ConclusionSection";
 import { CalculationSection } from "./CurveSection";
+import { CurveChart } from "./CurveChart";
 import { KpiSection } from "./KpiSection";
 import { OfferComposition } from "./OfferComposition";
 import { SaveScenarioSection } from "./SaveScenarioSection";
@@ -74,6 +75,36 @@ describe("painted pricing context", () => {
     const html = render(<MemoryRouter><SaveScenarioSection workspace={workspace} state={state()} /></MemoryRouter>);
     expect(html).toMatch(/data-testid="save-scenario"[^>]*disabled=""/);
     expect(html).toContain("Espera al resultado de tus últimos cambios");
+  });
+});
+
+describe("curve legend", () => {
+  it("shows the maximum-points label with a real accent, not a raw escape", () => {
+    const point: CurvePoint = {
+      discount_rate: "0.1000",
+      price_net: "106502.40",
+      profit_net: "16502.40",
+      margin_rate: "0.1550",
+      score: { status: "defined", value: "49.000000000000", max_points: "49", unknown_variables: [], reason_codes: [] },
+      anomaly_status: "not_flagged_under_assumptions",
+    };
+    const html = render(
+      <CurveChart
+        curve={[point, { ...point, discount_rate: "0.1500", price_net: "100585.60" }]}
+        ownPrice="106502.40"
+        ownScore="49.000000000000"
+        ownMax="49"
+        ownProfit="16502.40"
+        ownCost="90000.00"
+        discountRate="0.1000"
+        rivals={[]}
+        pending={false}
+        error={null}
+        requestCount={1}
+      />
+    );
+    expect(html).toContain("Máx.");
+    expect(html).not.toContain("M\\u00e1x");
   });
 });
 

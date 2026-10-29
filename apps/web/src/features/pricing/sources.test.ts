@@ -13,6 +13,7 @@ import {
   reasonEs,
   rightsStatusEs,
   selectionReasonEs,
+  stressWarningEs,
   variableEs,
 } from "./sources";
 
@@ -80,6 +81,8 @@ describe("sources", () => {
     expect(reasonEs("below_relative_threshold")).toContain("90 %");
     expect(reasonEs("absolute_25_close")).toContain("25 %");
     expect(reasonEs("zero_denominator")).toContain("cero");
+    expect(reasonEs("meets_limits")).toBe("cumple los límites en esta hipótesis");
+    expect(reasonEs("below_limits")).toBe("no llega a los límites en esta hipótesis");
     expect(reasonEs("future_code_xyz")).toBe("future_code_xyz");
   });
 
@@ -124,6 +127,16 @@ describe("sources", () => {
       "Ninguna rebaja probada cumple los límites en todas las hipótesis."
     );
     expect(selectionReasonEs("future_reason")).toBe("future_reason");
+  });
+
+  it("translates stress warnings to Spanish, keeping figures", () => {
+    expect(stressWarningEs("presumption flagged in 12 cells (informative only, never excludes)")).toBe(
+      "Oferta sospechosa en 12 celdas (solo informativo, nunca excluye)."
+    );
+    expect(
+      stressWarningEs("hypothesis 'Base': some cells are not comparable and never enter the selection")
+    ).toBe("Hipótesis «Base»: algunas celdas no son comparables y nunca entran en la elección.");
+    expect(stressWarningEs("future_warning_shape")).toBe("future_warning_shape");
   });
 
   it("translates evidence codes to Spanish", () => {

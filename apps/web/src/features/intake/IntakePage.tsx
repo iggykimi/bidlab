@@ -398,7 +398,7 @@ export function IntakePage() {
                       type="text"
                       autoComplete="off"
                       inputMode="numeric"
-                      placeholder="24"
+                      placeholder="Como 24"
                       value={form.periodMonths}
                       onChange={(e) => setField("periodMonths", e.target.value)}
                       onBlur={() => handleBlurField("periodMonths")}

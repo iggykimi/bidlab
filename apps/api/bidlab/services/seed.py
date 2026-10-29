@@ -160,7 +160,7 @@ def seed() -> dict[str, int]:
                 kind="pcap",
                 sha256="c74d063237b012df89543da73390d76d8996a558a85b0202890182bcee289677",
                 blob_path="",
-                display_name="PCAP Tías (research copy; bytes not redistributed)",
+                display_name="Pliego de cláusulas de Tías (copia de consulta)",
                 pages_count=41,
                 source_url=str(tender["source_url"]),
                 rights_status="research_copy_pending_publication_review",

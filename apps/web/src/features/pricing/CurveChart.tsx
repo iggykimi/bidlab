@@ -306,7 +306,7 @@ export function CurveChart({
             </li>
             {maxNum !== null && (
               <li>
-                <span className="curve-legend-max" aria-hidden="true" /> M\u00e1x.{" "}
+                <span className="curve-legend-max" aria-hidden="true" /> Máx.{" "}
                 {formatMaxPoints(ownMax)} puntos
               </li>
             )}

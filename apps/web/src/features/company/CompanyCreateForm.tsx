@@ -190,7 +190,7 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
             type="text"
             autoComplete="off"
             inputMode="numeric"
-            placeholder="24"
+            placeholder="Como 24"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
             onBlur={() => blurIfEngaged("period", period)}

@@ -25,19 +25,19 @@
 {% set MATCH_ES = {"exact": "literal", "normalized_match": "coincidencia normalizada", "missing": "no localizada", "manual_visual": "localizada a mano"} %}
 {% if mode == "demo" %}<p><span class="badge demo">Demo curada: cifras de semilla revisada, no extracción en vivo</span></p>{% elif mode == "live" %}<p><span class="badge live">Análisis en vivo</span></p>{% else %}<p><span class="badge manual">Tus datos</span></p>{% endif %}
 <h1>Informe de decisión — {{ report.scenario.context.tender_title }}</h1>
-<p><span class="badge decision">{{ report.decision }}</span></p>
-<p>Escenario <strong>{{ report.scenario.name }}</strong> · {{ report.created_at }}</p>
-{% if report.scenario.input is defined %}<p>Archivado el {{ report.created_at }} · Fórmula {{ report.scenario.input.pricing_rule_id }} rev. {{ report.scenario.input.pricing_rule_revision }} · Empresa rev. {{ report.scenario.input.company_revision }} · Copia {{ report.scenario.snapshot_sha256[:12] }}…</p>{% endif %}
+<p><span class="badge decision">{{ decision_es(report.decision) }}</span></p>
+<p>Escenario <strong>{{ report.scenario.name }}</strong> · {{ fecha_es(report.created_at) }}</p>
+{% if report.scenario.input is defined %}<p>Archivado el {{ fecha_es(report.created_at) }} · Fórmula {{ report.scenario.input.pricing_rule_id }} rev. {{ report.scenario.input.pricing_rule_revision }} · Empresa rev. {{ report.scenario.input.company_revision }} · Copia {{ report.scenario.snapshot_sha256[:12] }}…</p>{% endif %}
 
 <h2>Resultado</h2>
 <table>
 <tr><th>Concepto</th><th class="num">Valor</th></tr>
-<tr><td>Precio neto</td><td class="num">{{ report.scenario.result.price_net }} €</td></tr>
-<tr><td>Coste neto</td><td class="num">{{ report.scenario.result.cost_net if report.scenario.result.cost_net is not none else "sin determinar" }} €</td></tr>
-<tr><td>Beneficio</td><td class="num">{{ report.scenario.result.profit_net if report.scenario.result.profit_net is not none else "sin determinar" }} €</td></tr>
-<tr><td>Margen</td><td class="num">{{ report.scenario.result.margin_rate if report.scenario.result.margin_rate is not none else "sin determinar" }}</td></tr>
-<tr><td>Puntuación</td><td class="num">{{ report.scenario.result.score.value or ES.get(report.scenario.result.score.status, report.scenario.result.score.status) }}</td></tr>
-<tr><td>Anormalidad</td><td class="num">{{ ES.get(report.scenario.result.anomaly.status, report.scenario.result.anomaly.status) }}</td></tr>
+<tr><td>Precio neto</td><td class="num">{{ euros_es(report.scenario.result.price_net) }}</td></tr>
+<tr><td>Coste neto</td><td class="num">{{ euros_es(report.scenario.result.cost_net) }}</td></tr>
+<tr><td>Beneficio</td><td class="num">{{ euros_es(report.scenario.result.profit_net) }}</td></tr>
+<tr><td>Margen sobre ventas</td><td class="num">{{ margen_es(report.scenario.result.margin_rate) }}</td></tr>
+<tr><td>Puntuación</td><td class="num">{% if report.scenario.result.score.value is not none %}{{ puntos_es(report.scenario.result.score.value, report.scenario.result.score.max_points if report.scenario.result.score.max_points is defined else none) }}{% else %}{{ ES.get(report.scenario.result.score.status, report.scenario.result.score.status) }}{% endif %}</td></tr>
+<tr><td>Anormalidad</td><td class="num">{{ anomalia_es(report.scenario.result.anomaly.status) }}</td></tr>
 </table>
 
 <h2>Tu nota de decisión</h2>
@@ -71,14 +71,14 @@
 {% for cit in report.scenario.context.citations %}
 <blockquote>
 <p>{{ cit.verbatim_excerpt }}</p>
-<footer>Documento {{ cit.document_id }}, página {{ cit.page_number }} · {{ MATCH_ES.get(cit.match_status, cit.match_status) }}</footer>
+<footer>Documento {{ doc_names.get(cit.document_id, cit.document_id) }}, página {{ cit.page_number }} · {{ MATCH_ES.get(cit.match_status, cit.match_status) }}</footer>
 </blockquote>
 {% else %}
 <p>Sin citas vinculadas.</p>
 {% endfor %}
 
 <h2>Integridad</h2>
-<p>Instantánea (snapshot) <code>{{ report.scenario.snapshot_sha256 }}</code> · motor {{ report.scenario.result.engine_version }} · generado {{ generated_at }}</p>
-<p class="disclaimer">Simulación económica basada en los supuestos declarados. No es asesoramiento jurídico ni predice la adjudicación.</p>
+<p>Instantánea (snapshot) <code>{{ report.scenario.snapshot_sha256 }}</code> · motor {{ report.scenario.result.engine_version }} · generado {{ fecha_es(generated_at) }}</p>
+<p class="disclaimer">Puntos y margen se muestran redondeados a 1 decimal; los importes son exactos con 2 decimales. Simulación económica basada en los supuestos declarados. No es asesoramiento jurídico ni predice la adjudicación.</p>
 </body>
 </html>

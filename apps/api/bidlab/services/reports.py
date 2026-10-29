@@ -3,6 +3,7 @@
 import datetime as dt
 import re
 import uuid
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -38,9 +39,143 @@ def _now() -> str:
     return dt.datetime.now(dt.UTC).isoformat()
 
 
-def render_html(report: dict[str, Any], mode: str) -> str:
+_MESES_ES = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+]
+
+_DECISION_ES = {
+    "study": "Seguir estudiándola",
+    "prepare": "Preparar oferta",
+    "discard": "Descartarla",
+}
+
+_ANOMALIA_ES = {
+    "possible_justification_required": "Posible necesidad de justificación",
+    "not_flagged_under_assumptions": "No, en este supuesto",
+    "not_applicable": "No aplicable",
+    "unknown": "Sin determinar",
+}
+
+
+def _decimal_or_none(value: object) -> Decimal | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = Decimal(value.strip())
+    except InvalidOperation:
+        return None
+    return parsed if parsed.is_finite() else None
+
+
+def fecha_es(value: object) -> str:
+    """ISO instant -> "26 de octubre de 2026, 00:00 (UTC)". Invalid echoes back."""
+    if not isinstance(value, str):
+        return "sin determinar"
+    text = value.strip().replace("Z", "+00:00")
+    try:
+        moment = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return value
+    if moment.tzinfo is not None:
+        moment = moment.astimezone(dt.UTC)
+        suffix = " (UTC)"
+    else:
+        suffix = ""
+    return (
+        f"{moment.day} de {_MESES_ES[moment.month - 1]} de {moment.year}, "
+        f"{moment.hour:02d}:{moment.minute:02d}{suffix}"
+    )
+
+
+def _agrupar_miles(enteros: str) -> str:
+    negatif = enteros.startswith("-")
+    digitos = enteros[1:] if negatif else enteros
+    grupos = []
+    while len(digitos) > 3:
+        grupos.append(digitos[-3:])
+        digitos = digitos[:-3]
+    grupos.append(digitos)
+    return ("-" if negatif else "") + ".".join(reversed(grupos))
+
+
+def euros_es(value: object) -> str:
+    """Protocol money -> "100.585,60 €", exact. None/invalid -> "sin determinar"."""
+    parsed = _decimal_or_none(value)
+    if parsed is None:
+        return "sin determinar"
+    exact = parsed.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    entero, _, decimal = format(exact, "f").partition(".")
+    return f"{_agrupar_miles(entero)},{decimal} €"
+
+
+def puntos_es(value: object, max_points: object) -> str:
+    """Score -> "49,0 de 49" (1 decimal display). None/invalid -> "sin determinar"."""
+    parsed = _decimal_or_none(value)
+    if parsed is None:
+        return "sin determinar"
+    shown = parsed.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    texto = format(shown, "f").replace(".", ",")
+    maximo = _decimal_or_none(max_points)
+    if maximo is None:
+        return texto
+    enteros = int(maximo.to_integral_value(rounding=ROUND_HALF_UP))
+    return f"{texto} de {enteros}"
+
+
+def margen_es(value: object) -> str:
+    """Sales-margin rate -> "10,5 %" (1 decimal display). None/invalid -> "sin determinar"."""
+    parsed = _decimal_or_none(value)
+    if parsed is None:
+        return "sin determinar"
+    pct = (parsed * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    return f"{format(pct, 'f').replace('.', ',')} %"
+
+
+def decision_es(value: object) -> str:
+    return _DECISION_ES.get(str(value), "Sin determinar")
+
+
+def anomalia_es(value: object) -> str:
+    return _ANOMALIA_ES.get(str(value), str(value))
+
+
+def render_html(report: dict[str, Any], mode: str, doc_names: dict[str, str] | None = None) -> str:
     template = _jinja_env().get_template("report.html.jinja")
-    return template.render(report=report, mode=mode, generated_at=_now())
+    return template.render(
+        report=report,
+        mode=mode,
+        generated_at=_now(),
+        doc_names=doc_names or {},
+        fecha_es=fecha_es,
+        euros_es=euros_es,
+        puntos_es=puntos_es,
+        margen_es=margen_es,
+        decision_es=decision_es,
+        anomalia_es=anomalia_es,
+    )
+
+
+def _document_names(session: Session, scenario: dict[str, Any]) -> dict[str, str]:
+    """Document id -> display name for the report Fuentes block (ids stay fallback)."""
+    context = scenario.get("context", {})
+    tender_id = context.get("tender_id") if isinstance(context, dict) else None
+    if not isinstance(tender_id, str) or not tender_id:
+        return {}
+    rows = session.execute(
+        select(models.Document).where(models.Document.tender_id == tender_id)
+    ).scalars()
+    return {row.id: row.display_name for row in rows}
 
 
 def create_report(session: Session, scenario_id: str, decision: str, note: str) -> dict[str, Any]:
@@ -61,7 +196,10 @@ def create_report(session: Session, scenario_id: str, decision: str, note: str) 
     settings = get_settings()
     html_abs = settings.storage_path / html_rel
     html_abs.parent.mkdir(parents=True, exist_ok=True)
-    html_abs.write_text(render_html(payload, settings.bidlab_mode), encoding="utf-8")
+    names = _document_names(session, scenario)
+    html_abs.write_text(
+        render_html(payload, settings.bidlab_mode, doc_names=names), encoding="utf-8"
+    )
     session.add(
         models.Report(
             id=report_id,

@@ -34,8 +34,11 @@ def money_or_none(cents: int | None) -> str | None:
 def scope_to_dict(scope: models.Scope) -> dict[str, Any]:
     basis = scope.basis_json if isinstance(scope.basis_json, dict) else {}
     period = basis.get("period_months")
-    if scope.lot_key == "__whole__" and isinstance(period, int):
-        label = f"Contrato inicial completo ({period} meses)"
+    if scope.lot_key == "__whole__":
+        if isinstance(period, int):
+            label = f"Contrato inicial completo ({period} meses)"
+        else:
+            label = "Contrato completo"
     else:
         label = scope.lot_key
     return {
