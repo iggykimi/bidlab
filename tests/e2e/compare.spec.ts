@@ -38,6 +38,15 @@ test("CMP-01 two saved scenarios compare with backend deltas", async ({ page }) 
   await expect(result).toContainText(/cede .* de beneficio/);
   // BL-V2-13: los rivales comparados se etiquetan como supuestos.
   await expect(result).toContainText("tus supuestos de rivales, no ofertas reales");
+  // BL-V3 P0-04: el resumen destaca el veredicto del backend con cifras y CTAs.
+  await page.getByRole("tab", { name: "Resumen" }).click();
+  const hero = page.getByTestId("decision-spotlight");
+  await expect(hero).toContainText("CMP base 5");
+  await expect(hero).toContainText("CMP base 15");
+  await expect(hero).toContainText("de 49");
+  await expect(hero.getByRole("link", { name: "Explorar comparación" })).toHaveAttribute("href", /tab=informe/);
+  await expect(hero.getByRole("link", { name: "Ver regla de precio" })).toHaveAttribute("href", /tab=revisar/);
+  await expect(hero.getByRole("link", { name: "Abrir evidencia" })).toHaveAttribute("href", /tab=evidencia/);
   expect(guard.blocked()).toBe(0);
 });
 

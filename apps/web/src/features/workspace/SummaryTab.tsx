@@ -22,6 +22,7 @@ import { nombreImpuesto } from "../../lib/taxKind";
 import { decisionEs } from "../report/ReportTab";
 import { isOwnTender, ownChecklist } from "../review/ownTender";
 import { useWorkspaceDrafts } from "./WorkspaceDrafts";
+import { DecisionSpotlight } from "./DecisionSpotlight";
 import { DecisionTraceBar } from "./DecisionTrail";
 import { JourneySteps } from "./JourneySteps";
 
@@ -148,6 +149,7 @@ export function SummaryTab({ workspace }: Props) {
 
   return (
     <div className="grid gap-4">
+      <DecisionSpotlight workspace={workspace} />
       <DecisionTraceBar workspace={workspace} />
       {own && checklist && (
         <Card aria-label="Tu recorrido" data-testid="recorrido-propio">

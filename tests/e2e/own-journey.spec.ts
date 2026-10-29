@@ -173,6 +173,11 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await expect(trace).toContainText("Última: preparar oferta.");
   // Cada nodo enlaza a su sección real.
   await expect(trace.getByRole("link", { name: "Cálculo" })).toHaveAttribute("href", /tab=precio/);
+  // BL-V3 P0-04: propia con una prueba: pendiente honesto, nunca hero de Tías.
+  const hero = page.getByTestId("decision-spotlight");
+  await expect(hero).toContainText("Guarda dos pruebas para compararlas aquí.");
+  await expect(hero).not.toContainText("Ejemplo preparado");
+  await expect(hero.getByRole("link", { name: "Probar precios" })).toHaveAttribute("href", /tab=precio/);
   // V2 BL-V2-07: cobertura del documento propio subido.
   await openTab(page, "Revisar");
   const coverage = page.getByTestId("coverage-job");
@@ -199,6 +204,11 @@ test("R05 pricing without a company links to Revisar", async ({ page }) => {
   await page.getByRole("link", { name: "Crea tu empresa en Revisar" }).click();
   await expect(page.getByRole("heading", { name: "¿Pides propuestas automáticas?" })).toBeVisible();
   await expect(page.getByText("Esta licitación no tiene documento.")).toBeVisible();
+  // BL-V3 P0-04: propia incompleta sin aprobar: pendiente honesto con paso real.
+  await openTab(page, "Resumen");
+  const hero = page.getByTestId("decision-spotlight");
+  await expect(hero).toContainText("Completa requisitos y costes para comparar.");
+  await expect(hero.getByRole("link", { name: "Revisar fórmula" })).toHaveAttribute("href", /tab=revisar/);
   expect(guard.blocked()).toBe(0);
 });
 

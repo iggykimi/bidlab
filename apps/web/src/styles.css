@@ -1302,6 +1302,39 @@ a[href^="http"]::after {
   font-size: 0.85rem;
 }
 
+/* Decision spotlight (BL-V3 P0-04): verdict first, conditions attached. */
+.spotlight > h2 {
+  font-size: 1.15rem;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+.spotlight-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0.75rem 0 0;
+}
+.spotlight-figures > div {
+  min-width: 0;
+}
+.spotlight-figures dt {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+.spotlight-figures dd {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.spotlight-ctas {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+.spotlight-ctas a {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
 /* Coverage strip (BL-V2-07): every page shown, cited ones stand out. */
 .coverage-strip {
   display: flex;
