@@ -1509,7 +1509,7 @@ el cierre del issue #3.
 Commits main: 04828fb (P0-01/P0-05) + c361ebe (P0-02/P0-03) +
 956dcbe (P0-04) + def2793 (P1-01) + ad69683 (P1-03) +
 66adb86 (P1-02) + 6d6028e (P1-05) + 0ec778d (P1-01 frontera) +
-c179813 (P1-04) + P1-06 docs (guion v5, CHANGELOG_V3, cifras).
+c179813 (P1-04) + f780bb7 (P1-06 docs: guion v5, CHANGELOG_V3, cifras).
 
 Gates @c179813 (exit 0 observado): verify.py ALL CHECKS
 PASSED 10/10 (deps, pytest unit, pytest integ+contratos,

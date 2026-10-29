@@ -4,7 +4,7 @@
 > (preserved byte-identical at [docs/archive/EXECUTIVE_AUDIT_2026-10-26.md](docs/archive/EXECUTIVE_AUDIT_2026-10-26.md)).
 > Start here: [README.md](README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
 
-**Checked:** 2026-10-29 · **Verified code:** `c179813` (V3 `scripts/verify.py` ALL CHECKS PASSED 10/10, exit 0; docs-only P1-06 follows) · **Mode:** local-first demo + opt-in Meta adapter.
+**Checked:** 2026-10-29 · **Verified code:** `c179813` (V3 `scripts/verify.py` ALL CHECKS PASSED 10/10, exit 0; docs P1-06 @f780bb7) · **Mode:** local-first demo + opt-in Meta adapter.
 
 ## Verdict
 
