@@ -1342,3 +1342,43 @@ offline intactos. Desviaciones honestas:
 h2 Discount conserva text-lg (R06),
 tabs movil en fila scroll (no select),
 sin filtros/sort inventados.
+
+## Update-all + UX research (goal-01a18497, 29-oct-2026, Windows)
+
+Commits: da4da97 (deps) + a17bb36 (gitignore) + 19bd55c
+(forms) + 30940aa (progreso) + 5f33605 (feedback). Push OK.
+
+Updates: skill Impeccable 4.5.0→4.8.0; npm majors;
+TS 5.9.3 (TS7 sin soporte typescript-eslint 8.72.1);
+uv lock --upgrade; recharts v3 Tooltip unknown;
+mypy 2.x: 49 errores → 0 (tests + re-export
+MAX_TREE_DEPTH); ruff check/format verdes.
+
+UX (investigación online: NN/g, Laws of UX, Baymard,
+clásicos formularios, material académico/pro; 46
+evidencias + crítica + síntesis; backlog 12 ítems):
+- Formularios: blur valida si engaged, submit enfoca
+  primer error, iconos ⚠︎ + aria-describedby (intake,
+  company, hypotheses, review). 2 E2E nuevos.
+- Progreso: badges reales Precio (N)/Informe (N),
+  requisitos agrupados por criterio (cae Apartado).
+- Feedback: tarjeta anomalía warn cuando flagged
+  (texto intacto), live-region anuncia, puntos
+  aislados con dot (splitFlaggedRuns + 5 vitest),
+  aria cuenta zona sospechosa.
+- Micro-CSS: selection, scrollbar-gutter,
+  touch-action, underline-offset, overscroll,
+  thumb slider 28px. Copy intacto (pins E2E).
+
+Gates finales (exit 0 observado):
+- pytest apps/api: 502 passed + 1 skipped (live
+  opt-in BIDLAB_RUN_LIVE=1). Colectados 503.
+- vitest: 221 passed (216 + 5 curveFlags).
+- ruff check + format --check + mypy 104: OK.
+- tsc --noEmit, eslint, build: OK.
+- E2E completa: 74/74 (72 + 2 intake UX).
+- demo-shots 4/4; docs/demo 01-10 regen;
+  05-requisitos + 02-precio inspeccionadas.
+Capturas /tmp: shot-intake-errors, shot-req-groups,
+shot-step-badges, shot-anomaly-flag, shot-curve-flag.
+Sin Meta en vivo (G3 sigue blocked: sin clave).
