@@ -85,10 +85,13 @@ export function DiscountSection({ state }: Props) {
           value={h.discountPct}
           onChange={(e) => setField("discountPct", Number(e.target.value))}
           className="tnum mt-1 w-full rounded-lg border border-border px-3 py-2 text-base"
+          aria-invalid={fieldErrors.discount !== undefined}
+          aria-describedby={fieldErrors.discount ? "discount-error" : undefined}
         />
       </label>
       {fieldErrors.discount && (
-        <p role="alert" className="mt-2 text-sm text-error">
+        <p role="alert" id="discount-error" className="mt-2 text-sm text-error">
+          <span aria-hidden="true">⚠︎ </span>
           {fieldErrors.discount}
         </p>
       )}
@@ -146,6 +149,7 @@ export function HypothesesForm({ state }: Props) {
         </label>
         {fieldErrors.rivalA && (
           <p role="alert" id="rival-a-error" className="text-sm text-error">
+            <span aria-hidden="true">⚠︎ </span>
             {fieldErrors.rivalA}
           </p>
         )}
@@ -164,6 +168,7 @@ export function HypothesesForm({ state }: Props) {
         </label>
         {fieldErrors.rivalB && (
           <p role="alert" id="rival-b-error" className="text-sm text-error">
+            <span aria-hidden="true">⚠︎ </span>
             {fieldErrors.rivalB}
           </p>
         )}

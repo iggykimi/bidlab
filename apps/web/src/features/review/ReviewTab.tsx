@@ -303,10 +303,12 @@ export function ReviewTab({ workspace }: Props) {
               value={draft.budgetNet}
               onChange={(e) => updateReview({ budgetNet: e.target.value })}
               aria-invalid={touched && budgetError !== null}
+              aria-describedby={touched && budgetError ? "review-budget-error" : undefined}
               className={INPUT_CLASS}
             />
             {touched && budgetError && (
-              <p role="alert" className="mt-1 text-sm text-error">
+              <p id="review-budget-error" role="alert" className="mt-1 text-sm text-error">
+                <span aria-hidden="true">⚠︎ </span>
                 {budgetError}
               </p>
             )}
@@ -324,10 +326,12 @@ export function ReviewTab({ workspace }: Props) {
               value={draft.periodMonths}
               onChange={(e) => updateReview({ periodMonths: e.target.value })}
               aria-invalid={touched && periodError !== null}
+              aria-describedby={touched && periodError ? "review-period-error" : undefined}
               className={INPUT_CLASS}
             />
             {touched && periodError && (
-              <p role="alert" className="mt-1 text-sm text-error">
+              <p id="review-period-error" role="alert" className="mt-1 text-sm text-error">
+                <span aria-hidden="true">⚠︎ </span>
                 {periodError}
               </p>
             )}
@@ -376,10 +380,12 @@ export function ReviewTab({ workspace }: Props) {
                   value={draft.referenceNet}
                   onChange={(e) => updateReview({ referenceNet: e.target.value })}
                   aria-invalid={touched && referenceError !== null}
+                  aria-describedby={touched && referenceError ? "review-reference-net-error" : undefined}
                   className={INPUT_CLASS}
                 />
                 {touched && referenceError && (
-                  <p role="alert" className="mt-1 text-sm text-error">
+                  <p id="review-reference-net-error" role="alert" className="mt-1 text-sm text-error">
+                    <span aria-hidden="true">⚠︎ </span>
                     {referenceError}
                   </p>
                 )}
@@ -419,10 +425,12 @@ export function ReviewTab({ workspace }: Props) {
               value={draft.maxPoints}
               onChange={(e) => updateReview({ maxPoints: e.target.value })}
               aria-invalid={touched && pointsError !== null}
+              aria-describedby={touched && pointsError ? "review-maxpoints-error" : undefined}
               className={INPUT_CLASS}
             />
             {touched && pointsError && (
-              <p role="alert" className="mt-1 text-sm text-error">
+              <p id="review-maxpoints-error" role="alert" className="mt-1 text-sm text-error">
+                <span aria-hidden="true">⚠︎ </span>
                 {pointsError}
               </p>
             )}
@@ -491,10 +499,12 @@ export function ReviewTab({ workspace }: Props) {
               maxLength={2000}
               placeholder="Leí la cláusula de puntos del pliego y…"
               aria-invalid={touched && reasonError !== null}
+              aria-describedby={touched && reasonError ? "review-reason-error" : undefined}
               className={INPUT_CLASS}
             />
             {touched && reasonError && (
-              <p role="alert" className="mt-1 text-sm text-error">
+              <p id="review-reason-error" role="alert" className="mt-1 text-sm text-error">
+                <span aria-hidden="true">⚠︎ </span>
                 {reasonError}
               </p>
             )}

@@ -58,6 +58,7 @@ function Field({
       {children}
       {error && (
         <p id={errorId} role="alert" className="mt-1 text-sm text-error">
+          <span aria-hidden="true">⚠︎ </span>
           {error}
         </p>
       )}
@@ -118,17 +119,57 @@ export function IntakePage() {
   });
   const maxBytes = capsQuery.data?.limits.pdf_bytes ?? null;
 
+  const submittedRef = useRef(false);
+
   function setField<K extends keyof IntakeForm>(field: K, value: IntakeForm[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => (prev[field] === undefined ? prev : { ...prev, [field]: undefined }));
   }
 
+  // Baymard/NN/g: validate on blur once the user engaged (non-empty value
+  // or a previous submit), never on the first keystroke; the live error
+  // clears as soon as the value is fixed (setField above).
+  function handleBlurField(field: keyof IntakeForm) {
+    const raw = form[field];
+    const engaged = submittedRef.current || String(raw ?? "").trim() !== "";
+    if (!engaged) return;
+    const found = validateIntake(form);
+    const message = found[field];
+    setErrors((prev) => {
+      if (message === undefined) {
+        if (prev[field] === undefined) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      }
+      return prev[field] === message ? prev : { ...prev, [field]: message };
+    });
+  }
+
+  const FIELD_IDS: Partial<Record<keyof IntakeForm, string>> = {
+    title: "intake-title",
+    externalId: "intake-external-id",
+    contractingBody: "intake-body",
+    sourceUrl: "intake-source-url",
+    scopeLabel: "intake-scope",
+    pblNet: "intake-pbl-net",
+    pblGross: "intake-pbl-gross",
+    periodMonths: "intake-period",
+  };
+  const FIELD_ORDER = Object.keys(FIELD_IDS) as (keyof IntakeForm)[];
+
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
     if (creatingRef.current) return;
+    submittedRef.current = true;
     const found = validateIntake(form);
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
+    const firstBad = FIELD_ORDER.find((key) => found[key as keyof IntakeErrors] !== undefined);
+    const firstId = firstBad !== undefined ? FIELD_IDS[firstBad] : undefined;
+    if (firstId !== undefined) {
+      document.getElementById(firstId)?.focus();
+      return;
+    }
     creatingRef.current = true;
     setCreating(true);
     setCreateError(null);
@@ -236,6 +277,7 @@ export function IntakePage() {
                   autoComplete="off"
                   value={form.title}
                   onChange={(e) => setField("title", e.target.value)}
+                  onBlur={() => handleBlurField("title")}
                   aria-invalid={errors.title !== undefined}
                   aria-describedby={errors.title ? "intake-title-error" : undefined}
                   className={INPUT_CLASS}
@@ -249,6 +291,7 @@ export function IntakePage() {
                   autoComplete="off"
                   value={form.externalId}
                   onChange={(e) => setField("externalId", e.target.value)}
+                  onBlur={() => handleBlurField("externalId")}
                   aria-invalid={errors.externalId !== undefined}
                   aria-describedby={errors.externalId ? "intake-external-id-error" : undefined}
                   className={INPUT_CLASS}
@@ -262,6 +305,7 @@ export function IntakePage() {
                   autoComplete="off"
                   value={form.contractingBody}
                   onChange={(e) => setField("contractingBody", e.target.value)}
+                  onBlur={() => handleBlurField("contractingBody")}
                   aria-invalid={errors.contractingBody !== undefined}
                   aria-describedby={errors.contractingBody ? "intake-body-error" : undefined}
                   className={INPUT_CLASS}
@@ -277,6 +321,7 @@ export function IntakePage() {
                   placeholder="https://…"
                   value={form.sourceUrl}
                   onChange={(e) => setField("sourceUrl", e.target.value)}
+                  onBlur={() => handleBlurField("sourceUrl")}
                   aria-invalid={errors.sourceUrl !== undefined}
                   aria-describedby={errors.sourceUrl ? "intake-source-url-error" : undefined}
                   className={INPUT_CLASS}
@@ -290,6 +335,7 @@ export function IntakePage() {
                   autoComplete="off"
                   value={form.scopeLabel}
                   onChange={(e) => setField("scopeLabel", e.target.value)}
+                  onBlur={() => handleBlurField("scopeLabel")}
                   aria-invalid={errors.scopeLabel !== undefined}
                   aria-describedby={errors.scopeLabel ? "intake-scope-error" : undefined}
                   className={INPUT_CLASS}
@@ -310,6 +356,7 @@ export function IntakePage() {
                       placeholder="118336,00"
                       value={form.pblNet}
                       onChange={(e) => setField("pblNet", e.target.value)}
+                      onBlur={() => handleBlurField("pblNet")}
                       aria-invalid={errors.pblNet !== undefined}
                       aria-describedby={errors.pblNet ? "intake-pbl-net-error" : undefined}
                       className={INPUT_CLASS}
@@ -325,6 +372,7 @@ export function IntakePage() {
                       placeholder="126619,52"
                       value={form.pblGross}
                       onChange={(e) => setField("pblGross", e.target.value)}
+                      onBlur={() => handleBlurField("pblGross")}
                       aria-invalid={errors.pblGross !== undefined}
                       aria-describedby={errors.pblGross ? "intake-pbl-gross-error" : undefined}
                       className={INPUT_CLASS}
@@ -353,6 +401,7 @@ export function IntakePage() {
                       placeholder="24"
                       value={form.periodMonths}
                       onChange={(e) => setField("periodMonths", e.target.value)}
+                      onBlur={() => handleBlurField("periodMonths")}
                       aria-invalid={errors.periodMonths !== undefined}
                       aria-describedby={errors.periodMonths ? "intake-period-error" : undefined}
                       className={INPUT_CLASS}

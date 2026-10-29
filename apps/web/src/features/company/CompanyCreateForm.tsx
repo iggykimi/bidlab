@@ -36,6 +36,7 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
   const [overhead, setOverhead] = useState("");
   const [period, setPeriod] = useState(initialPeriodMonths);
   const [touched, setTouched] = useState(false);
+  const [blurred, setBlurred] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveRaw, setSaveRaw] = useState<string | null>(null);
@@ -48,10 +49,31 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
   const periodError = parsePeriod(period) === null ? "Escribe los meses como un número entero." : null;
   const valid = nameError === null && directError === null && overheadError === null && periodError === null;
 
+  // Baymard/NN/g: surface a field error on blur once engaged (non-empty
+  // value or a previous submit); live derivation clears it on fix.
+  function blurIfEngaged(field: string, value: string) {
+    if (touched || value.trim() !== "") setBlurred((prev) => ({ ...prev, [field]: true }));
+  }
+  const show = (field: string, error: string | null) =>
+    (touched || blurred[field] === true) && error !== null;
+
+  const FIELD_IDS: [string, string | null][] = [
+    ["company-create-name", nameError],
+    ["company-create-direct", directError],
+    ["company-create-overhead", overheadError],
+    ["company-create-period", periodError],
+  ];
+
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
     setTouched(true);
-    if (!valid || saving) return;
+    if (!valid || saving) {
+      if (!valid) {
+        const firstBad = FIELD_IDS.find(([, error]) => error !== null);
+        if (firstBad) document.getElementById(firstBad[0])?.focus();
+      }
+      return;
+    }
     const months = parsePeriod(period);
     if (!directParsed.ok || !overheadParsed.ok || months === null) return;
     setSaving(true);
@@ -95,11 +117,14 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
             autoComplete="off"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-invalid={touched && nameError !== null}
+            onBlur={() => blurIfEngaged("name", name)}
+            aria-invalid={show("name", nameError)}
+            aria-describedby={show("name", nameError) ? "company-create-name-error" : undefined}
             className={INPUT_CLASS}
           />
-          {touched && nameError && (
-            <p role="alert" className="mt-1 text-sm text-error">
+          {show("name", nameError) && (
+            <p id="company-create-name-error" role="alert" className="mt-1 text-sm text-error">
+              <span aria-hidden="true">⚠︎ </span>
               {nameError}
             </p>
           )}
@@ -117,11 +142,14 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
             placeholder="Como 80000,00"
             value={direct}
             onChange={(e) => setDirect(e.target.value)}
-            aria-invalid={touched && directError !== null}
+            onBlur={() => blurIfEngaged("direct", direct)}
+            aria-invalid={show("direct", directError)}
+            aria-describedby={show("direct", directError) ? "company-create-direct-error" : undefined}
             className={INPUT_CLASS}
           />
-          {touched && directError && (
-            <p role="alert" className="mt-1 text-sm text-error">
+          {show("direct", directError) && (
+            <p id="company-create-direct-error" role="alert" className="mt-1 text-sm text-error">
+              <span aria-hidden="true">⚠︎ </span>
               {directError}
             </p>
           )}
@@ -139,11 +167,14 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
             placeholder="Como 10000,00"
             value={overhead}
             onChange={(e) => setOverhead(e.target.value)}
-            aria-invalid={touched && overheadError !== null}
+            onBlur={() => blurIfEngaged("overhead", overhead)}
+            aria-invalid={show("overhead", overheadError)}
+            aria-describedby={show("overhead", overheadError) ? "company-create-overhead-error" : undefined}
             className={INPUT_CLASS}
           />
-          {touched && overheadError && (
-            <p role="alert" className="mt-1 text-sm text-error">
+          {show("overhead", overheadError) && (
+            <p id="company-create-overhead-error" role="alert" className="mt-1 text-sm text-error">
+              <span aria-hidden="true">⚠︎ </span>
               {overheadError}
             </p>
           )}
@@ -162,11 +193,14 @@ export function CompanyCreateForm({ tenderId, scopeId, initialPeriodMonths, head
             placeholder="24"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            aria-invalid={touched && periodError !== null}
+            onBlur={() => blurIfEngaged("period", period)}
+            aria-invalid={show("period", periodError)}
+            aria-describedby={show("period", periodError) ? "company-create-period-error" : undefined}
             className={INPUT_CLASS}
           />
-          {touched && periodError && (
-            <p role="alert" className="mt-1 text-sm text-error">
+          {show("period", periodError) && (
+            <p id="company-create-period-error" role="alert" className="mt-1 text-sm text-error">
+              <span aria-hidden="true">⚠︎ </span>
               {periodError}
             </p>
           )}

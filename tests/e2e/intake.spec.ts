@@ -47,6 +47,32 @@ test("manual tender without document appears in the library and opens", async ({
   expect(guard.blocked()).toBe(0);
 });
 
+// Intake UX (NN/g + Baymard): blur validates an engaged field without
+// submitting, and untouched empty fields stay quiet.
+test("blur validates an engaged field and spares untouched ones", async ({ page }) => {
+  await installOfflineGuard(page);
+  await page.goto("/");
+  await page.getByTestId("nueva-licitacion").click();
+  await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+
+  await page.getByTestId("intake-source-url").fill("notaurl");
+  await page.getByTestId("intake-source-url").press("Tab");
+  await expect(page.getByText("empiece por https://")).toBeVisible();
+  await expect(page.getByText("Escribe el título de la licitación.")).toBeHidden();
+});
+
+// Intake UX (NN/g + WCAG 3.3.1): an invalid submit focuses the first error.
+test("invalid submit focuses the first field error", async ({ page }) => {
+  await installOfflineGuard(page);
+  await page.goto("/");
+  await page.getByTestId("nueva-licitacion").click();
+  await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+
+  await page.getByTestId("intake-submit").click();
+  await expect(page.getByTestId("intake-title")).toBeFocused();
+  await expect(page.getByText("Escribe el título de la licitación.")).toBeVisible();
+});
+
 // Intake: non-PDF upload shows an explicit error and keeps the tender intact.
 test("non-PDF upload shows an explicit error and keeps the tender", async ({ page }) => {
   const guard = await installOfflineGuard(page);
