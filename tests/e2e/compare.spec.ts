@@ -36,6 +36,8 @@ test("CMP-01 two saved scenarios compare with backend deltas", async ({ page }) 
   await expect(result).toContainText("-11.833,60 €");
   await expect(result).toContainText("+2,6");
   await expect(result).toContainText(/cede .* de beneficio/);
+  // BL-V2-13: los rivales comparados se etiquetan como supuestos.
+  await expect(result).toContainText("tus supuestos de rivales, no ofertas reales");
   expect(guard.blocked()).toBe(0);
 });
 

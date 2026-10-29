@@ -39,6 +39,31 @@ test.describe("E11 desktop 1280x720", () => {
   });
 });
 
+test.describe("V2 narrow 320x568", () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  // BL-V2-14/Q08: el rastro y la tira de cobertura se ajustan sin scroll
+  // horizontal global a 320 px.
+  test("V2 trace bar and coverage strip fit at 320px", async ({ page }) => {
+    const guard = await installOfflineGuard(page);
+    await loadDemo(page);
+    const trace = page.getByTestId("decision-trace");
+    await expect(trace.locator("li")).toHaveCount(5);
+    const overflowResumen = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth
+    );
+    expect(overflowResumen).toBeLessThanOrEqual(1);
+
+    await openTab(page, "Citas");
+    await expect(page.getByTestId("coverage-card")).toBeVisible();
+    const overflowCitas = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth
+    );
+    expect(overflowCitas).toBeLessThanOrEqual(1);
+    expect(guard.blocked()).toBe(0);
+  });
+});
+
 test.describe("E11 mobile 390x844", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

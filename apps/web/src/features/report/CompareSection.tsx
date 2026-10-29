@@ -127,6 +127,9 @@ function CompareResultView({ result, scoreMax }: { result: CompareResult; scoreM
         {result.status === "partial" && "Comparación parcial: revisa los avisos."}
         {result.status === "no_comparable" && "No puedes compararlas como si fueran el mismo caso."}
       </p>
+      <p className="text-xs text-muted">
+        Las pruebas comparan tus supuestos de rivales, no ofertas reales.
+      </p>
       {result.deltas.length > 1 && (
         <fieldset>
           <legend className="text-sm font-semibold">Par destacado en el titular</legend>

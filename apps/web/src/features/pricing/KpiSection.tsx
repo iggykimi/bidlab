@@ -82,7 +82,7 @@ export function KpiSection({ workspace, state }: Props) {
         {resultStale || pending
           ? "Actualizando. Conservamos las cifras del cálculo anterior."
           : result
-          ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}${flagged ? ". Oferta sospechosa" : ""}`
+          ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}${flagged ? ". Zona de aviso: verifica el criterio de baja anormal" : ""}`
           : "Calculando tu resultado…"}
       </span>
       <Card as="div" pad="sm">
