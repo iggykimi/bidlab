@@ -183,14 +183,16 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 `npm run build`, `npm run test:unit`, `ruff check .`,
 `mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
 
-Estado a 29-oct-2026 (contado en este árbol; detalle y comandos
-en [verification-log](docs/verification-log.md)):
+Estado vigente a 29-oct-2026 (contado en este árbol @`132cfb2`; detalle
+y comandos en [verification-log](docs/verification-log.md)):
 
-- Backend: 559 recogidos, 557 en verde + 2 skipped (live opt-in +
-  symlink sin permiso en Windows).
-  Web: 252 en 33 ficheros (`npm run test:unit`, verde).
-  E2E: 85 tests herméticos (Chromium, loopback).
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@264712f, 29-oct).
+- Backend: 589 recogidos, 588 en verde + 1 skipped (symlink sin
+  permiso en Windows).
+  Web: 260 en 33 ficheros (`npm run test:unit`, verde).
+  E2E: 98 tests herméticos (Chromium, loopback, incl. qa-visual/axe).
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0.
+- Histórico V2 (@`264712f`, 29-oct): backend 557 + 2 skipped, web 252,
+  E2E 85. Ver [QA V2](docs/QA_REPORT_V2.md).
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
@@ -217,11 +219,23 @@ en [verification-log](docs/verification-log.md)):
 ## Configuración
 
 Sin `.env`, el arranque usa: modo `demo`, bind `127.0.0.1:8000`,
-storage `./storage`, historial desactivado. Para live con Meta, copiar
-[.env.example](.env.example) a `.env` (gitignored, nunca commitear) y
-definir `BIDLAB_MODE=live` + `MODEL_API_KEY`. Clave presente en modo
-demo no activa live (`live_ready` exige ambas). `META_API_KEY`
-pertenece al entorno del CLI de Muse, no a la app.
+storage `./storage`, historial desactivado. Para live con Meta hacen
+falta TRES condiciones (`Settings.live_ready`): `BIDLAB_MODE=live` +
+`MODEL_API_KEY` no vacía + `META_API_URL` en el entorno del proceso
+(el adaptador no la lee de `.env`). Ejemplo reproducible:
+
+```powershell
+# 1. Copiar [.env.example](.env.example) a `.env` (gitignored) y definir:
+#    BIDLAB_MODE=live
+#    MODEL_API_KEY=<tu clave, introducida por ti>
+# 2. En la consola que arranca la API:
+$env:META_API_URL = 'https://api.meta.ai/v1/chat/completions'
+python scripts/dev.py
+# 3. Comprobar: GET /api/v1/capabilities -> mode=live, meta_configured=true
+```
+
+Clave presente en modo demo no activa live. `META_API_KEY` pertenece
+al entorno del CLI de Muse, no a la app.
 
 | Variable | Defecto | Efecto |
 |---|---|---|
@@ -231,7 +245,7 @@ pertenece al entorno del CLI de Muse, no a la app.
 | `BIDLAB_HISTORY_ENABLED` | `false` | histórico P1 desactivado |
 | `BIDLAB_META_BUDGET_USD` | `20.00` | presupuesto de admisión y reservas Meta |
 | `META_MODEL` | `muse-spark-1.3` | modelo de extracción |
-| `MODEL_API_KEY` | vacío | live solo si modo=live y clave |
+| `MODEL_API_KEY` | vacío | live solo si modo=live + clave + `META_API_URL` en proceso |
 
 ## Límites
 
@@ -244,7 +258,9 @@ pertenece al entorno del CLI de Muse, no a la app.
 - `unknown` se representa con `null`, nunca cero; regla o scope
   pendientes bloquean puntos; la anormalidad es presunción, no
   exclusión automática.
-- Sin Meta en vivo en el frontal (solo smoke backend); empresa y
+- Flujo live implementado en el frontal (consentimiento + clave +
+  presupuesto), pero extracción real aún no verificada: 0 llamadas
+  live (ver [evidencia V3](docs/META_EVIDENCE_V3.md)). Empresa y
   rivales sintéticos; sin predicción.
 - Histórico descriptivo P1 aparcado salvo P0 sólido + tiempo.
 

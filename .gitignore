@@ -8,6 +8,7 @@ node_modules/
 dist/
 storage/
 evidence/originals/
+evidence/private/
 playwright-report/
 test-results/
 test-results-final*/

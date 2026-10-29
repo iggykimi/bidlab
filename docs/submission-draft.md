@@ -8,11 +8,11 @@ Status: DRAFT. NOT SENT. Do NOT publish or send. The author reviews every field 
 
 A small supplier reads a real tender. They check what each requirement asks. They compare what each discount costs in profit and gains in points. They keep the decision with its sources.
 
-## Hook (conditional)
+## Hook (current 10/15, verified)
 
-Verified hook (use this one). A 15 % discount reaches 49.0000 price points. But it keeps 11,833.60 EUR less profit than 5 % (10,585.60 vs 22,419.20). Is the deeper discount worth it? Profits: `fixtures/demo/expected.json`. Points: E2E E03 (`tests/e2e/e03-e06-pricing.spec.ts`).
+"Would you give up 5,916.80 EUR for the same price score?" The 10 % case scores 49/49 at 106,502.40 EUR price and 16,502.40 EUR profit under stated synthetic hypotheses (cost 90,000 EUR, rivals as seeded); 15 % scores 49/49 with 10,585.60 EUR profit. Sources: `apps/api/tests/integration/test_compare.py` golden + `tests/e2e/compare.spec.ts` CMP-02. Always paired with the synthetic-hypotheses label.
 
-Verified hook (repo-side, 27-oct). "Would you give up 5,916.80 EUR for the same price score?" The 10 % case scores 49/49 at 106,502.40 EUR price and 16,502.40 EUR profit under stated synthetic hypotheses (cost 90,000 EUR, rivals as seeded). Sources: `apps/api/tests/integration/test_compare.py` golden + `tests/e2e/compare.spec.ts` CMP-02. Always paired with the synthetic-hypotheses label.
+Older verified variant (5 % vs 15 %, 11,833.60 EUR gap): `fixtures/demo/expected.json` + E03. Use the 10/15 hook unless the form needs the 5 % case.
 
 ## Title
 
@@ -41,18 +41,19 @@ document extraction below:
 - Model: muse-spark-1.3.
 - Real evidence: `evidence/meta_smoke_status.json` — status PASS, HTTP 200, executed_inference true, checked 2026-10-26T19:05:43Z, usage 14 prompt + 236 completion tokens (222 reasoning, 0 cached), 250 total, 1647 ms, provider_request_id da5dbf70-cf11-436d-910a-e3140e4caa8b.
 
-Current document-extraction state (28-oct):
+Current document-extraction state (29-oct, V5 @`132cfb2`):
 - Backend analysis pipeline is real (POST /analysis → 202 job → worker → verified citations; `tests/e2e/` reload spec + `analysisJobStore` rehydrate). It returns honest 503 provider_not_configured without a key. Unit and integration tests cover it with an explicitly labelled offline stub (fixture_stub).
 - Invocation receipts are real data when they run (mode fixture/live, tokens, cost, latency, provider_request_id on Job; PKG-T01/T09). Demo runs show mode fixture with null live tokens — never presented as live.
-- NOT claimed: live document extraction in the demo UI is pending (G3 partial: smoke green, no key, zero live extraction calls). The demo seed is manually curated and labelled "Demo curada".
+- The opt-in live flow exists in the UI (consent names Meta Model API + partial coverage; `AnalysisTracker.tsx`), and a strict offline preflight validates the real Pydantic schema before any payload is built. A 12-case synthetic adversarial corpus (`examples/meta_eval_synthetic/`) is ready with a strict scorecard; generation stands at 0/12 BLOCKED (no key/consent/budget, zero live calls). See `docs/META_EVIDENCE_V3.md`.
+- NOT claimed: live document extraction is pending. The demo seed is manually curated and labelled "Datos de ejemplo".
 - Measured comparison (PKG-T11, `evidence/extraction_comparison.json`): same 11 eval claims / 4 held-out expedientes, same schema. Text (offline fixture): 0 hit / 0 miss / 11 unsupported, 0 critical errors, p50 0.004 ms, cost 0 micro-USD + fixture reason, tokens null. Hybrid: blocked (G3, `provider_not_configured`), all metrics null, zero live calls. No advantage attributed to either mode; n=11 published with limitations, no savings invented.
 
 ## Verification (real runs, Windows)
 
-- Backend: 557 passing + 2 skipped (live opt-in + Windows symlink), 559 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @264712f. Ruff check + format clean, mypy 111 files clean, observed 29-oct.
-- Web: 252 vitest passing (33 files), eslint + tsc exit 0, vite build OK, observed 29-oct @264712f. Novedades V2: rastro Fuente→Decisión, cobertura honesta, frontera Pareto, mapa de stress, bandeja con contadores, informe con descargo, bench de intake.
-- Playwright E2E: 85/85 green (hermetic per-run storage), observed 29-oct @264712f. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @264712f. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
+- Backend: 588 passing + 1 skipped (Windows symlink), 589 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @132cfb2. Ruff check + format clean, mypy clean, observed 29-oct.
+- Web: 260 vitest passing (33 files), eslint + tsc exit 0, vite build OK, observed 29-oct @132cfb2. Since V2: Fuente→Decisión trail, honest coverage, Pareto frontier, stress map, tray counters, report disclaimer, intake bench (V2); V3 visuals; V5 Meta close (preflight, corpus, honest copy).
+- Playwright E2E: 98/98 green (hermetic per-run storage, incl. qa-visual/axe 6/6), observed 29-oct @132cfb2 and in a clean clone @5a5ee35. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @132cfb2. Historical V2 figures (557/252/85 @264712f) stay in `docs/QA_REPORT_V2.md`.
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2 (26-oct); current pushes not forced through CI per author order.
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
@@ -88,6 +89,7 @@ Current document-extraction state (28-oct):
 - Extraction quality: human gold + dev/eval split (PKG-T10, n=11 eval) + measured text-vs-hybrid (PKG-T11): text 0/0/11 with 0 critical errors, hybrid blocked with nulls. No quality advantage or savings figure is claimed.
 - Usability: protocol ready, 0 sessions (author recruits, incl. low-digital-fluency + senior profiles).
 - Original PDFs are research copies, not redistributed (publication-manifest flags). The report embeds citations and links, not full private documents.
+- No `LICENSE` file yet (owner decides before distribution); PyMuPDF page-render dependency is AGPL/commercial dual-licensed — distribution decision pending with the owner (see ARCHITECTURE note A04).
 - Unnarrated real footage recorded 28-oct (`docs/demo/footage-oro-20261028.webm`, gold flow). Narrated ≤180 s video pending author. Duration, language, and format per official rules (NC).
 
 ## Links

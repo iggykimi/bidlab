@@ -1,4 +1,4 @@
-# BidLab · Runbook demo V2 (única secuencia vigente)
+# BidLab · Runbook demo V2 (histórico @264712f; secuencia válida, cifras V2)
 
 Fecha: 2026-10-29. HEAD código: `264712f`. Estado: curado (modo B §18.4):
 «Demostración reproducible · datos revisados». Cero llamadas Meta.
@@ -28,7 +28,8 @@ y los E2E usan almacenamientos temporales y no tocan la tuya.
 
 ## Verificación de cifras (antes de grabar)
 
-1. `python scripts/verify.py` → exit 0 (puertas 10/10, E2E 85/85).
+1. `python scripts/verify.py` → exit 0 (puertas 10/10; E2E 85/85 en V2,
+   98/98 en V5 — ver [verification-log](verification-log.md) §V5).
 2. Caso oro: rebaja 10 % → 106.502,40 € / +16.502,40 € / 49,0 de 49;
    rebaja 15 % → 100.585,60 € / +10.585,60 € / 49,0 de 49;
    delta +5.916,80 € (CMP-02).

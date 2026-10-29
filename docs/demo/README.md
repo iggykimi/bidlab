@@ -31,6 +31,13 @@ El estado pre-V3 se conserva en [v3-before/](v3-before/)
 ![Resumen](01-resumen.png)
 ![Precio](02-precio.png)
 
+Capturas V5 jurado (29-oct-2026, offline, con SHA en
+[FINAL_HEAD_VALIDATION](../FINAL_HEAD_VALIDATION.md)): 2 UI
+([u1](../../evidence/jury/u1-expert-state.png),
+[u2](../../evidence/jury/u2-compare-10v15.png)) + 4 renders del corpus
+sintético (S04/S07/S08/S12 en [evidence/jury/](../../evidence/jury/)).
+Ninguna finge una extracción Meta live.
+
 ## Matriz V3 (§8): 8 escenas × 5 anchos
 
 Capturada el 29-oct-2026 con

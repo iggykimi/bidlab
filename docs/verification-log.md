@@ -1594,3 +1594,30 @@ cifras V5 en README/EN/guia/audit/demo. OPT-01 DESCARTADO con
 motivo; S14 sin cambios invasivos (0.0.0.0 ausente, loopback ok).
 Clon limpio @5a5ee35: uv sync/npm ci/chromium exit 0 + verify.py
 ALL CHECKS PASSED 10/10 (vitest 260/33, E2E 98/98), exit 0.
+## V6 issue #6 baseline (29-oct-2026, Windows, lead)
+
+HEAD: 132cfb22a22f3b84de63dea2fc3cd15e7a515a0f (main, limpio).
+El issue suponia 5a5ee35; el HEAD real va un commit por delante
+(132cfb2: SHAs freeze + adenda auditoria V5, solo docs).
+Issue #6: BIDLAB_ISSUE_CIERRE_FINAL_META_2026.md (343 lineas,
+SS0-12 + referencias), leido entero antes de actuar.
+
+Baseline (instalacion limpia sobre HEAD, sin editar):
+uv sync --frozen --all-packages exit 0; npm ci exit 0;
+npx playwright install chromium exit 0;
+python scripts/verify.py exit 0 ALL CHECKS PASSED 10/10
+(backend 588 passed + 1 skipped symlink; vitest 260/33;
+E2E 98/98; ruff/mypy/eslint/tsc/build exit 0);
+uv run python scripts/demo_story.py --output
+test-results/final-demo-story exit 0 (4 escenarios + 4
+informes + comparacion + RESUMEN.json).
+Entorno: Python 3.14.7, uv 0.12.5, Node v26.3.0, npm 12.0.2,
+Playwright 1.64.1 (Chromium).
+
+Lecturas S1 completas: AGENTS.md, ARCHITECTURE (CURRENT
+IMPLEMENTATION), RULE_ENGINE.md, DECISION_LOG_V3.md,
+META_EVIDENCE_V3.md, README.md, README_EN.md,
+demo-script-180s.md, submission-draft.md.
+Guard reset verificado en codigo: seed_demo.py rechaza
+--reset fuera de BIDLAB_MODE=demo (exit 2); demo_story.py
+usa TemporaryDirectory (no toca storage real).
