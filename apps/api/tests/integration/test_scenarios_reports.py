@@ -222,6 +222,21 @@ def test_report_template_translates_statuses(score_status: str, expected: str) -
     assert "missing" not in html
 
 
+def test_report_template_v2_honesty() -> None:
+    """BL-V2-15: nulls never render as dashes/zeros, mode always labeled."""
+    html = reports_service.render_html(_unfinished_report("unknown"), "manual")
+    assert "sin determinar" in html
+    assert ">—<" not in html
+    assert ">— €" not in html
+    assert "Tus datos" in html
+    assert "Tu nota de decisión" in html
+    assert "ni predice la adjudicación" in html
+    live = reports_service.render_html(_unfinished_report("unknown"), "live")
+    assert "Análisis en vivo" in live
+    demo = reports_service.render_html(_unfinished_report("unknown"), "demo")
+    assert "no extracción en vivo" in demo
+
+
 def test_report_html_path_roundtrip(seeded_client: TestClient) -> None:
     res = seeded_client.post(
         "/api/v1/scenarios", json={"name": "Base 5%", "input": _input()}, headers=HEADERS

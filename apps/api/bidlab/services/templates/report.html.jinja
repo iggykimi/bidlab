@@ -8,6 +8,9 @@
   body { font-family: system-ui, sans-serif; color: #172033; max-width: 70ch; margin: 2rem auto; padding: 0 1rem; }
   .badge { display: inline-block; padding: .2rem .6rem; border-radius: .4rem; font-size: .85rem; }
   .demo { background: #fff4d6; border: 1px solid #9a5b00; }
+  .live { background: #e8efff; border: 1px solid #3159d9; }
+  .manual { background: #edf7f1; border: 1px solid #176046; }
+  .disclaimer { font-size: .85rem; color: #4c5d73; border-top: 1px solid #c9d2e8; padding-top: 1rem; }
   .decision { background: #e8efff; border: 1px solid #3159d9; }
   table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
   th, td { border: 1px solid #c9d2e8; padding: .4rem .6rem; text-align: left; }
@@ -20,7 +23,7 @@
 <body>
 {% set ES = {"unknown": "sin determinar", "unsupported": "no soportada", "not_applicable": "no aplicable"} %}
 {% set MATCH_ES = {"exact": "literal", "normalized_match": "coincidencia normalizada", "missing": "no localizada", "manual_visual": "localizada a mano"} %}
-{% if mode == "demo" %}<p><span class="badge demo">Demo curada: cifras de semilla revisada, no extracción en vivo</span></p>{% endif %}
+{% if mode == "demo" %}<p><span class="badge demo">Demo curada: cifras de semilla revisada, no extracción en vivo</span></p>{% elif mode == "live" %}<p><span class="badge live">Análisis en vivo</span></p>{% else %}<p><span class="badge manual">Tus datos</span></p>{% endif %}
 <h1>Informe de decisión — {{ report.scenario.context.tender_title }}</h1>
 <p><span class="badge decision">{{ report.decision }}</span></p>
 <p>Escenario <strong>{{ report.scenario.name }}</strong> · {{ report.created_at }}</p>
@@ -30,15 +33,15 @@
 <table>
 <tr><th>Concepto</th><th class="num">Valor</th></tr>
 <tr><td>Precio neto</td><td class="num">{{ report.scenario.result.price_net }} €</td></tr>
-<tr><td>Coste neto</td><td class="num">{{ report.scenario.result.cost_net or "—" }} €</td></tr>
-<tr><td>Beneficio</td><td class="num">{{ report.scenario.result.profit_net or "—" }} €</td></tr>
-<tr><td>Margen</td><td class="num">{{ report.scenario.result.margin_rate or "—" }}</td></tr>
+<tr><td>Coste neto</td><td class="num">{{ report.scenario.result.cost_net if report.scenario.result.cost_net is not none else "sin determinar" }} €</td></tr>
+<tr><td>Beneficio</td><td class="num">{{ report.scenario.result.profit_net if report.scenario.result.profit_net is not none else "sin determinar" }} €</td></tr>
+<tr><td>Margen</td><td class="num">{{ report.scenario.result.margin_rate if report.scenario.result.margin_rate is not none else "sin determinar" }}</td></tr>
 <tr><td>Puntuación</td><td class="num">{{ report.scenario.result.score.value or ES.get(report.scenario.result.score.status, report.scenario.result.score.status) }}</td></tr>
 <tr><td>Anormalidad</td><td class="num">{{ ES.get(report.scenario.result.anomaly.status, report.scenario.result.anomaly.status) }}</td></tr>
 </table>
 
-<h2>Nota de decisión</h2>
-<p>{{ report.note }}</p>
+<h2>Tu nota de decisión</h2>
+<p>{{ report.note if report.note else "Sin nota." }}</p>
 
 <h2>Detalle del cálculo</h2>
 <table>
@@ -76,5 +79,6 @@
 
 <h2>Integridad</h2>
 <p>Instantánea (snapshot) <code>{{ report.scenario.snapshot_sha256 }}</code> · motor {{ report.scenario.result.engine_version }} · generado {{ generated_at }}</p>
+<p class="disclaimer">Simulación económica basada en los supuestos declarados. No es asesoramiento jurídico ni predice la adjudicación.</p>
 </body>
 </html>
