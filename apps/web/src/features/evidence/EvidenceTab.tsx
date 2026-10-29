@@ -22,18 +22,21 @@ function lineaDocumento(kind: string, pages: number): string {
 
 /**
  * Dónde ha mirado la revisión (BL-V2-07). Cuenta citas y páginas distintas
- * por documento desde el workspace; no inventa cobertura.
+ * por documento desde el workspace; no inventa cobertura. La tarjeta
+ * gemela de Revisar añade lo enviado al modelo cuando hay un trabajo.
  */
 function CoverageCard({ workspace }: Props) {
   const lines = workspace.documents.map((doc) => {
     const cites = workspace.citations.filter((c) => c.document_id === doc.id);
-    const pages = new Set(cites.map((c) => c.page_number));
-    return { doc, cites: cites.length, pages: pages.size };
+    const pages = [...new Set(cites.map((c) => c.page_number))].sort((a, b) => a - b);
+    return { doc, cites: cites.length, pages };
   });
   const totalCites = lines.reduce((n, line) => n + line.cites, 0);
+  const own = workspace.tender.source_id === workspace.tender.id;
   return (
     <section aria-label="Cobertura de la revisión" data-testid="coverage-card">
       <h2 className="font-semibold">Dónde hemos mirado</h2>
+      {!own && <p className="mt-1 text-sm">Esta es una demostración curada.</p>}
       <p className="mt-1 text-sm text-muted">
         {totalCites === 0
           ? "Aún no hay citas: nada revisado todavía."
@@ -42,11 +45,22 @@ function CoverageCard({ workspace }: Props) {
       <ul className="mt-2 grid gap-1 text-sm">
         {lines.map(({ doc, cites, pages }) => (
           <li key={doc.id}>
-            {doc.display_name}: {cites} {cites === 1 ? "cita" : "citas"} en {pages}{" "}
-            {pages === 1 ? "página" : "páginas"} de {doc.pages_count}.
+            {doc.display_name}: {cites} {cites === 1 ? "cita" : "citas"} en {pages.length}{" "}
+            {pages.length === 1 ? "página" : "páginas"} de {doc.pages_count}.
+            {pages.length > 0 && ` Páginas: ${pages.join(", ")}.`}
           </li>
         ))}
       </ul>
+      {workspace.documents.length > 0 && (
+        <>
+          <p className="mt-2 text-sm">
+            Este análisis ha priorizado algunas páginas. No sustituye una revisión integral.
+          </p>
+          <p className="mt-1 text-sm">
+            Cómo completar la revisión: abre el PDF original y coteja cada requisito a mano.
+          </p>
+        </>
+      )}
     </section>
   );
 }

@@ -173,6 +173,12 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await expect(trace).toContainText("Última: preparar oferta.");
   // Cada nodo enlaza a su sección real.
   await expect(trace.getByRole("link", { name: "Cálculo" })).toHaveAttribute("href", /tab=precio/);
+  // V2 BL-V2-07: cobertura del documento propio subido.
+  await openTab(page, "Revisar");
+  const coverage = page.getByTestId("coverage-job");
+  await expect(coverage).toContainText("pliego.pdf");
+  await expect(coverage).toContainText("2 páginas");
+  await expect(coverage).toContainText("No sustituye una revisión integral.");
   expect(guard.blocked()).toBe(0);
 });
 

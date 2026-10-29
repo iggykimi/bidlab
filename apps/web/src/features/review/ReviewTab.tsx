@@ -23,6 +23,7 @@ import { loadSession } from "../../lib/session";
 import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { AnalysisTracker } from "./AnalysisTracker";
+import { CoverageCard } from "./CoverageCard";
 import { ProposalClaims } from "./ProposalClaims";
 import { canConfirmClaim } from "./claimHelpers";
 import { RadarSection } from "./RadarSection";
@@ -248,6 +249,8 @@ export function ReviewTab({ workspace }: Props) {
       )}
 
       <AnalysisTracker key={tender.id} workspace={workspace} />
+
+      <CoverageCard workspace={workspace} />
 
       <ProposalClaims
         workspace={workspace}

@@ -41,6 +41,22 @@ test("trace bar shows true demo states with real links", async ({ page }) => {
   expect(guard.blocked()).toBe(0);
 });
 
+// V2 BL-V2-07: cobertura honesta en demo curada, sin porcentajes inventados.
+test("coverage card shows curated pages without fake claims", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  await page.getByRole("tab", { name: "Citas" }).click();
+  const card = page.getByTestId("coverage-card");
+  await expect(card).toBeVisible();
+  await expect(card).toContainText("Esta es una demostración curada.");
+  await expect(card).toContainText("9 citas en total");
+  await expect(card).toContainText("6 páginas de 41");
+  await expect(card).toContainText("Páginas:");
+  await expect(card).toContainText("No sustituye una revisión integral.");
+  await expect(card).not.toContainText("100");
+  expect(guard.blocked()).toBe(0);
+});
+
 // E02: abrir requisito técnico -> por verificar; drawer en página 6 de 41 con la cita.
 test("E02 technical requirement is unknown with page 6 of 41 evidence", async ({ page }) => {
   const guard = await installOfflineGuard(page);
