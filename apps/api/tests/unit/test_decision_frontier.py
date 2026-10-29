@@ -33,6 +33,44 @@ def test_dominated_pair_names_dominator() -> None:
     assert "Baja 10%" in by_id["b"].motivo
 
 
+def test_dominated_equal_score_names_same_points() -> None:
+    verdicts = classify(
+        [
+            _candidate("a", "Baja 10%", "16502.40", "49.000000000000"),
+            _candidate("b", "Baja 15%", "10585.60", "49.000000000000"),
+        ]
+    )
+    by_id = {v.scenario_id: v for v in verdicts}
+    assert by_id["b"].verdict == "dominada"
+    assert "mismos puntos" in by_id["b"].motivo
+    assert "menos puntos" not in by_id["b"].motivo
+
+
+def test_dominated_equal_profit_names_same_profit() -> None:
+    verdicts = classify(
+        [
+            _candidate("a", "Alta", "100.00", "40.000000000000"),
+            _candidate("b", "Baja", "100.00", "30.000000000000"),
+        ]
+    )
+    by_id = {v.scenario_id: v for v in verdicts}
+    assert by_id["b"].verdict == "dominada"
+    assert "mismo beneficio" in by_id["b"].motivo
+    assert "menos beneficio" not in by_id["b"].motivo
+
+
+def test_dominated_both_strict_names_both() -> None:
+    verdicts = classify(
+        [
+            _candidate("a", "Alta", "200.00", "40.000000000000"),
+            _candidate("b", "Baja", "100.00", "30.000000000000"),
+        ]
+    )
+    by_id = {v.scenario_id: v for v in verdicts}
+    assert by_id["b"].verdict == "dominada"
+    assert "menos beneficio y menos puntos" in by_id["b"].motivo
+
+
 def test_ties_all_stay_on_frontier() -> None:
     verdicts = classify(
         [

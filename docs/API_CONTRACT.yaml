@@ -1718,8 +1718,8 @@ paths:
                     - scenario_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1d
                       name: Baja 15%
                       verdict: dominada
-                      motivo: '«Baja 15%» queda dominada por «Baja 10%»: menos beneficio
-                        y puntos en este caso.'
+                      motivo: '«Baja 15%» queda dominada por «Baja 10%»: menos beneficio,
+                        con los mismos puntos, en este caso.'
                       profit_net: '10585.60'
                       score_value: '49.000000000000'
                       anomaly_status: not_flagged_under_assumptions

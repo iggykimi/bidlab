@@ -177,5 +177,7 @@ test("CMP-05 frontier puts 10 ahead of 15 with backend motivos", async ({ page }
   await expect(frontier).toBeVisible();
   await expect(frontier).toContainText("«CMP front 10» está en la frontera");
   await expect(frontier).toContainText("«CMP front 15» queda dominada");
+  // BL-V3 P1-01: equal points are named as equal, never as less.
+  await expect(frontier).toContainText("con los mismos puntos");
   expect(guard.blocked()).toBe(0);
 });

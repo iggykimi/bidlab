@@ -55,6 +55,29 @@ def _dominates(a_profit: str, a_score: str, b_profit: str, b_score: str) -> bool
     )
 
 
+def _dominada(candidate: FrontierCandidate, dominator: FrontierCandidate) -> str:
+    """Dominated sentence naming only the strictly-worse dimensions.
+
+    Mirrors compare._supera (J4 F1) from the loser's side: equal
+    dimensions are named as equal, never as less (BL-V3 P1-01).
+    Both entries passed the comparable filter, so figures are present.
+    """
+    with MO.arithmetic():
+        profit_d = MO.parse_decimal(str(dominator.profit_net), field="profit_net")
+        profit_c = MO.parse_decimal(str(candidate.profit_net), field="profit_net")
+        score_d = MO.parse_decimal(str(dominator.score_value), field="score")
+        score_c = MO.parse_decimal(str(candidate.score_value), field="score")
+    less_profit = profit_c < profit_d
+    less_score = score_c < score_d
+    if less_profit and less_score:
+        dims = "menos beneficio y menos puntos"
+    elif less_profit:
+        dims = "menos beneficio, con los mismos puntos,"
+    else:
+        dims = "menos puntos, con el mismo beneficio,"
+    return f"«{candidate.name}» queda dominada por «{dominator.name}»: {dims} en este caso."
+
+
 def _missing_dims(candidate: FrontierCandidate) -> str:
     missing: list[str] = []
     if candidate.profit_net is None:
@@ -147,10 +170,7 @@ def classify(candidates: list[FrontierCandidate]) -> list[FrontierVerdict]:
                     scenario_id=candidate.scenario_id,
                     name=candidate.name,
                     verdict="dominada",
-                    motivo=(
-                        f"«{candidate.name}» queda dominada por «{dominator.name}»: "
-                        "menos beneficio y puntos en este caso."
-                    ),
+                    motivo=_dominada(candidate, dominator),
                     profit_net=candidate.profit_net,
                     score_value=candidate.score_value,
                     anomaly_status=candidate.anomaly_status,
