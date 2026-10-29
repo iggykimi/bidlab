@@ -64,8 +64,9 @@ export function DecisionFrontier({ scenarioIds }: { scenarioIds: string[] }) {
     <Card aria-label="Frontera de decisión">
       <h2>¿Cuál resiste la comparación?</h2>
       <p className="mt-1 text-sm text-muted">
-        Una prueba está en la frontera cuando ninguna otra la supera en beneficio y puntos a
-        la vez. Mismo contexto que la comparación de arriba.
+        Una prueba está en la frontera si ninguna otra iguala o supera sus puntos
+        y beneficio y mejora al menos uno de los dos. Solo se comparan pruebas
+        del mismo contexto.
       </p>
       {frontierQuery.isPending && (
         <p className="mt-2 text-sm" role="status">

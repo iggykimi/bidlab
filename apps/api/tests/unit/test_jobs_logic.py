@@ -1,6 +1,7 @@
 """T15/T17 service logic: citation verification, budget guard, restarts."""
 
 import datetime as dt
+import hashlib
 from collections.abc import Iterator, Sequence
 from typing import Any, cast
 
@@ -431,6 +432,143 @@ def test_job_to_dict_exposes_latest_invocation(session: Session) -> None:
     assert parsed.invocation_id is not None
     assert parsed.invocation_id.root == "inv-job-test-1-a2"
     session.rollback()
+
+
+def _doc_row(pages_count: int = 8, doc_id: str = "d1") -> models.Document:
+    return models.Document(
+        id=doc_id,
+        tender_id="t1",
+        kind="pcap",
+        sha256=hashlib.sha256(doc_id.encode()).hexdigest(),
+        blob_path="",
+        display_name="doc",
+        pages_count=pages_count,
+        source_url=None,
+        rights_status="user_supplied",
+        parse_status="parsed",
+    )
+
+
+def _publish_fixtures(
+    session: Session, *, live: bool, pages: int, empty_text: bool = False, tag: str = ""
+) -> tuple[models.Job, jobs_service.AttemptClaim, jobs_service.AttemptOutcome, meta_adapter.AdapterResult]:
+    job_id = f"job-test-1{tag}"
+    doc_id = f"d1{tag}"
+    row = _job_row("queued")
+    row.id = job_id
+    session.add(row)
+    session.add(_doc_row(doc_id=doc_id))
+    session.commit()
+    job = session.get(models.Job, job_id)
+    assert job is not None
+    claim = jobs_service.AttemptClaim(
+        job_id=job_id,
+        attempt=1,
+        generation=1,
+        tender_id="t1",
+        mode="live" if live else "curated_demo",
+        doc_ids=(doc_id,),
+        worker_id="w1",
+    )
+    inputs = tuple(
+        meta_adapter.PageInput(
+            document_id=doc_id,
+            page_number=n,
+            normalized_text="" if empty_text else f"texto extraido pagina {n}",
+        )
+        for n in range(1, pages + 1)
+    )
+    outcome = jobs_service.AttemptOutcome(
+        inputs=inputs,
+        input_hash="ab" * 32,
+        run_started=dt.datetime.now(dt.UTC).isoformat(),
+        live=live,
+        coverage={},
+    )
+    result = meta_adapter.AdapterResult(
+        proposal=_proposal([]),
+        warnings=(),
+        mode="live" if live else "fixture",
+        model="muse-spark" if live else None,
+        prompt_tokens=None,
+        completion_tokens=None,
+        cached_tokens=None,
+        provider_request_id=None,
+        estimated_cost_usd=None,
+        latency_ms=0,
+        status="ok",
+    )
+    return job, claim, outcome, result
+
+
+def _publish_warnings(session: Session, job_id: str = "job-test-1") -> tuple[list[str], models.Job]:
+    job = session.get(models.Job, job_id)
+    assert job is not None
+    request = job.request_json
+    assert isinstance(request, dict)
+    warnings = request.get("warnings", [])
+    assert isinstance(warnings, list)
+    return [str(w) for w in warnings], job
+
+
+def test_publish_partial_live_warns_submitted_to_meta(session: Session) -> None:
+    job, claim, outcome, result = _publish_fixtures(session, live=True, pages=6)
+    jobs_service._publish_success(session, job, claim, outcome, result)
+    warnings, published = _publish_warnings(session)
+    assert published.status == "needs_review"
+    assert "document d1: 6 of 8 pages submitted to Meta (partial coverage)" in warnings
+
+
+def test_publish_partial_fixture_warns_local_records(session: Session) -> None:
+    job, claim, outcome, result = _publish_fixtures(session, live=False, pages=6)
+    jobs_service._publish_success(session, job, claim, outcome, result)
+    warnings, published = _publish_warnings(session)
+    assert published.status == "needs_review"
+    assert "document d1: 6 of 8 page records available for local extraction" in warnings
+    assert not any("Meta" in w for w in warnings)
+
+
+def test_publish_live_image_only_never_claims_text(session: Session) -> None:
+    job, claim, outcome, result = _publish_fixtures(session, live=True, pages=6, empty_text=True)
+    jobs_service._publish_success(session, job, claim, outcome, result)
+    warnings, _ = _publish_warnings(session)
+    assert "document d1: 6 of 8 pages submitted to Meta (partial coverage)" in warnings
+    assert not any("has text" in w or "with text" in w for w in warnings)
+
+
+def test_publish_live_keeps_partial_reading_manifest(session: Session) -> None:
+    job, claim, outcome, result = _publish_fixtures(session, live=True, pages=6)
+    jobs_service._publish_success(session, job, claim, outcome, result)
+    published = session.get(models.Job, "job-test-1")
+    assert published is not None
+    request = published.request_json
+    assert isinstance(request, dict)
+    manifest = request.get("manifest")
+    assert isinstance(manifest, dict)
+    selection = manifest.get("page_selection")
+    assert isinstance(selection, dict)
+    assert selection["complete_document_reading"] is False
+    assert len(selection["selected"]) == 6
+
+
+def test_publish_warnings_carry_no_hashes_or_secrets(session: Session) -> None:
+    import re
+
+    for tag, live in (("-a", True), ("-b", False)):
+        job, claim, outcome, result = _publish_fixtures(session, live=live, pages=6, tag=tag)
+        jobs_service._publish_success(session, job, claim, outcome, result)
+        warnings, _ = _publish_warnings(session, f"job-test-1{tag}")
+        assert warnings != []
+        for warning in warnings:
+            assert re.search(r"[0-9a-f]{32,}", warning) is None
+            assert "sk-" not in warning and "key" not in warning.lower()
+
+
+def test_publish_live_without_usage_warns_budget_hold(session: Session) -> None:
+    job, claim, outcome, result = _publish_fixtures(session, live=True, pages=8)
+    jobs_service._publish_success(session, job, claim, outcome, result)
+    warnings, _ = _publish_warnings(session)
+    assert "Meta usage unavailable; budget hold retained until reconciliation" in warnings
 
 
 def test_job_to_dict_guards_foreign_mode_and_clips(session: Session) -> None:

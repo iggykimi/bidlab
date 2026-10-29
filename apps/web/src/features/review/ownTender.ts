@@ -103,5 +103,15 @@ export function jobWarningEs(warning: string): string {
   if (warning.startsWith("demo: proposal is empty")) {
     return "La propuesta viene vacía; revísala a mano.";
   }
+  const partial = /^document (.+): (\d+) of (\d+) pages submitted to Meta \(partial coverage\)$/;
+  const matchPartial = warning.match(partial);
+  if (matchPartial) {
+    return `Documento ${matchPartial[1]}: se enviaron ${matchPartial[2]} de ${matchPartial[3]} páginas a Meta. Cobertura parcial.`;
+  }
+  const local = /^document (.+): (\d+) of (\d+) page records available for local extraction$/;
+  const matchLocal = warning.match(local);
+  if (matchLocal) {
+    return `Documento ${matchLocal[1]}: hay registros locales de ${matchLocal[2]} de ${matchLocal[3]} páginas.`;
+  }
   return warning;
 }

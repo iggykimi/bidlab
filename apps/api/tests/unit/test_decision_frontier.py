@@ -20,6 +20,21 @@ def _candidate(
     )
 
 
+def test_frontier_motivo_states_exact_dominance_rule() -> None:
+    verdicts = classify(
+        [
+            _candidate("a", "Alta", "200.00", "40.000000000000"),
+            _candidate("b", "Baja", "100.00", "30.000000000000"),
+        ]
+    )
+    by_id = {v.scenario_id: v for v in verdicts}
+    assert by_id["a"].verdict == "en_frontera"
+    assert by_id["a"].motivo == (
+        "\u00abAlta\u00bb est\u00e1 en la frontera: ninguna otra iguala o supera "
+        "sus puntos y beneficio y mejora al menos uno de los dos."
+    )
+
+
 def test_dominated_pair_names_dominator() -> None:
     verdicts = classify(
         [

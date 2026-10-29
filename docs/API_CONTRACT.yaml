@@ -1726,8 +1726,9 @@ paths:
                     - scenario_id: 9f2c4a1e0b3d4f5a8c7d6e5f4a3b2c1e
                       name: Baja 10%
                       verdict: en_frontera
-                      motivo: '«Baja 10%» está en la frontera: ninguna otra prueba
-                        la supera en beneficio y puntos a la vez.'
+                      motivo: '«Baja 10%» está en la frontera: ninguna otra iguala
+                        o supera sus puntos y beneficio y mejora al menos uno de los
+                        dos.'
                       profit_net: '16502.40'
                       score_value: '49.000000000000'
                       anomaly_status: not_flagged_under_assumptions

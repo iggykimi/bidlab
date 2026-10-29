@@ -134,6 +134,15 @@ describe("job copy", () => {
       "citation 0: quote not found on doc p.3"
     );
   });
+
+  it("translates the partial-coverage warnings job by job", () => {
+    expect(
+      jobWarningEs("document d1: 6 of 8 pages submitted to Meta (partial coverage)")
+    ).toBe("Documento d1: se enviaron 6 de 8 páginas a Meta. Cobertura parcial.");
+    expect(
+      jobWarningEs("document d1: 6 of 8 page records available for local extraction")
+    ).toBe("Documento d1: hay registros locales de 6 de 8 páginas.");
+  });
 });
 
 describe("reviewHistory", () => {

@@ -1016,7 +1016,16 @@ def _publish_success(
     for doc in docs:
         have = by_doc.get(doc.id, 0)
         if have < doc.pages_count:
-            job_warnings.append(f"document {doc.id}: {have} of {doc.pages_count} pages have text")
+            if outcome.live:
+                job_warnings.append(
+                    f"document {doc.id}: {have} of {doc.pages_count} "
+                    "pages submitted to Meta (partial coverage)"
+                )
+            else:
+                job_warnings.append(
+                    f"document {doc.id}: {have} of {doc.pages_count} "
+                    "page records available for local extraction"
+                )
 
     text_by_page = {(page.document_id, page.page_number): page.normalized_text for page in pages}
     citation_ids, citation_warnings, unmatched = verify_and_store_citations(

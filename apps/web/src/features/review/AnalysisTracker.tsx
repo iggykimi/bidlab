@@ -207,7 +207,7 @@ export function AnalysisTracker({ workspace }: Props) {
                 onChange={(e) => setConsent(e.target.checked)}
                 className="mt-1 h-5 w-5"
               />
-              <span>Acepto enviar mi PDF al servicio de análisis.</span>
+              <span>Autorizo el envío a Meta Model API del texto y las imágenes de las páginas seleccionadas de esta licitación. El análisis es parcial y revisaré las propuestas antes de utilizarlas.</span>
             </label>
           ) : (
             capsQuery.isSuccess && (

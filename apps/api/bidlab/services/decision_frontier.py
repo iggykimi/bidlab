@@ -157,7 +157,8 @@ def classify(candidates: list[FrontierCandidate]) -> list[FrontierVerdict]:
                     verdict="en_frontera",
                     motivo=(
                         f"«{candidate.name}» está en la frontera: ninguna otra "
-                        "prueba la supera en beneficio y puntos a la vez."
+                        "iguala o supera sus puntos y beneficio y mejora "
+                        "al menos uno de los dos."
                     ),
                     profit_net=candidate.profit_net,
                     score_value=candidate.score_value,
