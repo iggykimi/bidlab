@@ -217,6 +217,14 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         role="region"
         aria-label="Contenido de la cita, desplázate verticalmente"
       >
+        <div className="mb-3 rounded-lg bg-surface p-3" data-testid="evidence-provenance">
+          <h3 className="font-semibold">De dónde sale esta cita</h3>
+          <p className="mt-1 text-sm">
+            {workspace.mode === "demo"
+              ? "Copia revisada del ejemplo. Aquí no se redistribuye el PDF original."
+              : "Tu propio documento, incorporado por ti a esta licitación."}
+          </p>
+        </div>
         <dl className="grid gap-2 text-sm">
           <div>
             <dt className="font-medium text-muted">Documento</dt>

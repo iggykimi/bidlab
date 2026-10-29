@@ -63,6 +63,9 @@ test.describe("T15 desktop 1280x720", () => {
       "No pudimos mostrar la imagen"
     );
     await expect(page.getByTestId("evidence-image")).toHaveCount(0);
+    await expect(page.getByTestId("evidence-provenance")).toContainText(
+      "Copia revisada del ejemplo"
+    );
     await expect(drawer.getByRole("heading", { name: "Texto de la página" })).toBeVisible();
     await expect(page.getByTestId("evidence-quote")).toBeVisible();
 
