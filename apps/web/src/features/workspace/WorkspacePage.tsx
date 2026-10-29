@@ -63,6 +63,16 @@ function lineaPresupuesto(pblNet: string | null, pblGross: string | null, taxKin
   return "Presupuesto de salida: sin determinar";
 }
 
+/** Compact figures for the one-line workhead meta (U1). Same sources, no label. */
+function lineaPresupuestoCorta(
+  pblNet: string | null,
+  pblGross: string | null,
+  taxKind: string
+): string {
+  const full = lineaPresupuesto(pblNet, pblGross, taxKind);
+  return full.replace("Presupuesto de salida: ", "");
+}
+
 export function WorkspacePage() {
   const { tenderId = "" } = useParams();
   const [params, setParams] = useSearchParams();
@@ -192,23 +202,48 @@ export function WorkspacePage() {
         Saltar al contenido
       </a>
       <div className="workhead">
-        <p className="backrow">
-          <Link to="/">← Volver a mis licitaciones</Link>
-        </p>
-        <p className="eyebrow">
-          {tender.contracting_body}
-          {eyebrowMode ? ` · ${eyebrowMode}` : ""}
-        </p>
+        <div className="workhead-top">
+          <p className="backrow">
+            <Link to="/">← Volver a mis licitaciones</Link>
+          </p>
+          <p className="eyebrow">
+            {tender.contracting_body}
+            {eyebrowMode ? ` · ${eyebrowMode}` : ""}
+          </p>
+        </div>
         <h1 id="tender-title" data-testid="tender-title" tabIndex={-1}>
           {tender.title}
         </h1>
-        <p className="muted small">
-          Expediente {tender.external_id} · {tender.contracting_body}
-          {scope ? ` · ${scope.label}` : ""}
+        <p className="muted small workhead-meta">
+          Expediente {tender.external_id}
+          {scope ? ` · ${scope.label}` : ""} ·{" "}
+          {lineaPresupuestoCorta(tender.pbl_net, tender.pbl_gross, scope?.basis.tax_kind ?? "unknown")}
         </p>
-        <p className="muted small">
-          {lineaPresupuesto(tender.pbl_net, tender.pbl_gross, scope?.basis.tax_kind ?? "unknown")}
-        </p>
+        <details className="workhead-details">
+          <summary>Más detalles del expediente</summary>
+          <dl className="mt-2 grid gap-1 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Órgano</dt>
+              <dd>{tender.contracting_body}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Expediente</dt>
+              <dd>{tender.external_id}</dd>
+            </div>
+            {scope ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted">Ámbito</dt>
+                <dd>{scope.label}</dd>
+              </div>
+            ) : null}
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Presupuesto de salida</dt>
+              <dd className="tnum">
+                {lineaPresupuestoCorta(tender.pbl_net, tender.pbl_gross, scope?.basis.tax_kind ?? "unknown")}
+              </dd>
+            </div>
+          </dl>
+        </details>
       </div>
 
       {mode === "demo" && (

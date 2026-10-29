@@ -417,6 +417,31 @@ a[href^="http"]::after {
   .workhead .eyebrow {
     margin-top: 24px;
   }
+  /* U1: back + eyebrow share one row; meta folds to one line + details. */
+  .workhead-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    flex-wrap: wrap;
+  }
+  .workhead-top .backrow,
+  .workhead-top .eyebrow {
+    margin: 0;
+  }
+  .workhead-meta {
+    margin: 4px 0 0;
+  }
+  .workhead-details {
+    padding: 0;
+    border-top: 0;
+  }
+  .workhead-details summary {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 0.889rem;
+  }
   .workhead .small {
     margin: 4px 0 0;
   }
