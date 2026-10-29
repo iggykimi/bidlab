@@ -33,9 +33,10 @@ opt-in (`MODEL_API_KEY`, see README.md Configuración).
 python scripts/verify.py            # all gates; exit 0 = green
 ```
 
-Status 29-oct-2026 @cca2f72: backend 556 + 2 skipped · web 252 ·
-E2E 85 (Chromium, hermetic) · verify.py 10/10 ALL CHECKS PASSED.
-Detail: [verification-log](docs/verification-log.md) (Spanish).
+Historical local QA runs are documented in [verification-log](docs/verification-log.md)
+and [V3 changelog](docs/CHANGELOG_IMPLEMENTACION_V3.md). Results must be
+rerun and linked to the final submitted HEAD; historical counts are not
+a certification of later commits.
 
 ## Honest limits
 
@@ -45,7 +46,9 @@ Detail: [verification-log](docs/verification-log.md) (Spanish).
   predictor, no rival distribution.
 - `unknown` is `null`, never zero; pending rules block points; abnormality
   is a presumption, never an automatic exclusion.
-- No live Meta in the UI (backend smoke only); synthetic company and rivals.
+- Own-tender UI contains an opt-in live analysis flow, but a complete
+  document extraction via Meta has not yet been proven end-to-end.
+  Company costs and rival bids in the curated example are synthetic.
 - Simulation based on stated assumptions: not legal advice, not an award
   prediction.
 

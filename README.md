@@ -10,7 +10,7 @@ BidLab helps small businesses turn complex public tenders into **traceable prici
 >
 > In our curated Tías public-tender example, a 10% and a 15% discount obtain the same economic points **under stated synthetic cost and rival-bid assumptions**. The 10% scenario retains €5,916.80 more hypothetical profit. This demonstrates a scenario-specific trade-off, not an estimate of the probability of winning.
 
-**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [QA results](docs/QA_REPORT_V2.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
+**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [V3 validation](docs/CHANGELOG_IMPLEMENTACION_V3.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
 
 ### What makes BidLab different
 

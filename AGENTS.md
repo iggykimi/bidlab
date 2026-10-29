@@ -72,8 +72,9 @@ change oracles or tests to hide bugs. A video only exists once recorded.
   the app runtime, `META_API_KEY` to the CLI environment.
 - Offline demo labelled Datos de ejemplo (Tus datos on own tenders).
   No fake API animations or logs. Tokens null for fixture/manual.
-- No live Meta in the UI (backend smoke only); synthetic company and
-  rivals; no prediction, no automatic legal exclusion.
+- Opt-in live extraction exists in the UI (consent + key + budget);
+  no live extraction proven: 0 calls, see `docs/META_EVIDENCE_V3.md`.
+  Synthetic company and rivals; no prediction, no automatic legal exclusion.
 
 ## Work protocol
 
