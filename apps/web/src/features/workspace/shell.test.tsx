@@ -4,6 +4,7 @@
 // codes and unapproved rules. Dynamic values (deadline countdown, dates)
 // are recomputed through the same canonical formatters to verify wiring.
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
@@ -96,11 +97,14 @@ function makeWorkspace(): Workspace {
 }
 
 function renderSummary(ws: Workspace): string {
+  const client = new QueryClient();
   return renderToStaticMarkup(
     <MemoryRouter>
+      <QueryClientProvider client={client}>
       <WorkspaceDraftsProvider>
         <SummaryTab workspace={ws} />
       </WorkspaceDraftsProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 }
