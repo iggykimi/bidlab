@@ -140,9 +140,9 @@ en [verification-log](docs/verification-log.md)):
 
 - Backend: 550 recogidos, 548 en verde + 2 skipped (live opt-in +
   symlink sin permiso en Windows).
-  Web: 236 en 31 ficheros (`npm run test:unit`, verde).
-  E2E: 77 tests herméticos (Chromium, loopback).
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@7af9417, 29-oct).
+  Web: 237 en 31 ficheros (`npm run test:unit`, verde).
+  E2E: 78 tests herméticos (Chromium, loopback).
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@4b44ec9, 29-oct).
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
@@ -156,6 +156,8 @@ en [verification-log](docs/verification-log.md)):
   Revisión 29-oct (issue #1, @7af9417): recibos/reservas/guardas backend,
   UI servida en el mismo origen, presets demo, composición coste/beneficio
   y `demo_story` reproducible (4 escenarios + 4 informes + comparación).
+  Auditoría 29-oct (issue #2, @19ed006): cabecera compacta, hero
+  comparador 10/15, procedencia en drawer, motivos en español.
   Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
   sin envío.

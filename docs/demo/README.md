@@ -57,8 +57,8 @@ análisis + revisión manual + simular + comparar + exportar
 - Tests (contados el 29-oct-2026 en este árbol, ver
   [verification-log](../verification-log.md)):
   backend 548 + 2 skipped (unit + evaluation + integración/contratos),
-  web 236 en 31 ficheros (`npm run test:unit`),
-  E2E 77 herméticos (Chromium, loopback).
+  web 237 en 31 ficheros (`npm run test:unit`),
+  E2E 78 herméticos (Chromium, loopback).
   Puertas completas en verde el 29-oct
   (`python scripts/verify.py`, 10/10) + dos ensayos
   limpios R1+R2.

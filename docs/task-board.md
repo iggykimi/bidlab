@@ -3,6 +3,14 @@
 Status values: done | in_progress | pending | blocked | parked.
 DoD per block in docs/MILESTONES.md; evidence in docs/verification-log.md.
 
+## Issue #2 P0 + RC · 29-oct (lead, en main @19ed006)
+
+- Auditoría+prompt leídos enteros (sin MANIFEST). G0/M1/T1
+  BLOCKED (sin credencial/saldo/admisión verificables).
+- U1 cabecera + U2 hero (CMP-03) + U3 procedencia + U6
+  motivos ES. Gates: 548+2skip, vitest 237, E2E 78/78,
+  shots 4/4, story 8/8. RC + DEMO_FINAL + submission.
+
 ## Integración issue #1 · 29-oct (lead, en main @7af9417)
 
 - ZIP BidLab_Codigo_Revisado_2026-10-29: base exacta 1a53b6a,
