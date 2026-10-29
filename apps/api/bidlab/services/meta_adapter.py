@@ -58,6 +58,7 @@ from pydantic import ValidationError
 from bidlab.api.errors import ApiError
 from bidlab.schemas import generated as g
 from bidlab.schemas import observations as obs
+from bidlab.services.meta_schema_preflight import check_meta_strict_schema
 from bidlab.settings import get_settings
 
 if TYPE_CHECKING:
@@ -369,6 +370,8 @@ def build_hybrid_request(
     if schema.get("type") != "object":
         msg = "supply the provider-compatible model JSON schema"
         raise ValueError(msg)
+    # Preflight before any request is built; provider acceptance still needs live verification.
+    check_meta_strict_schema(schema)
     content: list[dict[str, Any]] = []
     mapping: list[dict[str, Any]] = []
     seen: set[tuple[str, int]] = set()
