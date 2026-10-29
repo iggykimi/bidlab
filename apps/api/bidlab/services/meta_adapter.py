@@ -200,6 +200,15 @@ def pages_input_hash(pages: Sequence[PageInput]) -> str:
                 "document_id": page.document_id,
                 "page_number": page.page_number,
                 "text_sha256": hashlib.sha256(page.normalized_text.encode("utf-8")).hexdigest(),
+                "document_sha256": page.document_sha256,
+                "image_id": page.image_id,
+                "image_sha256": (
+                    hashlib.sha256(page.image_bytes).hexdigest()
+                    if page.image_bytes is not None
+                    else None
+                ),
+                "image_width": page.image_width,
+                "image_height": page.image_height,
             }
             for page in pages
         ],
@@ -961,14 +970,15 @@ class LiveExtractor:
             ) from exc
         except httpx.HTTPError as exc:
             latency_ms = int((time.monotonic() - started) * 1000)
+            definitely_unsent = isinstance(exc, (httpx.ConnectError, httpx.PoolTimeout))
             raise AdapterError(
                 "provider_failure",
                 f"model call failed: {exc}",
                 receipt=_attempt_receipt(
                     model_requested=self._model,
                     latency_ms=latency_ms,
-                    status="failed",
-                    sent=False,
+                    status="failed" if definitely_unsent else "uncertain",
+                    sent=not definitely_unsent,
                 ),
             ) from exc
         latency_ms = int((time.monotonic() - started) * 1000)
@@ -1072,6 +1082,18 @@ def select_adapter(mode: str) -> ExtractionAdapter:
             503,
             "provider_not_configured",
             f"{META_API_URL_ENV} is not set; no verified Muse endpoint (G3 blocked)",
+        )
+    if settings.bidlab_mode != "live":
+        raise ApiError(
+            503,
+            "provider_not_configured",
+            "BIDLAB_MODE must be live; demo/manual never sends documents",
+        )
+    if settings.meta_model != "muse-spark-1.3":
+        raise ApiError(
+            503,
+            "provider_not_configured",
+            "model lacks a verified billing profile; configure muse-spark-1.3",
         )
     return LiveExtractor(
         api_key=api_key,

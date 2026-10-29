@@ -254,6 +254,7 @@ def test_budget_exhaust_persists_failed_job(
     monkeypatch.setattr(socket, "create_connection", _blocked)
     monkeypatch.setattr(httpx, "post", _blocked)
     monkeypatch.setenv("MODEL_API_KEY", "test-key")
+    monkeypatch.setenv("BIDLAB_MODE", "live")
     monkeypatch.setenv(meta_adapter.META_API_URL_ENV, "https://meta.test/v1")
     monkeypatch.setenv("BIDLAB_META_BUDGET_USD", "0.00")
     get_settings.cache_clear()
@@ -426,7 +427,7 @@ def test_live_invalid_output_settles_reported_cost(
     assert budget_service.totals(get_engine(), ceiling_micro=20_000_000)["spent"] == 27750
 
 
-def test_live_timeout_settles_estimate_as_uncertain(
+def test_live_timeout_retains_uncertain_hold(
     demo_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """PKG-T02 acceptance: sent-but-unknown never settles as zero."""
@@ -454,9 +455,23 @@ def test_live_timeout_settles_estimate_as_uncertain(
         assert invocation.status == "uncertain"
         row = session.get(models.ModelSpendReservation, key)
         assert row is not None
-        assert row.state == "settled"
-        assert row.actual_micro_usd == row.amount_micro_usd
-        assert row.actual_micro_usd > 0
+        assert row.state == "uncertain"
+        assert row.actual_micro_usd is None
+        assert row.amount_micro_usd > 0
+    totals = budget_service.totals(get_engine(), ceiling_micro=20_000_000)
+    assert totals["spent"] == 0
+    assert totals["held"] > 0
+    assert totals["uncertain"] == 1
+    # A missing bill is not a cheap call. Reusing a fresh key cannot turn
+    # this transport ambiguity into an automatic second paid invocation.
+    with pytest.raises(budget_service.BudgetBlockedError):
+        budget_service.reserve(
+            get_engine(),
+            key="another-attempt",
+            job_id=job.id.root,
+            amount_micro=1,
+            ceiling_micro=20_000_000,
+        )
 
 
 def test_live_unsent_attempt_releases_hold(

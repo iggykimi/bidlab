@@ -4,10 +4,17 @@ import { API_BASE, installOfflineGuard, loadDemo, openPricing, takeConsoleFailur
 // Archived report vs draft vs print: the decision is never pre-filled, the
 // archived snapshot carries its revisions on screen, HTML and print, and
 // editing the draft never touches the archive.
-// C10: any console.error / pageerror fails the test.
+// C10: any console.error / pageerror fails the test. Chromium logs one exact
+// line for every srcdoc+sandbox preview iframe even with zero scripts in it
+// (verified with a scriptless <p> probe); the sandbox stays because the
+// preview renders server HTML carrying user note text. Only that exact
+// browser-noise line is exempt here.
+const SANDBOX_SRCDOC_NOISE =
+  "Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed";
 test.afterEach(() => {
   const failures = takeConsoleFailures();
-  expect(failures.consoleErrors, "console.error calls").toEqual([]);
+  const unexpected = failures.consoleErrors.filter((m) => !m.startsWith(SANDBOX_SRCDOC_NOISE));
+  expect(unexpected, "console.error calls").toEqual([]);
   expect(failures.pageErrors, "page errors").toEqual([]);
 });
 
@@ -44,6 +51,30 @@ test("archive decision is never pre-filled", async ({ page }) => {
   await page.getByTestId("export-report").click();
   await expect(page.getByTestId("report-detail")).toBeVisible();
   await expect(page.getByTestId("report-decision")).toContainText("Seguir estudiándola");
+  expect(guard.blocked()).toBe(0);
+});
+
+test("report preview closes without fetching the HTML again", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  await openPricing(page);
+  await saveNamed(page, "10", `Vista previa ${uniqueTag()}`, "106.502,40");
+  await page.getByRole("link", { name: "Verla en el informe" }).click();
+  await page.getByRole("radio", { name: "Seguir estudiándola" }).check();
+  await page.getByTestId("export-report").click();
+  await expect(page.getByTestId("report-detail")).toBeVisible();
+  let fetches = 0;
+  page.on("request", (request) => {
+    if (request.method() === "GET" && /\/reports\/[^/]+\/html$/.test(new URL(request.url()).pathname)) {
+      fetches += 1;
+    }
+  });
+  await page.getByRole("button", { name: "Vista previa del informe", exact: true }).click();
+  await expect(page.locator('iframe[title="Vista previa del informe"]')).toBeVisible();
+  expect(fetches).toBe(1);
+  await page.getByRole("button", { name: "Ocultar vista previa", exact: true }).click();
+  await expect(page.locator('iframe[title="Vista previa del informe"]')).toHaveCount(0);
+  expect(fetches).toBe(1);
   expect(guard.blocked()).toBe(0);
 });
 

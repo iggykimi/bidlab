@@ -232,8 +232,9 @@ export function CurveChart({
   return (
     <div className="grid gap-4" data-testid="curve-chart" aria-busy={pending}>
       <p role="status" aria-live="polite" className="sr-only" key={requestCount}>
-        A {formatEurosExact(ownPrice)}: {ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}
-        , beneficio {ownProfit !== null ? formatSignedEurosExact(ownProfit) : "sin determinar"}
+        {pending
+          ? "Actualizando la curva. Conservamos el cálculo anterior."
+          : `A ${formatEurosExact(ownPrice)}: ${ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}, beneficio ${ownProfit !== null ? formatSignedEurosExact(ownProfit) : "sin determinar"}`}
       </p>
       {error && <Alert tone="error">{error}</Alert>}
       {pending && <p role="status">Actualizando la curva…</p>}

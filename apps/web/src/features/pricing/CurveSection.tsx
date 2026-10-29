@@ -30,7 +30,8 @@ interface CalcProps {
 }
 
 export function CurveSection({ state }: CurveProps) {
-  const { result, ruleCitations, openEvidence, h, pending, error, inputsValid, requestCount } = state;
+  const { result, ruleCitations, openEvidence, pending, error, inputsValid, requestCount } = state;
+  const h = state.resultHypotheses ?? state.h;
   return (
     <Card aria-label="Curva precio-puntos">
       <h2>Curva precio-puntos</h2>
@@ -57,7 +58,7 @@ export function CurveSection({ state }: CurveProps) {
                     { label: "Rival B", price: h.rivalBPrice },
                   ]
             }
-            pending={pending}
+            pending={pending || state.resultStale}
             error={inputsValid ? error : null}
             requestCount={requestCount}
           />
@@ -77,7 +78,8 @@ export function CurveSection({ state }: CurveProps) {
 }
 
 export function CalculationSection({ workspace, state }: CalcProps) {
-  const { result, rule, ruleCitations, anomalyCitations, openEvidence, h, inputsValid } = state;
+  const { result, rule, ruleCitations, anomalyCitations, openEvidence, inputsValid } = state;
+  const h = state.resultHypotheses ?? state.h;
   const best = result?.trace.find((s) => s.label === "Mejor oferta incluyendo propia")?.value ?? null;
   const scoreDefined =
     result?.score.status === "defined" && result.score.value !== null && best !== null;

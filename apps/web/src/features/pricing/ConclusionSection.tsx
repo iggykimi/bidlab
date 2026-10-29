@@ -59,7 +59,8 @@ function CommittedConclusion({ text }: { text: string }) {
 }
 
 export function ConclusionSection({ state }: Props) {
-  const { result, pending, h, resultStale } = state;
+  const { result, pending, resultStale } = state;
+  const h = state.resultHypotheses ?? state.h;
   if (!result) {
     if (!pending) return null;
     return (
@@ -114,15 +115,11 @@ export function ConclusionSection({ state }: Props) {
     const other = Number(rival.price);
     if (Number.isFinite(own) && Number.isFinite(other)) {
       if (own < other) {
-        sentences.push(
-          h.complete ? "Eres la oferta más barata." : "De las ofertas supuestas, eres la más barata."
-        );
+        sentences.push("De las ofertas supuestas, eres la más barata.");
       } else if (own > other) {
         sentences.push(`El rival ${rival.label}, con ${formatEurosHeadline(rival.price)}, ofrece menos.`);
       } else {
-        sentences.push(
-          h.complete ? "Empatas como la oferta más barata." : "De las ofertas supuestas, empatas como la más barata."
-        );
+        sentences.push("De las ofertas supuestas, empatas como la más barata.");
       }
     }
   }

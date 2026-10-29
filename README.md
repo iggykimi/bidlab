@@ -15,6 +15,14 @@ PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
 [task-board](docs/task-board.md); este README describe la instalación
 limpia rehearseada en T31/T32.
 
+## Revisión de código · 29 de octubre
+
+Correcciones de backend, revisión de fuentes, estados de interfaz y ejemplos seleccionables ya aplicadas: [detalle e integración](docs/IMPLEMENTACION_20261029.md).
+
+Con `npm run build` completado, `python scripts/demo.py` sirve API e interfaz desde <http://127.0.0.1:8000/>. No hace falta Vite para usar la compilación. Las dos terminales siguen disponibles para desarrollo.
+
+Ejemplos reproducibles sin modificar tu base: `uv run python scripts/demo_story.py --output test-results/demo-story`. Crea una base temporal y exporta cuatro escenarios, cuatro informes y su comparación. No llama a Meta.
+
 ## Demo
 
 Pack para revisores (capturas, guía de 5 minutos, límites honestos):
@@ -142,7 +150,7 @@ en [verification-log](docs/verification-log.md)):
   (alta + PDF + empresa + análisis + revisión manual + simular +
   comparar + exportar) + visita guiada + malla de resistencia.
   Paquete integral: extracción con recibos live, gold humano +
-  comparativa medida texto/híbrido (T11), imagen exacta de página (T15),
+  harness de control offline; comparación real texto/híbrido pendiente (T11), imagen exacta de página (T15),
   radar de incoherencias (T20), techo de coste con paridad motor (T21).
   Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
@@ -163,7 +171,7 @@ pertenece al entorno del CLI de Muse, no a la app.
 | `BIDLAB_BIND_HOST` / `BIDLAB_PORT` | `127.0.0.1` / `8000` | bind API (loopback only) |
 | `BIDLAB_STORAGE_DIR` | `./storage` | SQLite + uploads |
 | `BIDLAB_HISTORY_ENABLED` | `false` | histórico P1 desactivado |
-| `BIDLAB_META_BUDGET_USD` | `20.00` | techo de gasto Meta |
+| `BIDLAB_META_BUDGET_USD` | `20.00` | presupuesto de admisión y reservas Meta |
 | `META_MODEL` | `muse-spark-1.3` | modelo de extracción |
 | `MODEL_API_KEY` | vacío | live solo si modo=live y clave |
 

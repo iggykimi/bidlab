@@ -60,7 +60,7 @@ test.describe("T15 desktop 1280x720", () => {
     await expect(drawer).toBeVisible();
     // The curated seed has no render: labeled text, never a fake preview.
     await expect(page.getByTestId("evidence-image-missing")).toContainText(
-      "Esta página no tiene imagen"
+      "No pudimos mostrar la imagen"
     );
     await expect(page.getByTestId("evidence-image")).toHaveCount(0);
     await expect(drawer.getByRole("heading", { name: "Texto de la página" })).toBeVisible();
@@ -201,7 +201,7 @@ test.describe("T15 mobile 390x844", () => {
     const drawer = page.getByTestId("evidence-drawer");
     await expect(drawer).toBeVisible();
     await expect(page.getByTestId("evidence-image-missing")).toContainText(
-      "Esta página no tiene imagen"
+      "No pudimos mostrar la imagen"
     );
     await expect(page.getByTestId("evidence-image")).toHaveCount(0);
     const overflowX = await page.evaluate(

@@ -372,9 +372,9 @@ describe("shell: word budget (≤20 per sentence)", () => {
 
   it("keeps each guided step within twenty words", () => {
     for (const [link, rest] of [
-      ["Revisa los requisitos", "y comprueba si puedes presentarte."],
-      ["Prueba precios", "y mira cuántos puntos consigues."],
-      ["Guarda tu decisión", "en el informe, con tus notas."],
+      ["Revisa los requisitos", "Comprueba qué puedes acreditar."],
+      ["Prueba precios", "Compara puntos y beneficio."],
+      ["Guarda tu decisión", "Conserva tu prueba y sus fuentes."],
     ] as const) {
       expect(html).toContain(link);
       expect(html).toContain(rest);

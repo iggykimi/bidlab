@@ -42,7 +42,10 @@ export interface PricingState {
   rule: PricingRule | null;
   companyId: string | null;
   h: Hypotheses;
+  /** Inputs that produced the painted result; never mix a new draft with old figures. */
+  resultHypotheses: Hypotheses | null;
   setField: <K extends keyof Hypotheses>(key: K, value: Hypotheses[K]) => void;
+  applyHypotheses: (values: Partial<Hypotheses>) => void;
   fieldErrors: Record<string, string>;
   inputsValid: boolean;
   requestInput: EvaluationRequest | null;
@@ -95,6 +98,7 @@ export function usePricingState(workspace: Workspace): PricingState {
   const saveState = drafts.pricing.savedCopy;
   const [fetched, setFetched] = useState<EvaluationResult | null>(null);
   const [resultKey, setResultKey] = useState<string | null>(null);
+  const [resultHypotheses, setResultHypotheses] = useState<Hypotheses | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rawError, setRawError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -184,6 +188,7 @@ export function usePricingState(workspace: Workspace): PricingState {
     }
     const payload = requestInput;
     const payloadKey = stableKey(payload);
+    const payloadHypotheses = { ...h };
     const timer = window.setTimeout(() => {
       const seq = ++seqRef.current;
       setPending(true);
@@ -195,12 +200,14 @@ export function usePricingState(workspace: Workspace): PricingState {
           if (seqRef.current !== seq) return; // stale response: never paint it
           setFetched(res);
           setResultKey(payloadKey);
+          setResultHypotheses(payloadHypotheses);
         })
         .catch((err: unknown) => {
           if (isAbort(err)) return;
           if (seqRef.current !== seq) return;
           setFetched(null);
           setResultKey(null);
+          setResultHypotheses(null);
           setError(errorEs(err, "No pudimos evaluar tu oferta. Vuelve a intentarlo en unos segundos."));
           setRawError(errorCode(err));
         })
@@ -217,7 +224,10 @@ export function usePricingState(workspace: Workspace): PricingState {
   async function handleSave() {
     setSaveError(null);
     setSaveRawError(null);
-    updatePricing({ savedCopy: null });
+    if (!inputsValid || pending || resultStale || result === null) {
+      setSaveError("Espera al resultado de tus últimos cambios antes de guardar.");
+      return;
+    }
     const name = scenarioNameSchema.safeParse(scenarioName);
     if (!name.success) {
       setSaveError(name.error.issues[0]?.message ?? "Nombre no válido");
@@ -254,6 +264,10 @@ export function usePricingState(workspace: Workspace): PricingState {
     updatePricing({ h: { ...h, [key]: value } });
   }
 
+  function applyHypotheses(values: Partial<Hypotheses>) {
+    updatePricing({ h: { ...h, ...values } });
+  }
+
   function setScenarioName(name: string) {
     updatePricing({ scenarioName: name });
   }
@@ -264,7 +278,9 @@ export function usePricingState(workspace: Workspace): PricingState {
     rule,
     companyId,
     h,
+    resultHypotheses,
     setField,
+    applyHypotheses,
     fieldErrors,
     inputsValid,
     requestInput,

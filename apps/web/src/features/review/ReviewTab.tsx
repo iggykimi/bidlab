@@ -24,6 +24,7 @@ import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
 import { AnalysisTracker } from "./AnalysisTracker";
 import { ProposalClaims } from "./ProposalClaims";
+import { canConfirmClaim } from "./claimHelpers";
 import { RadarSection } from "./RadarSection";
 import { appendReviewHistory, loadReviewHistory } from "./reviewHistory";
 import {
@@ -162,6 +163,15 @@ export function ReviewTab({ workspace }: Props) {
     setConflict(false);
     if (!valid || sending) return;
     if (budgetProtocol === null || pointsProtocol === null) return;
+    const invalidClaim = draft.approvedClaims.some((key) => {
+      const claim = workspace.claims.find((candidate) => candidate.key === key);
+      return !claim || !canConfirmClaim(claim, workspace.citations, workspace.documents);
+    });
+    if (invalidClaim) {
+      setSubmitError("Revisa las confirmaciones marcadas. Hay un dato con valor o citas pendientes.");
+      setSubmitRaw(null);
+      return;
+    }
     setSending(true);
     setSubmitError(null);
     setSubmitRaw(null);

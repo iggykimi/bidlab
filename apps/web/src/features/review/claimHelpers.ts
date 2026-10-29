@@ -1,7 +1,7 @@
 // Pure helpers for the live proposal review: human labels for claim
 // keys and citation joins. Tested in proposalClaims.test.ts.
 
-import type { Citation, CitationProposal, ClaimProposal } from "../../api/client";
+import type { Citation, CitationProposal, ClaimProposal, TenderDocument } from "../../api/client";
 
 /** Known extractor keys -> Spanish label; unknown keys show verbatim. */
 const CLAIM_LABELS: Record<string, string> = {
@@ -38,7 +38,7 @@ export interface JoinedCitation {
   verified: Citation | null;
 }
 
-/** Join proposal citations with verified stored rows by doc + page. */
+/** A different quote on the same page cannot lend its localization state. */
 export function joinClaimCitations(
   claim: ClaimProposal,
   stored: Citation[]
@@ -47,9 +47,27 @@ export function joinClaimCitations(
     proposal,
     verified:
       stored.find(
-        (c) => c.document_id === proposal.document_id && c.page_number === proposal.page_number
+        (c) => c.document_id === proposal.document_id &&
+          c.page_number === proposal.page_number &&
+          c.verbatim_excerpt === proposal.verbatim_excerpt
       ) ?? null,
   }));
+}
+
+/** UI guard only; the backend independently rechecks every source on approval. */
+export function canConfirmClaim(
+  claim: ClaimProposal,
+  stored: Citation[],
+  documents: TenderDocument[],
+): boolean {
+  if (claim.status !== "proposed" || claim.normalized_value === null || claim.normalized_value.trim() === "" || claim.citations.length === 0) {
+    return false;
+  }
+  return joinClaimCitations(claim, stored).every(({ verified }) =>
+    verified !== null &&
+    (verified.match_status === "exact" || verified.match_status === "normalized_match") &&
+    documents.some((doc) => doc.id === verified.document_id && doc.sha256 === verified.document_sha256),
+  );
 }
 
 /**

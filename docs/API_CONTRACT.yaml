@@ -2117,6 +2117,8 @@ components:
       - budget_exhausted
       - budget_not_positive
       - ceiling_exceeded
+      - citation_unverified
+      - claim_not_reviewable
       - company_not_found
       - company_profile_corrupt
       - company_scope_mismatch

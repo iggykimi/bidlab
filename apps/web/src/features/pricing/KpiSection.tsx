@@ -51,7 +51,8 @@ function anomalySentence(
 }
 
 export function KpiSection({ workspace, state }: Props) {
-  const { result, pending, requestCount, h, resultStale } = state;
+  const { result, pending, requestCount, resultStale } = state;
+  const h = state.resultHypotheses ?? state.h;
   const rebate = formatPercent(discountPercentToRate(h.discountPct));
   const pblNet = workspace.tender.pbl_net;
   const pblGross = workspace.tender.pbl_gross;
@@ -78,7 +79,9 @@ export function KpiSection({ workspace, state }: Props) {
         </p>
       )}
       <span role="status" aria-live="polite" className="sr-only" key={requestCount}>
-        {result
+        {resultStale || pending
+          ? "Actualizando. Conservamos las cifras del cálculo anterior."
+          : result
           ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}${flagged ? ". Oferta sospechosa" : ""}`
           : "Calculando tu resultado…"}
       </span>
@@ -127,7 +130,7 @@ export function KpiSection({ workspace, state }: Props) {
         </p>
         <p className="mt-1 text-xs text-muted">
           {result?.cost_net
-            ? `Coste: ${formatEurosExact(result.cost_net)} (empresa de ejemplo${state.companyName ? ` «${state.companyName}»` : ""}). Es un dato inventado.`
+            ? `Coste: ${formatEurosExact(result.cost_net)}${state.companyName ? ` · ${state.companyName}` : ""}. ${state.companySynthetic ? "Es un dato de ejemplo." : "Es el coste declarado de tu empresa."}`
             : "Tu coste está sin determinar."}
         </p>
       </Card>

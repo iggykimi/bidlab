@@ -33,7 +33,8 @@ function warningEs(warning: string): string | null {
 }
 
 export function AssumptionsSection({ state }: StateOnly) {
-  const { h, result } = state;
+  const { result } = state;
+  const h = state.resultHypotheses ?? state.h;
   const warnings = result?.warnings ?? [];
   const plainWarnings = warnings.map(warningEs).filter((w): w is string => w !== null);
   const internalWarnings = warnings.filter((w) => warningEs(w) === null);
@@ -77,6 +78,9 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
     saveRawError,
     saveState,
     saveIsCurrent,
+    pending,
+    resultStale,
+    result,
   } = state;
   const rawCode = errorCodeOnly(saveRawError);
   return (
@@ -96,11 +100,16 @@ export function SaveScenarioSection({ workspace, state }: SaveProps) {
       <Button
         data-testid="save-scenario"
         onClick={handleSave}
-        disabled={saving || !inputsValid}
+        disabled={saving || !inputsValid || pending || resultStale || result === null}
         className="mt-3"
       >
         {saving ? "Guardando…" : "Guardar esta prueba"}
       </Button>
+      {(pending || resultStale) && (
+        <p role="status" className="mt-2 text-sm text-muted">
+          Espera al resultado de tus últimos cambios para guardar esta prueba.
+        </p>
+      )}
       {saveError && (
         <p role="alert" className="mt-2 text-sm text-error">
           {saveError}

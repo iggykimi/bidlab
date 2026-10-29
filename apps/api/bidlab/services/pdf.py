@@ -57,6 +57,7 @@ class CoveragePage:
     text: str
     flags: tuple[str, ...] = ()
     image_submitted: bool = False
+    text_submitted: bool | None = None
 
 
 # Flags that deserve a human-visible warning. Stored informational flags
@@ -104,7 +105,7 @@ def coverage(expected_pages: dict[str, int], pages: list[CoveragePage]) -> dict[
         for number in range(1, total + 1):
             stored = known.get((doc_id, number))
             usable = stored is not None and bool(stored.text.strip())
-            text_sent = bool(stored is not None and usable)
+            text_sent = bool(stored is not None and usable and stored.text_submitted is not False)
             image_sent = bool(stored is not None and stored.image_submitted)
             flags = list(stored.flags) if stored else ["page_missing"]
             if stored is not None and not usable and "no_extractable_text" not in flags:

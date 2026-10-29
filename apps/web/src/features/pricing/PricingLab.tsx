@@ -109,7 +109,10 @@ export function PricingLab({ workspace }: Props) {
   return (
     <div className="stack">
       <div className="twocol">
-        <DiscountSection state={state} />
+        <DiscountSection
+          state={state}
+          showExamples={workspace.mode === "demo" && workspace.tender.id === "tias"}
+        />
         <div className="stack">
           <KpiSection workspace={workspace} state={state} />
           <ConclusionSection state={state} />

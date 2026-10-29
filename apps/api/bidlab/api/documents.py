@@ -134,7 +134,12 @@ def get_page_image(
     except (OSError, ValueError):
         manifest = None
     entry: dict[str, Any] | None = None
-    if isinstance(manifest, dict) and manifest.get("status") == "ready":
+    if (
+        isinstance(manifest, dict)
+        and manifest.get("status") == "ready"
+        and manifest.get("pdf_sha256") == doc.sha256
+        and manifest.get("render_version") == render_service.RENDER_VERSION
+    ):
         pages = manifest.get("pages")
         if isinstance(pages, list):
             for item in pages:

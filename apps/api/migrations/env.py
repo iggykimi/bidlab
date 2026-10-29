@@ -22,12 +22,16 @@ def run_migrations_online() -> None:
     settings.storage_path.mkdir(parents=True, exist_ok=True)
     url = f"sqlite:///{settings.storage_path / 'bidlab.sqlite3'}"
     engine = create_engine(url)
+    try:
+        with engine.connect() as connection:
+            context.configure(connection=connection, target_metadata=Base.metadata)
 
-    with engine.connect() as connection:
-        context.configure(connection=connection, target_metadata=Base.metadata)
-
-        with context.begin_transaction():
-            context.run_migrations()
+            with context.begin_transaction():
+                context.run_migrations()
+    finally:
+        # Release the file handle: each migrate() leaked a pooled SQLite
+        # connection, which blocks directory removal on Windows.
+        engine.dispose()
 
 
 if context.is_offline_mode():

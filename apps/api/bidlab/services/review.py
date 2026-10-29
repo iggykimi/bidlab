@@ -22,6 +22,7 @@ from bidlab.api.errors import ApiError
 from bidlab.db import models
 from bidlab.domain import expressions as EX
 from bidlab.services import jobs as jobs_service
+from bidlab.services import pdf as pdf_service
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
@@ -91,6 +92,58 @@ def latest_revision_row(session: Session, tender_id: str) -> models.Interpretati
     ).first()
 
 
+def _validate_approved_claims(
+    session: Session,
+    tender_id: str,
+    proposal: dict[str, Any],
+    approved_keys: list[str],
+    expected_hashes: dict[str, Any],
+) -> None:
+    """Approval requires located sources, not a browser-supplied badge.
+
+    Matching is checked against the current physical page and file version.
+    It only establishes citation location; the actor still owns semantic
+    approval. An unknown/ambiguous value cannot be approved as a found fact.
+    """
+    claims = [item for item in proposal.get("claims", []) if isinstance(item, dict)]
+    for key in approved_keys:
+        candidates = [claim for claim in claims if claim.get("key") == key]
+        if len(candidates) != 1:
+            raise ApiError(422, "unknown_claim_key", f"claim {key}: missing or duplicate key")
+        claim = candidates[0]
+        value = claim.get("normalized_value")
+        if claim.get("status") != "proposed" or not isinstance(value, str) or not value.strip():
+            raise ApiError(
+                422, "claim_not_reviewable", f"claim {key}: correct the unknown value first"
+            )
+        citations = claim.get("citations")
+        if not isinstance(citations, list) or not citations:
+            raise ApiError(422, "citation_unverified", f"claim {key}: no supporting citation")
+        for citation in citations:
+            if not isinstance(citation, dict):
+                raise ApiError(422, "citation_unverified", f"claim {key}: invalid citation")
+            doc_id = citation.get("document_id")
+            page_no = citation.get("page_number")
+            quote = citation.get("verbatim_excerpt")
+            doc = session.get(models.Document, doc_id) if isinstance(doc_id, str) else None
+            if doc is None or doc.tender_id != tender_id:
+                raise ApiError(
+                    422, "citation_unverified", f"claim {key}: source outside this tender"
+                )
+            if expected_hashes.get(doc.id) != doc.sha256:
+                raise ApiError(409, "revision_conflict", f"claim {key}: document version changed")
+            page = session.get(models.DocumentPage, (doc.id, page_no))
+            if (
+                page is None
+                or not isinstance(quote, str)
+                or pdf_service.locate_citation(page.normalized_text, quote).match_status
+                == "missing"
+            ):
+                raise ApiError(
+                    422, "citation_unverified", f"claim {key}: quote not found on its page"
+                )
+
+
 def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> dict[str, Any]:
     tender = session.get(models.Tender, tender_id)
     if tender is None:
@@ -135,6 +188,21 @@ def apply_review(session: Session, tender_id: str, payload: g.ReviewRequest) -> 
         raise ApiError(
             422, "unknown_claim_key", f"unknown claim keys: {', '.join(sorted(unknown))}"
         )
+    # An explicit correction can cite another current document from this
+    # tender. Record the new version set; unchanged proposals must still
+    # match the versions their extraction actually used.
+    if payload.corrected_proposal is not None:
+        current_docs = session.scalars(
+            select(models.Document).where(models.Document.tender_id == tender_id)
+        ).all()
+        doc_hashes = {doc.id: doc.sha256 for doc in current_docs}
+    _validate_approved_claims(
+        session,
+        tender_id,
+        proposal_data,
+        [key.root for key in payload.approved_claim_keys],
+        doc_hashes,
+    )
     # Materialization plan: validate EVERYTHING before persisting anything, so a
     # 409/422 below leaves no orphan InterpretationRevision behind. Only an
     # approved payload materializes; pending/blocked (or absent) payloads are

@@ -42,6 +42,7 @@ class Settings(BaseSettings):
         # so live is ready only when the URL is there too.
         return (
             self.bidlab_mode == "live"
+            and self.meta_model == "muse-spark-1.3"
             and bool(self.model_api_key.get_secret_value())
             and bool(os.environ.get("META_API_URL"))
         )

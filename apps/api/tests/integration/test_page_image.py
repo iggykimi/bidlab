@@ -1,6 +1,7 @@
 """Page image delivery: exact rendered PNG by document + page (T15)."""
 
 import hashlib
+import json
 
 from bidlab.services import render as render_service
 from bidlab.settings import get_settings
@@ -121,3 +122,16 @@ def test_page_image_corrupt_png_is_500(fresh_client: TestClient) -> None:
     res = fresh_client.get(f"/api/v1/documents/{doc_id}/pages/1/image")
     assert res.status_code == 500
     assert res.json()["code"] == "internal"
+
+
+def test_page_image_from_other_pdf_version_is_not_served(fresh_client: TestClient) -> None:
+    tender_id = _create(fresh_client, "img-tender-old-version")
+    doc_id = _upload(fresh_client, tender_id, "img-old-version", _two_page_pdf())
+    storage = get_settings().storage_path.resolve()
+    manifest_path = render_service.render_dir_for(storage, tender_id, doc_id) / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["pdf_sha256"] = "f" * 64
+    manifest_path.write_text(json.dumps(manifest))
+    response = fresh_client.get(f"/api/v1/documents/{doc_id}/pages/1/image")
+    assert response.status_code == 404
+    assert response.json()["code"] == "document_bytes_unavailable"

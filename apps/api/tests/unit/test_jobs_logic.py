@@ -279,8 +279,8 @@ def test_run_claimed_attempt_refusal_fails_explicitly(session: Session) -> None:
     assert job.result_revision is None
 
 
-def test_publish_stale_generation_aborts_without_side_effects(session: Session) -> None:
-    """PKG-T03 fence: a superseded claim publishes nothing."""
+def test_publish_stale_generation_keeps_receipt_without_promoting(session: Session) -> None:
+    """A superseded claim cannot publish a proposal or erase its invocation."""
     session.add(_job_row("queued"))
     session.commit()
     engine = _engine_of(session)
@@ -302,7 +302,10 @@ def test_publish_stale_generation_aborts_without_side_effects(session: Session) 
         assert jobs_service.publish_outcome(publish_session, claim, outcome) is None
     with Session(engine) as reader:
         assert reader.get(models.InterpretationRevision, ("t1", 1)) is None
-        assert reader.get(models.ModelInvocation, "inv-job-test-1-a2") is None
+        invocation = reader.get(models.ModelInvocation, "inv-job-test-1-a2")
+        assert invocation is not None
+        assert invocation.mode == "fixture"
+        assert invocation.prompt_tokens is None
         job = reader.get(models.Job, "job-test-1")
         assert job is not None
         assert job.status == "running"

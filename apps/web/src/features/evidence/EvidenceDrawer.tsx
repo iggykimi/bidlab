@@ -76,7 +76,7 @@ function PageImage({ documentId, page }: { documentId: string; page: number }) {
       )}
       {state === "missing" && (
         <p role="status" data-testid="evidence-image-missing" className="mt-2 text-sm">
-          Esta página no tiene imagen. Coteja con el texto de abajo.
+          No pudimos mostrar la imagen. Coteja con el texto de abajo.
         </p>
       )}
     </section>
@@ -195,7 +195,7 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
         aria-modal="true"
         aria-label={`Cita del pliego, página ${citation.page_number}`}
         className={clsx(
-          "drawer-enter absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl",
+          "drawer-enter absolute inset-y-0 right-0 flex w-full max-w-2xl flex-col bg-white shadow-xl",
           closing && "drawer-exit"
         )}
       >
@@ -222,14 +222,18 @@ export function EvidenceDrawer({ workspace, target, onClose }: Props) {
             <dt className="font-medium text-muted">Documento</dt>
             <dd>
               <p>{nombreDocumento}</p>
-              <p className="mt-1">Documento de consulta revisado para la demo.</p>
+              <p className="mt-1">
+                {workspace.mode === "demo"
+                  ? "Documento de consulta del ejemplo revisado."
+                  : "Documento que has incorporado a esta licitación. Confirma cada dato antes de usarlo."}
+              </p>
             </dd>
           </div>
           <div>
             <dt className="font-medium text-muted">
               {duplicate
                 ? "Cita y texto de la página (el mismo texto)"
-                : `Cita (${minuscula(textoEs(citation.match_status))})`}
+                : `Cita de la página ${citation.page_number} (${minuscula(textoEs(citation.match_status))})`}
             </dt>
             <dd
               ref={quoteRef}

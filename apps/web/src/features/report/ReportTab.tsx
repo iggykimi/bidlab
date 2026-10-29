@@ -250,6 +250,10 @@ function ReportDetail({
   async function handlePreview() {
     setDownloadError(null);
     setDownloadRawError(null);
+    if (preview !== null) {
+      setPreview(null);
+      return;
+    }
     try {
       setPreview(await fetchReportHtml(report.id));
     } catch (err) {

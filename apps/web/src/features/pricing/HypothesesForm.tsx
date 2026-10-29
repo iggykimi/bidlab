@@ -16,6 +16,8 @@ import { SourceCitations } from "./SourceCitations";
 import { branchEs, errorCodeOnly, variableEs } from "./sources";
 import type { Hypotheses } from "./hypotheses";
 import type { PricingState } from "./usePricingState";
+import { DEFAULTS } from "./hypotheses";
+import { OfferComposition } from "./OfferComposition";
 
 interface Props {
   state: PricingState;
@@ -32,7 +34,7 @@ function showRivalPrice(raw: string): string {
   return norm === null ? raw : formatEurosExact(norm);
 }
 
-export function DiscountSection({ state }: Props) {
+export function DiscountSection({ state, showExamples = false }: Props & { showExamples?: boolean }) {
   const { h, setField, fieldErrors, pending, error, rawError, inputsValid } = state;
   const rawCode = errorCodeOnly(rawError);
   return (
@@ -103,6 +105,41 @@ export function DiscountSection({ state }: Props) {
           </span>
         )}
       </p>
+      {showExamples && (
+        <fieldset className="example-presets mt-5">
+          <legend>Explora el ejemplo</legend>
+          <p className="text-sm text-muted">
+            Cambia los supuestos con un clic. Mantienes tu coste y tus pruebas guardadas.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {[
+              { pct: 10, label: "10 % · Comparar", id: "demo-case-10" },
+              { pct: 15, label: "15 % · Comparar", id: "demo-case-15" },
+              { pct: 30, label: "30 % · Revisar costes", id: "demo-case-30" },
+            ].map((example) => (
+              <Button
+                key={example.id}
+                variant="secondary"
+                data-testid={example.id}
+                onClick={() => state.applyHypotheses({ ...DEFAULTS, discountPct: example.pct })}
+              >
+                {example.label}
+              </Button>
+            ))}
+            <Button
+              variant="secondary"
+              data-testid="demo-case-incomplete"
+              onClick={() => state.applyHypotheses({ ...DEFAULTS, complete: false })}
+            >
+              Rivales incompletos
+            </Button>
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            Supones dos rivales: {formatEurosExact(DEFAULTS.rivalAPrice)} y {formatEurosExact(DEFAULTS.rivalBPrice)}. Ningún acceso guarda una prueba.
+          </p>
+        </fieldset>
+      )}
+      {state.result && <OfferComposition result={state.result} stale={state.resultStale} />}
       {error && inputsValid && (
         <Alert tone="error" className="mt-2">
           {error}
@@ -114,7 +151,8 @@ export function DiscountSection({ state }: Props) {
 }
 
 export function HypothesesForm({ state }: Props) {
-  const { h, setField, fieldErrors, result } = state;
+  const { h, setField, fieldErrors } = state;
+  const result = state.resultStale ? null : state.result;
   const impuesto = nombreImpuesto(state.scope?.basis.tax_kind ?? "unknown");
   return (
     <Card aria-label="Prueba con precios de rivales">
@@ -288,7 +326,8 @@ export function HypothesesForm({ state }: Props) {
 }
 
 export function GroupReferencesSection({ state }: Props) {
-  const { h, result, anomalyCitations, openEvidence } = state;
+  const { result, anomalyCitations, openEvidence } = state;
+  const h = state.resultHypotheses ?? state.h;
   return (
     <Card aria-label="Referencias de oferta sospechosa por grupo">
       <h2>Referencias por grupo</h2>

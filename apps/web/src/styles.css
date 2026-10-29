@@ -103,6 +103,112 @@ a[href^="http"]::after {
 }
 
 @layer components {
+  .summary-essential {
+    border-top: 3px solid var(--color-primary);
+  }
+  .summary-journey {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: 20px 0 0;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--color-line);
+    gap: 20px;
+  }
+  .summary-journey li {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    min-width: 0;
+  }
+  .summary-journey svg {
+    flex-shrink: 0;
+    color: var(--color-primary);
+    margin-top: 7px;
+  }
+  .journey-number {
+    display: block;
+    font-size: 0.889rem;
+    font-weight: 700;
+    color: var(--color-muted);
+  }
+  .summary-journey a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: underline;
+    gap: 6px;
+  }
+  .summary-journey p {
+    margin: 4px 0 0;
+    font-size: 0.889rem;
+    color: var(--color-muted);
+  }
+  .example-presets {
+    border-top: 1px solid var(--color-line);
+    padding-top: 16px;
+    min-width: 0;
+  }
+  .example-presets legend {
+    padding: 0 8px 0 0;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .example-presets button {
+    font-size: 0.889rem;
+    padding: 10px 12px;
+  }
+  .offer-composition {
+    border-top: 1px solid var(--color-line);
+    padding-top: 20px;
+    margin-top: 24px;
+  }
+  .offer-composition h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  .offer-composition svg {
+    display: block;
+    margin: 12px 0;
+  }
+  .composition-legend {
+    display: flex;
+    gap: 12px 24px;
+    flex-wrap: wrap;
+    font-size: 1rem;
+    margin: 8px 0 12px;
+  }
+  .composition-legend dt {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .composition-legend dd {
+    margin: 2px 0 0 17px;
+    font-weight: 750;
+  }
+  .composition-key {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--color-primary);
+  }
+  .composition-profit .composition-key {
+    background: var(--color-green);
+  }
+  .composition-loss .composition-key {
+    background: var(--color-error);
+  }
+  @media (max-width: 900px) {
+    .summary-journey {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  }
   /* ---- Mock primitives (prototipo/style.css, adapted names where the
    * app already owns the pattern). Unported views keep working because
    * Tailwind utilities win over this layer on conflict. ---- */

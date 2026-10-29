@@ -165,6 +165,7 @@ def test_select_adapter_live_with_key_and_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("MODEL_API_KEY", "test-key-not-a-secret")
+    monkeypatch.setenv("BIDLAB_MODE", "live")
     monkeypatch.setenv(meta_adapter.META_API_URL_ENV, "http://127.0.0.1:9/unverified")
     get_settings.cache_clear()
     try:

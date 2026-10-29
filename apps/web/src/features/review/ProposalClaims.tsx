@@ -3,10 +3,13 @@
 // T15: the citation line is the machine localization state and the
 // checkbox is the human semantic review; the two never share wording.
 
+import { useState } from "react";
 import type { Citation, ClaimProposal, Workspace } from "../../api/client";
-import { Card } from "../../components/ui";
+import { Button, Card } from "../../components/ui";
+import { EvidenceDrawer, type EvidenceTarget } from "../evidence/EvidenceDrawer";
 import {
   citaEstadoEs,
+  canConfirmClaim,
   claimLabel,
   claimStatusEs,
   confidenceEs,
@@ -25,6 +28,7 @@ function minuscula(s: string): string {
 }
 
 export function ProposalClaims({ workspace, approved, onToggle }: Props) {
+  const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
   const claims: ClaimProposal[] = workspace.claims ?? [];
   if (claims.length === 0) return null;
   const stored: Citation[] = workspace.citations ?? [];
@@ -37,6 +41,7 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
       <ul className="mt-3 grid gap-3">
         {claims.map((claim) => {
           const checked = approved.includes(claim.key);
+          const confirmable = canConfirmClaim(claim, stored, workspace.documents);
           const statusNote = claimStatusEs(claim.status);
           return (
             <li key={claim.key} className="rounded-lg border border-line p-3">
@@ -45,6 +50,7 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
                   type="checkbox"
                   data-testid={`claim-approve-${claim.key}`}
                   checked={checked}
+                  disabled={!confirmable && !checked}
                   onChange={(e) => onToggle(claim.key, e.target.checked)}
                   className="mt-1"
                 />
@@ -60,7 +66,7 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
                     {statusNote ? ` ${statusNote}` : ""}
                   </span>
                   <span className="block text-xs text-muted" data-testid={`claim-review-state-${claim.key}`}>
-                    {checked ? "Lo confirmas." : "Por verificar."}
+                    {checked && confirmable ? "Lo confirmas." : "Por verificar."}
                   </span>
                 </span>
               </label>
@@ -72,15 +78,40 @@ export function ProposalClaims({ workspace, approved, onToggle }: Props) {
                   <p className="mt-1 whitespace-pre-wrap">
                     «{joined.proposal.verbatim_excerpt}»
                   </p>
+                  {joined.verified && workspace.documents.some((doc) =>
+                    doc.id === joined.verified?.document_id && doc.sha256 === joined.verified.document_sha256,
+                  ) && (
+                    <Button
+                      variant="secondary"
+                      className="mt-2"
+                      onClick={() => joined.verified && setEvidence({ citation: joined.verified })}
+                    >
+                      Ver página {joined.proposal.page_number} en el documento
+                    </Button>
+                  )}
                 </div>
               ))}
               {claim.citations.length === 0 && (
                 <p className="mt-2 text-xs text-muted">Sin cita: revísalo en tu documento.</p>
               )}
+              {!confirmable && (
+                <p className="mt-2 text-sm text-alert">
+                  Corrige las citas o el valor antes de confirmar este dato.
+                  {checked ? " Desmarca esta confirmación para continuar con los demás datos." : ""}
+                </p>
+              )}
             </li>
           );
         })}
       </ul>
+      {evidence && (
+        <EvidenceDrawer
+          key={evidence.citation.id}
+          workspace={workspace}
+          target={evidence}
+          onClose={() => setEvidence(null)}
+        />
+      )}
     </Card>
   );
 }

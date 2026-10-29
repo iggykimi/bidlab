@@ -1,5 +1,6 @@
 """SQLite engine/session. WAL, foreign_keys=ON, busy_timeout=5000."""
 
+import threading
 from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
@@ -24,14 +25,39 @@ def _apply_pragmas(dbapi_conn: Any, _record: Any) -> None:
     cur.close()
 
 
-@lru_cache
-def get_engine(db_path: str | None = None) -> Engine:
-    settings = get_settings()
-    path = Path(db_path) if db_path else settings.storage_path / "bidlab.sqlite3"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(f"sqlite:///{path}", connect_args={"check_same_thread": False})
-    event.listen(engine, "connect", _apply_pragmas)
-    return engine
+class _EngineCache:
+    """Single-flight engine registry.
+
+    Plain lru_cache lets two threads racing on first use (worker boot vs
+    first request) build two pools for the same file. The orphan pool then
+    holds SQLite open with no cached handle to dispose, which blocks
+    temp-dir removal on Windows. Tests reset via cache_clear().
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._engines: dict[str | None, Engine] = {}
+
+    def __call__(self, db_path: str | None = None) -> Engine:
+        with self._lock:
+            engine = self._engines.get(db_path)
+            if engine is None:
+                settings = get_settings()
+                path = Path(db_path) if db_path else settings.storage_path / "bidlab.sqlite3"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                engine = create_engine(
+                    f"sqlite:///{path}", connect_args={"check_same_thread": False}
+                )
+                event.listen(engine, "connect", _apply_pragmas)
+                self._engines[db_path] = engine
+            return engine
+
+    def cache_clear(self) -> None:
+        with self._lock:
+            self._engines.clear()
+
+
+get_engine = _EngineCache()
 
 
 @lru_cache

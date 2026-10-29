@@ -13,9 +13,10 @@ against committed state. Every operation commits on its own short
 connection, separate from the long job transaction, so a hold is visible
 to concurrent attempts immediately.
 
-Fail-closed rules: a sent attempt without reported usage settles at the
-estimate, never zero; an ``uncertain`` reservation blocks further
-reserves until it settles. The ceiling always comes from the
+Fail-closed rules: a sent attempt without reported usage retains its hold
+as ``uncertain``; estimates never masquerade as settled usage. An
+``uncertain`` reservation blocks further reserves until it is reconciled.
+The ceiling always comes from the
 ``BIDLAB_META_BUDGET_USD`` setting, so admin changes apply to new
 reserves; settled spend is never rewritten.
 """
@@ -34,9 +35,10 @@ if TYPE_CHECKING:
 
 _MICRO = Decimal(1_000_000)
 
-# Pre-call reservation assumes the provider output cap (PKG-T06): billed
-# completions can never exceed max_completion_tokens, so admission blocks
-# exactly what the attempt may spend.
+# Planning estimate only: chars/4 is not an input-token upper bound and
+# omits image/prompt overhead. The ledger enforces admission against the
+# configured estimate, not a guaranteed provider bill. Unknown use keeps
+# the hold, and actual usage is never clipped to this estimate.
 _INPUT_CHARS_PER_TOKEN = 4
 
 
@@ -60,7 +62,7 @@ def budget_cap_micro_usd() -> int:
         cap = Decimal(get_settings().bidlab_meta_budget_usd)
     except InvalidOperation:
         return 0
-    if cap < 0:
+    if not cap.is_finite() or cap < 0:
         return 0
     return int((cap * _MICRO).to_integral_value(rounding=ROUND_FLOOR))
 
@@ -72,7 +74,7 @@ def usd_str_to_micro(raw: str) -> int:
     except InvalidOperation as exc:
         msg = f"invalid usd amount {raw!r}"
         raise ValueError(msg) from exc
-    if value < 0:
+    if not value.is_finite() or value < 0:
         msg = f"invalid usd amount {raw!r}"
         raise ValueError(msg)
     return int((value * _MICRO).to_integral_value(rounding=ROUND_CEILING))
@@ -150,7 +152,7 @@ def reserve(
         with engine.begin() as conn:
             existing = _get_reservation(conn, key)
             if existing is not None:
-                if existing["amount_micro_usd"] != amount_micro:
+                if existing["amount_micro_usd"] != amount_micro or existing["job_id"] != job_id:
                     msg = "idempotency key changed reservation"
                     raise ReservationConflictError(msg)
                 return existing
@@ -191,7 +193,11 @@ def reserve(
         # Lost a same-key race: the winner committed; apply idempotency rules.
         with engine.connect() as conn:
             winner = _get_reservation(conn, key)
-        if winner is None or winner["amount_micro_usd"] != amount_micro:
+        if (
+            winner is None
+            or winner["amount_micro_usd"] != amount_micro
+            or winner["job_id"] != job_id
+        ):
             msg = "idempotency key changed reservation"
             raise ReservationConflictError(msg) from None
         return winner
@@ -217,13 +223,28 @@ def mark_uncertain(engine: Engine, key: str) -> None:
 
 
 def release_before_send(engine: Engine, key: str) -> None:
+    _release_hold(engine, key, allowed=("reserved",))
+
+
+def release_untransmitted_dispatch(engine: Engine, key: str) -> None:
+    """Release a dispatch marker only after transport confirms no send.
+
+    ``mark_sent`` is persisted before entering the adapter, so a process
+    crash cannot hide a possible send. A typed adapter error with no sent
+    receipt can prove preflight rejection; an unclassified error cannot.
+    """
+    _release_hold(engine, key, allowed=("sent",))
+
+
+def _release_hold(engine: Engine, key: str, *, allowed: tuple[str, ...]) -> None:
+    statement = text(
+        "UPDATE model_spend_reservation SET state = 'released'"
+        " WHERE key = :key AND state IN :states"
+    ).bindparams(bindparam("states", expanding=True))
     with engine.begin() as conn:
         moved = conn.execute(
-            text(
-                "UPDATE model_spend_reservation SET state = 'released'"
-                " WHERE key = :key AND state = 'reserved'"
-            ),
-            {"key": key},
+            statement,
+            {"key": key, "states": list(allowed)},
         )
         if moved.rowcount != 1:
             msg = "invalid attempt transition"
@@ -237,6 +258,23 @@ def release_before_send(engine: Engine, key: str) -> None:
             ),
             {"key": key},
         )
+
+
+def retain_interrupted_holds(engine: Engine, job_ids: list[str]) -> None:
+    """On recovery retain possible sends, including older reserved markers.
+
+    Earlier versions wrote ``sent`` after HTTP, so an orphaned reserved
+    row cannot safely be assumed free. Recovery never starts another paid
+    request for an interrupted job.
+    """
+    if not job_ids:
+        return
+    statement = text(
+        "UPDATE model_spend_reservation SET state = 'uncertain'"
+        " WHERE job_id IN :jobs AND state IN ('reserved', 'sent')"
+    ).bindparams(bindparam("jobs", expanding=True))
+    with engine.begin() as conn:
+        conn.execute(statement, {"jobs": job_ids})
 
 
 def settle(engine: Engine, key: str, *, actual_micro: int, receipt: str) -> dict[str, int]:

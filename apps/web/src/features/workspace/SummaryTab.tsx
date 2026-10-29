@@ -22,6 +22,7 @@ import { nombreImpuesto } from "../../lib/taxKind";
 import { decisionEs } from "../report/ReportTab";
 import { isOwnTender, ownChecklist } from "../review/ownTender";
 import { useWorkspaceDrafts } from "./WorkspaceDrafts";
+import { JourneySteps } from "./JourneySteps";
 
 interface Props {
   workspace: Workspace;
@@ -198,7 +199,7 @@ export function SummaryTab({ workspace }: Props) {
           </ol>
         </Card>
       )}
-      <Card aria-label="Lo esencial" data-testid="lo-esencial">
+      <Card aria-label="Lo esencial" data-testid="lo-esencial" className="summary-essential">
         <h2>Lo esencial</h2>
         <dl className="mt-3 grid gap-2 text-sm">
           <div className="flex justify-between gap-4">
@@ -230,26 +231,7 @@ export function SummaryTab({ workspace }: Props) {
           </div>
         </dl>
         <h3 className="mt-4 font-semibold">Sigue estos tres pasos</h3>
-        <ol className="mt-2 list-decimal space-y-2 pl-6 text-sm">
-          <li>
-            <Link to="?tab=requisitos" className="font-semibold text-primary underline hover:text-primary-ink">
-              Revisa los requisitos
-            </Link>{" "}
-            y comprueba si puedes presentarte.
-          </li>
-          <li>
-            <Link to="?tab=precio" className="font-semibold text-primary underline hover:text-primary-ink">
-              Prueba precios
-            </Link>{" "}
-            y mira cuántos puntos consigues.
-          </li>
-          <li>
-            <Link to="?tab=informe" className="font-semibold text-primary underline hover:text-primary-ink">
-              Guarda tu decisión
-            </Link>{" "}
-            en el informe, con tus notas.
-          </li>
-        </ol>
+        <JourneySteps />
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">

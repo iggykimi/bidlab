@@ -5,17 +5,17 @@ returns 202 immediately; this thread claims each job (compare-and-swap),
 extracts with no job transaction open, and publishes through the
 generation fence. Every phase uses its own short session, so a slow
 provider never blocks health, pricing, or polling. On boot the worker
-re-queues jobs left queued (or lease-expired) by a previous process.
+resumes only jobs never started; interrupted attempts retain possible
+spend and need a new explicit action, never an automatic paid retry.
 """
 
 from __future__ import annotations
 
-import datetime as dt
 import logging
 import queue
 import threading
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bidlab.db import models
@@ -50,20 +50,23 @@ def _ensure_started() -> None:
 
 
 def start() -> None:
-    """Start the worker and re-queue jobs orphaned by a previous process."""
-    _ensure_started()
+    """Resume never-started jobs; interrupted sends require a new user action.
+
+    Failed jobs are terminal, not a retry queue. On a real process restart
+    no old lease owner can still be trusted, even if its time has not yet
+    expired. Retain any possible spend before marking those jobs failed.
+    Calling start twice in the same process does not interrupt its worker.
+    """
     engine = get_engine()
+    if _THREAD is None or not _THREAD.is_alive():
+        jobs_service.recover_interrupted(engine)
     with Session(engine) as session:
-        now = dt.datetime.now(dt.UTC).isoformat()
         rows = session.scalars(
-            select(models.Job.id).where(
-                or_(
-                    models.Job.status == "queued",
-                    models.Job.status == "failed",
-                    (models.Job.status == "running") & (models.Job.lease_until < now),
-                )
-            )
+            select(models.Job.id)
+            .where(models.Job.status == "queued")
+            .order_by(models.Job.created_at, models.Job.id)
         ).all()
+    _ensure_started()
     for job_id in rows:
         _QUEUE.put(job_id)
     if rows:
@@ -74,9 +77,13 @@ def stop(timeout_s: float = 10.0) -> None:
     """Signal the worker loop to exit and wait for the thread."""
     global _THREAD
     _STOP.set()
-    thread, _THREAD = _THREAD, None
+    thread = _THREAD
     if thread is not None and thread is not threading.current_thread():
         thread.join(timeout=timeout_s)
+        if thread.is_alive():
+            log.warning("worker is still finishing an extraction after shutdown timeout")
+            return
+    _THREAD = None
 
 
 def _loop() -> None:

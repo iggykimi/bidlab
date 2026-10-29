@@ -1382,3 +1382,65 @@ Gates finales (exit 0 observado):
 Capturas /tmp: shot-intake-errors, shot-req-groups,
 shot-step-badges, shot-anomaly-flag, shot-curve-flag.
 Sin Meta en vivo (G3 sigue blocked: sin clave).
+
+
+## 2026-10-29 · Revisión integrada y entrega ZIP
+
+Entorno Linux, Python 3.12.14, Node 24.22.1. Código revisado 93fb854; base del autor 1a53b6a. Sin push ni inferencias nuevas a Meta.
+
+- `python3 scripts/verify.py --skip-e2e`: exit 0 sobre c9754b4 (todas las puertas no navegador). Web: 236 tests / 31 archivos. Mypy: 55 archivos. Backend, integración, contratos, lint, tipos y build pasan.
+- Después de añadir dos códigos al enum canónico y regenerar los clientes (93fb854): contratos + guardas de revisión, typecheck, ruff y mypy repetidos, exit 0 cada uno. No cambia matemática ni payloads válidos.
+- `uv run python scripts/demo_story.py --output ...`: dos ejecuciones en bases temporales; cuatro escenarios, cuatro informes y comparación en cada una. Coinciden cifras/estados; snapshots separados.
+- `npm run test:e2e -- --list`: exit 0, 77 tests / 25 archivos. No ejecutados: Chromium no pudo descargarse (archivo inválido). Browser QA también sin verificar por fallo de acceso al preview.
+- `git apply --check cambios.patch` sobre worktree limpio 1a53b6a: exit 0.
+- El primer pase encontró 404 en vez de 405 al montar la interfaz sobre API. Se corrigió la prioridad de rutas, se añadió regresión y el siguiente pase completo quedó verde.
+
+Logs completos y comandos están en `verificacion/` del ZIP BidLab_Codigo_Revisado_2026-10-29. No se atribuye esta ejecución a Windows ni se presenta el control de fixtures como una ablation Meta real.
+
+## 2026-10-29 · Integración issue #1 en Windows (lead)
+
+ZIP BidLab_Codigo_Revisado_2026-10-29 verificado: base
+1a53b6afc96cffb5256279669dd30b9cce8e0d87 exacta sobre HEAD
+limpio, MANIFEST 412/412 hashes OK. Parche leído entero
+(3443 líneas, 54 ficheros). `git apply --check`: exit 0;
+aplicado y comparado contra `codigo/`: 54/54 idénticos
+(salvo finales de línea). Sin reset ni reimplementación.
+
+Fixes del integrador sobre la entrega (causa raíz
+verificada en cada uno, no para tapar tests):
+- web.py: `get_path` de starlette devuelve `tenders\tias`
+  en Windows y el fallback a index fallaba (2 tests rojos).
+  Normalización a ruta URL en `__call__`/`get_response`.
+- ARCHITECTURE.md: referencia a backend-review-20261029.md
+  inexistente (ni en parche ni en codigo/) → apunta a
+  IMPLEMENTACION_20261029.md.
+- report-archive.spec.ts: Chromium registra una línea exacta
+  para TODO iframe srcdoc+sandbox aunque no haya scripts
+  (reproducido con `<p>` mínimo). El sandbox se mantiene
+  (el preview rinde HTML con nota de usuario); solo esa
+  línea exacta queda exenta en el afterEach, como los
+  precedentes 409/422. Test nuevo intacto y en verde.
+- demo_story + motores SQLite (triple causa, todas reales):
+  (1) env.py de alembic fugaba un engine por migrate()
+  (ahora dispose); (2) demo_story dispone el engine antes
+  de borrar el tempdir; (3) carrera de hilos: lru_cache
+  creaba DOS pools del mismo fichero (worker vs request;
+  probado con gc: 2 engines vivos). get_engine es ahora
+  registro con lock (misma API cache_clear para tests).
+
+Gates finales Windows (exit 0 observado):
+- verify.py --skip-e2e: ALL CHECKS PASSED.
+- pytest apps/api: 550 recogidos, 548 passed + 2 skipped
+  (live opt-in + symlink sin permiso en esta cuenta).
+- vitest 236/31, tsc, eslint, build, ruff, mypy 109: OK.
+- E2E completa: 77/77 (74 + demo-presets 2 + preview 1).
+- demo_story: 4 escenarios + 4 HTML + comparación;
+  cifras/score/anomalía/snapshot 4/4 MATCH contra
+  ejecucion-1 Y ejecucion-2 del ZIP. 0 llamadas Meta.
+- Visual: Resumen (JourneySteps), Precio (presets +
+  OfferComposition), Requisitos, móvil 390 (overflow -15).
+- demo-shots 4/4; regen 01/02/06/07/08/10 (01+02
+  inspeccionadas). Capturas /tmp: v-summary, v-pricing,
+  v-req, v-mobile.
+Sin Meta en vivo (G3 sigue blocked: sin clave). Vídeo y
+sesiones de usabilidad siguen pendientes del autor.

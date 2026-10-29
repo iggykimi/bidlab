@@ -23,6 +23,8 @@ from bidlab.api import (
 from bidlab.api.errors import new_request_id, register_handlers
 from bidlab.services import seed as seed_service
 from bidlab.services import worker as worker_service
+from bidlab.settings import ROOT
+from bidlab.web import LocalFrontend, LocalWebMount
 
 
 @asynccontextmanager
@@ -76,4 +78,8 @@ app.include_router(review.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(stress.router, prefix="/api/v1")
 
-# TODO(T19): serve apps/web/dist from / when built.
+# Registered last: API and report routes keep their response/error semantics.
+# A build is optional for API-only development; / explains how to prepare it.
+app.router.routes.append(
+    LocalWebMount("/", app=LocalFrontend(ROOT / "apps" / "web" / "dist"), name="web")
+)

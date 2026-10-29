@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { Citation, ClaimProposal } from "../../api/client";
+import type { Citation, ClaimProposal, TenderDocument } from "../../api/client";
 import {
   citaEstadoEs,
+  canConfirmClaim,
   claimLabel,
   claimStatusEs,
   confidenceEs,
@@ -75,6 +76,45 @@ describe("joinClaimCitations", () => {
     const joined = joinClaimCitations(claim, makeStored());
     expect(joined).toHaveLength(1);
     expect(joined[0]?.verified).toBeNull();
+  });
+
+  it("does not borrow an exact match from another quote on the same page", () => {
+    const claim = makeClaim({
+      citations: [{ document_id: "d1", page_number: 1, verbatim_excerpt: "Un importe inventado: 7." }],
+    });
+    expect(joinClaimCitations(claim, makeStored())[0]?.verified).toBeNull();
+  });
+});
+
+describe("canConfirmClaim", () => {
+  const documents = [{ id: "d1", sha256: "x" }] as TenderDocument[];
+
+  it("accepts only a proposed value whose complete citation set is current and localized", () => {
+    expect(canConfirmClaim(makeClaim(), makeStored(), documents)).toBe(true);
+    const stored = makeStored().map((c) => ({ ...c, match_status: "normalized_match" as const }));
+    expect(canConfirmClaim(makeClaim(), stored, documents)).toBe(true);
+  });
+
+  it("blocks missing values, non-proposed claims and absent citations", () => {
+    expect(canConfirmClaim(makeClaim({ normalized_value: null }), makeStored(), documents)).toBe(false);
+    expect(canConfirmClaim(makeClaim({ normalized_value: "" }), makeStored(), documents)).toBe(false);
+    expect(canConfirmClaim(makeClaim({ normalized_value: "  " }), makeStored(), documents)).toBe(false);
+    expect(canConfirmClaim(makeClaim({ status: "ambiguous" }), makeStored(), documents)).toBe(false);
+    expect(canConfirmClaim(makeClaim({ citations: [] }), makeStored(), documents)).toBe(false);
+  });
+
+  it("blocks an old file hash and an unrelated exact quote", () => {
+    expect(canConfirmClaim(makeClaim(), makeStored(), [{ id: "d1", sha256: "new" }] as TenderDocument[])).toBe(false);
+    const claim = makeClaim({ citations: [{ document_id: "d1", page_number: 1, verbatim_excerpt: "No consta." }] });
+    expect(canConfirmClaim(claim, makeStored(), documents)).toBe(false);
+  });
+
+  it("requires every citation and does not promote a manual visual state to text verification", () => {
+    const claim = makeClaim();
+    claim.citations.push({ document_id: "d1", page_number: 2, verbatim_excerpt: "Sin comprobar." });
+    expect(canConfirmClaim(claim, makeStored(), documents)).toBe(false);
+    const visual = makeStored().map((c) => ({ ...c, match_status: "manual_visual" as const }));
+    expect(canConfirmClaim(makeClaim(), visual, documents)).toBe(false);
   });
 });
 

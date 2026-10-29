@@ -7,12 +7,11 @@ from sqlalchemy.orm import Session
 
 from bidlab.api.errors import ApiError
 from bidlab.db.session import get_session
+from bidlab.settings import get_settings
 
 LOCAL_CLIENT = "local-ui"
 ALLOWED_ORIGINS = frozenset(
     {
-        "http://127.0.0.1:8000",
-        "http://localhost:8000",
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     }
@@ -34,5 +33,11 @@ def require_local_client(
     if x_bidlab_client != LOCAL_CLIENT:
         raise ApiError(403, "forbidden", "missing or invalid X-BidLab-Client")
     origin = request.headers.get("origin")
-    if origin is not None and origin not in ALLOWED_ORIGINS:
+    port = get_settings().bidlab_port
+    app_origins = {
+        f"http://127.0.0.1:{port}",
+        f"http://localhost:{port}",
+        f"http://[::1]:{port}",
+    }
+    if origin is not None and origin not in ALLOWED_ORIGINS | app_origins:
         raise ApiError(403, "forbidden", "untrusted origin")

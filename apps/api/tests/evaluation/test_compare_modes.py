@@ -165,6 +165,7 @@ def test_hybrid_refusal_ladder_needs_creds_flag_and_texts(
         assert run.block_reason is not None and "G3" in run.block_reason
         # Fake credential without the flag: still blocked, still no calls.
         monkeypatch.setenv("MODEL_API_KEY", "test-only-fake-key")
+        monkeypatch.setenv("BIDLAB_MODE", "live")
         monkeypatch.setenv("META_API_URL", "http://127.0.0.1:9/chat/completions")
         get_settings.cache_clear()
         run = ec.run_hybrid_mode(claims, allow_live=False)

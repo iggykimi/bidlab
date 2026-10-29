@@ -28,7 +28,7 @@ from bidlab.api.errors import ApiError
 from bidlab.db import models
 from bidlab.schemas import generated as g
 from bidlab.services import budget as budget_service
-from bidlab.services import meta_adapter
+from bidlab.services import meta_adapter, page_selection
 from bidlab.services import pdf as pdf_service
 from bidlab.services import render as render_service
 from bidlab.settings import get_settings
@@ -169,6 +169,10 @@ def check_live_budget(session: Session) -> None:
     engine = _engine_of(session)
     cap = budget_service.budget_cap_micro_usd()
     held_spend = budget_service.totals(engine, ceiling_micro=cap)
+    if held_spend["uncertain"]:
+        raise ApiError(
+            429, "budget_exhausted", "live usage needs reconciliation before another run"
+        )
     if held_spend["spent"] + held_spend["held"] >= held_spend["ceiling"]:
         raise ApiError(429, "budget_exhausted", "live model budget exhausted")
 
@@ -176,22 +180,18 @@ def check_live_budget(session: Session) -> None:
 def _settle_attempt(
     engine: Engine,
     key: str,
-    estimate_micro: int,
     *,
     sent: bool,
     cost_usd: str | None,
 ) -> None:
-    """Close the spend hold: settle the reported cost, estimate when unknown.
-
-    A sent attempt without reported usage settles at the estimate, never
-    zero; only attempts that never reached the network release the hold.
-    """
+    """Settle known usage; keep unknown usage held until reconciled."""
     if not sent:
-        budget_service.release_before_send(engine, key)
+        budget_service.release_untransmitted_dispatch(engine, key)
         return
-    # The adapter owns the transport: sending is only known after the fact.
-    budget_service.mark_sent(engine, key)
-    actual = estimate_micro if cost_usd is None else budget_service.usd_str_to_micro(cost_usd)
+    if cost_usd is None:
+        budget_service.mark_uncertain(engine, key)
+        return
+    actual = budget_service.usd_str_to_micro(cost_usd)
     budget_service.settle(engine, key, actual_micro=actual, receipt=key)
 
 
@@ -239,6 +239,7 @@ def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest)
                 "mode": payload.mode,
                 "allow_remote_processing": payload.allow_remote_processing,
                 "expected_interpretation_revision": (payload.expected_interpretation_revision),
+                "document_hashes": {doc_id: by_id[doc_id].sha256 for doc_id in doc_ids},
             },
             "progress": {"processed_pages": 0, "total_pages": total_pages},
             "warnings": [],
@@ -328,23 +329,14 @@ def _fail_job(
     input_hash: str,
     receipt: meta_adapter.Receipt | None = None,
 ) -> models.Job:
-    session.add(
-        models.ModelInvocation(
-            id=f"inv-{job.id}-a{attempt}",
-            job_id=job.id,
-            mode=receipt.mode if receipt is not None else mode,
-            model=receipt.model if receipt is not None else None,
-            prompt_version=meta_adapter.PROMPT_VERSION,
-            input_hash=input_hash,
-            provider_request_id=(receipt.provider_request_id if receipt is not None else None),
-            prompt_tokens=receipt.prompt_tokens if receipt is not None else None,
-            completion_tokens=(receipt.completion_tokens if receipt is not None else None),
-            cached_tokens=receipt.cached_tokens if receipt is not None else None,
-            estimated_cost_usd=(receipt.estimated_cost_usd if receipt is not None else None),
-            latency_ms=receipt.latency_ms if receipt is not None else 0,
-            status=receipt.status if receipt is not None else "failed",
-            created_at=_now().isoformat(),
-        )
+    _record_invocation(
+        session,
+        job_id=job.id,
+        attempt=attempt,
+        input_hash=input_hash,
+        mode=mode,
+        receipt=receipt,
+        status=receipt.status if receipt is not None else "failed",
     )
     job.status = "failed"
     job.stage = "failed"
@@ -354,6 +346,69 @@ def _fail_job(
     _update_request(job, warnings=[message[:2000]], attempts=attempt)
     session.flush()
     return job
+
+
+def _record_invocation(
+    session: Session,
+    *,
+    job_id: str,
+    attempt: int,
+    input_hash: str,
+    mode: str,
+    receipt: meta_adapter.Receipt | None,
+    status: str,
+    created_at: str | None = None,
+) -> None:
+    """Keep transport evidence independently of proposal promotion.
+
+    Promotion can subsequently mark the same invocation failed; it cannot
+    erase the usage already committed by execution. Recovery without a
+    receipt also leaves any previously reported metrics intact.
+    """
+    invocation_id = f"inv-{job_id}-a{attempt}"
+    row = session.get(models.ModelInvocation, invocation_id)
+    if row is None:
+        row = models.ModelInvocation(
+            id=invocation_id,
+            job_id=job_id,
+            mode=mode,
+            prompt_version=meta_adapter.PROMPT_VERSION,
+            input_hash=input_hash,
+            latency_ms=0,
+            status=status,
+            created_at=created_at or _now().isoformat(),
+        )
+        session.add(row)
+    row.status = status
+    if receipt is not None:
+        row.mode = receipt.mode
+        row.model = receipt.model
+        row.provider_request_id = receipt.provider_request_id
+        row.prompt_tokens = receipt.prompt_tokens
+        row.completion_tokens = receipt.completion_tokens
+        row.cached_tokens = receipt.cached_tokens
+        row.estimated_cost_usd = receipt.estimated_cost_usd
+        row.latency_ms = receipt.latency_ms
+
+
+def _outcome_receipt(outcome: AttemptOutcome) -> meta_adapter.Receipt | None:
+    if outcome.error is not None:
+        return outcome.error.receipt
+    result = outcome.result
+    if result is None:
+        return None
+    return meta_adapter.Receipt(
+        mode=result.mode,
+        model=result.model,
+        provider_request_id=result.provider_request_id,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        cached_tokens=result.cached_tokens,
+        estimated_cost_usd=result.estimated_cost_usd,
+        latency_ms=result.latency_ms,
+        status=result.status,
+        sent=outcome.live,
+    )
 
 
 def _iter_proposal_citations(proposal: dict[str, Any]) -> list[dict[str, Any]]:
@@ -436,6 +491,8 @@ class AttemptClaim:
     mode: str
     doc_ids: tuple[str, ...]
     worker_id: str
+    expected_revision: int | None = None
+    document_hashes: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -500,11 +557,22 @@ def claim_attempt(session: Session, job_id: str, worker_id: str) -> AttemptClaim
         mode=str(job_input.get("mode", "curated_demo")),
         doc_ids=tuple(str(item) for item in (job_input.get("document_ids", []) or [])),
         worker_id=worker_id,
+        expected_revision=(
+            job_input["expected_interpretation_revision"]
+            if type(job_input.get("expected_interpretation_revision")) is int
+            else None
+        ),
+        document_hashes=tuple(sorted(_as_dict(job_input.get("document_hashes")).items())),
     )
 
 
 def _page_images(
-    storage_root: Path, tender_id: str, doc_id: str
+    storage_root: Path,
+    tender_id: str,
+    doc_id: str,
+    *,
+    expected_pdf_sha256: str | None,
+    selected_pages: set[int] | None = None,
 ) -> dict[int, tuple[bytes, dict[str, Any]]]:
     """Load rendered PNGs plus manifest entries for one document.
 
@@ -516,7 +584,13 @@ def _page_images(
         manifest = render_service.load_render_manifest(storage_root, tender_id, doc_id)
     except (OSError, ValueError):
         return {}
-    if not manifest or manifest.get("status") != "ready":
+    if (
+        not manifest
+        or manifest.get("status") != "ready"
+        or not expected_pdf_sha256
+        or manifest.get("pdf_sha256") != expected_pdf_sha256
+        or manifest.get("render_version") != render_service.RENDER_VERSION
+    ):
         return {}
     entries = manifest.get("pages")
     if not isinstance(entries, list):
@@ -533,13 +607,20 @@ def _page_images(
             or number < 1
             or not isinstance(file_name, str)
             or not file_name
+            or (selected_pages is not None and number not in selected_pages)
         ):
             continue
         try:
             png = render_service.load_rendered_png(storage_root, tender_id, doc_id, file_name)
         except OSError:
             continue
-        if png is None:
+        if png is None or hashlib.sha256(png).hexdigest() != entry.get("image_sha256"):
+            continue
+        if len(png) < 24 or png[:8] != b"\x89PNG\r\n\x1a\n":
+            continue
+        if int.from_bytes(png[16:20], "big") != entry.get("width") or int.from_bytes(
+            png[20:24], "big"
+        ) != entry.get("height"):
             continue
         out[number] = (png, entry)
     return out
@@ -549,6 +630,8 @@ def _build_inputs_and_coverage(
     page_rows: Sequence[models.DocumentPage],
     doc_rows: Sequence[models.Document],
     images_by_doc: dict[str, dict[int, tuple[bytes, dict[str, Any]]]],
+    *,
+    submitted_keys: set[tuple[str, int]] | None = None,
 ) -> tuple[tuple[meta_adapter.PageInput, ...], dict[str, Any]]:
     """Assemble adapter inputs plus delivery coverage over the same rows."""
     sha_by_doc = {doc.id: doc.sha256 for doc in doc_rows}
@@ -602,7 +685,16 @@ def _build_inputs_and_coverage(
                     )
                     if value
                 ),
-                image_submitted=png is not None,
+                image_submitted=(
+                    png is not None
+                    and (
+                        submitted_keys is None
+                        or (page.document_id, page.page_number) in submitted_keys
+                    )
+                ),
+                text_submitted=(
+                    submitted_keys is None or (page.document_id, page.page_number) in submitted_keys
+                ),
             )
         )
     coverage = pdf_service.coverage({doc.id: doc.pages_count for doc in doc_rows}, cover_pages)
@@ -622,6 +714,7 @@ def execute_attempt(
     failed attempt, never a stuck job.
     """
     with Session(engine) as session:
+        revision = current_revision(session, claim.tender_id)
         page_rows = session.scalars(
             select(models.DocumentPage)
             .where(models.DocumentPage.document_id.in_(claim.doc_ids))
@@ -630,6 +723,25 @@ def execute_attempt(
         doc_rows = session.scalars(
             select(models.Document).where(models.Document.id.in_(claim.doc_ids))
         ).all()
+    context_changed = (
+        claim.expected_revision is not None and revision != claim.expected_revision
+    ) or (
+        bool(claim.document_hashes)
+        and dict(claim.document_hashes) != {doc.id: doc.sha256 for doc in doc_rows}
+    )
+    if context_changed:
+        inputs, coverage = _build_inputs_and_coverage(page_rows, doc_rows, {})
+        return AttemptOutcome(
+            inputs=inputs,
+            input_hash=meta_adapter.pages_input_hash(inputs),
+            run_started=_now().isoformat(),
+            live=claim.mode == "live",
+            coverage=coverage,
+            error=meta_adapter.AdapterError(
+                "revision_conflict",
+                "analysis context changed before processing; start a new analysis",
+            ),
+        )
     if adapter is None:
         try:
             adapter = meta_adapter.select_adapter(claim.mode)
@@ -646,11 +758,30 @@ def execute_attempt(
             )
     live = adapter.is_live
     images_by_doc: dict[str, dict[int, tuple[bytes, dict[str, Any]]]] = {}
+    selected_keys: set[tuple[str, int]] | None = None
     if live:
+        candidates, _ = _build_inputs_and_coverage(page_rows, doc_rows, {})
+        selected = page_selection.select_first_packet(
+            candidates, limit=meta_adapter.MAX_HYBRID_PAGES
+        )
+        selected_keys = {(page.document_id, page.page_number) for page in selected}
         storage_root = get_settings().storage_path.resolve()
+        sha_by_doc = {doc.id: doc.sha256 for doc in doc_rows}
         for doc_id in claim.doc_ids:
-            images_by_doc[doc_id] = _page_images(storage_root, claim.tender_id, doc_id)
-    inputs, coverage = _build_inputs_and_coverage(page_rows, doc_rows, images_by_doc)
+            images_by_doc[doc_id] = _page_images(
+                storage_root,
+                claim.tender_id,
+                doc_id,
+                expected_pdf_sha256=sha_by_doc.get(doc_id),
+                selected_pages={number for ident, number in selected_keys if ident == doc_id},
+            )
+    inputs, coverage = _build_inputs_and_coverage(
+        page_rows, doc_rows, images_by_doc, submitted_keys=selected_keys
+    )
+    if selected_keys is not None:
+        inputs = tuple(
+            page for page in inputs if (page.document_id, page.page_number) in selected_keys
+        )
     input_hash = meta_adapter.pages_input_hash(inputs)
     run_started = _now().isoformat()
     key = f"inv-{claim.job_id}-a{claim.attempt}"
@@ -676,6 +807,9 @@ def execute_attempt(
                 coverage=coverage,
                 budget_blocked=True,
             )
+        # Commit intent before entering the adapter: a crash during HTTP
+        # must leave a possible send visible, not an apparently unused hold.
+        budget_service.mark_sent(engine, key)
     try:
         result = adapter.extract(inputs)
     except meta_adapter.AdapterError as exc:
@@ -684,7 +818,6 @@ def execute_attempt(
             _settle_attempt(
                 engine,
                 key,
-                estimate,
                 sent=receipt is not None and receipt.sent,
                 cost_usd=receipt.estimated_cost_usd if receipt is not None else None,
             )
@@ -696,8 +829,38 @@ def execute_attempt(
             coverage=coverage,
             error=exc,
         )
+    except Exception:
+        # A transport/plugin bug is not proof that nothing was sent. Keep
+        # its hold and surface a terminal job rather than a permanent spinner.
+        receipt = None
+        if live:
+            budget_service.mark_uncertain(engine, key)
+            receipt = meta_adapter.Receipt(
+                mode="live",
+                model=get_settings().meta_model,
+                provider_request_id=None,
+                prompt_tokens=None,
+                completion_tokens=None,
+                cached_tokens=None,
+                estimated_cost_usd=None,
+                latency_ms=0,
+                status="uncertain",
+                sent=True,
+            )
+        return AttemptOutcome(
+            inputs=inputs,
+            input_hash=input_hash,
+            run_started=run_started,
+            live=live,
+            coverage=coverage,
+            error=meta_adapter.AdapterError(
+                "provider_failure",
+                "unexpected extraction failure; inspect the recorded attempt",
+                receipt,
+            ),
+        )
     if live:
-        _settle_attempt(engine, key, estimate, sent=True, cost_usd=result.estimated_cost_usd)
+        _settle_attempt(engine, key, sent=True, cost_usd=result.estimated_cost_usd)
     return AttemptOutcome(
         inputs=inputs,
         input_hash=input_hash,
@@ -718,6 +881,21 @@ def publish_outcome(
     lease expired and was reclaimed) rolls back instead of overwriting the
     newer attempt.
     """
+    # A slow or rejected proposal is still an invocation. Persist its
+    # receipt before the generation/context fence can reject promotion.
+    transport_receipt = _outcome_receipt(outcome)
+    with Session(_engine_of(session)) as receipt_session:
+        _record_invocation(
+            receipt_session,
+            job_id=claim.job_id,
+            attempt=claim.attempt,
+            input_hash=outcome.input_hash,
+            mode="live" if outcome.live else "fixture",
+            receipt=transport_receipt,
+            status=transport_receipt.status if transport_receipt is not None else "failed",
+            created_at=outcome.run_started,
+        )
+        receipt_session.commit()
     job = session.get(models.Job, claim.job_id)
     if (
         job is None
@@ -738,7 +916,27 @@ def publish_outcome(
     if fenced.rowcount != 1:
         session.rollback()
         return None
-    if outcome.budget_blocked:
+    docs = session.scalars(
+        select(models.Document).where(models.Document.id.in_(claim.doc_ids))
+    ).all()
+    if (
+        claim.expected_revision is not None
+        and current_revision(session, claim.tender_id) != claim.expected_revision
+    ) or (
+        bool(claim.document_hashes)
+        and dict(claim.document_hashes) != {doc.id: doc.sha256 for doc in docs}
+    ):
+        _fail_job(
+            session,
+            job,
+            code="revision_conflict",
+            message="analysis belongs to an earlier context; current review was preserved",
+            mode="live" if outcome.live else "fixture",
+            attempt=claim.attempt,
+            input_hash=outcome.input_hash,
+            receipt=_outcome_receipt(outcome),
+        )
+    elif outcome.budget_blocked:
         _fail_job(
             session,
             job,
@@ -813,6 +1011,8 @@ def _publish_success(
     for page in pages:
         by_doc[page.document_id] = by_doc.get(page.document_id, 0) + 1
     job_warnings = list(result.warnings)
+    if outcome.live and result.estimated_cost_usd is None:
+        job_warnings.append("Meta usage unavailable; budget hold retained until reconciliation")
     for doc in docs:
         have = by_doc.get(doc.id, 0)
         if have < doc.pages_count:
@@ -845,24 +1045,7 @@ def _publish_success(
             created_at=_now().isoformat(),
         )
     )
-    session.add(
-        models.ModelInvocation(
-            id=f"inv-{job.id}-a{claim.attempt}",
-            job_id=job.id,
-            mode=result.mode,
-            model=result.model,
-            prompt_version=meta_adapter.PROMPT_VERSION,
-            input_hash=outcome.input_hash,
-            provider_request_id=result.provider_request_id,
-            prompt_tokens=result.prompt_tokens,
-            completion_tokens=result.completion_tokens,
-            cached_tokens=result.cached_tokens,
-            estimated_cost_usd=result.estimated_cost_usd,
-            latency_ms=result.latency_ms,
-            status="ok",
-            created_at=_now().isoformat(),
-        )
-    )
+    # The invocation receipt is already committed independently above.
     claims = proposal_data.get("claims", []) or []
     weak_claim = any(
         isinstance(claim_item, dict) and claim_item.get("status") in NON_PROPOSED_CLAIM
@@ -894,11 +1077,28 @@ def _publish_success(
     job.result_revision = new_revision
     job.error_code = None
     job.updated_at = _now().isoformat()
-    usable_pages = outcome.coverage.get("usable_text", len(pages))
+    coverage_pages = outcome.coverage.get("pages")
+    delivered_pages = (
+        sum(
+            1
+            for page in coverage_pages
+            if isinstance(page, dict)
+            and (page.get("text_submitted") or page.get("image_submitted"))
+        )
+        if isinstance(coverage_pages, list)
+        else len(pages)
+    )
     manifest["coverage"] = outcome.coverage
+    if outcome.live:
+        manifest["page_selection"] = {
+            "method": "clause-signals-1",
+            "limit": meta_adapter.MAX_HYBRID_PAGES,
+            "selected": [[page.document_id, page.page_number] for page in pages],
+            "complete_document_reading": False,
+        }
     _update_request(
         job,
-        processed=int(usable_pages) if isinstance(usable_pages, int) else len(pages),
+        processed=delivered_pages,
         warnings=job_warnings,
         manifest=manifest,
     )
@@ -936,3 +1136,32 @@ def cancel_queued_job(session: Session, job_id: str) -> bool:
     )
     session.flush()
     return bool(cancelled.rowcount == 1)
+
+
+def recover_interrupted(engine: Engine) -> None:
+    """Recover process-owned running jobs without another provider call."""
+    with Session(engine) as session:
+        ids = list(session.scalars(select(models.Job.id).where(models.Job.status == "running")))
+    budget_service.retain_interrupted_holds(engine, ids)
+    with Session(engine) as session:
+        for job_id in ids:
+            job = session.get(models.Job, job_id)
+            if job is None or job.status != "running":
+                continue
+            req = _as_dict(job.request_json)
+            job_input = _as_dict(req.get("input"))
+            job.generation += 1
+            job.worker_id = None
+            job.lease_until = None
+            _fail_job(
+                session,
+                job,
+                code="interrupted",
+                message=(
+                    "processing was interrupted; review the attempt before starting a new analysis"
+                ),
+                mode="live" if job_input.get("mode") == "live" else "fixture",
+                attempt=max(1, _as_int(req.get("attempts"))),
+                input_hash="",
+            )
+        session.commit()

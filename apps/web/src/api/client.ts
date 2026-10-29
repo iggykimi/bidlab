@@ -1,5 +1,5 @@
 // Typed client for the BidLab local API (docs/API_CONTRACT.yaml).
-// Backend base URL comes from VITE_API_URL; default is the local API.
+// Vite proxies /api in development; the production build shares the API origin.
 // All money/points stay backend strings; this module never computes figures.
 
 import type { z } from "zod";
@@ -8,7 +8,7 @@ import { evaluationResultSchema, workspaceSchema } from "./schemas";
 
 export const API_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ??
-  "http://127.0.0.1:8000/api/v1";
+  "/api/v1";
 
 export const LOCAL_CLIENT = "local-ui";
 
