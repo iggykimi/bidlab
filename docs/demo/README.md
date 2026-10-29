@@ -56,9 +56,9 @@ análisis + revisión manual + simular + comparar + exportar
   textos centralizados en `lib/` + [voice-guide](../voice-guide-es.md)
 - Tests (contados el 29-oct-2026 en este árbol, ver
   [verification-log](../verification-log.md)):
-  backend 548 + 2 skipped (unit + evaluation + integración/contratos),
-  web 237 en 31 ficheros (`npm run test:unit`),
-  E2E 78 herméticos (Chromium, loopback).
+  backend 557 + 2 skipped (unit + evaluation + integración/contratos),
+  web 252 en 33 ficheros (`npm run test:unit`),
+  E2E 85 herméticos (Chromium, loopback).
   Puertas completas en verde el 29-oct
   (`python scripts/verify.py`, 10/10) + dos ensayos
   limpios R1+R2.

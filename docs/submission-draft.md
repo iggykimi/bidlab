@@ -49,10 +49,10 @@ Current document-extraction state (28-oct):
 
 ## Verification (real runs, Windows)
 
-- Backend: 548 passing + 2 skipped (live opt-in + Windows symlink), 550 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @4b44ec9 (sin cambios desde 7af9417). Ruff check + format clean, mypy 109 files clean, observed 29-oct.
-- Web: 237 vitest passing (31 files), eslint + tsc exit 0, vite build OK, observed 29-oct @4b44ec9. Novedades RC: cabecera compacta (U1), hero comparador (U2), procedencia en drawer (U3), motivos de malla en español (U6).
-- Playwright E2E: 78/78 green (hermetic per-run storage), observed 29-oct @4b44ec9. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
-- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @4b44ec9. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
+- Backend: 557 passing + 2 skipped (live opt-in + Windows symlink), 559 collected (unit + evaluation + integration + contracts), exit 0, observed 29-oct @264712f. Ruff check + format clean, mypy 111 files clean, observed 29-oct.
+- Web: 252 vitest passing (33 files), eslint + tsc exit 0, vite build OK, observed 29-oct @264712f. Novedades V2: rastro Fuente→Decisión, cobertura honesta, frontera Pareto, mapa de stress, bandeja con contadores, informe con descargo, bench de intake.
+- Playwright E2E: 85/85 green (hermetic per-run storage), observed 29-oct @264712f. Specs run on real local API + web, Chromium, every spec guarded to loopback-only traffic (0 external calls).
+- `scripts/verify.py`: 10/10 ALL CHECKS PASSED, exit 0, observed 29-oct @264712f. Two clean rehearsals R1+R2 10/10 (fresh storage, real loopback servers).
 - CI (GitHub Actions, incl. Playwright): green on b00dda8 pre-round-2 (26-oct); current pushes not forced through CI per author order.
 - Demo oracles: `fixtures/demo/expected.json` (cost 90000.00, rivals 106502.40 / 110052.48; 5/15/30 % cases; anomaly possible_justification_required at 30 %).
 - Detail: `docs/verification-log.md`.
@@ -66,7 +66,7 @@ Current document-extraction state (28-oct):
 | C03 | Minimal real Meta inference on record | OBSERVED (minimal) | `evidence/meta_smoke_status.json`, 2026-10-26T19:05:43Z |
 | C04 | Upload → job → review → simulator path in UI (fixture) | OBSERVED | PKG-T09: AnalysisTracker + rehydrate E2E + review-gated engine (verification-log PKG-T09) |
 | C04b | Same path with LIVE document extraction | NOT VERIFIED | Zero live calls; G3 partial, no key |
-| C11 | Exact page image in evidence drawer, labelled text fallback | OBSERVED | PKG-T15: `get_page_image` + `t15-evidence.spec.ts` 3/3 |
+| C11 | Exact page image in evidence drawer, labelled text fallback | OBSERVED | PKG-T15: `get_page_image` + `t15-evidence.spec.ts` 4/4 |
 | C12 | Citation (machine localisation) vs review (human) kept distinct | OBSERVED | PKG-T15: vocab split + `citaEstadoEs` tests |
 | C13 | Text-vs-hybrid extraction quality/cost measured | OBSERVED | `evidence/extraction_comparison.json` + `scripts/compare_extraction.py` (text 0/0/11, hybrid blocked, 14 tests) |
 | C14 | Usability sessions with target people | PENDING | Protocol in `docs/usability-log.md`; 0 sessions, author recruits |

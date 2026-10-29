@@ -59,9 +59,9 @@ Proof points to repeat verbatim (never paraphrase numbers):
   report with decision, note, pendings, hypotheses, sources, rule ids.
 - Meta evidence: muse-spark-1.3 smoke PASS, HTTP 200, real inference,
   2026-10-26 (`evidence/meta_smoke_status.json`).
-- Verification: 77 Playwright E2E green (incl. E01–E12, CMP-01/02,
+- Verification: 85 Playwright E2E green (incl. E01–E12, CMP-01–05,
   R01–R06, T15/T20 evidence; loopback only, 0 external calls);
-  backend 548 + web 236 green; ruff + mypy clean;
+  backend 557 + web 252 green; ruff + mypy clean;
   frontend lint/typecheck/build green; npm audit 0 vulns.
 
 ## 3. Channels (ORB, adapted to a hackathon)

@@ -1,6 +1,6 @@
 # BidLab — guion demo 180 s
 
-Estado: BORRADOR de guion v3 (29-oct, post issue #1). Literales «» re-verificados contra código/tests @7af9417: citas vigentes salvo las dos marcadas v3 (aviso de imagen, línea de coste), ver notas al pie de cada bloque tocado. Footage-oro-20261028.webm REGRABADO post-paquete (mismo día, VP9 800×450 15 s, UI actual): sirve como metraje base para narrar. Vídeo narrado de 180 s pendiente de grabar por el autor. Nada de aquí se ha enviado.
+Estado: BORRADOR de guion v4 (29-oct, post issue #3). Literales «» re-verificados contra código/tests @264712f: arranque same-origin real (§18.9), aviso curado «El documento original no se incluye…», notas de cámara V2 (rastro en bloque 2, frontera en bloque 6). Footage-oro-20261028.webm anterior al V2 (UI sin rastro/frontera): sirve como metraje base parcial; regrabación pendiente del autor junto al vídeo narrado de 180 s. Nada de aquí se ha enviado.
 Caso: licitación real 2026/00006554N (Tías, PLACSP 20777838). UI en español, tuteo.
 Regla de honestidad: solo se muestra lo que existe y pasa E2E en Chromium.
 Textos entre «» son literales verificados en código o specs E2E.
@@ -14,9 +14,11 @@ pero el 10 % conserva 5916,80 € más de beneficio.
 
 ## Preparación (antes de grabar)
 
-1. `python scripts/demo.py --reset-demo` (resetea la DB en `BIDLAB_STORAGE_DIR`, API en loopback).
-2. GET capabilities: mode=demo, meta_configured=false, cero llamadas externas.
-3. `npm run dev -w apps/web` (el paso 1 NO arranca el frontal).
+1. `npm run build` en `apps/web` una vez (la API sirve esa compilación).
+2. `python scripts/demo.py --reset-demo` (resetea la DB en `BIDLAB_STORAGE_DIR`,
+   sirve API + frontal same-origin en `http://127.0.0.1:8000/`).
+3. GET capabilities: mode=demo, meta_configured=false, cero llamadas externas.
+   (`npm run dev -w apps/web` solo hace falta para desarrollar el frontal.)
 4. Ventana 1280×720, zoom 100 %. Tras «Cargar ejemplo», clic en «Precio»
    para comprobar que «Escribe tu rebaja (%)» cabe en el primer pantallazo.
 5. Sin .env, claves ni ventanas ajenas en pantalla.
@@ -36,7 +38,9 @@ aviso «Datos de ejemplo. Los precios de los rivales y tu coste son inventados
 para que puedas probar.», «Lo esencial»: «Presupuesto de salida» 118.336 €
 sin IGIC (126.619,52 € con IGIC), «El precio da hasta 49 puntos.»,
 «Datos del 25 de octubre de 2026.», enlace «Ver publicación en Contratación
-del Estado» (visible, NO pulsarlo). [NO SE LEE: plano de la línea «El asistente
+del Estado» (visible, NO pulsarlo). [NO SE LEE: sobre «Lo esencial» se ve la
+barra «Rastro de decisión» (Fuente→Propuesta→Revisión→Cálculo→Decisión) con
+«Ejemplo preparado.»; no la narres, es contexto en plano. Plano de la línea «El asistente
 de IA no está disponible en esta demo: aquí los datos ya vienen revisados.»;
 no muestres ninguna extracción Meta en vivo, no existe en el frontal.]
 Narración: «Partimos de una licitación real de Tías: 118.336 euros de
@@ -48,7 +52,7 @@ cifras vienen de una semilla revisada a mano.»
 Pantalla: pestaña «Requisitos». Fila «Servicios similares año mayor ejecución
 ≥ 207.088,00 €»: «Por verificar». Clic en «Ver página 6 en el pliego» →
 «Página 6 de 41»: la semilla no trae imagen, así que se ve el aviso
-«No pudimos mostrar la imagen. Coteja con el texto de abajo.» (v3: literal nuevo) y la cita con
+«El documento original no se incluye en este ejemplo. Coteja con el texto de abajo.» y la cita con
 207.088 como texto rotulado. «Cerrar» antes del siguiente bloque
 [NO SE LEE: el drawer devuelve el foco al botón; no finjas una imagen
 que no existe].
@@ -87,7 +91,9 @@ Pantalla: «¿Guardas esta prueba?» → «Guardar esta prueba» («Prueba
 «Puedes compararlas: comparten contexto.», delta «-5916,80 €»,
 ««Demo 10» conserva 5916,80 € más de beneficio con los mismos puntos.»
 [NO SE LEE: la comparación vive en la bandeja «Comparar pruebas», también
-disponible en «Informe»; no hay vista animada lado a lado.]
+disponible en «Informe»; no hay vista animada lado a lado. Bajo el delta
+aparece «Frontera de decisión» con «Demo 10» en la frontera: no lo narres
+o menciónalo en 5 s quitándolos del bloque 8 opcional.]
 Narración: «Guardamos ambas pruebas y las comparamos. Mismos supuestos, mismo
 contexto. El 10 % conserva 5916,80 euros más con los mismos puntos.»
 
@@ -168,7 +174,7 @@ ejemplo. Atajos honestos si algo falta: «Crea tu empresa en Revisar»,
 - Números esperados 5/15/30 %: fixtures/demo/expected.json (90000.00 =
   80000 + 10000 de company.json «Pyme de ejemplo»; casos 5/15/30 %;
   anomalía a 30 %); caso 10 % fijado por CMP-02 + R06 + backend, no por expected.json.
-- Puertas globales: suite 77/77 + backend 548 + web 236 en verde
-  el 29-oct (@7af9417; ver docs/verification-log.md, post-issue #1);
+- Puertas globales: suite 85/85 + backend 557 + web 252 en verde
+  el 29-oct (@264712f; ver docs/verification-log.md, post-issue #3);
   re-ejecutar `python scripts/verify.py` tras cualquier cambio posterior
-  antes de grabar (el 10/10 citado es post-issue #1).
+  antes de grabar.

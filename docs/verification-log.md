@@ -1472,3 +1472,35 @@ D2 (requiere live), R1 (autor). Nota §24: el motivo
 usa 5916,80 (backend), no 5.916,80; test corregido al
 texto real. Sin Meta en vivo (G3 blocked). Vídeo,
 sesiones y candidatura: autor.
+
+## 2026-10-29 · Issue #3 V2 (lead, Windows)
+
+Paquete BIDLAB_V2_PROMPT_Y_GUIA_2026-10-29.zip leído entero
+(prompt 2183 líneas + guía). Sin MANIFEST (nada que
+verificar). Base 616b248 limpia; MODEL_API_KEY/META_API_URL
+ausentes → BL-V2-02 live BLOCKED externo. D-V2-8: orden
+vigente del autor (siempre commit y push) prevalece sobre
+la regla 4 del prompt.
+
+Commits: f0cb455 (01 stale) + eca05ed (04 drawer) +
+bf49982 (03 curva) + 030600c (08 pares) + fa315cb (05
+Pareto) + 3795240 (06 heatmap) + 2c2cb5c/6776a5f (07
+cobertura) + 5b4824b (12 rastro) + 5e698e9 (09 bandeja)
++ c68964b (15 informe) + 8b1bb93 (13/14 visual-a11y) +
+522ab32 (10 bench) + 881c19c/cca2f72 (fixes + shots)
++ 264712f (Q02-F frontera 422).
+
+Gates @264712f (exit 0 observado): verify.py ALL CHECKS
+PASSED 10/10; backend 557+2skip (559); vitest 252/33;
+tsc/eslint/build OK; ruff + mypy 111 OK; E2E 85/85;
+demo-shots 4/4; v2-shots 3/3 (8 PNG); demo_story MATCH
+(10/15: 49,0 + 5916,80); bench 2/40/100 p.; compare
+offline 0/11 baseline + híbrido blocked, 0 llamadas live.
+Visual: informe, stress, móvil 390 inspeccionados.
+
+BLOQUEADO: live Meta (sin clave/admisión/saldo).
+DESCARTADO con motivo: 2ª pasada P2, multilote P3,
+extras §24, export A-B, filtros/criticidad sin contrato.
+Vídeo, sesiones y candidatura: autor. Detalle por ID en
+docs/CHANGELOG_IMPLEMENTACION_V2.md; informe §22.6 en
+el cierre del issue #3.

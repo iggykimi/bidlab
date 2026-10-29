@@ -81,11 +81,14 @@ npm run dev -w apps/web
 ```
 
 Atajo demo: `python scripts/demo.py --reset-demo` resetea la DB demo,
-siembra y arranca el API en un solo paso.
+siembra y sirve API + frontal (compilado) same-origin en un solo paso:
+<http://127.0.0.1:8000/>.
 
 URLs:
 
-- Web: <http://127.0.0.1:5173/> (botón demo → workspace `/tenders/tias`)
+- Web same-origin: <http://127.0.0.1:8000/> tras `npm run build`
+  (botón demo → workspace `/tenders/tias`)
+- Web dev: <http://127.0.0.1:5173/> (`npm run dev -w apps/web`)
 - API: <http://127.0.0.1:8000/api/v1/health> →
   `{"status":"ok","engine_version":"1.0.0","schema_version":"1.0.0"}`
 - Capacidades y límites: `/api/v1/capabilities`
@@ -138,11 +141,11 @@ pytest integration+contracts, `npm run lint`, `npm run typecheck`,
 Estado a 29-oct-2026 (contado en este árbol; detalle y comandos
 en [verification-log](docs/verification-log.md)):
 
-- Backend: 550 recogidos, 548 en verde + 2 skipped (live opt-in +
+- Backend: 559 recogidos, 557 en verde + 2 skipped (live opt-in +
   symlink sin permiso en Windows).
-  Web: 237 en 31 ficheros (`npm run test:unit`, verde).
-  E2E: 78 tests herméticos (Chromium, loopback).
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@4b44ec9, 29-oct).
+  Web: 252 en 33 ficheros (`npm run test:unit`, verde).
+  E2E: 85 tests herméticos (Chromium, loopback).
+- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0 (@264712f, 29-oct).
 - Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
   Playwright, `verify.py`. Sin CI remota (decisión del autor).
 - Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
@@ -158,6 +161,10 @@ en [verification-log](docs/verification-log.md)):
   y `demo_story` reproducible (4 escenarios + 4 informes + comparación).
   Auditoría 29-oct (issue #2, @19ed006): cabecera compacta, hero
   comparador 10/15, procedencia en drawer, motivos en español.
+  V2 29-oct (issue #3, @264712f): rastro Fuente→Decisión, cobertura
+  honesta, frontera Pareto, mapa de stress, bandeja con contadores,
+  informe con descargo, bench de intake, auditoría a11y, guion v4
+  ([changelog](docs/CHANGELOG_IMPLEMENTACION_V2.md), [QA](docs/QA_REPORT_V2.md)).
   Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
   guion 180s v2 verificado; vídeo narrado pendiente del autor;
   sin envío.
