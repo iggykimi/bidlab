@@ -78,7 +78,9 @@ export function KpiSection({ workspace, state }: Props) {
         </p>
       )}
       <span role="status" aria-live="polite" className="sr-only" key={requestCount}>
-        {result ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}` : "Calculando tu resultado…"}
+        {result
+          ? `Valores actualizados: precio ${formatEurosExact(result.price_net)}${flagged ? ". Oferta sospechosa" : ""}`
+          : "Calculando tu resultado…"}
       </span>
       <Card as="div" pad="sm">
         <h2 className="text-sm font-medium text-muted">Tu oferta (sin {impuesto})</h2>
@@ -158,8 +160,10 @@ export function KpiSection({ workspace, state }: Props) {
           <SourceCitations citations={state.ruleCitations} onSelect={state.openEvidence} />
         </p>
       </Card>
-      <Card as="div" pad="sm">
-        <h2 className="text-sm font-medium text-muted">¿Oferta sospechosamente baja?</h2>
+      <Card as="div" pad="sm" data-testid="anomaly-card" className={flagged ? "border border-alert bg-warn-bg" : undefined}>
+        <h2 className="text-sm font-medium text-muted">
+          {flagged && <span aria-hidden="true">⚠︎ </span>}¿Oferta sospechosamente baja?
+        </h2>
         <p data-testid="anomaly-status" className="text-2xl font-bold">
           <Crossfade key={result ? result.anomaly.status : "none"}>
             {result ? anomalyVerdictEs(result.anomaly.status) : "—"}

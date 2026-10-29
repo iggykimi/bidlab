@@ -62,6 +62,12 @@ test("E05 own 30 percent raises a conditional presumption", async ({ page }) => 
   await expect(page.getByTestId("anomaly-status")).toHaveText("Sí");
   await expect(page.getByTestId("anomaly-detail")).toContainText("cae por debajo");
   await expect(page.getByTestId("anomaly-detail")).toContainText("justifiques tus costes");
+  // H1 visibility: flagged state warns (tint + marker) without changing
+  // the verdict text, and the curve names its flagged points.
+  await expect(page.getByTestId("anomaly-card")).toHaveClass(/bg-warn-bg/);
+  await expect(page.getByRole("img", { name: /Curva precio-puntos/ })).toHaveAccessibleName(
+    /zona sospechosa/
+  );
   await expect(page.locator("main")).not.toContainText(/excluida/i);
   expect(guard.blocked()).toBe(0);
 });

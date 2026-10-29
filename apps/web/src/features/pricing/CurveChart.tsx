@@ -60,6 +60,33 @@ function toNum(raw: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+export interface FlagSplit {
+  runs: { x1: number; x2: number }[];
+  isolated: number[];
+}
+
+/**
+ * Split flagged prices into contiguous hatch runs (2+ distinct prices)
+ * and isolated points (dots). Pure: covered by curveFlags.test.ts.
+ */
+export function splitFlaggedRuns(rows: { price: number; flagged: boolean }[]): FlagSplit {
+  const runs: { x1: number; x2: number }[] = [];
+  let runStart: number | null = null;
+  let runEnd = 0;
+  for (const r of rows) {
+    if (r.flagged) {
+      if (runStart === null) runStart = r.price;
+      runEnd = r.price;
+    } else if (runStart !== null) {
+      if (runEnd > runStart) runs.push({ x1: runStart, x2: runEnd });
+      runStart = null;
+    }
+  }
+  if (runStart !== null && runEnd > runStart) runs.push({ x1: runStart, x2: runEnd });
+  const inRun = (price: number): boolean => runs.some((run) => price >= run.x1 && price <= run.x2);
+  return { runs, isolated: rows.filter((r) => r.flagged && !inRun(r.price)).map((r) => r.price) };
+}
+
 // Shared axes/tooltip config (recharts needs direct <XAxis>/<Tooltip>
 // children, so the sharing unit is props objects, not components).
 const CHART_MARGIN = { top: 24, right: 24, bottom: 56, left: 8 };
@@ -167,20 +194,12 @@ export function CurveChart({
     profitMax > profitMin &&
     ownProfitNum <= profitMin + (profitMax - profitMin) * 0.12;
 
-  // Contiguous flagged runs (≥2 points) for the hatch overlay.
-  const flaggedRuns: { x1: number; x2: number }[] = [];
-  let runStart: number | null = null;
-  let runEnd = 0;
-  for (const r of rows) {
-    if (r.flagged) {
-      if (runStart === null) runStart = r.price;
-      runEnd = r.price;
-    } else if (runStart !== null) {
-      if (runEnd > runStart) flaggedRuns.push({ x1: runStart, x2: runEnd });
-      runStart = null;
-    }
-  }
-  if (runStart !== null && runEnd > runStart) flaggedRuns.push({ x1: runStart, x2: runEnd });
+  // Contiguous flagged runs (≥2 points) hatch; isolated flagged points
+  // get dots, otherwise lone points were invisible on the curve.
+  const { runs: flaggedRuns, isolated: isolatedPrices } = splitFlaggedRuns(rows);
+  const isolatedSet = new Set(isolatedPrices);
+  const isolatedFlagged = rows.filter((r) => isolatedSet.has(r.price));
+  const flaggedCount = rows.filter((r) => r.flagged).length;
 
   let deltaClause = "";
   if (cheapest !== null && ownPriceNum !== null) {
@@ -203,8 +222,12 @@ export function CurveChart({
       : `Tu beneficio está sin determinar a tu rebaja del ${formatPercent(discountRate)}`) +
     (ownCost !== null ? ` · equilibrio en ${formatEurosHeadline(ownCost)}` : "") +
     ".";
-  const scoreAria = `Curva precio-puntos, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}. Tu oferta ${formatEurosHeadline(ownPrice)}: ${ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}`;
-  const profitAria = `Curva precio-beneficio, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}. Tu oferta ${formatEurosHeadline(ownPrice)}: beneficio ${ownProfit !== null ? formatSignedEurosExact(ownProfit) : "sin determinar"}`;
+  const flaggedClause =
+    flaggedCount > 0
+      ? `, ${flaggedCount} en zona sospechosa`
+      : "";
+  const scoreAria = `Curva precio-puntos, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}${flaggedClause}. Tu oferta ${formatEurosHeadline(ownPrice)}: ${ownScore !== null ? `${formatPoints1(ownScore)} puntos` : "puntos sin determinar"}`;
+  const profitAria = `Curva precio-beneficio, ${rows.length} puntos de ${formatEurosHeadline(first.rawPrice)} a ${formatEurosHeadline(last.rawPrice)}${flaggedClause}. Tu oferta ${formatEurosHeadline(ownPrice)}: beneficio ${ownProfit !== null ? formatSignedEurosExact(ownProfit) : "sin determinar"}`;
 
   return (
     <div className="grid gap-4" data-testid="curve-chart" aria-busy={pending}>
@@ -257,6 +280,20 @@ export function CurveChart({
                     label={{ value: "Oferta sospechosa", position: "insideBottom", fontSize: 14 }}
                   />
                 ))}
+                {isolatedFlagged.map(
+                  (r) =>
+                    r.score !== null && (
+                      <ReferenceDot
+                        key={`flag-${r.price}`}
+                        x={r.price}
+                        y={r.score}
+                        r={6}
+                        fill="var(--color-alert)"
+                        stroke="var(--color-white)"
+                        strokeWidth={2}
+                      />
+                    )
+                )}
                 {maxNum !== null && (
                   <ReferenceLine
                     y={maxNum}

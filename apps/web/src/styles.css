@@ -61,6 +61,34 @@ td {
   outline-offset: 2px;
 }
 
+/* Browser surfaces: selection, stable gutter, tap delay, underline offset. */
+html {
+  scrollbar-gutter: stable;
+}
+::selection {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+button,
+a,
+summary,
+input,
+select,
+textarea,
+[role="tab"] {
+  touch-action: manipulation;
+}
+a {
+  text-underline-offset: 3px;
+}
+/* Scrollable regions keep their scroll: no chaining to the page. */
+.table-scroll,
+.overflow-x-auto,
+.overflow-auto,
+.steps ul {
+  overscroll-behavior: contain;
+}
+
 /* Long protocol tokens (hashes, decimals) must wrap inside table cells. */
 td,
 th {
@@ -666,6 +694,32 @@ a[href^="http"]::after {
   }
   input[type="range"] {
     min-height: 48px;
+    accent-color: var(--color-primary);
+  }
+  /* 28px thumb (touch target): the discount slider is the app's main
+   * continuous control. Track keeps the browser default height. */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-white);
+    box-shadow: 0 0 0 2px var(--color-primary);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-white);
+    box-shadow: 0 0 0 2px var(--color-primary);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    background: var(--color-line);
+    border-radius: 2px;
   }
   .btn-row {
     display: flex;
