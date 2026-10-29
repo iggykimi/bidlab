@@ -24,6 +24,23 @@ test("E01 demo load shows Tías with example badge and stays offline", async ({ 
   expect(guard.blocked()).toBe(0);
 });
 
+// V2 BL-V2-12: el rastro demo muestra estados verdaderos (ejemplo preparado,
+// nunca Meta live) y enlaza a secciones reales.
+test("trace bar shows true demo states with real links", async ({ page }) => {
+  const guard = await installOfflineGuard(page);
+  await loadDemo(page);
+  const trace = page.getByTestId("decision-trace");
+  await expect(trace).toBeVisible();
+  await expect(trace.locator("li")).toHaveCount(5);
+  await expect(trace).toContainText("41 páginas");
+  await expect(trace).toContainText("Ejemplo preparado.");
+  await expect(trace).not.toContainText("Analizando con Meta");
+  await expect(trace).toContainText("Fórmula aprobada");
+  await expect(trace.getByRole("link", { name: "Fuente" })).toHaveAttribute("href", /tab=evidencia/);
+  await expect(trace.getByRole("link", { name: "Decisión" })).toHaveAttribute("href", /tab=informe/);
+  expect(guard.blocked()).toBe(0);
+});
+
 // E02: abrir requisito técnico -> por verificar; drawer en página 6 de 41 con la cita.
 test("E02 technical requirement is unknown with page 6 of 41 evidence", async ({ page }) => {
   const guard = await installOfflineGuard(page);

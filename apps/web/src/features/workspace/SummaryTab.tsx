@@ -22,6 +22,7 @@ import { nombreImpuesto } from "../../lib/taxKind";
 import { decisionEs } from "../report/ReportTab";
 import { isOwnTender, ownChecklist } from "../review/ownTender";
 import { useWorkspaceDrafts } from "./WorkspaceDrafts";
+import { DecisionTraceBar } from "./DecisionTrail";
 import { JourneySteps } from "./JourneySteps";
 
 interface Props {
@@ -147,6 +148,7 @@ export function SummaryTab({ workspace }: Props) {
 
   return (
     <div className="grid gap-4">
+      <DecisionTraceBar workspace={workspace} />
       {own && checklist && (
         <Card aria-label="Tu recorrido" data-testid="recorrido-propio">
           <h2>¿Qué te falta?</h2>
@@ -296,6 +298,7 @@ export function SummaryTab({ workspace }: Props) {
                   ? " Tienes una nota que aún no está en ningún informe."
                   : " Sin notas todavía."}
               </li>
+              {/* Conteos persistidos: ver barra de rastro superior. */}
             </ul>
             <p className="mt-3 space-x-4 text-sm">
               <Link to="?tab=precio" className="font-semibold text-primary underline hover:text-primary-ink">

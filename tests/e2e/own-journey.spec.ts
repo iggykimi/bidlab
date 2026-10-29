@@ -163,6 +163,16 @@ test("R05 own tender travels from intake to exported report", async ({ page }) =
   await page.reload();
   await expect(page.getByTestId("tender-title")).toContainText(title);
   await expect(page.getByText("Carga el ejemplo")).toHaveCount(0);
+  // V2 BL-V2-12: el rastro resume el recorrido real con estados verdaderos.
+  await openTab(page, "Resumen");
+  const trace = page.getByTestId("decision-trace");
+  await expect(trace).toContainText("pliego.pdf");
+  await expect(trace).toContainText("Prueba simulada.");
+  await expect(trace).toContainText("Fórmula aprobada");
+  await expect(trace).toContainText("1 prueba guardada.");
+  await expect(trace).toContainText("Última: preparar oferta.");
+  // Cada nodo enlaza a su sección real.
+  await expect(trace.getByRole("link", { name: "Cálculo" })).toHaveAttribute("href", /tab=precio/);
   expect(guard.blocked()).toBe(0);
 });
 
