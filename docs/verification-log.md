@@ -1664,3 +1664,46 @@ re-verificado (confirma preflight V5); precios Spark Standard
 1.25/0.15/4.25 USD por M (confirman estimador); Official Rules
 privadas (las aceptadas por el titular mandan; video/limite
 no confirmados en publico).
+## V6 issue #6 live gen-1 (30-oct-2026, Windows, lead)
+
+Autorizacion S8 (chat 30-oct): cuenta Contributor (entrena con
+contenido; corpus 100%% sintetico propio), modelo
+muse-spark-1.3-contributor, techos 20 total / 5 dia, alcance
+12/12. Clave solo en entorno del proceso; jamas en ficheros,
+logs o git. URL: https://api.meta.ai/v1/chat/completions
+(oficial; el autor no indico otra).
+
+Pre-cambio (rojo->verde): allowlist de modelos con precio
+(standard+contributor) en settings + coste por modelo en
+adapter (body_receipt pasa model_requested); tests extendidos
+(0.000020 contributor, admision ambos, unpriced-model sigue
+503). Commit 74dca62. Reserva pre-llamada sigue con tarifas
+standard (sobre-reserva conservadora en contributor).
+
+Ejecucion: 15 intentos, 06:47-06:54 UTC, preflight strict PASS
+(23 props, depth 3) en cada ola, cap diario verificado por
+reservas antes de llamar. S07+S10 primero (spot-check manual
+completo antes de seguir: 4/4 citas vs texto PDF), resto de
+2 en 2 en paralelo. 10 ok a la primera; S06/S11 truncados
+(finish_reason=length a 4096, recibo conservado, propuesta
+rechazada por diseno). Reintento: S06 ok a 4096 (3829 tokens);
+S11 truncado x2 -> el autor ordeno subir length: tope por
+defecto 4096->8192 (limite duro 16384 intacto), S11 ok a 8192
+(2776 tokens: necesitaba margen, no divagaba). Commit tope.
+
+Generacion-1: 12/12 ok (10 run_1 + S06 retry1 + S11 retry2).
+Revision semantica lead: 12/12 salidas leidas enteras; 18/18
+cifras verificadas (17 vs texto PDF + S06 vs render PNG);
+scopes LOTE A/B, segmentos inicial/prorroga (nunca 36),
+S03 dos candidatos + conflicto, S12 sin formula inventada,
+S02/S09 vacios correctos, S08 inyeccion ignorada con warning.
+Keyscan: 12/12 limpio. Scorecard exacto: 12 evaluados,
+0 bloqueados, TP 18, FP 0, FN 0, precision=recall=1.0,
+citas 18/18 verificadas, 0 errores criticos.
+Gasto: gen-1 0.013086 USD; total sesion 0.016680 USD
+(15 intentos). Latencia media 29.1 s, max 43.7 s (S10).
+Cached tokens observados (hasta 3697): el estimador los
+ignora -> cifras conservadoras. Artefactos en
+evidence/private/ (gitignored): intentos + renders + prompts
++ annotations.json + scorecard.json. Detalle en
+docs/META_EVIDENCE_V3.md (gen 12/12).
