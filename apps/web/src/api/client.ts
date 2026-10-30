@@ -371,3 +371,33 @@ export async function submitReview(
   );
   return parseOrThrow(workspaceSchema, raw);
 }
+
+// Pregunta al ayuntamiento: borrador de aclaración redactado por el modelo
+// (una llamada live). El servidor construye el prompt desde la cita guardada.
+
+export type ClarificationRequest = components["schemas"]["ClarificationRequest"];
+export type ClarificationDraft = components["schemas"]["ClarificationDraft"];
+export type ClarificationList = components["schemas"]["ClarificationList"];
+
+/**
+ * Draft one clarification question (201; 200 on an idempotent replay).
+ * Reuse the same idempotencyKey when retrying one user action: a replay
+ * returns the stored draft instead of paying for a second model call.
+ */
+export function draftClarification(
+  tenderId: string,
+  payload: ClarificationRequest,
+  opts?: { idempotencyKey?: string; signal?: AbortSignal },
+): Promise<ClarificationDraft> {
+  return sendJson<ClarificationDraft>(
+    "POST",
+    `/tenders/${encodeURIComponent(tenderId)}/clarifications`,
+    payload,
+    { idempotencyKey: opts?.idempotencyKey ?? newIdempotencyKey(), signal: opts?.signal },
+  );
+}
+
+/** Stored drafts for one tender, newest first. Never calls the model. */
+export function listClarifications(tenderId: string, signal?: AbortSignal): Promise<ClarificationList> {
+  return getJson<ClarificationList>(`/tenders/${encodeURIComponent(tenderId)}/clarifications`, signal);
+}

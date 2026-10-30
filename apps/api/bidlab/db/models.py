@@ -1,4 +1,4 @@
-"""SQLAlchemy models. Mirror of schemas/schema.sql plus later migrations (20 tables)."""
+"""SQLAlchemy models. Mirror of schemas/schema.sql plus later migrations (21 tables)."""
 
 from __future__ import annotations
 
@@ -317,4 +317,27 @@ class StressTest(Base):
     request_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     result_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     result_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class ClarificationDraft(Base):
+    __tablename__ = "clarification_draft"
+    __table_args__ = (Index("ix_clarification_tender", "tender_id", "created_at"),)
+    # One stored live draft. The receipt lives on its model_invocation row
+    # (job_id NULL), so live spend totals count it like any extraction.
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    tender_id: Mapped[str] = mapped_column(String(80), ForeignKey("tender.id"), nullable=False)
+    interpretation_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    requirement_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    requirement_label: Mapped[str] = mapped_column(String, nullable=False)
+    citation_id: Mapped[str] = mapped_column(String(80), ForeignKey("citation.id"), nullable=False)
+    document_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    invocation_id: Mapped[str] = mapped_column(
+        String(80), ForeignKey("model_invocation.id"), nullable=False
+    )
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    why_it_matters: Mapped[str] = mapped_column(Text, nullable=False)
+    cited_page: Mapped[int] = mapped_column(Integer, nullable=False)
+    quote_used: Mapped[str] = mapped_column(Text, nullable=False)
+    reasoning_tokens: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[str] = mapped_column(String, nullable=False)

@@ -177,24 +177,6 @@ def check_live_budget(session: Session) -> None:
         raise ApiError(429, "budget_exhausted", "live model budget exhausted")
 
 
-def _settle_attempt(
-    engine: Engine,
-    key: str,
-    *,
-    sent: bool,
-    cost_usd: str | None,
-) -> None:
-    """Settle known usage; keep unknown usage held until reconciled."""
-    if not sent:
-        budget_service.release_untransmitted_dispatch(engine, key)
-        return
-    if cost_usd is None:
-        budget_service.mark_uncertain(engine, key)
-        return
-    actual = budget_service.usd_str_to_micro(cost_usd)
-    budget_service.settle(engine, key, actual_micro=actual, receipt=key)
-
-
 def start_analysis(session: Session, tender_id: str, payload: g.AnalysisRequest) -> models.Job:
     tender = session.get(models.Tender, tender_id)
     if tender is None:
@@ -815,7 +797,7 @@ def execute_attempt(
     except meta_adapter.AdapterError as exc:
         if live:
             receipt = exc.receipt
-            _settle_attempt(
+            budget_service.settle_attempt(
                 engine,
                 key,
                 sent=receipt is not None and receipt.sent,
@@ -860,7 +842,7 @@ def execute_attempt(
             ),
         )
     if live:
-        _settle_attempt(engine, key, sent=True, cost_usd=result.estimated_cost_usd)
+        budget_service.settle_attempt(engine, key, sent=True, cost_usd=result.estimated_cost_usd)
     return AttemptOutcome(
         inputs=inputs,
         input_hash=input_hash,

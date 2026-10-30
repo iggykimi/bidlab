@@ -706,11 +706,14 @@ def test_build_run_manifest_contents() -> None:
 
 def test_provider_unreachable_from_offline_paths() -> None:
     """Pricing, curve, scenario, report, demo and review code never calls the model."""
+    import bidlab.services.clarification as clarification_module
     import bidlab.services.jobs as jobs_module
 
     assert jobs_module.__file__ is not None
-    # Positive control: the analysis-job path is the only caller.
+    assert clarification_module.__file__ is not None
+    # Positive control: analysis jobs and clarification drafts are the only callers.
     assert "select_adapter" in Path(jobs_module.__file__).read_text(encoding="utf-8")
+    assert "live_provider" in Path(clarification_module.__file__).read_text(encoding="utf-8")
     offline = [
         "evaluation",
         "scenarios",

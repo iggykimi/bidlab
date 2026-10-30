@@ -35,9 +35,12 @@ reported, feeds an estimated cost from the published Standard Spark
 rates so the budget guard in ``bidlab.services.jobs`` keeps working;
 missing usage stays untracked, never zero-invented.
 
-Only the analysis-job path (``bidlab.services.jobs``) may call this
-module. Pricing, curve, scenario, report, demo and review paths never call
-the provider (covered by ``test_provider_unreachable_from_offline_paths``).
+Only the analysis-job path (``bidlab.services.jobs``) and the
+clarification-draft path (``bidlab.services.clarification``) may call this
+module; both share :func:`live_provider` (the gate) and
+:func:`post_chat_completion` (the transport). Pricing, curve, scenario,
+report, demo and review paths never call the provider (covered by
+``test_provider_unreachable_from_offline_paths``).
 """
 
 from __future__ import annotations
@@ -936,6 +939,104 @@ def build_run_manifest(
     }
 
 
+@dataclass(frozen=True)
+class LiveProvider:
+    """Verified live configuration. Built only by :func:`live_provider`."""
+
+    api_key: str
+    model: str
+    endpoint_url: str
+
+
+def post_chat_completion(
+    provider: LiveProvider, payload: Mapping[str, Any], *, timeout_s: float = 120.0
+) -> tuple[dict[str, Any], Receipt]:
+    """Send ONE ``chat/completions`` request; return the raw body and its receipt.
+
+    Shared transport for every live use (extraction, clarification drafts):
+    single attempt, no retries. Transport failures raise
+    :class:`AdapterError` carrying a receipt that says whether the request
+    may have reached the provider (timeouts stay ``uncertain``). The body
+    is not validated here; callers parse it with :func:`parse_chat_response`
+    and keep the returned receipt on any later rejection.
+    """
+    model = provider.model
+    started = time.monotonic()
+    try:
+        response = httpx.post(
+            provider.endpoint_url,
+            json=dict(payload),
+            headers={
+                "Authorization": f"Bearer {provider.api_key}",
+                "Content-Type": "application/json",
+            },
+            timeout=timeout_s,
+        )
+    except httpx.TimeoutException as exc:
+        latency_ms = int((time.monotonic() - started) * 1000)
+        raise AdapterError(
+            "provider_failure",
+            f"model call timed out: {exc}",
+            receipt=_attempt_receipt(
+                model_requested=model,
+                latency_ms=latency_ms,
+                status="uncertain",
+                sent=True,
+            ),
+        ) from exc
+    except httpx.HTTPError as exc:
+        latency_ms = int((time.monotonic() - started) * 1000)
+        definitely_unsent = isinstance(exc, (httpx.ConnectError, httpx.PoolTimeout))
+        raise AdapterError(
+            "provider_failure",
+            f"model call failed: {exc}",
+            receipt=_attempt_receipt(
+                model_requested=model,
+                latency_ms=latency_ms,
+                status="failed" if definitely_unsent else "uncertain",
+                sent=not definitely_unsent,
+            ),
+        ) from exc
+    latency_ms = int((time.monotonic() - started) * 1000)
+    if response.status_code == 429:
+        raise AdapterError(
+            "provider_rate_limited",
+            "model endpoint rate limited",
+            receipt=_attempt_receipt(
+                model_requested=model,
+                latency_ms=latency_ms,
+                status="failed",
+                sent=True,
+            ),
+        )
+    if response.status_code >= 400:
+        raise AdapterError(
+            "provider_failure",
+            f"model endpoint answered {response.status_code}",
+            receipt=_attempt_receipt(
+                model_requested=model,
+                latency_ms=latency_ms,
+                status="failed",
+                sent=True,
+            ),
+        )
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise AdapterError(
+            "invalid_model_output",
+            "model endpoint answered non-JSON",
+            receipt=_attempt_receipt(
+                model_requested=model,
+                latency_ms=latency_ms,
+                status="failed",
+                sent=True,
+            ),
+        ) from exc
+    body = _as_dict(data)
+    return body, body_receipt(body, latency_ms=latency_ms, model_requested=model)
+
+
 class LiveExtractor:
     """Official ``chat/completions`` adapter. Construct only via :func:`select_adapter`."""
 
@@ -944,9 +1045,8 @@ class LiveExtractor:
     def __init__(
         self, *, api_key: str, model: str, endpoint_url: str, timeout_s: float = 120.0
     ) -> None:
-        self._api_key = api_key
+        self._provider = LiveProvider(api_key=api_key, model=model, endpoint_url=endpoint_url)
         self._model = model
-        self._endpoint_url = endpoint_url
         self._timeout_s = timeout_s
 
     def extract(self, pages: Sequence[PageInput]) -> AdapterResult:
@@ -958,80 +1058,8 @@ class LiveExtractor:
             )
         except ValueError as exc:
             raise AdapterError("bad_request", str(exc)) from exc
-        started = time.monotonic()
-        try:
-            response = httpx.post(
-                self._endpoint_url,
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                timeout=self._timeout_s,
-            )
-        except httpx.TimeoutException as exc:
-            latency_ms = int((time.monotonic() - started) * 1000)
-            raise AdapterError(
-                "provider_failure",
-                f"model call timed out: {exc}",
-                receipt=_attempt_receipt(
-                    model_requested=self._model,
-                    latency_ms=latency_ms,
-                    status="uncertain",
-                    sent=True,
-                ),
-            ) from exc
-        except httpx.HTTPError as exc:
-            latency_ms = int((time.monotonic() - started) * 1000)
-            definitely_unsent = isinstance(exc, (httpx.ConnectError, httpx.PoolTimeout))
-            raise AdapterError(
-                "provider_failure",
-                f"model call failed: {exc}",
-                receipt=_attempt_receipt(
-                    model_requested=self._model,
-                    latency_ms=latency_ms,
-                    status="failed" if definitely_unsent else "uncertain",
-                    sent=not definitely_unsent,
-                ),
-            ) from exc
-        latency_ms = int((time.monotonic() - started) * 1000)
-        if response.status_code == 429:
-            raise AdapterError(
-                "provider_rate_limited",
-                "model endpoint rate limited",
-                receipt=_attempt_receipt(
-                    model_requested=self._model,
-                    latency_ms=latency_ms,
-                    status="failed",
-                    sent=True,
-                ),
-            )
-        if response.status_code >= 400:
-            raise AdapterError(
-                "provider_failure",
-                f"model endpoint answered {response.status_code}",
-                receipt=_attempt_receipt(
-                    model_requested=self._model,
-                    latency_ms=latency_ms,
-                    status="failed",
-                    sent=True,
-                ),
-            )
-        try:
-            data = response.json()
-        except ValueError as exc:
-            raise AdapterError(
-                "invalid_model_output",
-                "model endpoint answered non-JSON",
-                receipt=_attempt_receipt(
-                    model_requested=self._model,
-                    latency_ms=latency_ms,
-                    status="failed",
-                    sent=True,
-                ),
-            ) from exc
-        body = _as_dict(data)
-        receipt = body_receipt(body, latency_ms=latency_ms, model_requested=self._model)
+        body, receipt = post_chat_completion(self._provider, payload, timeout_s=self._timeout_s)
+        latency_ms = receipt.latency_ms
         try:
             observations = parse_chat_response(
                 body, validate=obs.ObservationsProposal.model_validate
@@ -1073,21 +1101,31 @@ class LiveExtractor:
 
 
 def select_adapter(mode: str) -> ExtractionAdapter:
-    """Return the stub for ``curated_demo``; gate live behind key + endpoint.
+    """Return the stub for ``curated_demo``; gate live behind :func:`live_provider`."""
+    if mode != "live":
+        return StubExtractor()
+    provider = live_provider()
+    return LiveExtractor(
+        api_key=provider.api_key,
+        model=provider.model,
+        endpoint_url=provider.endpoint_url,
+    )
+
+
+def live_provider() -> LiveProvider:
+    """The live gate: key + endpoint + live mode + priced model, or 503.
 
     ``META_API_URL`` must hold the full ``chat/completions`` endpoint URL
     (official: ``https://api.meta.ai/v1/chat/completions``); nothing is
     defaulted, so an unverified endpoint can never be called by accident.
     """
-    if mode != "live":
-        return StubExtractor()
     settings = get_settings()
     api_key = settings.model_api_key.get_secret_value()
     if not api_key:
         raise ApiError(
             503,
             "provider_not_configured",
-            "MODEL_API_KEY is not set; live extraction unavailable (G3 blocked)",
+            "MODEL_API_KEY is not set; live model calls unavailable (G3 blocked)",
         )
     endpoint = os.environ.get(META_API_URL_ENV, "").strip()
     if not endpoint:
@@ -1108,8 +1146,4 @@ def select_adapter(mode: str) -> ExtractionAdapter:
             "provider_not_configured",
             "model lacks a verified billing profile",
         )
-    return LiveExtractor(
-        api_key=api_key,
-        model=settings.meta_model,
-        endpoint_url=endpoint,
-    )
+    return LiveProvider(api_key=api_key, model=settings.meta_model, endpoint_url=endpoint)

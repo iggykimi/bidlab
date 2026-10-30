@@ -80,14 +80,23 @@ def usd_str_to_micro(raw: str) -> int:
     return int((value * _MICRO).to_integral_value(rounding=ROUND_CEILING))
 
 
-def estimate_attempt_micro_usd(input_chars: int) -> int:
-    """Pre-call estimate: ~chars/4 input tokens plus the real output cap."""
+def estimate_attempt_micro_usd(input_chars: int, max_completion_tokens: int | None = None) -> int:
+    """Pre-call estimate: ~chars/4 input tokens plus the real output cap.
+
+    ``max_completion_tokens`` is the cap the request actually sends; it
+    defaults to the extraction cap.
+    """
     from bidlab.services import meta_adapter
 
+    cap_out = (
+        meta_adapter.MAX_COMPLETION_TOKENS
+        if max_completion_tokens is None
+        else max_completion_tokens
+    )
     tokens_in = max(1, -(-max(0, input_chars) // _INPUT_CHARS_PER_TOKEN))
     cost = (
         Decimal(tokens_in) * meta_adapter.META_INPUT_USD_PER_MTOK
-        + Decimal(meta_adapter.MAX_COMPLETION_TOKENS) * meta_adapter.META_OUTPUT_USD_PER_MTOK
+        + Decimal(cap_out) * meta_adapter.META_OUTPUT_USD_PER_MTOK
     ) / _MICRO
     return max(1, int((cost * _MICRO).to_integral_value(rounding=ROUND_CEILING)))
 
@@ -275,6 +284,21 @@ def retain_interrupted_holds(engine: Engine, job_ids: list[str]) -> None:
     ).bindparams(bindparam("jobs", expanding=True))
     with engine.begin() as conn:
         conn.execute(statement, {"jobs": job_ids})
+
+
+def settle_attempt(engine: Engine, key: str, *, sent: bool, cost_usd: str | None) -> None:
+    """Close a ``sent`` attempt from its receipt.
+
+    Known usage settles; unknown usage stays held as ``uncertain`` until
+    reconciled; a transport-confirmed non-send releases the hold.
+    """
+    if not sent:
+        release_untransmitted_dispatch(engine, key)
+        return
+    if cost_usd is None:
+        mark_uncertain(engine, key)
+        return
+    settle(engine, key, actual_micro=usd_str_to_micro(cost_usd), receipt=key)
 
 
 def settle(engine: Engine, key: str, *, actual_micro: int, receipt: str) -> dict[str, int]:

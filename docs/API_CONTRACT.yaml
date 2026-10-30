@@ -2179,6 +2179,174 @@ paths:
         schema:
           $ref: '#/components/schemas/EntityId'
         example: a1b2c3d4e5f60718293a4b5c6d7e8f90
+  /api/v1/tenders/{tender_id}/clarifications:
+    post:
+      operationId: draft_clarification
+      summary: Draft clarification question
+      description: One live Meta call drafts a formal question to the contracting
+        body about one requirement, grounded only in one stored citation (page + quote)
+        of this tender. The prompt is built server-side; the model drafts wording
+        and never decides eligibility or figures. Requires allow_remote_processing,
+        a configured provider (503 provider_not_configured) and budget (429 budget_exhausted).
+        Output must echo the supplied page and quote (502 invalid_model_output otherwise);
+        the receipt is kept and spend settled either way. Idempotent via Idempotency-Key.
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClarificationDraft'
+              examples:
+                example:
+                  summary: draft_clarification example
+                  value:
+                    id: clar-9f2c4a1e0b3d4f5a
+                    tender_id: tias
+                    interpretation_revision: 1
+                    requirement_id: req-tech-amount
+                    requirement_label: Servicios similares año mayor ejecución ≥ 207.088,00
+                      €
+                    citation_id: cit-technical_services_threshold
+                    document_id: doc-tias-pcap
+                    question: En relación con la solvencia técnica del PCAP (página
+                      6), ¿pueden confirmar si el importe de 207.088,00 € se refiere
+                      al año de mayor ejecución de los tres últimos y si se computa
+                      sin impuestos?
+                    why_it_matters: Si el importe incluye impuestos o se calcula de
+                      otra forma, cambia lo que tu empresa tiene que acreditar.
+                    cited_page: 6
+                    quote_used: 207.088,00 euros
+                    mode: live
+                    invocation_id: inv-clar-9f2c4a1e0b3d4f5a
+                    model: muse-spark-1.3
+                    provider_request_id: chatcmpl-example
+                    prompt_tokens: 900
+                    completion_tokens: 400
+                    reasoning_tokens: 250
+                    estimated_cost_usd: '0.002825'
+                    latency_ms: 2100
+                    created_at: '2026-10-30T00:00:00+00:00'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - clarifications
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClarificationRequest'
+            examples:
+              example:
+                summary: draft_clarification example
+                value:
+                  requirement_id: req-tech-amount
+                  citation_id: cit-technical_services_threshold
+                  allow_remote_processing: true
+    get:
+      operationId: list_clarifications
+      summary: List clarification drafts
+      description: Stored clarification drafts for one tender, newest first, with
+        their live receipts. Never calls the model.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClarificationList'
+              examples:
+                example:
+                  summary: list_clarifications example
+                  value:
+                    items:
+                    - id: clar-9f2c4a1e0b3d4f5a
+                      tender_id: tias
+                      interpretation_revision: 1
+                      requirement_id: req-tech-amount
+                      requirement_label: Servicios similares año mayor ejecución ≥
+                        207.088,00 €
+                      citation_id: cit-technical_services_threshold
+                      document_id: doc-tias-pcap
+                      question: En relación con la solvencia técnica del PCAP (página
+                        6), ¿pueden confirmar si el importe de 207.088,00 € se refiere
+                        al año de mayor ejecución de los tres últimos y si se computa
+                        sin impuestos?
+                      why_it_matters: Si el importe incluye impuestos o se calcula
+                        de otra forma, cambia lo que tu empresa tiene que acreditar.
+                      cited_page: 6
+                      quote_used: 207.088,00 euros
+                      mode: live
+                      invocation_id: inv-clar-9f2c4a1e0b3d4f5a
+                      model: muse-spark-1.3
+                      provider_request_id: chatcmpl-example
+                      prompt_tokens: 900
+                      completion_tokens: 400
+                      reasoning_tokens: 250
+                      estimated_cost_usd: '0.002825'
+                      latency_ms: 2100
+                      created_at: '2026-10-30T00:00:00+00:00'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - clarifications
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias
 components:
   schemas:
     EntityId:
@@ -2213,6 +2381,8 @@ components:
       - budget_exhausted
       - budget_not_positive
       - ceiling_exceeded
+      - citation_not_found
+      - citation_not_linked
       - citation_unverified
       - claim_not_reviewable
       - company_not_found
@@ -2245,6 +2415,7 @@ components:
       - idempotency_conflict
       - internal
       - interpretation_not_found
+      - invalid_model_output
       - job_not_found
       - job_running
       - log_non_positive
@@ -2269,12 +2440,14 @@ components:
       - price_not_positive
       - provider_failure
       - provider_not_configured
+      - provider_refusal
       - rate_limited
       - reference_not_positive
       - remote_processing_not_allowed
       - report_corrupt
       - report_html_missing
       - report_not_found
+      - requirement_not_found
       - requirements_tree_corrupt
       - requirements_tree_too_deep
       - revision_conflict
@@ -5161,6 +5334,126 @@ components:
       - selection_reason
       - warnings
       - created_at
+      additionalProperties: false
+    ClarificationRequest:
+      type: object
+      properties:
+        requirement_id:
+          $ref: '#/components/schemas/EntityId'
+        citation_id:
+          $ref: '#/components/schemas/EntityId'
+        allow_remote_processing:
+          type: boolean
+      required:
+      - requirement_id
+      - citation_id
+      - allow_remote_processing
+      additionalProperties: false
+    ClarificationDraft:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityId'
+        tender_id:
+          $ref: '#/components/schemas/EntityId'
+        interpretation_revision:
+          type: integer
+          minimum: 1
+        requirement_id:
+          $ref: '#/components/schemas/EntityId'
+        requirement_label:
+          type: string
+          maxLength: 1000
+        citation_id:
+          $ref: '#/components/schemas/EntityId'
+        document_id:
+          $ref: '#/components/schemas/EntityId'
+        question:
+          type: string
+          maxLength: 1000
+        why_it_matters:
+          type: string
+          maxLength: 600
+        cited_page:
+          type: integer
+          minimum: 1
+        quote_used:
+          type: string
+          maxLength: 600
+        mode:
+          type: string
+          enum:
+          - live
+        invocation_id:
+          $ref: '#/components/schemas/EntityId'
+        model:
+          type: string
+          maxLength: 80
+        provider_request_id:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+        prompt_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        completion_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        reasoning_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        estimated_cost_usd:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+        latency_ms:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          maxLength: 80
+      required:
+      - id
+      - tender_id
+      - interpretation_revision
+      - requirement_id
+      - requirement_label
+      - citation_id
+      - document_id
+      - question
+      - why_it_matters
+      - cited_page
+      - quote_used
+      - mode
+      - invocation_id
+      - model
+      - provider_request_id
+      - prompt_tokens
+      - completion_tokens
+      - reasoning_tokens
+      - estimated_cost_usd
+      - latency_ms
+      - created_at
+      additionalProperties: false
+    ClarificationList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClarificationDraft'
+          minItems: 0
+          maxItems: 100
+      required:
+      - items
       additionalProperties: false
   parameters:
     XBidLabClient:
