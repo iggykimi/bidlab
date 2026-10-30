@@ -96,6 +96,7 @@ test("capture 09 radar presentation shot", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("nueva-licitacion").click();
   await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-manual").click();
   await page.getByTestId("intake-title").fill("Radar de ejemplo");
   await page.getByTestId("intake-external-id").fill("RADAR-DEMO");
   await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");
@@ -104,7 +105,7 @@ test("capture 09 radar presentation shot", async ({ page }) => {
   await page.getByTestId("intake-skip").click();
   await page.getByTestId("intake-skip-company").click();
   await expect(page.getByTestId("tender-title")).toContainText("Radar de ejemplo");
-  await expect(page.getByText("Tus datos")).toBeVisible();
+  await expect(page.getByTestId("demo-badge")).toContainText("Tus datos");
 
   await openTab(page, "Revisar");
   await expect(page.getByTestId("radar-empty")).toContainText("Sin pares comparables");

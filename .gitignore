@@ -15,7 +15,6 @@ test-results-final*/
 verify-full.log
 verify-final.log
 scripts/demo-shots/.storage-*/
-scripts/demo-video/.storage-*/
 .pytest_cache/
 .coverage
 *.sqlite3
