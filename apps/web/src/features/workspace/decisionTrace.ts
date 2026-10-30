@@ -26,7 +26,7 @@ export interface TraceStep {
 
 export interface TraceInput {
   /**
-   * Licitación propia (source_id === id) frente al ejemplo curado.
+   * Licitación propia (origin local/placsp) frente al ejemplo curado.
    * workspace.mode es global de la app, no procedencia del caso.
    */
   own: boolean;

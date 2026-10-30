@@ -60,6 +60,7 @@ const tenderSchema: z.ZodType<Tender> = z.object({
   raw_snapshot_sha256: z.string(),
   metadata_evidence: z.array(metadataEvidenceSchema),
   id: z.string(),
+  origin: z.enum(["local", "placsp", "seed"]),
   source_id: z.string(),
   source_url: z.string(),
   external_id: z.string(),

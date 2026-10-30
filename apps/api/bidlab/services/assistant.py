@@ -89,7 +89,8 @@ SCHEMA_NAME = "bidlab_assistant_answer_v1"
 MAX_MODEL_CALLS = 3
 MAX_TOOL_CALLS_PER_TURN = 4
 # Room for default reasoning plus a ~600-char answer and a few figures.
-MAX_COMPLETION_TOKENS = 2048
+# Raised from 2048 after a live contributor answer was cut by finish_reason=length.
+MAX_COMPLETION_TOKENS = 4096
 MAX_ANSWER_CHARS = 600
 MAX_FIGURES = 6
 MAX_LABEL_CHARS = 120

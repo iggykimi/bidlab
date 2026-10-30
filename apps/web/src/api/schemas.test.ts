@@ -5,6 +5,7 @@ const tenderBase = {
   raw_snapshot_sha256: "snapshot",
   metadata_evidence: [],
   id: "t1",
+  origin: "seed",
   source_id: "s1",
   source_url: "https://example.invalid",
   external_id: "T/1",

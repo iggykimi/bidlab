@@ -26,6 +26,23 @@ const manifest: Record<string, Record<string, Box>> = {};
 
 test.skip(!LIVE, "live captures need BIDLAB_MODE=live, MODEL_API_KEY and META_API_URL");
 
+// Fake microphone for the voice scene. Top-level because launchOptions
+// cannot be set inside a describe; harmless for the import test.
+test.use(
+  VOICE_WAV
+    ? {
+        launchOptions: {
+          args: [
+            "--use-fake-ui-for-media-stream",
+            "--use-fake-device-for-media-stream",
+            `--use-file-for-fake-audio-capture=${VOICE_WAV}%noloop`,
+          ],
+        },
+        permissions: ["microphone"],
+      }
+    : {}
+);
+
 async function snap(page: Page, name: string, focus: Record<string, Locator> = {}): Promise<void> {
   await page.evaluate(() => document.fonts.ready.then(() => true));
   await page.mouse.move(4, 4);
@@ -83,21 +100,6 @@ test("live: import a published tender and let Muse Spark read it", async ({ page
 });
 
 test.describe("live: clarification and voice on the reviewed example", () => {
-  test.use(
-    VOICE_WAV
-      ? {
-          launchOptions: {
-            args: [
-              "--use-fake-ui-for-media-stream",
-              "--use-fake-device-for-media-stream",
-              `--use-file-for-fake-audio-capture=${VOICE_WAV}%noloop`,
-            ],
-          },
-          permissions: ["microphone"],
-        }
-      : {}
-  );
-
   test("clarification draft and a spoken question", async ({ page }) => {
     test.setTimeout(300_000);
     await loadDemo(page);

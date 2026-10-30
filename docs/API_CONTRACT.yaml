@@ -226,6 +226,7 @@ paths:
                     - raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
                       metadata_evidence: []
                       id: tias
+                      origin: seed
                       source_id: placsp:2026/00006554N
                       source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
                       external_id: 2026/00006554N
@@ -321,6 +322,7 @@ paths:
                     raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
                     metadata_evidence: []
                     id: tias
+                    origin: local
                     source_id: placsp:2026/00006554N
                     source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
                     external_id: 2026/00006554N
@@ -411,6 +413,7 @@ paths:
                       raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
                       metadata_evidence: []
                       id: tias
+                      origin: placsp
                       source_id: placsp:2026/00006554N
                       source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
                       external_id: 2026/00006554N
@@ -589,6 +592,7 @@ paths:
                     raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
                     metadata_evidence: []
                     id: tias
+                    origin: seed
                     source_id: placsp:2026/00006554N
                     source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
                     external_id: 2026/00006554N
@@ -3046,6 +3050,12 @@ components:
           maxItems: 30
         id:
           $ref: '#/components/schemas/EntityId'
+        origin:
+          type: string
+          enum:
+          - local
+          - placsp
+          - seed
         source_id:
           type: string
           maxLength: 1000
@@ -3113,6 +3123,7 @@ components:
       - raw_snapshot_sha256
       - metadata_evidence
       - id
+      - origin
       - source_id
       - source_url
       - external_id

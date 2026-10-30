@@ -45,11 +45,10 @@ function makeSession(mode: StoredSession["mode"], tenderId: string): StoredSessi
 }
 
 describe("isOwnTender", () => {
-  it("treats source_id === id as your own intake, feed URLs as curated", () => {
-    expect(isOwnTender({ id: "abc123", source_id: "abc123" })).toBe(true);
-    expect(
-      isOwnTender({ id: "tias", source_id: "https://contrataciondelestado.es/sindicacion/20777838" })
-    ).toBe(false);
+  it("treats local intake and PLACSP imports as own, seeds as curated", () => {
+    expect(isOwnTender({ origin: "local" })).toBe(true);
+    expect(isOwnTender({ origin: "placsp" })).toBe(true);
+    expect(isOwnTender({ origin: "seed" })).toBe(false);
   });
 });
 

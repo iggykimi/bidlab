@@ -3,6 +3,8 @@
 from bidlab.db import models
 from bidlab.db.session import get_engine
 from bidlab.schemas import generated as g
+from bidlab.services import placsp_import
+from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -46,6 +48,35 @@ def test_tender_detail_and_list(seeded_client: TestClient) -> None:
     assert g.TenderList.model_validate(res.json()).total == 1
     res = seeded_client.get("/api/v1/tenders", params={"q": "inexistente-zzz"})
     assert g.TenderList.model_validate(res.json()).total == 0
+
+
+def test_tender_origin_by_feed(seeded_client: TestClient) -> None:
+    """origin follows the producer: local intake, PLACSP import, curated seed."""
+    assert workspace_service.origin_for("local") == "local"
+    assert workspace_service.origin_for(placsp_import.FEED_ID) == "placsp"
+    assert workspace_service.origin_for("https://example.invalid/feed") == "seed"
+    seed = g.Tender.model_validate(seeded_client.get("/api/v1/tenders/tias").json())
+    assert seed.origin == "seed"
+    session = Session(get_engine())
+    try:
+        session.add(
+            models.Tender(
+                id="imp1",
+                feed_id=placsp_import.FEED_ID,
+                atom_id="idEvl-token",
+                external_id="5/2026",
+                title="Imported",
+                source_url="https://contrataciondelestado.es/wps/poc",
+                source_updated_at="2026-10-30T00:00:00Z",
+                metadata_json={},
+            )
+        )
+        session.commit()
+    finally:
+        session.close()
+    imported = g.Tender.model_validate(seeded_client.get("/api/v1/tenders/imp1").json())
+    assert imported.origin == "placsp"
+    assert imported.source_id == "idEvl-token"
 
 
 def test_unknown_tender_404_envelope(seeded_client: TestClient) -> None:

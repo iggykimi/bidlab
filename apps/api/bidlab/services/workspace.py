@@ -23,6 +23,15 @@ PARSE_MAP = {
     "failed": "failed",
     "metadata_only_curated_excerpts": "needs_review",
 }
+# feed_id -> Tender.origin. Intake writes "local", placsp_import writes its
+# FEED_ID ("placsp_deeplink"; literal here because placsp_import imports this
+# module, so importing the constant would cycle; a test pins the equality).
+# Curated seeds are the only other producer and carry feed URLs as feed_id.
+ORIGIN_BY_FEED = {"local": "local", "placsp_deeplink": "placsp"}
+
+
+def origin_for(feed_id: str) -> str:
+    return ORIGIN_BY_FEED.get(feed_id, "seed")
 
 
 def money_or_none(cents: int | None) -> str | None:
@@ -68,6 +77,7 @@ def tender_to_dict(session: Session, tender_id: str) -> dict[str, Any]:
         "raw_snapshot_sha256": notice.raw_sha256 if notice else "",
         "metadata_evidence": meta.get("metadata_evidence", []),
         "id": tender.id,
+        "origin": origin_for(tender.feed_id),
         "source_id": tender.atom_id,
         "source_url": tender.source_url,
         "external_id": tender.external_id,

@@ -27,6 +27,7 @@ function makeWorkspace(): Workspace {
       raw_snapshot_sha256: HASH,
       metadata_evidence: [],
       id: "tias",
+      origin: "seed",
       source_id: "https://example.invalid/atom",
       source_url: "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion",
       external_id: "2026/00006554N",

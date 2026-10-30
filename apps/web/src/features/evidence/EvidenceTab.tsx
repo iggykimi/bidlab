@@ -4,6 +4,7 @@ import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { Button } from "../../components/ui";
 import { citationName, textoEs } from "../../lib/citationNames";
 import { formatFechaNormal } from "../../lib/format";
+import { isOwnTender } from "../review/ownTender";
 import { EvidenceDrawer, type EvidenceTarget } from "./EvidenceDrawer";
 
 interface Props {
@@ -32,7 +33,7 @@ function CoverageCard({ workspace }: Props) {
     return { doc, cites: cites.length, pages };
   });
   const totalCites = lines.reduce((n, line) => n + line.cites, 0);
-  const own = workspace.tender.source_id === workspace.tender.id;
+  const own = isOwnTender(workspace.tender);
   return (
     <section aria-label="Cobertura de la revisión" data-testid="coverage-card">
       <h2 className="font-semibold">Dónde hemos mirado</h2>

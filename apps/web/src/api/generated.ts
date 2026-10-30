@@ -759,6 +759,8 @@ export interface components {
             raw_snapshot_sha256: string;
             metadata_evidence: components["schemas"]["MetadataEvidence"][];
             id: components["schemas"]["EntityId"];
+            /** @enum {string} */
+            origin: "local" | "placsp" | "seed";
             source_id: string;
             source_url: string;
             external_id: string;

@@ -1,14 +1,14 @@
 // Own-tender detection and recorrido gating (pure logic, no React).
-// An own tender is one you created in intake: the backend stores
-// feed_id="local" and atom_id=tender_id (services/intake.py), served as
-// source_id, while curated seeds carry feed URLs. No approved pricing
-// rule also gates, so a tender that lost its rule asks for review first.
+// An own tender is your working copy: manual intake (origin "local") or a
+// PLACSP import (origin "placsp"). Curated seeds ("seed") are read-only
+// demos. No approved pricing rule also gates, so a tender that lost its
+// rule asks for review first.
 
 import type { PricingRule, Tender, Workspace } from "../../api/client";
 import type { StoredSession } from "../../lib/session";
 
-export function isOwnTender(tender: Pick<Tender, "id" | "source_id">): boolean {
-  return tender.source_id === tender.id;
+export function isOwnTender(tender: Pick<Tender, "origin">): boolean {
+  return tender.origin === "local" || tender.origin === "placsp";
 }
 
 /** First approved pricing rule, or null when nothing is approved yet. */
