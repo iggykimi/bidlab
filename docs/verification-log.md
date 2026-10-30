@@ -1621,3 +1621,46 @@ demo-script-180s.md, submission-draft.md.
 Guard reset verificado en codigo: seed_demo.py rechaza
 --reset fuera de BIDLAB_MODE=demo (exit 2); demo_story.py
 usa TemporaryDirectory (no toca storage real).
+## V6 issue #6 offline final (30-oct-2026, Windows, lead)
+
+HEAD offline: 6e373f1 (main, limpio). Olas: 5c69fec (docs+higiene),
+c869705 (FIX UX F1-F9 red->green), b28558a (F10+shots), 53c1d75
+(SHAs u1/u2) + 6e373f1 (este log + freeze).
+Issue #6: BIDLAB_ISSUE_CIERRE_FINAL_META_2026.md (343 lineas),
+leido entero; S1-S7 ejecutados, S8 pendiente del autor.
+
+Gates @53c1d75 (exit 0 observado): verify.py ALL CHECKS PASSED
+10/10 (backend 593 passed + 1 skipped symlink; vitest 262/33;
+E2E 99/99; ruff/mypy/eslint/tsc/build exit 0); demo_story.py
+exit 0 (oraculos 10/15 exactos, 0 llamadas Meta).
+Deltas vs V5: +5 backend (3 etiquetas ambito F5 + 2 plantilla
+F2), +2 vitest (F1 leyenda, F3 warnings), +1 E2E (F10 badge).
+Logs clave en test-results/final/ (gitignored, local).
+
+Auditorias: backend SS2.2-2.3 sin FAIL (helper, 325 tests
+dirigidos + matriz C:/tmp/v6-be/matriz.md, revisada por lead);
+UX SS2.1/2.4/3 (helper, 67 PNG a 5 viewports + teclado/zoom,
+C:/tmp/v6-fe/INFORME.md): 9 FIX aceptados + 1 bug P1 propio
+del lead (F10 badge) + 6 DEFER aceptados. Correccion: el helper
+invento un warning ("eligible cell count...") y erro un sufijo;
+test F3 corregido a los strings reales del backend antes de
+implementar. Traza "plantilla/politica" se conserva (log de
+auditoria fijado por test_evaluate + E2E); "Instantanea
+(snapshot)" idem (test). Precision informe: puntos/margen a
+1 decimal con aviso, importes exactos.
+
+Shots: matriz v3 5/5 re-verde (23 PNG, s5 ya con Pareto
+nuevo, s4 con "Max." real); jury u1/u2 re-capturados con
+scripts/demo-shots/jury-shots.spec.ts (u2 V5 mostraba el
+formulario, no resultados; corregido + SHAs en
+FINAL_HEAD_VALIDATION). Revision propia del lead: u1/u2,
+s4/s5/s6, propia+Resumen/cabecera/empresa/archivo/export.
+DEFER UX (nits, no bloquean): D1-D6 en informe helper.
+
+S7 reglas (30-oct, web_fetch): plazo oficial 4-nov 21:00 ET
+(= 5-nov 03:00 CET, EST=UTC-5) confirmado en
+dev.meta.ai/events/global-hackathon; structured-output
+re-verificado (confirma preflight V5); precios Spark Standard
+1.25/0.15/4.25 USD por M (confirman estimador); Official Rules
+privadas (las aceptadas por el titular mandan; video/limite
+no confirmados en publico).
