@@ -1,0 +1,22 @@
+{
+  "what": "One real public PLACSP tender: detail page (deeplink target) and its CODICE CallForTenders XML, recorded verbatim by bidlab.services.placsp_import.PlacspClient. PDFs are not stored; tests use a generated PDF.",
+  "deeplink": "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=4mTE7tVTKp4IYE3ZiZ%2BxmQ%3D%3D",
+  "detail_final_url": "https://contrataciondelestado.es/wps/portal/plataforma/buscadores/detalle/!ut/p/z1/hY9JD4IwEIV_kel0oeCRpZTiVmTR9kJITAwJizHG328xXtW5vcz33rxBFp2Rnbpnf-0e_Tx1g9PG8paJQxynGYGgpAmQbVLXPFskQQ06_UOsW8OXCcH57RvxaMyavNG8VBJAZWmyrbEHkvAP8CPDuA5-GzaiCNWawiE6ug653lVaEgzAUT3N99H9Uy5Z_UU8B2QI9gNGGafBxy8lKBxJYHizT4BrX-SiqJYT__y3MV2rlRnbXRW-AOmcfsk!/dz/d5/L2dBISEvZ0FBIS9nQSEh/",
+  "record_url": "https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?cifrado=QUC1GjXXSiLkydRHJBmbpw%3D%3D&DocumentIdParam=eTWX4LxBKCNggSFY/MFoxDwh0ZDMkIPcoFM7gHgJ8hF5XKvw38RKcHg1s5vE5eLWYtPaQTeBbZUxNDwD%2BiGD6FPJ2KXx0GWf2ulpgjsEBJx7QB3HKyQaFUExmUVQCerk",
+  "retrieved_at": "2026-10-30T09:08:30.819819+00:00",
+  "files": {
+    "detail.html": "bb1b42a601d91c630cfbd32a04383cf57ffb61ddc93ae570b3d4715dc308f529",
+    "call_for_tenders.xml": "d10d3e20bf80f437f3ade9d739caf930b3eba7f58b72918dd49209a394017ca2"
+  },
+  "expediente": "2026/00006554N",
+  "rows": [
+    [
+      "25/10/2026 14:12:11",
+      "Anuncio de Licitación"
+    ],
+    [
+      "26/10/2026 08:58:07",
+      "Pliego"
+    ]
+  ]
+}

@@ -4,7 +4,9 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from bidlab.api import deps
 from bidlab.api.errors import ERROR_RESPONSES
@@ -13,12 +15,14 @@ from bidlab.schemas import generated as g
 from bidlab.services import demo as demo_service
 from bidlab.services import idempotency
 from bidlab.services import intake as intake_service
+from bidlab.services import placsp_import as placsp
 from bidlab.services import workspace as workspace_service
 from bidlab.settings import get_settings
 
 router = APIRouter(responses=ERROR_RESPONSES, tags=["tenders"])
 
 CREATE_ROUTE = "POST /api/v1/tenders"
+IMPORT_ROUTE = "POST /api/v1/tenders/import"
 DEMO_ROUTE = "POST /api/v1/demo/sessions"
 
 
@@ -72,6 +76,52 @@ async def create_tender(
         response.status_code = 200
         return g.Tender.model_validate(winner)
     return g.Tender.model_validate(created)
+
+
+@router.post(
+    "/tenders/import", response_model=g.TenderImport, status_code=201, operation_id="import_tender"
+)
+async def import_tender(
+    payload: g.TenderImportRequest,
+    request: Request,
+    response: Response,
+    db: Annotated[Session, Depends(deps.get_db)],
+    _guard: Annotated[None, Depends(deps.require_local_client)],
+    client: Annotated[placsp.PlacspClient, Depends(placsp.get_client)],
+    idempotency_key: str = Header(max_length=100),
+) -> g.TenderImport:
+    """Import one PLACSP tender; see ``bidlab.services.placsp_import``."""
+    body = await request.body()
+    stored = idempotency.check(db, IMPORT_ROUTE, idempotency_key, body)
+    if stored is not None:
+        response.status_code = 200
+        return g.TenderImport.model_validate(stored)
+    ref = placsp.parse_reference(payload.url_or_id)
+    existing = placsp.find_existing(db, ref)
+    writes: list[placsp.PendingWrite] = []
+    if existing is None:
+        # Network work runs off the event loop and before any write.
+        fetched = await run_in_threadpool(placsp.fetch_tender, ref, client)
+        try:
+            tender_id, writes = placsp.persist_import(db, fetched)
+        except IntegrityError:
+            # A concurrent import of the same tender won the unique key.
+            db.rollback()
+            existing = placsp.find_existing(db, ref)
+            if existing is None:
+                raise
+            writes = []
+    if existing is not None:
+        result = placsp.import_payload(db, existing.id, already_imported=True)
+        response.status_code = 200
+    else:
+        result = placsp.import_payload(db, tender_id, already_imported=False)
+    winner = idempotency.store(db, IMPORT_ROUTE, idempotency_key, body, result)
+    if winner is not None:
+        response.status_code = 200
+        return g.TenderImport.model_validate(winner)
+    placsp.write_pending(writes)
+    return g.TenderImport.model_validate(result)
 
 
 @router.get("/tenders/{tender_id}", response_model=g.Tender, operation_id="get_tender")

@@ -17,11 +17,12 @@ function uniqueTag(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 }
 
-/** Fill step 1 and land on step 2 ("Añadir documento"). */
+/** Open the manual form, fill step 1 and land on step 2 ("Añadir documento"). */
 async function createTenderToStep2(page: Page, title: string, externalId: string): Promise<void> {
   await page.goto("/");
   await page.getByTestId("nueva-licitacion").click();
   await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-manual").click();
   await page.getByTestId("intake-title").fill(title);
   await page.getByTestId("intake-external-id").fill(externalId);
   await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");
@@ -54,6 +55,7 @@ test("blur validates an engaged field and spares untouched ones", async ({ page 
   await page.goto("/");
   await page.getByTestId("nueva-licitacion").click();
   await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-manual").click();
 
   await page.getByTestId("intake-source-url").fill("notaurl");
   await page.getByTestId("intake-source-url").press("Tab");
@@ -67,6 +69,7 @@ test("invalid submit focuses the first field error", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("nueva-licitacion").click();
   await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-manual").click();
 
   await page.getByTestId("intake-submit").click();
   await expect(page.getByTestId("intake-title")).toBeFocused();

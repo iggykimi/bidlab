@@ -1,6 +1,8 @@
 // Intake flow: three short steps, "Identificar", "Añadir documento", "Tu empresa".
-// The tender is created first; the PDF and the company stay optional here
-// (Revisar offers the company form again if you skip it).
+// Step 1 first offers the import from the Plataforma de Contratación (link ->
+// tender + pliegos, then straight to "Tu empresa"); the manual form stays
+// below for tenders that are not there. The PDF and the company stay
+// optional (Revisar offers the company form again if you skip it).
 // Voice: Spanish tú, short sentences, questions as headings.
 
 import { useRef, useState, type ReactNode } from "react";
@@ -9,13 +11,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTender,
   getCapabilities,
+  importTender,
   newIdempotencyKey,
   uploadTenderDocument,
   type TenderDocument,
+  type TenderImport,
 } from "../../api/client";
 import { Alert, Button } from "../../components/ui";
 import { errorCode, errorEs } from "../../lib/errors";
-import { PRECIO_INPUT_MODE } from "../../lib/format";
+import { formatEurosExact, formatFechaNormal, PRECIO_INPUT_MODE } from "../../lib/format";
 import { CompanyCreateForm } from "../company/CompanyCreateForm";
 import {
   buildTenderCreate,
@@ -25,6 +29,7 @@ import {
   type IntakeForm,
   type TaxChoice,
 } from "./intakeForm";
+import { documentKindEs, documentReasonEs, importErrorEs } from "./importErrors";
 import {
   formatBytesEs,
   parseStatusToState,
@@ -90,6 +95,73 @@ function Stepper({ step }: { step: 1 | 2 | 3 }) {
   );
 }
 
+const IMPORT_EXAMPLE =
+  "https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=…";
+
+function SummaryRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="py-2">
+      <dt className="text-base text-muted">{label}</dt>
+      <dd className="text-lg font-semibold text-ink">{children}</dd>
+    </div>
+  );
+}
+
+/** What the import found, before the user continues. Figures stay backend strings. */
+function ImportSummary({ result }: { result: TenderImport }) {
+  const { tender } = result;
+  const missing = "Sin dato en la Plataforma";
+  return (
+    <div data-testid="import-summary" className="mt-4 rounded-xl border-2 border-primary bg-white p-4 sm:p-6">
+      <h3>¿Es esta la licitación?</h3>
+      {result.already_imported && (
+        <Alert tone="info" role="status" className="mt-3">
+          Ya la tenías en BidLab. Seguimos con la que ya existe.
+        </Alert>
+      )}
+      <dl className="mt-3 divide-y divide-border">
+        <SummaryRow label="Título">{tender.title}</SummaryRow>
+        <SummaryRow label="Expediente">{tender.external_id}</SummaryRow>
+        <SummaryRow label="Organismo que convoca">{tender.contracting_body || missing}</SummaryRow>
+        <SummaryRow label="Presupuesto de salida sin impuestos">
+          {tender.pbl_net ? formatEurosExact(tender.pbl_net) : missing}
+        </SummaryRow>
+        <SummaryRow label="Presupuesto de salida con impuestos">
+          {tender.pbl_gross ? formatEurosExact(tender.pbl_gross) : missing}
+        </SummaryRow>
+        <SummaryRow label="Plazo para presentar ofertas">
+          {tender.deadline_at ? formatFechaNormal(tender.deadline_at) : (tender.deadline_literal ?? missing)}
+        </SummaryRow>
+      </dl>
+      <p className="mt-2 text-base text-muted">La Plataforma no indica el tipo de impuesto. Lo revisas después.</p>
+
+      <h4 className="mt-5 text-lg font-semibold">Documentos</h4>
+      <ul className="mt-2 grid gap-3">
+        {result.documents.map((doc) => (
+          <li key={`${doc.kind}-${doc.source_url}`} className="tnum rounded-lg border border-border p-3">
+            <p className="break-all text-base font-semibold">{doc.label}</p>
+            <p className="text-base text-muted">{documentKindEs(doc.kind)}</p>
+            {doc.status === "downloaded" ? (
+              <p className="text-base">
+                {"Guardado"}
+                {doc.size_bytes !== null && ` · ${formatBytesEs(doc.size_bytes)}`}
+                {doc.pages_count !== null && ` · ${doc.pages_count} páginas`}
+              </p>
+            ) : (
+              <p className="text-base">
+                {documentReasonEs(doc.reason)}{" "}
+                <a href={doc.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+                  Ábrelo en la Plataforma
+                </a>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function IntakePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -120,6 +192,54 @@ export function IntakePage() {
   const maxBytes = capsQuery.data?.limits.pdf_bytes ?? null;
 
   const submittedRef = useRef(false);
+
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importRaw, setImportRaw] = useState<string | null>(null);
+  const [imported, setImported] = useState<TenderImport | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const importingRef = useRef(false);
+  const importKeyRef = useRef({ url: "", key: "" });
+
+  async function handleImport(event: React.FormEvent) {
+    event.preventDefault();
+    if (importingRef.current) return;
+    const pasted = importUrl.trim();
+    if (!pasted) {
+      setImportError("Pega primero el enlace de la licitación.");
+      setImportRaw(null);
+      document.getElementById("import-url")?.focus();
+      return;
+    }
+    // Same key while the link stays the same: a retry never duplicates.
+    if (importKeyRef.current.url !== pasted) importKeyRef.current = { url: pasted, key: newIdempotencyKey() };
+    importingRef.current = true;
+    setImporting(true);
+    setImportError(null);
+    setImportRaw(null);
+    try {
+      const result = await importTender(pasted, { idempotencyKey: importKeyRef.current.key });
+      await queryClient.invalidateQueries({ queryKey: ["tenders"] });
+      setImported(result);
+      setTenderId(result.tender.id);
+      setTenderTitle(result.tender.title);
+      setScopeId(result.tender.scopes[0]?.id ?? `${result.tender.id}-whole`);
+    } catch (error) {
+      setImportError(importErrorEs(error));
+      setImportRaw(errorCode(error));
+    } finally {
+      importingRef.current = false;
+      setImporting(false);
+    }
+  }
+
+  function resetImport() {
+    setImported(null);
+    setTenderId(null);
+    setScopeId(null);
+    setImportUrl("");
+  }
 
   function setField<K extends keyof IntakeForm>(field: K, value: IntakeForm[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -265,8 +385,82 @@ export function IntakePage() {
 
       <div id="contenido" className="mt-6">
         {step === 1 && (
-          <form onSubmit={(e) => void handleCreate(e)} noValidate aria-label="Identificar licitación">
+          <div>
             <h2>¿Qué licitación quieres dar de alta?</h2>
+            {imported ? (
+              <>
+                <ImportSummary result={imported} />
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button data-testid="import-continue" onClick={() => setStep(3)}>
+                    Continuar con tu empresa
+                  </Button>
+                  <Button variant="secondary" onClick={resetImport}>
+                    No es esta, probar otro enlace
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <form
+                onSubmit={(e) => void handleImport(e)}
+                noValidate
+                aria-label="Importar desde la Plataforma de Contratación"
+                className="mt-4 rounded-xl border-2 border-primary bg-white p-4 sm:p-6"
+              >
+                <label htmlFor="import-url" className="block text-lg font-semibold">
+                  Pega el enlace de la licitación en la Plataforma de Contratación
+                </label>
+                <p id="import-url-hint" className="mt-1 text-base text-muted">
+                  En la ficha de la licitación, copia el «Enlace a la licitación». Se parece a este:{" "}
+                  <span className="break-all">{IMPORT_EXAMPLE}</span>
+                </p>
+                <input
+                  id="import-url"
+                  data-testid="import-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={importUrl}
+                  onChange={(e) => {
+                    setImportUrl(e.target.value);
+                    setImportError(null);
+                  }}
+                  aria-invalid={importError !== null}
+                  aria-describedby={importError ? "import-url-hint import-url-error" : "import-url-hint"}
+                  className="mt-3 min-h-[56px] w-full rounded-lg border-2 border-border px-4 py-3 text-lg"
+                />
+                {importError && (
+                  <Alert id="import-url-error" className="mt-3" title={importRaw ?? undefined}>
+                    {importError}
+                  </Alert>
+                )}
+                {importing && (
+                  <p role="status" className="mt-3 text-base">
+                    Estamos trayendo la licitación y sus pliegos. Puede tardar un minuto.
+                  </p>
+                )}
+                <Button data-testid="import-submit" type="submit" disabled={importing} className="mt-4 text-lg">
+                  {importing ? "Importando…" : "Importar"}
+                </Button>
+              </form>
+            )}
+
+            {!imported && (
+              <section aria-labelledby="intake-manual-heading" className="mt-10 border-t border-border pt-6">
+                <h3 id="intake-manual-heading">¿No está en la Plataforma? Créala a mano</h3>
+                {!manualOpen ? (
+                  <Button
+                    data-testid="intake-manual"
+                    variant="secondary"
+                    className="mt-3"
+                    aria-expanded={false}
+                    aria-controls="intake-manual-form"
+                    onClick={() => setManualOpen(true)}
+                  >
+                    Crear a mano
+                  </Button>
+                ) : (
+          <form id="intake-manual-form" onSubmit={(e) => void handleCreate(e)} noValidate aria-label="Identificar licitación">
             <p className="mt-1 text-sm text-muted">Escribe los datos tal como aparecen en el anuncio.</p>
             <div className="mt-4 grid gap-4">
               <Field htmlFor="intake-title" label="Título" error={errors.title}>
@@ -423,6 +617,10 @@ export function IntakePage() {
               </Button>
             </div>
           </form>
+                )}
+              </section>
+            )}
+          </div>
         )}
 
         {step === 2 && tenderId && (
@@ -511,7 +709,9 @@ export function IntakePage() {
             <CompanyCreateForm
               tenderId={tenderId}
               scopeId={scopeId}
-              initialPeriodMonths={form.periodMonths}
+              initialPeriodMonths={
+                imported ? String(imported.tender.scopes[0]?.basis.period_months ?? "") : form.periodMonths
+              }
               onCreated={() => openWorkspace("revisar")}
             />
             <div className="mt-4 flex flex-wrap gap-3">

@@ -251,6 +251,27 @@ export function createTender(payload: TenderCreate, signal?: AbortSignal): Promi
   return sendJson<Tender>("POST", "/tenders", payload, { idempotencyKey: newIdempotencyKey(), signal });
 }
 
+export type TenderImport = components["schemas"]["TenderImport"];
+export type ImportedDocument = components["schemas"]["ImportedDocument"];
+
+/**
+ * Import one published tender from the Plataforma de Contratación.
+ * 201 creates it; 200 is a replay or a tender you already had
+ * (`already_imported`). The server parses the link and fetches only
+ * official URLs; no model call starts here.
+ */
+export function importTender(
+  urlOrId: string,
+  opts?: { idempotencyKey?: string; signal?: AbortSignal },
+): Promise<TenderImport> {
+  return sendJson<TenderImport>(
+    "POST",
+    "/tenders/import",
+    { url_or_id: urlOrId },
+    { idempotencyKey: opts?.idempotencyKey ?? newIdempotencyKey(), signal: opts?.signal },
+  );
+}
+
 export async function uploadTenderDocument(
   tenderId: string,
   file: File,

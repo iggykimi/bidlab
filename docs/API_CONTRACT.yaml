@@ -385,6 +385,109 @@ paths:
                     tax_kind: IGIC
                     period_months: 24
                     currency: EUR
+  /api/v1/tenders/import:
+    post:
+      operationId: import_tender
+      summary: Import tender from PLACSP
+      description: 'Imports one published tender from the Plataforma de Contratación
+        del Sector Público. The pasted deeplink (or bare idEvl token) is parsed server-side
+        and the official URL rebuilt; only allowlisted https hosts are fetched, at
+        most four resources: detail page, CODICE CallForTenders XML, PCAP and PPT.
+        PDFs pass the manual-upload validation and keep source URL and sha256. Re-importing
+        the same tender links the existing one (200, already_imported). Never starts
+        a model call. Idempotent via Idempotency-Key.'
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderImport'
+              examples:
+                example:
+                  summary: import_tender example
+                  value:
+                    tender:
+                      raw_snapshot_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                      metadata_evidence: []
+                      id: tias
+                      source_id: placsp:2026/00006554N
+                      source_url: https://contrataciondelestado.es/wps/portal/!ut/p/b0/
+                      external_id: 2026/00006554N
+                      title: Servicio de limpieza (Tias, ejemplo curado)
+                      contracting_body: Ayuntamiento de Tias
+                      cpv_codes:
+                      - '79411000'
+                      status_raw: ADJ
+                      source_updated_at: '2026-01-01T00:00:00Z'
+                      deadline_literal: null
+                      deadline_at: null
+                      pbl_net: '118336.00'
+                      pbl_gross: '126619.52'
+                      estimated_value: '295840.00'
+                      scopes: []
+                      quality_flags: []
+                    already_imported: false
+                    record_url: https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?DocumentIdParam=example
+                    record_sha256: 9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e9f2c4a1e
+                    retrieved_at: '2026-10-30T09:00:00+00:00'
+                    documents:
+                    - kind: pcap
+                      label: PCAP 6554.pdf
+                      source_url: https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?DocumentIdParam=pcap
+                      status: downloaded
+                      reason: null
+                      size_bytes: 457479
+                      pages_count: 41
+                      document_id: doc-upload-001
+                      hash_verified: true
+                    - kind: other
+                      label: ANEXO I.docx
+                      source_url: https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?DocumentIdParam=anexo
+                      status: not_downloaded
+                      reason: not_requested
+                      size_bytes: null
+                      pages_count: null
+                      document_id: null
+                      hash_verified: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - tenders
+      parameters:
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenderImportRequest'
+            examples:
+              example:
+                summary: import_tender example
+                value:
+                  url_or_id: https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=4mTE7tVTKp4IYE3ZiZ%2BxmQ%3D%3D
   /api/v1/tenders/{tender_id}/documents:
     post:
       operationId: upload_tender_document
@@ -2404,6 +2507,7 @@ components:
       - document_bytes_unavailable
       - document_duplicate
       - document_not_found
+      - document_too_large
       - document_wrong_tender
       - domain_non_finite
       - domain_validation
@@ -2425,6 +2529,7 @@ components:
       - method_not_allowed
       - missing_variable
       - money_unparseable
+      - no_documents
       - non_finite
       - not_found
       - not_positive
@@ -2460,6 +2565,7 @@ components:
       - scope_tender_mismatch
       - scope_without_budget
       - snapshot_corrupt
+      - source_unavailable
       - stale_revision
       - stress_constraints_invalid
       - stress_cost_invalid
@@ -2474,6 +2580,7 @@ components:
       - unknown_variable
       - unknown_variant
       - unsupported_media
+      - unsupported_url
       - upload_not_pdf
       - upload_too_large
       - validation_error
@@ -2914,6 +3021,114 @@ components:
       - source_url
       - scope_label
       - basis
+      additionalProperties: false
+    TenderImportRequest:
+      type: object
+      properties:
+        url_or_id:
+          type: string
+          minLength: 1
+          maxLength: 3000
+      required:
+      - url_or_id
+      additionalProperties: false
+    ImportedDocument:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - pcap
+          - ppt
+          - other
+        label:
+          type: string
+          maxLength: 300
+        source_url:
+          type: string
+          maxLength: 3000
+        status:
+          type: string
+          enum:
+          - downloaded
+          - not_downloaded
+        reason:
+          anyOf:
+          - type: string
+            enum:
+            - not_requested
+            - not_pdf
+            - too_large
+            - too_many_pages
+            - unreadable
+            - other_host
+            - hash_mismatch
+            - download_failed
+          - type: 'null'
+        size_bytes:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        pages_count:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        document_id:
+          anyOf:
+          - $ref: '#/components/schemas/EntityId'
+          - type: 'null'
+        hash_verified:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+      required:
+      - kind
+      - label
+      - source_url
+      - status
+      - reason
+      - size_bytes
+      - pages_count
+      - document_id
+      - hash_verified
+      additionalProperties: false
+    TenderImport:
+      type: object
+      properties:
+        tender:
+          $ref: '#/components/schemas/Tender'
+        already_imported:
+          type: boolean
+        record_url:
+          anyOf:
+          - type: string
+            maxLength: 3000
+          - type: 'null'
+        record_sha256:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+        retrieved_at:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportedDocument'
+          minItems: 0
+          maxItems: 50
+      required:
+      - tender
+      - already_imported
+      - record_url
+      - record_sha256
+      - retrieved_at
+      - documents
       additionalProperties: false
     Document:
       type: object

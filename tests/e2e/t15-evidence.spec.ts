@@ -111,6 +111,7 @@ test.describe("T15 desktop 1280x720", () => {
 
     await page.goto("/");
     await page.getByTestId("nueva-licitacion").click();
+    await page.getByTestId("intake-manual").click();
     await page.getByTestId("intake-title").fill(title);
     await page.getByTestId("intake-external-id").fill(`T15/${tag}`);
     await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");
@@ -211,6 +212,7 @@ test.describe("T15 desktop 1280x720", () => {
 
     await page.goto("/");
     await page.getByTestId("nueva-licitacion").click();
+    await page.getByTestId("intake-manual").click();
     await page.getByTestId("intake-title").fill(title);
     await page.getByTestId("intake-external-id").fill(`T15/${tag}`);
     await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");

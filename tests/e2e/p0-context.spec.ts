@@ -30,6 +30,7 @@ async function createTenderToStep2(
   await page.goto("/");
   await page.getByTestId("nueva-licitacion").click();
   await expect(page.getByRole("heading", { name: "¿Qué licitación quieres dar de alta?" })).toBeVisible();
+  await page.getByTestId("intake-manual").click();
   await page.getByTestId("intake-title").fill(title);
   await page.getByTestId("intake-external-id").fill(externalId);
   await page.getByTestId("intake-body").fill("Ayuntamiento de Prueba");

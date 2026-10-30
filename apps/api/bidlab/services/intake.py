@@ -1,4 +1,7 @@
-"""Own-tender intake: manual creation + local PDF upload (no remote fetch).
+"""Own-tender intake: manual creation + local PDF upload (no remote fetch here).
+
+Remote import of published tenders lives in ``placsp_import`` and reuses
+the upload validation below for every downloaded PDF.
 
 Creation stores exactly the supplied fields: money strings are parsed with
 the repo Decimal parser (never float) and a single amount never implies the
@@ -234,11 +237,16 @@ def stage_document_upload(
     file_bytes: bytes,
     filename: str | None,
     kind: str | None,
+    *,
+    source_url: str | None = None,
+    rights_status: str = RIGHTS_USER_SUPPLIED,
 ) -> tuple[dict[str, Any], Path]:
     """Validate and persist an uploaded PDF; the caller writes the bytes.
 
     Returns the Document payload plus the absolute blob path. Byte writing
     stays with the caller so a lost idempotency race leaves no orphan file.
+    Official downloads (PLACSP import) pass their source URL and rights
+    status; local uploads keep the defaults.
     """
     tender = session.get(models.Tender, tender_id)
     if tender is None:
@@ -276,8 +284,8 @@ def stage_document_upload(
         blob_path=blob_rel,
         display_name=safe_display_name(filename),
         pages_count=len(pages),
-        source_url=None,
-        rights_status=RIGHTS_USER_SUPPLIED,
+        source_url=source_url,
+        rights_status=rights_status,
         parse_status=parse_status,
     )
     session.add(doc)

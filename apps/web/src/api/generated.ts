@@ -108,6 +108,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tenders/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import tender from PLACSP
+         * @description Imports one published tender from the Plataforma de Contratación del Sector Público. The pasted deeplink (or bare idEvl token) is parsed server-side and the official URL rebuilt; only allowlisted https hosts are fetched, at most four resources: detail page, CODICE CallForTenders XML, PCAP and PPT. PDFs pass the manual-upload validation and keep source URL and sha256. Re-importing the same tender links the existing one (200, already_imported). Never starts a model call. Idempotent via Idempotency-Key.
+         */
+        post: operations["import_tender"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tenders/{tender_id}/documents": {
         parameters: {
             query?: never;
@@ -630,7 +650,7 @@ export interface components {
          * @description Machine-readable failure code; the frontend maps known codes to Spanish copy.
          * @enum {string}
          */
-        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "citation_not_found" | "citation_not_linked" | "citation_unverified" | "claim_not_reviewable" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "invalid_model_output" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "period_mismatch" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "provider_refusal" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirement_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "stale_revision" | "stress_constraints_invalid" | "stress_cost_invalid" | "stress_not_found" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "upload_not_pdf" | "upload_too_large" | "validation_error";
+        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "citation_not_found" | "citation_not_linked" | "citation_unverified" | "claim_not_reviewable" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_too_large" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "invalid_model_output" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "no_documents" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "period_mismatch" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "provider_refusal" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirement_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "source_unavailable" | "stale_revision" | "stress_constraints_invalid" | "stress_cost_invalid" | "stress_not_found" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "unsupported_url" | "upload_not_pdf" | "upload_too_large" | "validation_error";
         Error: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -735,6 +755,30 @@ export interface components {
             source_url: string | null;
             scope_label: string | null;
             basis: components["schemas"]["TenderBasisInput"] | null;
+        };
+        TenderImportRequest: {
+            url_or_id: string;
+        };
+        ImportedDocument: {
+            /** @enum {string} */
+            kind: "pcap" | "ppt" | "other";
+            label: string;
+            source_url: string;
+            /** @enum {string} */
+            status: "downloaded" | "not_downloaded";
+            reason: ("not_requested" | "not_pdf" | "too_large" | "too_many_pages" | "unreadable" | "other_host" | "hash_mismatch" | "download_failed") | null;
+            size_bytes: number | null;
+            pages_count: number | null;
+            document_id: components["schemas"]["EntityId"] | null;
+            hash_verified: boolean | null;
+        };
+        TenderImport: {
+            tender: components["schemas"]["Tender"];
+            already_imported: boolean;
+            record_url: string | null;
+            record_sha256: string | null;
+            retrieved_at: string | null;
+            documents: components["schemas"]["ImportedDocument"][];
         };
         Document: {
             id: components["schemas"]["EntityId"];
@@ -1731,6 +1775,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Tender"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    import_tender: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenderImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenderImport"];
                 };
             };
             400: components["responses"]["BadRequest"];

@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CallForTenders xmlns:cbc="urn:dgpe:names:draft:codice:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:cac="urn:dgpe:names:draft:codice:schema:xsd:CommonAggregateComponents-2" xmlns="urn:dgpe:names:draft:codice:schema:xsd:CallforTenders-2" xmlns:cac-place-ext="urn:dgpe:names:draft:codice-place-ext:schema:xsd:CommonAggregateComponents-2" xmlns:cbc-place-ext="urn:dgpe:names:draft:codice-place-ext:schema:xsd:CommonBasicComponents-2">
+    <cbc:UBLVersionID>2.3</cbc:UBLVersionID>
+    <cbc:CustomizationID>CODICE 2.8.0</cbc:CustomizationID>
+    <cbc:ProfileID>CiP 2.1</cbc:ProfileID>
+    <cbc:ID>0000020237593</cbc:ID>
+    <cbc:UUID>2026-000692931</cbc:UUID>
+    <cbc:ContractFolderID>2026/00006554N</cbc:ContractFolderID>
+    <cbc:IssueDate>2026-10-26+01:00</cbc:IssueDate>
+    <cbc:IssueTime>08:58:07.546</cbc:IssueTime>
+    <cac:LegalDocumentReference>
+        <cbc:ID schemeName="ID_DOC_PLACE">PCAP 6554.pdf</cbc:ID>
+        <cbc:CopyIndicator>false</cbc:CopyIndicator>
+        <cbc:UUID>DOC20260925111601PCAP 6554.pdf</cbc:UUID>
+        <cac:Attachment>
+            <cac:ExternalReference>
+                <cbc:URI>https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?cifrado=QUC1GjXXSiLkydRHJBmbpw%3D%3D&amp;DocumentIdParam=pESoKhY6OkYeTjkPA4mIyRNzDVdk2G/JlqvyzN7vbNeRVnzR6vdrLPYY1lFK/Wpktv6vw41yxt3CVA5k76XRxFJnidApPiutqNZj92DAB0O1aXEvq3KHa/AEHgtDrQw0</cbc:URI>
+                <cbc:DocumentHash>DKu8jA7vvBSFzySzlkLHr3jrTZ8=</cbc:DocumentHash>
+            </cac:ExternalReference>
+        </cac:Attachment>
+    </cac:LegalDocumentReference>
+    <cac:TechnicalDocumentReference>
+        <cbc:ID schemeName="ID_DOC_PLACE">Pliego.pdf</cbc:ID>
+        <cbc:CopyIndicator>false</cbc:CopyIndicator>
+        <cbc:UUID>DOC20260925111522Pliego.pdf</cbc:UUID>
+        <cac:Attachment>
+            <cac:ExternalReference>
+                <cbc:URI>https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?cifrado=QUC1GjXXSiLkydRHJBmbpw%3D%3D&amp;DocumentIdParam=5WHE%2Be2VHRxMwfaeyukYSHVgX%2BhdlQ%2B9Mxp4Z5FeSiJFLHYkoTuLgsqHBzL9EfGQVYh/jxUv7KG6jAkO05xk4OZfFn8nNUXC7wowhW5%2Bmkq1aXEvq3KHa/AEHgtDrQw0</cbc:URI>
+                <cbc:DocumentHash>q9ko+YmY8kasgHicNCEA9dps3r4=</cbc:DocumentHash>
+            </cac:ExternalReference>
+        </cac:Attachment>
+    </cac:TechnicalDocumentReference>
+    <cac:AdditionalDocumentReference>
+        <cbc:ID>ANEXO I.docx</cbc:ID>
+        <cbc:CopyIndicator>false</cbc:CopyIndicator>
+        <cbc:UUID>DOC20261023125550ANEXO I.docx</cbc:UUID>
+        <cac:Attachment>
+            <cac:ExternalReference>
+                <cbc:URI>https://contrataciondelestado.es/FileSystem/servlet/GetDocumentByIdServlet?cifrado=QUC1GjXXSiLkydRHJBmbpw%3D%3D&amp;DocumentIdParam=2vbEXFbq2dMunWGNYQ9Ege7vOkYaaNOAPecdKE1jsKG%2Bn2P5LnR1THuhzwu3NTuqGy5wuzYtIv%2Bz/%2BiRMRnFE1lSOZyV1q9%2BW0NfUIcmzB/fdyQgZAdTm3EfcUAC7CJ6</cbc:URI>
+                <cbc:DocumentHash>XHLON5rZJbkZUNh5NrHJdD1Jcg4=</cbc:DocumentHash>
+            </cac:ExternalReference>
+        </cac:Attachment>
+    </cac:AdditionalDocumentReference>
+    <cac:ContractingParty>
+        <cbc:ContractingPartyTypeCode listVersionID="2.10" name="Autoridad local" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.10/ContractingAuthorityCode-2.10.gc">3</cbc:ContractingPartyTypeCode>
+        <cbc:ActivityCode listVersionID="2.10" name="Servicios públicos generales" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.10/ContractingAuthorityActivityCode-2.10.gc">1</cbc:ActivityCode>
+        <cbc:BuyerProfileURIID>https://contrataciondelestado.es/wps/poc?uri=deeplink:perfilContratante&amp;idBp=94bJJbsgrdxvYnTkQN0%2FZA%3D%3D</cbc:BuyerProfileURIID>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeName="ID_PLATAFORMA">31322280175988</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyIdentification>
+                <cbc:ID schemeName="NIF">P3502800J</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                <cbc:CityName>Tías</cbc:CityName>
+                <cbc:PostalZone>35572</cbc:PostalZone>
+                <cbc:CountrySubentity>Gran Canaria</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode listVersionID="2.12" name="Gran Canaria" listURI="http://contrataciondelestado.es/codice/cl/2.12/NUTS-2024.gc">ES705</cbc:CountrySubentityCode>
+                <cac:AddressLine>
+                    <cbc:Line>Libertad, 50</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                    <cbc:Name>España</cbc:Name>
+                </cac:Country>
+            </cac:PostalAddress>
+            <cac:Contact>
+                <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+                <cbc:Telephone>+34 928833619</cbc:Telephone>
+                <cbc:Telefax>+34 928833549</cbc:Telefax>
+                <cbc:ElectronicMail>contratacion@ayuntamientodetias.es</cbc:ElectronicMail>
+            </cac:Contact>
+            <cac:Person>
+                <cbc:JobTitle>Alcalde.Presidente</cbc:JobTitle>
+            </cac:Person>
+        </cac:Party>
+    </cac:ContractingParty>
+    <cac:TenderingTerms>
+        <cbc:RequiredCurriculaIndicator>false</cbc:RequiredCurriculaIndicator>
+        <cbc:VariantConstraintIndicator>false</cbc:VariantConstraintIndicator>
+        <cbc:FundingProgramCode listVersionID="2.08" name="Financiación con fondos de la UE" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/FundingProgramCode-2.08.gc">EU</cbc:FundingProgramCode>
+        <cbc:FundingProgramCode listVersionID="2.08" name="Fondo Europeo de Desarrollo Regional" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/FundingProgramCode-2.08.gc">FEDER</cbc:FundingProgramCode>
+        <cbc:FundingProgram>2021ES16RFPR001</cbc:FundingProgram>
+        <cbc:EcatalogIndicator>false</cbc:EcatalogIndicator>
+        <cbc:EorderingIndicator>true</cbc:EorderingIndicator>
+        <cbc:EpaymentMeansIndicator>true</cbc:EpaymentMeansIndicator>
+        <cbc:ProcurementNationalLegislationCode listVersionID="2.08" name="Ley 9/2017" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/ProcurementNationalLegislationCode-2.08.gc">3</cbc:ProcurementNationalLegislationCode>
+        <cbc:CVDScopeCode listVersionID="2.10" name="No aplica la Directiva de Vehículos Limpios" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.10/CVDScope-2.10.gc">no-CVD</cbc:CVDScopeCode>
+        <cac:RequiredFinancialGuarantee>
+            <cbc:GuaranteeTypeCode listVersionID="2006" name="Definitiva" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/GuaranteeTypeCode-1.04.gc">2</cbc:GuaranteeTypeCode>
+            <cbc:AmountRate>5</cbc:AmountRate>
+        </cac:RequiredFinancialGuarantee>
+        <cac:ProcurementLegislationDocumentReference>
+            <cbc:ID>2014/24/EU</cbc:ID>
+            <cbc:CopyIndicator>false</cbc:CopyIndicator>
+            <cbc:UUID>2014/24/EU</cbc:UUID>
+        </cac:ProcurementLegislationDocumentReference>
+        <cac:TendererQualificationRequest>
+            <cac:TechnicalEvaluationCriteria>
+                <cbc:EvaluationCriteriaTypeCode listVersionID="2.0" name="Trabajos realizados" listURI="http://contrataciondelestado.es/codice/cl/2.0/TechnicalCapabilityTypeCode-2.0.gc">OSR-COMPTASK</cbc:EvaluationCriteriaTypeCode>
+                <cbc:Description>Remisión a la cláusula 4.3.2 del PCAP</cbc:Description>
+            </cac:TechnicalEvaluationCriteria>
+            <cac:SpecificTendererRequirement>
+                <cbc:RequirementTypeCode listVersionID="2.08" name="Capacidad de obrar" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/DeclarationTypeCode-2.08.gc">1</cbc:RequirementTypeCode>
+                <cbc:Description>En esta fase se acreditará mediante la presentación del DEUC en formato PDF y formalizado.</cbc:Description>
+            </cac:SpecificTendererRequirement>
+        </cac:TendererQualificationRequest>
+        <cac:AllowedSubcontractTerms>
+            <cbc:UnknownPriceIndicator>true</cbc:UnknownPriceIndicator>
+        </cac:AllowedSubcontractTerms>
+        <cac:TenderPreparation>
+            <cbc:TenderEnvelopeID>Archivo electrónico n.º 1</cbc:TenderEnvelopeID>
+            <cbc:TenderEnvelopeTypeCode listVersionID="2.08" name="Documentación administrativa" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/TenderEnvelopeTypeCode-2.08.gc">1</cbc:TenderEnvelopeTypeCode>
+            <cbc:Description>Según cláusula 15.1 del PCAP</cbc:Description>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>true</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Compromiso de adscripción</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>Compromiso de adscribir a la ejecución del contrato los medios personales y/o materiales relacionados en la cláusula 4.3 del presente pliego.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Compromiso de integración de solvencia</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>Las empresas licitadoras que vayan a utilizar los medios y solvencia de otras empresas deberán aportar el correspondiente escrito de compromiso suscrito por estas últimas.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>true</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>declaración responsable del 15.1.6</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>Declaración expresa de que en la oferta presentada se han tenido en cuenta las obligaciones derivadas de las disposiciones vigentes en materia de protección del empleo, condiciones de trabajo y prevención de riesgos laborales, y protección del medio ambiente.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Declaración responsable del 15.1.5</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>En su caso, declaración responsable, emitida por quien tenga poder de representación de la empresa licitadora, haciendo constar que dicha empresa tiene la condición, al vencimiento del plazo de presentación de ofertas, de tener en su plantilla un porcentaje de trabajadores con discapacidad superior al que les imponga la normativa y, por lo tanto, le será de aplicación lo establecido en la cláusula 12.3 del presente pliego.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>true</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Documento Europeo Único de Contratación (DEUC)</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Compromiso UTE</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description> Asimismo, en el supuesto de que concurran a la licitación empresas agrupadas en una unión temporal, deberán presentar  escrito de compromiso de constituirse formalmente en unión temporal de empresas, en caso de resultar adjudicatarias del contrato, en el que se indicarán los nombres y circunstancias de las personas empresarias que  suscriban la unión, la participación de cada uno de ellas, y la designación de una persona como representante o apoderada único de la unión con poderes bastantes para ejercitar los derechos y cumplir las obligaciones que del contrato se deriven hasta la extinción del mismo, sin perjuicio de la existencia de poderes mancomunados que puedan otorgar las empresas para cobros y pagos de cuantía significativa.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Declaración responsable del 15.1.8</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>Las empresas extranjeras deberán presentar, además, declaración de someterse a la jurisdicción de los Juzgados y Tribunales españoles, de cualquier orden, para todas las incidencias que, de modo directo o indirecto, pudieran surgir del contrato, con renuncia, en su caso, al fuero jurisdiccional extranjero que pudiera corresponder al licitante. </cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>true</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Hoja resumen</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description> Hoja-resumen en la que figuren los datos de la licitadora: dirección completa, números de teléfono y fax y persona de contacto, así como una dirección de correo electrónico habilitada , en la que el órgano de contratación realizará las notificaciones derivadas de la presente contratación</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+        </cac:TenderPreparation>
+        <cac:TenderPreparation>
+            <cbc:TenderEnvelopeID>Archivo electrónico n.º 2</cbc:TenderEnvelopeID>
+            <cbc:TenderEnvelopeTypeCode listVersionID="2.08" name="Oferta técnica o evaluable mediante juicio de valor" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/TenderEnvelopeTypeCode-2.08.gc">2</cbc:TenderEnvelopeTypeCode>
+            <cbc:Description>Según cláusula 15.2 del PCAP</cbc:Description>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Oferta técnica</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description>Las personas licitadoras incluirán en este sobre la Memoria explicativa de la prestación del servicio, relacionada con el criterio de adjudicación cuya cuantificación depende de un juicio de &#xD;
+valor y que está relacionado con el criterio de adjudicación 2, indicado en la cláusula 12.3 del presente pliego.&#xD;
+Si algún sujeto licitador no aporta la documentación relativa a alguno de los criterios a que se refiere este apartado, o la misma no contiene todos los requisitos exigidos en los párrafos &#xD;
+anteriores, la proposición de dicho licitador no será valorada respecto del criterio de que se trate.&#xD;
+La inclusión en el ARCHIVO ELECTRÓNICO N.º 2 de datos o información concerniente al ARCHIVO ELETRÓNICO N.º 3, de oferta económica y criterios evaluables mediante la aplicación &#xD;
+de fórmulas, dará lugar a la exclusión de forma automática del licitador.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+        </cac:TenderPreparation>
+        <cac:TenderPreparation>
+            <cbc:TenderEnvelopeID>Archivo electrónico n.º 3</cbc:TenderEnvelopeID>
+            <cbc:TenderEnvelopeTypeCode listVersionID="2.08" name="Oferta económica o evaluable mediante fórmulas" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/TenderEnvelopeTypeCode-2.08.gc">3</cbc:TenderEnvelopeTypeCode>
+            <cbc:Description>Según cláusula 15.3 del PCAP</cbc:Description>
+            <cac:DocumentTenderRequirement>
+                <cbc:RequiredSignatureIndicator>true</cbc:RequiredSignatureIndicator>
+                <cbc:MandatoryIndicator>false</cbc:MandatoryIndicator>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>Oferta económica y otros criterios</cbc:ID>
+                    <cbc:DocumentTypeCode listVersionID="2.07" name="Documento requerido" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.07/EvidenceDocumentTypeCode-2.07.gc">DOC_REQUIRED</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>PDF</cbc:DocumentType>
+                    <cbc:Description> Las licitadoras incluirán en este sobre su oferta económica (criterio de adjudicación 1) y proposición relativa a los criterios de adjudicación 3. Adscripción de perfiles adicionales de consultoría técnica al equipo mínimo exigido y 4. Asistencia técnica adicional, que deberá redactarse según el modelo Anexo I al presente pliego, sin errores o tachaduras que dificulten conocer claramente lo que el órgano de contratación estime fundamental para considerar las ofertas, y que, de producirse, provocarán que la proposición sea rechazada.</cbc:Description>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+        </cac:TenderPreparation>
+        <cac:ContractExecutionRequirement>
+            <cbc:Name>Eliminar desigualdades entre el hombre y la mujer</cbc:Name>
+            <cbc:ExecutionRequirementCode listVersionID="2.08" name="Eliminar desigualdades entre el hombre y la mujer" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/ExecutionRequirementCode-2.08.gc">4</cbc:ExecutionRequirementCode>
+            <cbc:Description>Eliminar las desigualdades entre el hombre y la mujer en dicho mercado, favoreciendo la aplicación de medidas que fomenten la igualdad entre mujeres y hombres en el trabajo.</cbc:Description>
+        </cac:ContractExecutionRequirement>
+        <cac:AwardingTerms>
+            <cac:AwardingCriteria>
+                <cbc:ID>2775561</cbc:ID>
+                <cbc:AwardingCriteriaTypeCode listVersionID="2.0" name="Cuantificables Automáticamente" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.0/AwardingCriteriaCode-2.0.gc">OBJ</cbc:AwardingCriteriaTypeCode>
+                <cbc:Description> Asistencia técnica adicional</cbc:Description>
+                <cbc:Note>El licitador podrá asumir este compromiso mediante el Anexo I.</cbc:Note>
+                <cbc:AwardingCriteriaSubTypeCode listVersionID="2.09" name="Otros" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.09/AwardingCriteriaAutomaticallyEvaluatedSubTypeCode-2.09.gc">2</cbc:AwardingCriteriaSubTypeCode>
+                <cbc:WeightNumeric>9</cbc:WeightNumeric>
+                <cbc:StructuredValueIndicator>false</cbc:StructuredValueIndicator>
+            </cac:AwardingCriteria>
+            <cac:AwardingCriteria>
+                <cbc:ID>2775562</cbc:ID>
+                <cbc:AwardingCriteriaTypeCode listVersionID="2.0" name="Cuantificables Automáticamente" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.0/AwardingCriteriaCode-2.0.gc">OBJ</cbc:AwardingCriteriaTypeCode>
+                <cbc:Description>Adscripción de perfiles adicionales de  consultoría técnica al equipo mínimo exigido </cbc:Description>
+                <cbc:Note>El licitador podrá asumir este compromiso mediante el Anexo I.</cbc:Note>
+                <cbc:AwardingCriteriaSubTypeCode listVersionID="2.09" name="Otros" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.09/AwardingCriteriaAutomaticallyEvaluatedSubTypeCode-2.09.gc">2</cbc:AwardingCriteriaSubTypeCode>
+                <cbc:WeightNumeric>20</cbc:WeightNumeric>
+                <cbc:StructuredValueIndicator>false</cbc:StructuredValueIndicator>
+            </cac:AwardingCriteria>
+            <cac:AwardingCriteria>
+                <cbc:ID>2775564</cbc:ID>
+                <cbc:AwardingCriteriaTypeCode listVersionID="2.0" name="Cuantificables Automáticamente" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.0/AwardingCriteriaCode-2.0.gc">OBJ</cbc:AwardingCriteriaTypeCode>
+                <cbc:Description>Precio</cbc:Description>
+                <cbc:Note>El licitador deberá presentar su oferta mediante el Anexo I.</cbc:Note>
+                <cbc:AwardingCriteriaSubTypeCode listVersionID="2.09" name="Precio" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.09/AwardingCriteriaAutomaticallyEvaluatedSubTypeCode-2.09.gc">1</cbc:AwardingCriteriaSubTypeCode>
+                <cbc:WeightNumeric>49</cbc:WeightNumeric>
+                <cbc:StructuredValueIndicator>false</cbc:StructuredValueIndicator>
+            </cac:AwardingCriteria>
+            <cac:AwardingCriteria>
+                <cbc:ID>2775563</cbc:ID>
+                <cbc:AwardingCriteriaTypeCode listVersionID="2.0" name="Juicio de Valor" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.0/AwardingCriteriaCode-2.0.gc">SUBJ</cbc:AwardingCriteriaTypeCode>
+                <cbc:Description>Memoria explicativa de la prestación del  servicio</cbc:Description>
+                <cbc:Note>Respecto del criterio de adjudicación 2. Memoria explicativa de la prestación del servicio, siendo este criterio sometido a juicio de valor, se evaluará la propuesta de ejecución de las prestaciones incluidas en el objeto del contrato mediante la presentación de una Memoria Técnica, cuya puntuación total no podrá exceder de 22 puntos.&#xD;
+La memoria a presentar tendrá una extensión máxima de 25 páginas DIN A4, con interlineado 1,5 y tipo de letra Arial, tamaño 12, con márgenes de 2 cm en todos sus lados. LA MEMORIA SE PRESENTARÁ EN EL ARCHIVO ELECTRÓNICO N.º 2</cbc:Note>
+                <cbc:AwardingCriteriaSubTypeCode listVersionID="2.09" name="Otros" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.09/AwardingCriteriaNotAutomaticallyEvaluatedSubTypeCode-2.09.gc">99</cbc:AwardingCriteriaSubTypeCode>
+                <cbc:WeightNumeric>22</cbc:WeightNumeric>
+                <cbc:StructuredValueIndicator>false</cbc:StructuredValueIndicator>
+            </cac:AwardingCriteria>
+        </cac:AwardingTerms>
+        <cac:AdditionalInformationParty>
+            <cac:PartyName>
+                <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                <cbc:CityName>Tías</cbc:CityName>
+                <cbc:PostalZone>35572</cbc:PostalZone>
+                <cac:AddressLine>
+                    <cbc:Line>Libertad, 50</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                    <cbc:Name>España</cbc:Name>
+                </cac:Country>
+            </cac:PostalAddress>
+        </cac:AdditionalInformationParty>
+        <cac:DocumentProviderParty>
+            <cac:PartyName>
+                <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                <cbc:CityName>Tías</cbc:CityName>
+                <cbc:PostalZone>35572</cbc:PostalZone>
+                <cac:AddressLine>
+                    <cbc:Line>Libertad, 50</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                    <cbc:Name>España</cbc:Name>
+                </cac:Country>
+            </cac:PostalAddress>
+        </cac:DocumentProviderParty>
+        <cac:TenderRecipientParty>
+            <cbc:EndpointID>https://contrataciondelestado.es</cbc:EndpointID>
+            <cac:PartyName>
+                <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                <cbc:CityName>Tías</cbc:CityName>
+                <cbc:PostalZone>35572</cbc:PostalZone>
+                <cac:AddressLine>
+                    <cbc:Line>Libertad, 50</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                    <cbc:Name>España</cbc:Name>
+                </cac:Country>
+            </cac:PostalAddress>
+        </cac:TenderRecipientParty>
+        <cac:TenderValidityPeriod>
+            <cbc:DurationMeasure unitCode="MON">2</cbc:DurationMeasure>
+        </cac:TenderValidityPeriod>
+        <cac:AppealTerms>
+            <cac:PresentationPeriod>
+                <cbc:Description>El plazo de interposición de recursos está sometido a la Ley de Contratos</cbc:Description>
+            </cac:PresentationPeriod>
+            <cac:AppealInformationParty>
+                <cac:PartyName>
+                    <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+                </cac:PartyName>
+                <cac:PostalAddress>
+                    <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                    <cbc:CityName>Tías</cbc:CityName>
+                    <cbc:PostalZone>35572</cbc:PostalZone>
+                    <cac:AddressLine>
+                        <cbc:Line>Libertad, 50</cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                        <cbc:Name>España</cbc:Name>
+                    </cac:Country>
+                </cac:PostalAddress>
+                <cac:Contact>
+                    <cbc:ElectronicMail>contratacion@ayuntamientodetias.es</cbc:ElectronicMail>
+                </cac:Contact>
+            </cac:AppealInformationParty>
+            <cac:AppealReceiverParty>
+                <cac:PartyName>
+                    <cbc:Name>Pleno del Ayuntamiento de Tías</cbc:Name>
+                </cac:PartyName>
+                <cac:PostalAddress>
+                    <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                    <cbc:CityName>Tías</cbc:CityName>
+                    <cbc:PostalZone>35572</cbc:PostalZone>
+                    <cbc:CountrySubentity>Lanzarote</cbc:CountrySubentity>
+                    <cbc:CountrySubentityCode listVersionID="2.12" name="Lanzarote" listURI="http://contrataciondelestado.es/codice/cl/2.12/NUTS-2024.gc">ES708</cbc:CountrySubentityCode>
+                    <cac:AddressLine>
+                        <cbc:Line>Libertad, 50</cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                        <cbc:Name>España</cbc:Name>
+                    </cac:Country>
+                </cac:PostalAddress>
+            </cac:AppealReceiverParty>
+        </cac:AppealTerms>
+        <cac:Language>
+            <cbc:ID>es</cbc:ID>
+        </cac:Language>
+        <cac:InvoicingTerms>
+            <cbc:ElectronicInvoicingIndicator>true</cbc:ElectronicInvoicingIndicator>
+        </cac:InvoicingTerms>
+        <cac:ExclusionGrounds>
+            <cbc:ExclusionGroundTypeCode listName="exclusion-ground" listVersionID="2.10" name="Culpable de falta profesional grave" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.10/ExclusionGrounds-2.10.gc">prof-misconduct</cbc:ExclusionGroundTypeCode>
+            <cbc:Description>Resultará motivo de exclusión las prohibiciones de contratar previstas en el artículo 71 de la LCSP.</cbc:Description>
+        </cac:ExclusionGrounds>
+    </cac:TenderingTerms>
+    <cac:TenderingProcess>
+        <cbc:Description>El presente expediente se tramitará por procedimiento abierto por ser el que mejor garantiza la relación calidad precio a tenor de los artículos 131 y 156 de la LCSP. </cbc:Description>
+        <cbc:ProcedureCode listVersionID="2.08" name="Abierto" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/TenderingProcessCode-2.08.gc">1</cbc:ProcedureCode>
+        <cbc:UrgencyCode listVersionID="2006" name="Ordinaria" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/DiligenceTypeCode-1.04.gc">1</cbc:UrgencyCode>
+        <cbc:ExpenseCode listVersionID="2006" name="Ordinaria" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/ExpenseTypeCode-1.04.gc">1</cbc:ExpenseCode>
+        <cbc:ContractingSystemCode listVersionID="2.08" name="No aplica" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/ContractingSystemTypeCode-2.08.gc">0</cbc:ContractingSystemCode>
+        <cbc:SubmissionMethodCode listVersionID="2006" name="Electrónica" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/TenderDeliveryCode-1.04.gc">1</cbc:SubmissionMethodCode>
+        <cbc:GovernmentProcurementAgreementConstraintIndicator>false</cbc:GovernmentProcurementAgreementConstraintIndicator>
+        <cbc:OverThresholdIndicator>true</cbc:OverThresholdIndicator>
+        <cac:DocumentAvailabilityPeriod>
+            <cbc:EndDate>2026-11-25+01:00</cbc:EndDate>
+            <cbc:EndTime>23:59:00.000</cbc:EndTime>
+        </cac:DocumentAvailabilityPeriod>
+        <cac:TenderSubmissionDeadlinePeriod>
+            <cbc:EndDate>2026-11-25+01:00</cbc:EndDate>
+            <cbc:EndTime>23:59:00.000</cbc:EndTime>
+            <cbc:Description>Hora peninsular</cbc:Description>
+        </cac:TenderSubmissionDeadlinePeriod>
+        <cac:NoticeDocumentReference>
+            <cbc:ID schemeName="ENVIO_CN_DOUE">2026-000691196</cbc:ID>
+            <cbc:CopyIndicator>false</cbc:CopyIndicator>
+            <cbc:UUID>2026-000691196</cbc:UUID>
+            <cbc:IssueDate>2026-10-23+02:00</cbc:IssueDate>
+            <cbc:DocumentTypeCode listVersionID="2.11" name="Envío de Anuncio de Licitación al DOUE" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.11/TenderingDocumentTypeCode-2.11.gc">ENVIO_CN_DOUE</cbc:DocumentTypeCode>
+        </cac:NoticeDocumentReference>
+        <cac:NoticeDocumentReference>
+            <cbc:ID>740879-2026</cbc:ID>
+            <cbc:CopyIndicator>false</cbc:CopyIndicator>
+            <cbc:UUID>2026-000691196</cbc:UUID>
+            <cbc:IssueDate>2026-10-26+01:00</cbc:IssueDate>
+            <cbc:DocumentTypeCode listVersionID="2.11" name="Anuncio de Licitación publicado en DOUE" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.11/TenderingDocumentTypeCode-2.11.gc">PUB_CN_DOUE</cbc:DocumentTypeCode>
+            <cac:Attachment>
+                <cac:ExternalReference>
+                    <cbc:URI>https://ted.europa.eu/es/notice/-/detail/740879-2026</cbc:URI>
+                </cac:ExternalReference>
+            </cac:Attachment>
+        </cac:NoticeDocumentReference>
+        <cac:AdditionalDocumentReference>
+            <cbc:ID>Detalle_Licitacion</cbc:ID>
+            <cbc:CopyIndicator>false</cbc:CopyIndicator>
+            <cbc:UUID>Detalle_Licitacion</cbc:UUID>
+            <cbc:DocumentTypeCode listVersionID="2.11" name="Documento de detalle del Expediente publicado en la Plataforma" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.11/TenderingDocumentTypeCode-2.11.gc">LINK_EXP_PLACE</cbc:DocumentTypeCode>
+            <cac:Attachment>
+                <cac:ExternalReference>
+                    <cbc:URI>https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&amp;idEvl=4mTE7tVTKp4IYE3ZiZ%2BxmQ%3D%3D</cbc:URI>
+                </cac:ExternalReference>
+            </cac:Attachment>
+        </cac:AdditionalDocumentReference>
+        <cac:OpenTenderEvent>
+            <cbc:IdentificationID>Apertura de documentación administrativa</cbc:IdentificationID>
+            <cbc:OccurrenceDate>2026-11-27+01:00</cbc:OccurrenceDate>
+            <cbc:OccurrenceTime>09:00:00.000</cbc:OccurrenceTime>
+            <cbc:TypeCode listVersionID="2.09" name="Apertura sobre oferta económica" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.09/EventTypeCode-2.09.gc">4</cbc:TypeCode>
+            <cac:OccurrenceLocation>
+                <cbc:Description>Ayuntamiento de Tías</cbc:Description>
+                <cac:Address>
+                    <cbc:AddressFormatCode listVersionID="2007" name="Spanish Format" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/AddressFormatCode-1.0.gc">1</cbc:AddressFormatCode>
+                    <cbc:CityName>Tías</cbc:CityName>
+                    <cbc:PostalZone>35572</cbc:PostalZone>
+                    <cac:AddressLine>
+                        <cbc:Line>Calle Libertad, 50</cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                        <cbc:Name>España</cbc:Name>
+                    </cac:Country>
+                </cac:Address>
+            </cac:OccurrenceLocation>
+            <cac:AttendanceConditions>
+                <cbc:AttendanceRestrictionCode listVersionID="2.05" name="Privado" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.05/AttendanceRestrictionCode-2.05.gc">2</cbc:AttendanceRestrictionCode>
+            </cac:AttendanceConditions>
+        </cac:OpenTenderEvent>
+        <cac:AuctionTerms>
+            <cbc:AuctionConstraintIndicator>false</cbc:AuctionConstraintIndicator>
+        </cac:AuctionTerms>
+    </cac:TenderingProcess>
+    <cac:ProcurementProject>
+        <cbc:Name>Servicios de asistencia técnica de gestión del Plan de Actuación Integrado de Tías</cbc:Name>
+        <cbc:Description>El servicio comprenderá el apoyo técnico continuado a la Unidad de Gestión municipal en el ejercicio de las funciones derivadas del Acuerdo de Compromiso asumido, incluyendo, entre otras, la coordinación del PAI, la selección y seguimiento de operaciones, la gestión administrativa y financiera, el control de indicadores, la verificación del cumplimiento normativo, la aplicación de medidas antifraude, la correcta implementación del principio de no causar un perjuicio significativo (DNSH), el cumplimiento de las obligaciones en materia de sostenibilidad, comunicación y publicidad, así como la preparación y atención a controles y auditorías. </cbc:Description>
+        <cbc:TypeCode listVersionID="2.08" name="Servicios" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/ContractCode-2.08.gc">2</cbc:TypeCode>
+        <cbc:SubTypeCode listVersionID="2006" name="Otros servicios" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/1.04/ServiceContractCode-1.04.gc">27</cbc:SubTypeCode>
+        <cbc:MixContractIndicator>false</cbc:MixContractIndicator>
+        <cac:BudgetAmount>
+            <cbc:EstimatedOverallContractAmount currencyID="EUR">295840</cbc:EstimatedOverallContractAmount>
+            <cbc:TotalAmount currencyID="EUR">126619.52</cbc:TotalAmount>
+            <cbc:TaxExclusiveAmount currencyID="EUR">118336</cbc:TaxExclusiveAmount>
+        </cac:BudgetAmount>
+        <cac:RequiredCommodityClassification>
+            <cbc:ItemClassificationCode listName="CPV" listVersionID="2.04" name="Servicios generales de consultoría en gestión." listURI="http://contrataciondelestado.es/codice/cl/2.04/CPV2008-2.04.gc">79411000</cbc:ItemClassificationCode>
+        </cac:RequiredCommodityClassification>
+        <cac:RequiredCommodityClassification>
+            <cbc:ItemClassificationCode listName="CPV" listVersionID="2.04" name="Servicios de asistencia técnica." listURI="http://contrataciondelestado.es/codice/cl/2.04/CPV2008-2.04.gc">71356200</cbc:ItemClassificationCode>
+        </cac:RequiredCommodityClassification>
+        <cac:RealizedLocation>
+            <cbc:CountrySubentity>Lanzarote</cbc:CountrySubentity>
+            <cbc:CountrySubentityCode listVersionID="2.12" name="Lanzarote" listURI="http://contrataciondelestado.es/codice/cl/2.12/NUTS-2024.gc">ES708</cbc:CountrySubentityCode>
+            <cac:Address>
+                <cac:Country>
+                    <cbc:IdentificationCode listVersionID="2.08" name="España" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.08/CountryIdentificationCode-2.08.gc">ES</cbc:IdentificationCode>
+                    <cbc:Name>España</cbc:Name>
+                </cac:Country>
+            </cac:Address>
+        </cac:RealizedLocation>
+        <cac:PlannedPeriod>
+            <cbc:DurationMeasure unitCode="ANN">2</cbc:DurationMeasure>
+            <cbc:Description>El contrato tendrá un plazo de duración de DOS (2) AÑOS, a contar desde el día de la firma del &#xD;
+acta de inicio de la prestación. &#xD;
+Dicho plazo de vigencia podrá ser prorrogado por anualidades, hasta un máximo de TRES (3) &#xD;
+prórrogas, siendo por tanto la duración máxima, incluidas las prórrogas, de CINCO (5) años. </cbc:Description>
+        </cac:PlannedPeriod>
+        <cac:ContractExtension>
+            <cbc:MaximumNumberNumeric>3</cbc:MaximumNumberNumeric>
+            <cac:OptionValidityPeriod>
+                <cbc:Description>Cada prórroga tendrá una duración máxima de UN (1) año.</cbc:Description>
+            </cac:OptionValidityPeriod>
+        </cac:ContractExtension>
+        <cac:ProcurementAdditionalType>
+            <cbc:ProcurementTypeCode listName="strategic-procurement" listVersionID="2.10" name="Ninguno" languageID="es" listURI="http://contrataciondelestado.es/codice/cl/2.10/StrategicProcurement-2.10.gc">none</cbc:ProcurementTypeCode>
+        </cac:ProcurementAdditionalType>
+    </cac:ProcurementProject>
+</CallForTenders>

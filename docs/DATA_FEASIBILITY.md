@@ -112,6 +112,7 @@ Ejemplo minimizado y sin datos personales en examples/placsp_minimal.xml. Preser
 
 ## ETL implementable e idempotencia
 1. P0 importa un archivo local permitido o el fixture curado. P1 descargador CLI de URLs del catálogo, nunca endpoint de “importar cualquier URL”.
+   Nota 2026-10-30: `POST /api/v1/tenders/import` importa una sola licitación desde su enlace oficial. El servidor extrae el `idEvl` y reconstruye la URL; nunca descarga la URL pegada. Hace como máximo cuatro GET a `contrataciondelestado.es` (ficha, XML CODICE `CallForTenders`, PCAP y PPT), separados ≥1 s. La ficha HTML solo se usa para localizar el XML del pliego: no hay endpoint abierto por `idEvl` y recorrer los Atom sería un barrido. Detalle y límites en `apps/api/bidlab/services/placsp_import.py`.
 2. Guardar bytes en storage/raw/<sha256>, manifest con URL, retrieved_at, ETag, Last-Modified, content-type. No usar ETag como hash.
 3. ZIP: rechazar rutas absolutas/.., miembros >64 MiB, total >512 MiB, >1.000 miembros o ratio compresión >100; leer miembros a stream sin extractall. XML: sin DTD, entidades externas ni red.
 4. Guardar notice_version con unique(feed_id, atom_id, updated_utc, raw_sha). Si mismo ID/updated y distinto hash: conflicto en cuarentena, no elegir arbitrariamente.
