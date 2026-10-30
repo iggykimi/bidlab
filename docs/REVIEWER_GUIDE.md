@@ -1,97 +1,47 @@
 # BidLab — reviewer guide
 
-**Project:** https://github.com/iggykimi/bidlab
-**Domain:** public tender analysis and bid pricing decisions
-**Scope:** local-first demo plus opt-in Meta document-adapter capability
-**Evidence status:** links below refer to current public repo; rerun checks on the submitted revision.
+Every claim in the README maps to code, a test or an explicit limit. This page is the index.
 
 ## In 30 seconds
 
-Tender teams face a difficult trade-off: **How much bid margin should we sacrifice for economic points?** BidLab helps them compare prices under explicit assumptions, verify which document rule applies, and preserve a defensible decision record. A model can propose document fields and citations, but the final math and review-state logic remain deterministic.
-
-**Demonstrable case (curated data):** BidLab compares 10% and 15% discounts under synthetic company costs and rival bids for Tías tender 2026/00006554N. Both achieve 49/49 *economic* points; the 10% scenario retains **€5,916.80 more hypothetical profit**. This is not a predicted award outcome or a real competitor-price forecast.
+A small firm must decide whether it can bid on a public tender and how much margin to give up for price points. BidLab lets Meta's Muse Spark read the tender and propose requirements with page citations, keeps a person in charge of approving them, and computes every price, point and risk flag in a deterministic Python engine. The curated example (Tías, 2026/00006554N) shows a 10 % and a 15 % discount both scoring 49/49 price points, with the 10 % bid keeping €5,916.80 more hypothetical profit.
 
 ![Pricing screen](demo/02-precio.png)
 
-## Inspect in five minutes
+## Claims and where to check them
 
-| Question | Evidence and entry point |
-|---|---|
-| What does the product look like? | [Screenshots and quick tour](demo/README.md) |
-| Where is the numerical result defined and verified? | [Backend golden comparison tests](../apps/api/tests/integration/test_compare.py) and [E2E comparison tests](../tests/e2e/compare.spec.ts) |
-| Which code governs pricing UI? | [PricingLab.tsx](../apps/web/src/features/pricing/PricingLab.tsx), [CurveChart.tsx](../apps/web/src/features/pricing/CurveChart.tsx), [StressSection.tsx](../apps/web/src/features/pricing/StressSection.tsx) |
-| How is evidence distinguished from approval? | [EvidenceDrawer.tsx](../apps/web/src/features/evidence/EvidenceDrawer.tsx), [domain rules](RULE_ENGINE.md), [architecture](ARCHITECTURE.md) |
-| How are late/stale stress results handled? | [StressSection.tsx](../apps/web/src/features/pricing/StressSection.tsx) and its unit/E2E tests |
-| What architectural tradeoffs were chosen? | [Architecture](ARCHITECTURE.md) and [V2](DECISION_LOG_V2.md) / [V3](DECISION_LOG_V3.md) decision logs |
-| What did the project actually test? | [V2 QA report](QA_REPORT_V2.md) (historical), [V5 changelog](CHANGELOG_IMPLEMENTACION_V5.md) (current) and [verification log](verification-log.md) |
-| What really ran on Meta? | [Meta evidence V2](META_EVIDENCE_V2.md) (smoke) + [generation 0/12](META_EVIDENCE_V3.md) (current, blocked), including explicit unverified paths |
+| Claim | Source of truth | Check |
+|---|---|---|
+| The 10 % / 15 % result | demo fixture + backend comparator | [`tests/integration/test_compare.py`](../apps/api/tests/integration/test_compare.py), [`tests/e2e/compare.spec.ts`](../tests/e2e/compare.spec.ts) |
+| Money and points in `Decimal`, formulas as whitelisted AST | [`domain/`](../apps/api/bidlab/domain) | unit oracle tests in `apps/api/tests/unit/` (`test_scoring.py`, `test_expressions.py`, `test_money.py`) |
+| A citation is not an approval | review states in [RULE_ENGINE](RULE_ENGINE.md) | `test_review*.py`, [`EvidenceDrawer.tsx`](../apps/web/src/features/evidence/EvidenceDrawer.tsx) |
+| Muse Spark extraction is bounded, schema-strict and bound to the pages sent | [`meta_adapter.py`](../apps/api/bidlab/services/meta_adapter.py), [`meta_schema_preflight.py`](../apps/api/bidlab/services/meta_schema_preflight.py) | `test_meta_adapter.py`, `test_meta_schema_preflight.py`, `test_jobs.py` |
+| Live extraction ran: 12/12 adversarial cases, 18/18 figures verified, $0.013 | [META_EVIDENCE](META_EVIDENCE.md) | corpus + gold in [`examples/meta_eval_synthetic/`](../examples/meta_eval_synthetic); receipts kept private (they contain prompts) |
+| Clarification drafts are grounded in one stored citation | [`clarification.py`](../apps/api/bidlab/services/clarification.py) | [`test_clarifications.py`](../apps/api/tests/integration/test_clarifications.py) |
+| Voice answers only use numbers returned by engine tools | [`assistant.py`](../apps/api/bidlab/services/assistant.py) | `test_assistant*.py` |
+| Spend is reserved before each call and settled after | [`budget.py`](../apps/api/bidlab/services/budget.py) | `test_spend_ledger.py`, `test_cost_ceiling.py` |
+| The demo never calls the network | E2E loopback guard in [`tests/e2e/helpers.ts`](../tests/e2e/helpers.ts) | every E2E spec asserts zero blocked requests |
+| Accessibility | design block in [`styles.css`](../apps/web/src/styles.css) | axe checks in [`qa-visual.spec.ts`](../tests/e2e/qa-visual.spec.ts), layout specs at 390/768/1280 px |
 
-> **Documentation note:** the 26-oct `EXECUTIVE_AUDIT` research snapshot is
-> preserved at [docs/archive/EXECUTIVE_AUDIT_2026-10-26.md](archive/EXECUTIVE_AUDIT_2026-10-26.md);
-> the living root [EXECUTIVE_AUDIT.md](../EXECUTIVE_AUDIT.md) is authoritative.
+## Deliberate trade-offs
 
-## Evidence index
+1. **Deterministic engine over model arithmetic.** Supported formula templates instead of arbitrary generated code; unsupported formulas are flagged.
+2. **Human review gates.** Proposed, cited and approved are different states; unknown company data stays unknown, never zero.
+3. **No win prediction.** Public award data does not identify the distribution of rival bids, so rivals are declared hypotheses.
+4. **Immutable snapshots.** Saved trials carry a hash of their full context and only compare within the same context.
+5. **Local-first.** Loopback API and SQLite keep it installable in minutes; it is not a hosted multi-user service.
 
-Every important README claim traces to a source, not to marketing language.
-
-| Claim | Source of truth | Validation | Limit |
-|---|---|---|---|
-| 10/15 case | demo fixture + backend comparator | golden integration test + E2E compare | synthetic costs/rivals |
-| `Decimal` engine | domain services | oracle tests | supported rule schemas |
-| Provenance | job/citation/review states | integration + E2E evidence | localized ≠ approved |
-| Stale stress | `stressInputKey` + sequence state | out-of-order request tests | input changes need rerun |
-| QA V2 | `docs/QA_REPORT_V2.md` | commands + SHA | local run, no remote CI |
-| V3 visual | `docs/CHANGELOG_IMPLEMENTACION_V3.md` + `docs/demo/v3/` | E2E + shots + axe gate | no Lighthouse measured |
-| V5 Meta close | `docs/CHANGELOG_IMPLEMENTACION_V5.md` + `docs/FINAL_HEAD_VALIDATION.md` | verify 10/10 + corpus 12 + preflight | live 0/12 blocked, no key |
-| Meta | documented live/smoke evidence | receipts with model + request ID | live doc extraction unproven |
-| Security | loopback bind, validations | API tests | no SaaS auth implied |
-
-## Architecture and deliberate trade-offs
-
-1. **Deterministic economic engine:** Python `Decimal` is authoritative for money and scores. React renders values returned by the API, avoiding a second independent calculator. **Trade-off:** supported rule schemas instead of arbitrary LLM-generated code.
-2. **Human review gates:** citations, proposed fields, accepted rules and unknown company information are different states. **Trade-off:** an explicit approval step in exchange for auditability.
-3. **No invented predictions:** scenario rivals and company costs are declared assumptions. BidLab does not estimate probability of winning from incomplete public results. **Trade-off:** less marketing spectacle; more epistemic integrity.
-4. **Reproducible snapshots:** scenario hash and input-revision checks protect conclusions when hypotheses change. **Trade-off:** additional state management; better protection against stale decision displays.
-5. **Local-first:** loopback API, SQLite WAL and a single-process architecture keep the demo installable. **Trade-off:** not a production-ready public multi-tenant service. No claim of full auth or horizontal scale.
-
-## Run the demonstration
+## Run and verify
 
 ```bash
-uv sync --all-packages
-npm install
-npm run build
-python scripts/demo.py
+uv sync --all-packages && npm install && npm run build
+python scripts/demo.py --reset-demo      # http://127.0.0.1:8000/
+python scripts/verify.py                 # all gates, exit 0 = green
 ```
 
-Open http://127.0.0.1:8000/. The curated demonstration should start without Model API credentials. See [README](../README.md) for full environment, build, and testing requirements. For a clean review avoid `--reset-demo` on any storage directory that may contain user data; use an isolated temporary/demo storage.
+## Limits
 
-### Run quality gates
-
-```bash
-python scripts/verify.py
-```
-
-The [V2 QA report](QA_REPORT_V2.md) reports its recorded Windows build/commit figures; the [V5 changelog](CHANGELOG_IMPLEMENTACION_V5.md) reports the current ones (backend, vitest, E2E, gates) with SHAs ([V3 changelog](CHANGELOG_IMPLEMENTACION_V3.md) is historical). These are **project-reported results**, not independently reproduced claims here. Re-run on the final submitted checkout, preserve real exit codes and update figures if they changed.
-
-## Meta usage — precise boundary
-
-The opt-in Meta integration exists as backend code and documented test paths. The V2 evidence report differentiates:
-
-- a **historical real minimal inference smoke test** using Muse Spark 1.3;
-- **offline curated/fixture** paths used to make the reproducible demo available without credentials;
-- **end-to-end live document extraction**, which V2 did **not** establish as verified.
-
-Do not conflate these. If the live extraction is completed later, add evidence (document hash, pages actually submitted, model and request ID, response, citations, reviewed claims, latency and tokens) tied to a commit. Do not overwrite or retroactively change what V2 verified.
-
-## Explicit limitations
-
-- The curated tender is an example; model coverage across arbitrary procurement documents is not proven.
-- Business costs and hypothetical rival offers in the demonstration are synthetic.
-- Other tender categories, OCR coverage, and legal interpretations may be unsupported or require review.
-- Potentially abnormal offers require human/legal assessment; the application does not automatically exclude them from a tender.
-- The app is local-first, not an authenticated public multi-user service.
-- No guaranteed win prediction, no unauthorized competitor data, no fabricated Meta live run.
-
-## Verification principle
-
-Every important claim above is paired with a source path, a reproducible check or an explicit limitation. A reviewer should follow those links and draw their own conclusion. This guide does not request a favorable rating or special treatment.
+- The curated tender is one real example; coverage of arbitrary tenders is not proven.
+- Company costs and rival bids in the example are synthetic and labelled as such.
+- The abnormal-offer flag is a legal presumption that requires justification, not an exclusion.
+- No authentication: run it on your own machine.

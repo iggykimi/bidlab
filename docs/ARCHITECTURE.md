@@ -13,7 +13,10 @@ pypdf (`EXTRACTOR_VERSION="bidlab-pdf-1"`), page renders via PyMuPDF
 (`bidlab-render-1`) served as backend PNGs; no pdfplumber, no PDF.js in
 `apps/web`. Backend: FastAPI + Pydantic v2 + SQLAlchemy 2 + SQLite WAL,
 single Uvicorn on loopback; build served same-origin at 127.0.0.1:8000.
-Meta: Chat Completions adapter, opt-in, currently blocked (no credential).
+Meta: Chat Completions adapter (Muse Spark, hybrid text + page image, strict
+JSON Schema), opt-in; live-evaluated 12/12 on 30-oct-2026 (docs/META_EVIDENCE.md).
+Clarification drafts (services/clarification.py) reuse the same transport,
+budget ledger and receipts.
 
 ## ADR y stack (historical; see CURRENT IMPLEMENTATION above)
 | ADR | Decisión | Motivo y límite |

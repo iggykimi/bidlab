@@ -1,303 +1,143 @@
-# BidLab — licitación real, revisión trazable, Pricing Lab determinista
+# BidLab
 
-### From public tender requirements to defensible bid decisions.
+**From a Spanish public-tender PDF to a bid price you can defend.**
 
-BidLab helps small businesses turn complex public tenders into **traceable pricing decisions**. It connects page-cited document evidence, explicit business assumptions and human review to a **deterministic Python scoring engine**. The AI layer can propose structured information; it never invents the financial arithmetic.
+BidLab is a local-first assistant for small firms that bid on public contracts in Spain. Meta's **Muse Spark** reads the tender (text and page image) and proposes requirements with exact page citations. A person approves them. A deterministic Python engine then computes price, points and the abnormally-low-offer rule, and every figure in the final report points back to its page.
 
-![BidLab pricing interface showing a curated tender example](docs/demo/02-precio.png)
+The interface is designed first for the people who actually make these decisions in small firms, many of them over 60: large type, AAA contrast, big targets, plain Spanish, and voice.
 
-> **Same 49/49 price points. €5,916.80 more hypothetical profit.**
->
-> In our curated Tías public-tender example, a 10% and a 15% discount obtain the same economic points **under stated synthetic cost and rival-bid assumptions**. The 10% scenario retains €5,916.80 more hypothetical profit. This demonstrates a scenario-specific trade-off, not an estimate of the probability of winning.
+[![License: MIT](https://img.shields.io/badge/license-MIT-2748b8.svg)](LICENSE)
 
-**Explore the project:** [2-minute screenshot tour](docs/demo/README.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [V3 validation](docs/CHANGELOG_IMPLEMENTACION_V3.md) · [V5 validation](docs/CHANGELOG_IMPLEMENTACION_V5.md) · [Meta evidence and limitations](docs/META_EVIDENCE_V2.md)
+![BidLab pricing lab on a real tender from Tías (Lanzarote)](docs/demo/02-precio.png)
 
-### What makes BidLab different
+> **Same 49/49 price points. €5,916.80 more profit.**
+> On a real tender (Tías, expediente 2026/00006554N, €118,336 net budget), a 10 % and a 15 % discount score the same 49 of 49 price points. The 10 % bid keeps €5,916.80 more profit. Costs and rival bids in the example are declared hypotheses, labelled on screen; BidLab never predicts who wins.
 
-| Capability | Why it matters |
-|---|---|
-| **Document → traceable requirement** | Page citations and source provenance are visible; a citation is not the same as an approved requirement. |
-| **Human-in-the-loop validation** | Unreviewed rules and missing company data cannot silently become authoritative. |
-| **Decimal-based pricing simulator** | The economic engine computes bid price, points, conditional anomaly flags and scenario comparisons in Python. |
-| **Sensitivity and Pareto analysis** | Users see trade-offs under explicitly declared hypotheses, not guessed competitor distributions. |
-| **Reproducible decisions** | Immutable scenario snapshots and source-linked reports preserve what was evaluated. |
+---
 
-### Try the curated offline demo
+## Why it matters
 
-Requires Python 3.13+, `uv`, Node 22+ and `npm`.
+Spain publishes thousands of tenders a year on the Plataforma de Contratación del Sector Público. Each comes with long legal PDFs (PCAP, PPT) that decide who may bid and how price turns into points. Large firms have bid teams; a small firm usually has one person, often the owner, reading 40+ pages before a deadline. The two expensive mistakes are bidding when you are not eligible and giving away margin for points you would have scored anyway. BidLab targets both.
+
+## What you can do
+
+| Step | Screen | What happens |
+|---|---|---|
+| 1. Bring a tender | Nueva licitación | Paste a Plataforma de Contratación link or upload the PDF yourself. |
+| 2. Let Muse Spark read it | Revisar | Opt-in analysis: requirements, budget and the price formula, each with page and quote. You approve or correct. |
+| 3. Check eligibility | Requisitos | Met / not met / «Por verificar», never a guess. One click opens the exact quote. |
+| 4. Ask what is unclear | Requisitos → Pedir aclaración | Muse Spark drafts the formal clarification question for the contracting body, citing the page. |
+| 5. Try prices | Precio | Slider and curve: price, profit, points and abnormal-offer risk from the Python engine. Ask by voice: «¿y si bajo un 12 %?» |
+| 6. Compare and decide | Informe | Saved trials side by side, Pareto frontier, a printable decision record with sources. |
+
+Screens: [two-minute tour](docs/demo/README.md).
+
+## How BidLab uses Meta
+
+| Meta technology | Where | What it does in BidLab |
+|---|---|---|
+| **Muse Spark 1.3**, Meta Model API, text + page image in one request, strict JSON Schema output | [`services/meta_adapter.py`](apps/api/bidlab/services/meta_adapter.py), [`services/jobs.py`](apps/api/bidlab/services/jobs.py) | Extracts observations from a bounded page packet. Every answer is re-validated, bound to the pages and image ids that were sent, and stored with its receipt (model, request id, tokens, cost, latency). |
+| **Muse Spark**, structured drafting | [`services/clarification.py`](apps/api/bidlab/services/clarification.py) | Writes the clarification question for an open requirement. The prompt is built server-side from one stored citation; the draft must echo that page and quote or it is rejected. |
+| **muse-voice-transcribe** + **Muse Spark tool calling** | [`services/assistant.py`](apps/api/bidlab/services/assistant.py) | «Pregúntale al pliego»: speak a question, the model answers by calling BidLab's own engine and citation tools. Every number in the answer must come from a tool result. |
+| **Muse Code** | [`AGENTS.md`](AGENTS.md) | BidLab was built with Meta's coding agent. `AGENTS.md` is the instruction file it worked from: invariants, gates and the honesty rules below. |
+
+**Guardrails around every model call**
+
+- **The model proposes, Python decides.** No model output reaches a price, a point or an eligibility verdict without a person approving it; arithmetic lives in [`domain/`](apps/api/bidlab/domain) with `Decimal`, and the frontend never recomputes it.
+- **Strict schema preflight** before any payload is built ([`meta_schema_preflight.py`](apps/api/bidlab/services/meta_schema_preflight.py)): closed objects, bounded depth, the provider's strict-mode rules.
+- **Bounded spend.** Each call reserves budget first, is sent once (no retries) with an explicit output cap, and settles against reported usage ([`services/budget.py`](apps/api/bidlab/services/budget.py)).
+- **Untrusted documents.** Tender text is data, never instructions. The adversarial corpus includes a prompt-injection page.
+- **Honest states.** Without a key the app answers `503 provider_not_configured`; the offline demo is labelled «Datos de ejemplo» and never claims a model run.
+
+**Live evaluation** (30 Oct 2026, `muse-spark-1.3-contributor`, [details](docs/META_EVIDENCE.md)): 12 of 12 synthetic adversarial tenders extracted (scanned page, tables, contradictions, lots, extensions, ambiguous formula, injection attempt), 18 of 18 cited figures checked by a person against the PDF, 0 critical errors, $0.013 total spend. The corpus and gold answers are public in [`examples/meta_eval_synthetic/`](examples/meta_eval_synthetic).
+
+## Architecture
+
+```mermaid
+flowchart LR
+  PDF["Tender PDF<br/>(upload or Plataforma)"] --> PAGES["Page packet<br/>text + PNG, hashed"]
+  PAGES --> SPARK["Muse Spark<br/>strict JSON Schema"]
+  SPARK --> REVIEW["Human review<br/>approve / correct"]
+  REVIEW --> ENGINE["Python engine<br/>Decimal, formula AST"]
+  ENGINE --> UI["React UI<br/>price, curve, compare"]
+  UI --> REPORT["Decision report<br/>every figure sourced"]
+  VOICE["Voice question"] --> STT["muse-voice-transcribe"] --> TOOLS["Muse Spark<br/>tool calls"] --> ENGINE
+```
+
+FastAPI + Pydantic v2 + SQLAlchemy 2 + SQLite (WAL, one process on loopback). React 19 + TypeScript + Vite + Tailwind v4 + TanStack Query. PDFs: pypdf for text, PyMuPDF for page renders. Full description: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (implementation section first), math: [docs/RULE_ENGINE.md](docs/RULE_ENGINE.md).
+
+## Designed for older readers
+
+The design rules live as one commented block at the top of [`apps/web/src/styles.css`](apps/web/src/styles.css):
+
+- **Reading floor.** Nothing a user must read is under 16 px; body text is 18 px. One button enlarges everything by 12.5 %.
+- **Typeface.** [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) (Braille Institute, for low-vision readers), with plain-zero figures from Inter so euro amounts never show «Ø».
+- **Contrast and targets.** Text at WCAG AAA (7:1), form borders at 3:1, every control at least 48 px.
+- **Recognition over recall.** Five numbered steps always visible, one idea per card, the same word for the same action everywhere ([copy style guide](docs/copy-style-es.md), [voice guide](docs/voice-guide-es.md)).
+- **No colour-only signals, reduced motion respected, keyboard and screen-reader paths** tested with axe in the E2E suite.
+
+## Design decisions worth reading in the code
+
+- [`services/meta_adapter.py`](apps/api/bidlab/services/meta_adapter.py): one honest gate between an offline stub and the live API; failures are typed, never replaced by fixtures.
+- [`services/clarification.py`](apps/api/bidlab/services/clarification.py): why the model only drafts wording and how its output is bound to the evidence it was given.
+- [`domain/expressions.py`](apps/api/bidlab/domain/expressions.py): price formulas as a whitelisted AST, never `eval`.
+- [`services/decision_frontier.py`](apps/api/bidlab/services/decision_frontier.py): Pareto frontier over saved trials, compared only within one frozen context.
+- [`features/requirements/ClarificationPanel.tsx`](apps/web/src/features/requirements/ClarificationPanel.tsx): consent that names exactly what leaves the computer.
+
+## Run it
+
+Requires Python 3.12+, [uv](https://docs.astral.sh/uv/), Node 20.19+ and npm.
 
 ```bash
 uv sync --all-packages
 npm install
 npm run build
-python scripts/demo.py
+python scripts/demo.py --reset-demo
 ```
 
-Open **http://127.0.0.1:8000/**. The curated offline demonstration does **not** require API keys. The full Spanish README below describes development setup, environment configuration and verification commands.
+Open <http://127.0.0.1:8000/> and press «Cargar ejemplo». The curated demo runs fully offline with no API key.
 
-### AI and transparency
+**Live Meta features** (analysis, clarification drafts, voice): copy `.env.example` to `.env`, then
 
-BidLab contains an opt-in Meta Model API integration and a deterministic offline demonstration. **The curated data must not be described as the output of a live Meta extraction.** The project documents one historical minimal Meta inference smoke test separately from any end-to-end live document extraction. Live document extraction: not yet verified; opt-in implementation exists. See [Meta evidence](docs/META_EVIDENCE_V2.md) for what has and has not been verified, and [generation 0/12](docs/META_EVIDENCE_V3.md) for the current blocked run.
-
-*Current scope: a local-first research/demo application, not a public multi-user SaaS. Competitor prices and company costs in the curated example are synthetic; no winning-probability prediction or automatic legal exclusion is claimed.*
-
----
-
-## Versión en español
-
-BidLab ayuda a una pyme a decidir si pujar: biblioteca de licitaciones,
-matriz de requisitos con citas localizadas en página, y Pricing Lab con
-puntos, anomalía y curva calculados por un motor determinista en Python.
-El LLM propone estructura y citas; la aritmética, la elegibilidad y la
-anormalidad viven en dominio puro. Dinero y puntos en `Decimal`, API con
-strings, sin fórmulas autoritativas en el frontend.
-(Sin CI remota ni badge: por decisión del autor, las puertas son locales
-vía `scripts/verify.py`.)
-
-Caso P0: **2026/00006554N** (asistencia técnica del PAI de Tías),
-PBL neto 118.336 EUR, 49 puntos de precio, regla proporcional inversa
-(PCAP p.10) y anormalidad (PCAP p.20). Estado: P0 en curso según
-[task-board](docs/task-board.md); este README describe la instalación
-limpia rehearseada en T31/T32.
-
-## Revisión de código · 29 de octubre
-
-Correcciones de backend, revisión de fuentes, estados de interfaz y ejemplos seleccionables ya aplicadas: [detalle e integración](docs/IMPLEMENTACION_20261029.md).
-
-Con `npm run build` completado, `python scripts/demo.py` sirve API e interfaz desde <http://127.0.0.1:8000/>. No hace falta Vite para usar la compilación. Las dos terminales siguen disponibles para desarrollo.
-
-Ejemplos reproducibles sin modificar tu base: `uv run python scripts/demo_story.py --output test-results/demo-story`. Crea una base temporal y exporta cuatro escenarios, cuatro informes y su comparación. No llama a Meta.
-
-## Demo
-
-Pack para revisores (capturas, guía de 5 minutos, límites honestos):
-[docs/demo/](docs/demo/). Vista rápida:
-
-![Resumen](docs/demo/01-resumen.png)
-![Pricing Lab](docs/demo/02-precio.png)
-
-## Requisitos previos
-
-| Herramienta | Mínimo | Verificado (Windows, 29-oct-2026) |
-|---|---|---|
-| Python | >= 3.12 (`pyproject.toml`) | 3.14.7 |
-| uv | reciente con workspaces | 0.12.5 |
-| Node | >= 20.19 (Vite 6) | v26.3.0 |
-| npm | cualquiera con `package-lock` | 12.0.2 |
-| Chromium Playwright | solo para E2E | 1.64.1 (`npx playwright install chromium`) |
-
-Sin claves ni red para la demo offline. La extracción live con Meta es
-opt-in y necesita `MODEL_API_KEY` (ver [Configuración](#configuración)).
-
-## Instalación (limpia)
-
-Desde la raíz del repo:
-
-```sh
-uv sync --all-packages
-npm install
-npx playwright install chromium   # solo para test:e2e / verify.py completo
+```bash
+BIDLAB_MODE=live
+MODEL_API_KEY=<your Meta Model API key>
+META_API_URL=https://api.meta.ai/v1/chat/completions   # process environment
+BIDLAB_META_BUDGET_USD=5.00                            # hard ceiling for all calls
 ```
 
-Notas exactas del ensayo limpio (T31):
+`GET /api/v1/capabilities` then reports `meta_configured: true`. Every live call asks for consent in the UI first.
 
-- `uv sync` necesita `--all-packages` para instalar el miembro
-  `apps/api`; sin ese flag el API no queda instalado.
-- `npm install` no necesita aprobación manual de esbuild: los
-  `allowScripts` de esbuild ya están fijados en `package.json`.
-  Ensayo: `up to date, audited 313 packages, found 0 vulnerabilities`.
-- Los locks (`uv.lock`, `package-lock.json`) fijan las versiones; no
-  usar `latest`.
+## Verify
 
-## Arranque
-
-Tres terminales (o dos, si se usa `demo.py`):
-
-```sh
-# 1. API (migra al arrancar sobre storage vacío; sin seed automático)
-python scripts/dev.py
-# equivale a: uv run uvicorn bidlab.main:app --host 127.0.0.1 --port 8000
-
-# 2. Semilla demo (idempotente; --reset solo en modo demo)
-uv run python scripts/seed_demo.py
-
-# 3. Web
-npm run dev -w apps/web
+```bash
+python scripts/verify.py        # every gate below; exit 0 = green
 ```
 
-Atajo demo: `python scripts/demo.py --reset-demo` resetea la DB demo,
-siembra y sirve API + frontal (compilado) same-origin en un solo paso:
-<http://127.0.0.1:8000/>.
+pytest (unit, integration, contracts), ruff, mypy, ESLint, `tsc`, Vitest, Vite build and the Playwright E2E suite (Chromium against the real API, loopback-only network guard, axe accessibility checks).
 
-URLs:
+## Limits
 
-- Web same-origin: <http://127.0.0.1:8000/> tras `npm run build`
-  (botón demo → workspace `/tenders/tias`)
-- Web dev: <http://127.0.0.1:5173/> (`npm run dev -w apps/web`)
-- API: <http://127.0.0.1:8000/api/v1/health> →
-  `{"status":"ok","engine_version":"1.0.0","schema_version":"1.0.0"}`
-- Capacidades y límites: `/api/v1/capabilities`
+- Single-user, local-first: loopback API, no authentication. Not a hosted multi-tenant service.
+- Supported price formulas are templates (proportional inverse and others in [RULE_ENGINE](docs/RULE_ENGINE.md)); other formulas are flagged, not guessed.
+- Rival bids are declared hypotheses. There is no win-probability model, and the abnormal-offer rule is shown as a legal presumption that needs justification, never as an automatic exclusion.
+- The live evaluation covers a synthetic adversarial corpus; coverage of arbitrary real tenders is not claimed.
 
-Storage por defecto `./storage` (SQLite WAL, gitignored). Para un
-storage fresco aislado:
+## Repository map
 
-```powershell
-$env:BIDLAB_STORAGE_DIR = "C:\ruta\fresca"   # PowerShell
+```
+apps/api/bidlab/   domain/ (pure Decimal engine) · services/ (Meta, jobs, intake, compare) · api/ (routes)
+apps/web/src/      features/ (workspace, requirements, pricing, report, review, intake, assistant)
+docs/              ARCHITECTURE, RULE_ENGINE, DATA_MODELS, API_CONTRACT (generated), META_EVIDENCE, demo/
+examples/          synthetic Meta evaluation corpus + gold answers, math vectors
+tests/e2e/         Playwright suite (hermetic, loopback-only)
+video/             the 180 s demo video as code (Playwright captures + Remotion)
 ```
 
-```sh
-export BIDLAB_STORAGE_DIR=/ruta/fresca       # bash
-```
+## Resumen en español
 
-Comprobado en T19 (dos ensayos limpios R1+R2, 28-oct):
-arrancar con storage vacío crea 20 tablas (alembic
-`0006_job_generation`), la primera petición responde 200
-(sin 500), y `GET /tenders` devuelve `total: 0` hasta
-sembrar. Tras `seed_demo.py`: 1 tender (`tias`);
-`POST /demo/sessions` → 201
-`{"tender_id":"tias","scope_id":"tias-whole","company_id":"company-demo","mode":"demo"}`;
-capacidades `mode: demo, meta_configured: false`; web `/` 200.
+BidLab ayuda a una pyme a decidir si se presenta a una licitación pública y a qué precio. Muse Spark, el modelo de Meta, lee el pliego y propone los requisitos con su página. Tú los apruebas. Un motor en Python calcula precio, puntos y oferta anormalmente baja. Cada cifra del informe lleva su cita. La interfaz está pensada para personas mayores: letra grande, alto contraste, botones grandes y preguntas por voz.
 
-Mutaciones API (demo incluida) exigen cabeceras:
+## License
 
-```sh
-curl -X POST http://127.0.0.1:8000/api/v1/demo/sessions \
-  -H "Content-Type: application/json" \
-  -H "X-BidLab-Client: local-ui" -H "Idempotency-Key: <uuid>" -d "{}"
-```
-
-Sin `X-BidLab-Client: local-ui` → 403; sin `Idempotency-Key` → 422
-(salvo revisión, que la acepta opcional).
-El bind solo acepta loopback (`127.0.0.1`, `localhost`, `::1`).
-
-## Verificación
-
-```sh
-python scripts/verify.py            # todas las puertas; exit 0 = verde
-python scripts/verify.py --skip-e2e # sin Playwright
-```
-
-`verify.py` para en el primer fallo y devuelve su exit code. Puertas,
-en orden: `uv sync --frozen --all-packages`, pytest unit,
-pytest integration+contracts, `npm run lint`, `npm run typecheck`,
-`npm run build`, `npm run test:unit`, `ruff check .`,
-`mypy apps/api/bidlab`, Playwright E2E (Chromium, API+web reales).
-
-Estado vigente a 29-oct-2026 (contado en este árbol @`132cfb2`; detalle
-y comandos en [verification-log](docs/verification-log.md)):
-
-- Backend: 589 recogidos, 588 en verde + 1 skipped (symlink sin
-  permiso en Windows).
-  Web: 260 en 33 ficheros (`npm run test:unit`, verde).
-  E2E: 98 tests herméticos (Chromium, loopback, incl. qa-visual/axe).
-- `verify.py` completo (10/10 puertas): ALL CHECKS PASSED, exit 0.
-- Histórico V2 (@`264712f`, 29-oct): backend 557 + 2 skipped, web 252,
-  E2E 85. Ver [QA V2](docs/QA_REPORT_V2.md).
-- Puertas locales: pytest, ruff, mypy, tsc, eslint, vitest,
-  Playwright, `verify.py`. Sin CI remota (decisión del autor).
-- Auditoría UX externa aplicada ([ux-review](docs/ux-review.md)).
-- Alcance: ejemplo revisado (caso oro 10/15: mismos 49 puntos, el 10 %
-  conserva 5916,80 € más) + recorrido propio completo offline
-  (alta + PDF + empresa + análisis + revisión manual + simular +
-  comparar + exportar) + visita guiada + malla de resistencia.
-  Paquete integral: extracción con recibos live, gold humano +
-  harness de control offline; comparación real texto/híbrido pendiente (T11), imagen exacta de página (T15),
-  radar de incoherencias (T20), techo de coste con paridad motor (T21).
-  Revisión 29-oct (issue #1, @7af9417): recibos/reservas/guardas backend,
-  UI servida en el mismo origen, presets demo, composición coste/beneficio
-  y `demo_story` reproducible (4 escenarios + 4 informes + comparación).
-  Auditoría 29-oct (issue #2, @19ed006): cabecera compacta, hero
-  comparador 10/15, procedencia en drawer, motivos en español.
-  V2 29-oct (issue #3, @264712f): rastro Fuente→Decisión, cobertura
-  honesta, frontera Pareto, mapa de stress, bandeja con contadores,
-  informe con descargo, bench de intake, auditoría a11y, guion v4
-  ([changelog](docs/CHANGELOG_IMPLEMENTACION_V2.md), [QA](docs/QA_REPORT_V2.md)).
-  Footage-oro regrabado post-paquete (VP9 15 s, UI actual);
-  guion 180s v2 verificado; vídeo narrado pendiente del autor;
-  sin envío.
-
-## Configuración
-
-Sin `.env`, el arranque usa: modo `demo`, bind `127.0.0.1:8000`,
-storage `./storage`, historial desactivado. Para live con Meta hacen
-falta TRES condiciones (`Settings.live_ready`): `BIDLAB_MODE=live` +
-`MODEL_API_KEY` no vacía + `META_API_URL` en el entorno del proceso
-(el adaptador no la lee de `.env`). Ejemplo reproducible:
-
-```powershell
-# 1. Copiar [.env.example](.env.example) a `.env` (gitignored) y definir:
-#    BIDLAB_MODE=live
-#    MODEL_API_KEY=<tu clave, introducida por ti>
-# 2. En la consola que arranca la API:
-$env:META_API_URL = 'https://api.meta.ai/v1/chat/completions'
-python scripts/dev.py
-# 3. Comprobar: GET /api/v1/capabilities -> mode=live, meta_configured=true
-```
-
-Clave presente en modo demo no activa live. `META_API_KEY` pertenece
-al entorno del CLI de Muse, no a la app.
-
-| Variable | Defecto | Efecto |
-|---|---|---|
-| `BIDLAB_MODE` | `demo` | `demo`/`live`/`manual` |
-| `BIDLAB_BIND_HOST` / `BIDLAB_PORT` | `127.0.0.1` / `8000` | bind API (loopback only) |
-| `BIDLAB_STORAGE_DIR` | `./storage` | SQLite + uploads |
-| `BIDLAB_HISTORY_ENABLED` | `false` | histórico P1 desactivado |
-| `BIDLAB_META_BUDGET_USD` | `20.00` | presupuesto de admisión y reservas Meta |
-| `META_MODEL` | `muse-spark-1.3` | modelo de extracción |
-| `MODEL_API_KEY` | vacío | live solo si modo=live + clave + `META_API_URL` en proceso |
-
-## Límites
-
-- Un proceso Uvicorn + SQLite WAL; sin auth multiusuario (loopback +
-  cabecera no es auth; despliegue público la exigiría).
-- PDF: 20 MB, 120 páginas, 100.000 caracteres por página; curva limitada a 201
-  puntos (ver `/api/v1/capabilities`).
-- Sin todas las ofertas reales, los escenarios son hipótesis
-  declaradas; no hay predictor de adjudicación ni distribución rival.
-- `unknown` se representa con `null`, nunca cero; regla o scope
-  pendientes bloquean puntos; la anormalidad es presunción, no
-  exclusión automática.
-- Flujo live implementado en el frontal (consentimiento + clave +
-  presupuesto), pero extracción real aún no verificada: 0 llamadas
-  live (ver [evidencia V3](docs/META_EVIDENCE_V3.md)). Empresa y
-  rivales sintéticos; sin predicción.
-- Histórico descriptivo P1 aparcado salvo P0 sólido + tiempo.
-
-## Notas honestas de la demo
-
-- La insignia **Datos de ejemplo** significa: cifras de la semilla manual
-  revisada (`fixtures/demo/`), no de extracción live. Tokens `null`.
-  Las licitaciones propias muestran **Tus datos**.
-- Offline total: los E2E abortan cualquier petición no-loopback.
-- Ofertas de escenarios y costes de empresa sintéticos, siempre
-  rotulados. Sin animaciones ni registros ficticios de API.
-- Documentos originales de investigación bajo
-  [publication-manifest](docs/publication-manifest.json): copias con
-  publicación desactivada hasta revisión por fichero (T04 pendiente).
-
-## Documentación
-
-Contrato y diseño en `docs/`: [PRD](docs/PRD.md),
-[ARCHITECTURE](docs/ARCHITECTURE.md),
-[API_CONTRACT](docs/API_CONTRACT.yaml),
-[DATA_MODELS](docs/DATA_MODELS.md), [RULE_ENGINE](docs/RULE_ENGINE.md),
-[TEST_STRATEGY](docs/TEST_STRATEGY.md), [MILESTONES](docs/MILESTONES.md),
-[DEMO_SUBMISSION](docs/DEMO_SUBMISSION.md),
-[SOURCE_AUDIT](docs/SOURCE_AUDIT.md),
-[DATA_FEASIBILITY](docs/DATA_FEASIBILITY.md). Reglas de agente en
-[AGENTS.md](AGENTS.md). Puertas y entorno en
-[task-board](docs/task-board.md), [environment](docs/environment.md),
-[blockers](docs/blockers.md) y
-[verification-log](docs/verification-log.md).
-
-## Licencias y derechos
-
-- Este repo aún no incluye fichero `LICENSE`; no asumir licencia de
-  uso hasta que el autor la añada (T32 deja constancia, no la inventa).
-- `evidence/originals/` excluido del repo público (ver
-  `publication-manifest.json` y `.gitignore`): son copias de
-  investigación, no una licencia concedida.
-- `tools/` conserva sondas de investigación congeladas (excluidas del
-  lint); `bidlab_blueprint/` y el ZIP son drops locales del autor,
-  fuera del índice git.
+[MIT](LICENSE) © 2026 iggykimi

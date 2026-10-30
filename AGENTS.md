@@ -31,8 +31,10 @@ manual review + simulate + compare + export).
 - `tests/e2e/`: hermetic Playwright specs (loopback-only guard).
 - `scripts/`: `verify.py` (gates), `demo.py`, `demo_story.py`,
   `bench_pdf_intake.py`, `compare_extraction.py`, `demo-shots/`.
-- `docs/`: specs + `verification-log.md`, `QA_REPORT_V*.md`,
-  `DECISION_LOG_V*.md`, `META_EVIDENCE_V*.md`, `CHANGELOG_IMPLEMENTACION_V*.md`.
+- `docs/`: public specs (`ARCHITECTURE`, `RULE_ENGINE`, `DATA_MODELS`,
+  generated `API_CONTRACT.yaml`, `META_EVIDENCE`, `REVIEWER_GUIDE`, `demo/`).
+  `docs/internal/` is the author's local working log (gitignored).
+- `video/`: the demo video as code (Playwright captures + Remotion).
 
 ## Verify commands
 
@@ -46,8 +48,8 @@ python -m mypy apps/api
 ```
 
 Run focused tests per change, then the full gate before finishing.
-Log runs in `docs/verification-log.md` (date, command, exit code,
-commit, evidence). FAIL is FAIL; BLOCKED/SKIPPED are not PASS. Never
+Log runs in the local `docs/internal/verification-log.md` (date,
+command, exit code, commit, evidence). FAIL is FAIL; BLOCKED/SKIPPED are not PASS. Never
 change oracles or tests to hide bugs. A video only exists once recorded.
 
 ## Non-negotiable invariants
@@ -72,8 +74,9 @@ change oracles or tests to hide bugs. A video only exists once recorded.
   the app runtime, `META_API_KEY` to the CLI environment.
 - Offline demo labelled Datos de ejemplo (Tus datos on own tenders).
   No fake API animations or logs. Tokens null for fixture/manual.
-- Opt-in live extraction exists in the UI (consent + key + budget);
-  no live extraction proven: 0 calls, see `docs/META_EVIDENCE_V3.md`.
+- Every live Meta call (extraction, clarification drafts, voice) is
+  opt-in: consent + key + budget, one attempt, receipt kept. Live
+  extraction evidence: `docs/META_EVIDENCE.md` (12/12 synthetic cases).
   Synthetic company and rivals; no prediction, no automatic legal exclusion.
 
 ## Work protocol
@@ -92,7 +95,7 @@ change oracles or tests to hide bugs. A video only exists once recorded.
 ## Commits and publishing
 
 - Standing author order: commit and push per wave on `main`
-  (see `docs/DECISION_LOG_V2.md` D-V2-8). Clear local commits; never
+  (author decision D-V2-8). Clear local commits; never
   amend/reset others' work. Tags, releases, hosting, originals and the
   candidacy itself need the author's explicit final authorization.
 - Never contact organizers or third parties on your own. Report

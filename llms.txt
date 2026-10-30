@@ -1,38 +1,34 @@
-# BidLab — source map
+# BidLab
 
-Local-first tender decision laboratory for Spanish SMEs. Read the current
-README and reviewer guide before interpreting historical design notes.
+> Local-first assistant that turns a Spanish public-tender PDF into an
+> eligibility check and a defensible bid price. Meta's Muse Spark reads the
+> tender (text + page image, strict JSON Schema) and drafts clarification
+> questions; muse-voice-transcribe and Muse Spark tool calling answer spoken
+> questions through BidLab's own deterministic Python engine. A person
+> approves every extracted rule; price, points and the abnormal-offer rule
+> are computed in Decimal Python, never by the model. UI designed for older
+> users (16 px floor, AAA contrast, 48 px targets, voice).
 
-- Product and demo: README.md, docs/demo/README.md
-- Current reviewer guide: docs/REVIEWER_GUIDE.md
-- Architecture and implemented stack: docs/ARCHITECTURE.md
-- Economic/domain invariants: docs/RULE_ENGINE.md
-- Current test evidence: docs/QA_REPORT_V2.md, docs/verification-log.md
-- V2 design and tradeoffs: docs/DECISION_LOG_V2.md
-- Meta status and receipts: docs/META_EVIDENCE_V2.md
-- Public limitations and legal caveats: README.md, docs/submission-draft.md
-- V2 evidence shots: docs/v2-shots/
-- E2E suite (hermetic, loopback-only): tests/e2e/
-- Golden oracles: apps/api/tests/integration/test_compare.py,
-  scripts/demo_story.py, examples/evaluation_request.json
+## Start here
 
-Verify claims against code/tests and use the commit identified in the report.
+- [README.md](README.md): product, Meta usage, architecture, run and verify
+- [docs/META_EVIDENCE.md](docs/META_EVIDENCE.md): live Muse Spark evaluation, 12/12 adversarial cases, receipts and spend
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): implemented stack and component limits
+- [docs/RULE_ENGINE.md](docs/RULE_ENGINE.md): price/points math and review states
+- [docs/REVIEWER_GUIDE.md](docs/REVIEWER_GUIDE.md): claims mapped to code and tests
+- [docs/demo/README.md](docs/demo/README.md): screenshots
 
-## How to run
+## Code with the main design decisions
 
-Install with `uv sync --all-packages` and `npm install`, build the web UI
-with `npm run build -w apps/web`, then `python scripts/demo.py --reset-demo`
-serves API + built frontend same-origin at http://127.0.0.1:8000/.
-`npm run dev -w apps/web` (127.0.0.1:5173) is for frontend development only.
-The offline demo needs no keys; Meta live extraction is opt-in via
-MODEL_API_KEY and currently blocked (no credential). Full gates:
-`python scripts/verify.py` (exit 0 = green).
+- apps/api/bidlab/services/meta_adapter.py: live vs offline gate, bounded hybrid packet, receipts
+- apps/api/bidlab/services/clarification.py: Muse Spark drafts wording bound to one citation
+- apps/api/bidlab/services/assistant.py: voice + tool calling over the engine
+- apps/api/bidlab/domain/: pure Decimal engine and whitelisted formula AST
+- apps/web/src/styles.css: accessibility design rules (top comment)
+- apps/web/src/features/requirements/ClarificationPanel.tsx: consent and honest states
 
-## Limits
+## Run
 
-One tender fully modelled; company costs and rival offers are declared
-synthetic hypotheses, never inferred distributions. Unknown stays null,
-pending rules block points, anomaly verdicts are presumptions, never
-exclusions. No win prediction, OCR, or national search; PDFs cap at 20 MB
-and 120 pages; originals not redistributed; local-only without multi-user
-auth. No remote CI (author's decision); no public deployment claimed.
+`uv sync --all-packages && npm install && npm run build && python scripts/demo.py --reset-demo`,
+then http://127.0.0.1:8000/. Offline demo needs no key; live Meta features need
+BIDLAB_MODE=live, MODEL_API_KEY and META_API_URL. Gates: `python scripts/verify.py`.
