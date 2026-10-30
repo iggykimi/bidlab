@@ -1707,3 +1707,17 @@ ignora -> cifras conservadoras. Artefactos en
 evidence/private/ (gitignored): intentos + renders + prompts
 + annotations.json + scorecard.json. Detalle en
 docs/META_EVIDENCE_V3.md (gen 12/12).
+## V6 issue #6 video 180s (30-oct-2026, Windows, lead)
+
+Artefacto: C:/tmp/v6-video/bidlab-180s.mp4 (NO en git),
+179.08 s, 1280x720 H.264 25fps + AAC mono, 4.7 MB,
+SHA-256 70CC88BE3B89485AF8251B393D7541302F93750AB7FFA044A48117EDC9F09955.
+Guion EN: docs/demo/video-script-en-180s.md.
+Captura: scripts/demo-shots/v6-video.spec.ts (app real V6,
+raton visible, ~160 s) + narracion Zira en-US (7 segmentos,
+174.6 s) -> video x1.098 + mezcla con marcas por seccion.
+Sincronia verificada por lead en 9 fotogramas (hook, citas,
+precio, frontera, informe, revision x3). S6 re-grabado para
+no fingir: se ve el flujo de revision sin servicio live.
+Sin material de clave en pista alguna. Pendiente del autor:
+subir el mp4 y pegar la URL en la candidatura.
