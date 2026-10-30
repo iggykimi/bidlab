@@ -242,6 +242,24 @@ def test_nonfinite_budget_never_admits_spend(invalid: str, monkeypatch: pytest.M
         get_settings.cache_clear()
 
 
+@pytest.mark.parametrize("model", ["muse-spark-1.3", "muse-spark-1.3-contributor"])
+def test_configured_key_admits_priced_models(
+    model: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("BIDLAB_MODE", "live")
+    monkeypatch.setenv("META_MODEL", model)
+    monkeypatch.setenv("MODEL_API_KEY", "test-key-not-a-real-secret")
+    monkeypatch.setenv("META_API_URL", "https://meta.test/chat")
+    get_settings.cache_clear()
+    try:
+        assert get_settings().live_ready is True
+        adapter = meta_adapter.select_adapter("live")
+        assert isinstance(adapter, meta_adapter.LiveExtractor)
+        assert adapter._model == model
+    finally:
+        get_settings.cache_clear()
+
+
 @pytest.mark.parametrize(
     ("mode", "model"),
     [

@@ -59,7 +59,7 @@ from bidlab.api.errors import ApiError
 from bidlab.schemas import generated as g
 from bidlab.schemas import observations as obs
 from bidlab.services.meta_schema_preflight import check_meta_strict_schema
-from bidlab.settings import get_settings
+from bidlab.settings import PRICED_META_MODELS, get_settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -776,13 +776,18 @@ def parse_chat_response[T](body: Mapping[str, Any], validate: Callable[[dict[str
     return validate({str(key): item for key, item in candidate.items()})
 
 
-def estimate_cost_usd(prompt_tokens: int | None, completion_tokens: int | None) -> str | None:
-    """Estimated spend from reported usage, or None when usage is missing."""
+def estimate_cost_usd(
+    prompt_tokens: int | None, completion_tokens: int | None, model: str = "muse-spark-1.3"
+) -> str | None:
+    """Estimated spend from reported usage, or None when usage is missing.
+
+    Rates follow the priced-model table; an unknown model falls back to
+    standard rates (same behavior as before per-model pricing)."""
     if prompt_tokens is None or completion_tokens is None:
         return None
+    rate_in, rate_out = PRICED_META_MODELS.get(model, PRICED_META_MODELS["muse-spark-1.3"])
     cost = (
-        Decimal(prompt_tokens) * META_INPUT_USD_PER_MTOK
-        + Decimal(completion_tokens) * META_OUTPUT_USD_PER_MTOK
+        Decimal(prompt_tokens) * Decimal(rate_in) + Decimal(completion_tokens) * Decimal(rate_out)
     ) / _MICRO
     return str(cost.quantize(_COST_QUANTUM, rounding=ROUND_HALF_UP))
 
@@ -816,7 +821,9 @@ def body_receipt(
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         cached_tokens=cached_tokens,
-        estimated_cost_usd=estimate_cost_usd(prompt_tokens, completion_tokens),
+        estimated_cost_usd=estimate_cost_usd(
+            prompt_tokens, completion_tokens, model=model_requested
+        ),
         latency_ms=latency_ms,
         status=status,
         sent=sent,
@@ -1092,11 +1099,11 @@ def select_adapter(mode: str) -> ExtractionAdapter:
             "provider_not_configured",
             "BIDLAB_MODE must be live; demo/manual never sends documents",
         )
-    if settings.meta_model != "muse-spark-1.3":
+    if settings.meta_model not in PRICED_META_MODELS:
         raise ApiError(
             503,
             "provider_not_configured",
-            "model lacks a verified billing profile; configure muse-spark-1.3",
+            "model lacks a verified billing profile",
         )
     return LiveExtractor(
         api_key=api_key,

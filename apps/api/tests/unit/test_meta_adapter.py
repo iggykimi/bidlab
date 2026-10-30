@@ -646,6 +646,8 @@ def test_estimate_cost_usd() -> None:
     assert meta_adapter.estimate_cost_usd(None, 50) is None
     assert meta_adapter.estimate_cost_usd(100, None) is None
     assert meta_adapter.estimate_cost_usd(0, 0) == "0.000000"
+    assert meta_adapter.estimate_cost_usd(100, 50, model="muse-spark-1.3-contributor") == "0.000020"
+    assert meta_adapter.estimate_cost_usd(100, 50, model="unpriced-model") == "0.000338"
 
 
 def test_stub_deterministic() -> None:

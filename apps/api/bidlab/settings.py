@@ -12,6 +12,11 @@ ROOT = Path(__file__).resolve().parents[3]
 
 BidLabMode = Literal["demo", "live", "manual"]
 
+PRICED_META_MODELS: dict[str, tuple[str, str]] = {
+    "muse-spark-1.3": ("1.25", "4.25"),
+    "muse-spark-1.3-contributor": ("0.10", "0.20"),
+}
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -42,7 +47,7 @@ class Settings(BaseSettings):
         # so live is ready only when the URL is there too.
         return (
             self.bidlab_mode == "live"
-            and self.meta_model == "muse-spark-1.3"
+            and self.meta_model in PRICED_META_MODELS
             and bool(self.model_api_key.get_secret_value())
             and bool(os.environ.get("META_API_URL"))
         )
