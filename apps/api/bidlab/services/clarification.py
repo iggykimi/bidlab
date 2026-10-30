@@ -70,7 +70,8 @@ PROMPT_VERSION = "bidlab-clarify-1"
 SCHEMA_NAME = "bidlab_clarification_v1"
 # Room for default reasoning plus a ~600-char answer; truncation is a
 # typed failure with the receipt kept, never a partial draft.
-MAX_COMPLETION_TOKENS = 2048
+# Raised from 2048 after a live contributor draft was cut by finish_reason=length.
+MAX_COMPLETION_TOKENS = 4096
 MAX_QUESTION_CHARS = 1000
 MAX_WHY_CHARS = 600
 MAX_DRAFTS_LISTED = 100

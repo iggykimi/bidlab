@@ -8,6 +8,7 @@ this selector does not interpret a formula or approve a requirement.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from typing import TYPE_CHECKING
 
@@ -23,11 +24,23 @@ _SIGNALS = (
     (6, ("solvencia", "habilitacion", "adscripcion", "experiencia")),
 )
 
+# Pages that carry the money outrank figureless boilerplate: a budget page
+# (8) plus this beats any criteria/anomaly wording without figures (22 max),
+# while a money-only page (15) still loses to it, so penalty tables do not
+# push scoring pages out. Spanish thousand-group figures (34.724,63) or an
+# explicit currency word; clause numbers (14.1), years and spaced codes
+# never match.
+_MONEY_WEIGHT = 15
+_MONEY_WORDS = ("euros", "€")
+_MONEY_FIGURE_RE = re.compile(r"\d{1,3}(?:\.\d{3})+(?:,\d{2})?")
+
 
 def _rank(page: PageInput) -> tuple[int, str, int]:
     folded = unicodedata.normalize("NFKD", page.normalized_text.casefold())
     text = "".join(char for char in folded if not unicodedata.combining(char))
     score = sum(weight for weight, words in _SIGNALS if any(word in text for word in words))
+    if _MONEY_FIGURE_RE.search(text) or any(word in text for word in _MONEY_WORDS):
+        score += _MONEY_WEIGHT
     # Textless pages may be scanned. Keep them eligible for their render;
     # absence of a render is still an explicit preflight failure, not OCR.
     if not text.strip():

@@ -192,6 +192,21 @@ def test_page_selection_prioritizes_clauses_and_keeps_documents() -> None:
     assert selected == page_selection.select_first_packet(list(reversed(pages)), limit=6)
 
 
+def test_page_selection_prefers_pages_with_money_figures() -> None:
+    boilerplate = meta_adapter.PageInput(
+        "a", 1, "Apertura y criterios de adjudicacion; ofertas anormalmente bajas"
+    )
+    budget = meta_adapter.PageInput("a", 2, "Presupuesto base de licitacion 41.322,31 euros")
+    selected = page_selection.select_first_packet([boilerplate, budget], limit=1)
+    assert [(page.document_id, page.page_number) for page in selected] == [("a", 2)]
+    penalty = meta_adapter.PageInput("a", 3, "Penalidad de 1.000 euros por dia")
+    selected = page_selection.select_first_packet([boilerplate, penalty], limit=1)
+    assert [(page.document_id, page.page_number) for page in selected] == [("a", 1)]
+    lookalikes = meta_adapter.PageInput("a", 4, "Clausula 14.1 del ano 2026, codigo 26 1532 63100")
+    selected = page_selection.select_first_packet([lookalikes, penalty], limit=1)
+    assert [(page.document_id, page.page_number) for page in selected] == [("a", 3)]
+
+
 def test_input_identity_changes_with_image_or_source_version() -> None:
     page = meta_adapter.PageInput(
         "d1", 1, "same text", document_sha256="a" * 64, image_bytes=b"png-a"
