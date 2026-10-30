@@ -41,12 +41,17 @@ document extraction below:
 - Model: muse-spark-1.3.
 - Real evidence: `evidence/meta_smoke_status.json` — status PASS, HTTP 200, executed_inference true, checked 2026-10-26T19:05:43Z, usage 14 prompt + 236 completion tokens (222 reasoning, 0 cached), 250 total, 1647 ms, provider_request_id da5dbf70-cf11-436d-910a-e3140e4caa8b.
 
-Current document-extraction state (29-oct, V5 @`132cfb2`):
+Current document-extraction state (30-oct, V6 @`1051e93`, live generation 1/12→12/12):
 - Backend analysis pipeline is real (POST /analysis → 202 job → worker → verified citations; `tests/e2e/` reload spec + `analysisJobStore` rehydrate). It returns honest 503 provider_not_configured without a key. Unit and integration tests cover it with an explicitly labelled offline stub (fixture_stub).
 - Invocation receipts are real data when they run (mode fixture/live, tokens, cost, latency, provider_request_id on Job; PKG-T01/T09). Demo runs show mode fixture with null live tokens — never presented as live.
-- The opt-in live flow exists in the UI (consent names Meta Model API + partial coverage; `AnalysisTracker.tsx`), and a strict offline preflight validates the real Pydantic schema before any payload is built. A 12-case synthetic adversarial corpus (`examples/meta_eval_synthetic/`) is ready with a strict scorecard; generation stands at 0/12 BLOCKED (no key/consent/budget, zero live calls). See `docs/META_EVIDENCE_V3.md`.
-- NOT claimed: live document extraction is pending. The demo seed is manually curated and labelled "Datos de ejemplo".
+- The opt-in live flow exists in the UI (consent names Meta Model API + partial coverage; `AnalysisTracker.tsx`), and a strict offline preflight validates the real Pydantic schema before any payload is built. Live generation 1 (30-oct, muse-spark-1.3-contributor, author key + 20/5 USD budget): 12/12 synthetic adversarial cases extracted (scans, tables, contradictions, lots, extensions, injection-ignored), 18/18 figures human-verified against the documents, 0 critical errors, $0.0131 spend. Receipts, prompts, renders and scorecard under `evidence/private/` (gitignored). See `docs/META_EVIDENCE_V3.md`.
+- Demo video (179 s, EN narration, real V6 app): recorded 30-oct, file held by the author for upload (SHA-256 `70CC88BE…09955`, script in `docs/demo/video-script-en-180s.md`).
+- NOT claimed: the demo seed is manually curated and labelled "Datos de ejemplo"; live runs cover synthetic cases only, never private PDFs.
 - Measured comparison (PKG-T11, `evidence/extraction_comparison.json`): same 11 eval claims / 4 held-out expedientes, same schema. Text (offline fixture): 0 hit / 0 miss / 11 unsupported, 0 critical errors, p50 0.004 ms, cost 0 micro-USD + fixture reason, tokens null. Hybrid: blocked (G3, `provider_not_configured`), all metrics null, zero live calls. No advantage attributed to either mode; n=11 published with limitations, no savings invented.
+
+## Video
+
+URL: TBD (author uploads `bidlab-180s.mp4`, 179 s, 720p, EN narration).
 
 ## Verification (real runs, Windows)
 
