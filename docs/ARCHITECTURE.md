@@ -203,7 +203,7 @@ response = client.chat.completions.create(
         {"role": "developer", "content": prompt},
         {"role": "user", "content": page_marked_text},
     ],
-    max_completion_tokens=6000,
+    max_completion_tokens=8192,
     response_format={
         "type": "json_schema",
         "json_schema": {"name": "bidlab_extraction", "schema": extraction_schema},
@@ -211,7 +211,7 @@ response = client.chat.completions.create(
 )
 # validar contenido y finish_reason antes de persistir cualquier propuesta
 ~~~
-El adaptador limita la salida con max_completion_tokens=6000, documentado para Chat Completions (https://dev.meta.ai/docs/protocols/chat-completions). max_output_tokens pertenece a Responses y no se envía a Chat. Se comprueba el SDK con smoke antes de integración. No configurar temperature=0 para “garantizar verdad”; dejar default y exigir evidencias/validación. Cache por hashes de documento/páginas + prompt + schema + modelo + opciones + extractor. No cachear como éxito errores ni respuestas truncadas. No prometer reproducibilidad byte a byte de inferencia live.
+El adaptador limita la salida con max_completion_tokens=8192 (subido de 4096 el 30-oct-2026: S06 necesitó 3829 tokens y S11 se truncó dos veces a 4096 en live), documentado para Chat Completions (https://dev.meta.ai/docs/protocols/chat-completions). max_output_tokens pertenece a Responses y no se envía a Chat. Se comprueba el SDK con smoke antes de integración. No configurar temperature=0 para “garantizar verdad”; dejar default y exigir evidencias/validación. Cache por hashes de documento/páginas + prompt + schema + modelo + opciones + extractor. No cachear como éxito errores ni respuestas truncadas. No prometer reproducibilidad byte a byte de inferencia live.
 
 Política vigente 29-oct: un solo intento de transporte, sin reintentos automáticos (también ante 429/timeout). La reserva y el marcador de posible envío se confirman ANTES de entrar al adaptador. Si el transporte confirma rechazo antes de enviar se libera; si puede haberse enviado y falta uso, permanece uncertain y bloquea nuevas reservas hasta conciliación. Solo uso reportado liquida el coste: una estimación nunca se presenta como factura real. El estimador chars/4 no acota todos los tokens de entrada ni imágenes; el ledger limita admisiones con esa estimación, no garantiza un techo duro del proveedor. Concurrencia de inferencia 1. Tokens/latencia/estado sin texto completo ni razonamiento privado en logs. Ver IMPLEMENTACION_20261029.md (Backend corregido).
 

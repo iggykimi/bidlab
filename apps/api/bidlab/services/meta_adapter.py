@@ -79,7 +79,10 @@ MAX_HYBRID_TEXT_CHARS = 100_000
 MAX_HYBRID_IMAGE_BYTES = 5_000_000
 HYBRID_IMAGE_MIMES = frozenset({"image/png", "image/jpeg"})
 MIN_COMPLETION_TOKENS = 128
-MAX_COMPLETION_TOKENS = 4096
+# Default completion cap. Raised 4096 -> 8192 on 30-oct-2026: live eval
+# showed an image-heavy page needing 3829 output tokens (S06) and a
+# 1-page case truncated twice at 4096 (S11). Hard limit stays 16384.
+MAX_COMPLETION_TOKENS = 8192
 MAX_COMPLETION_TOKENS_LIMIT = 16384
 REASONING_EFFORTS = frozenset({"low", "medium"})
 
