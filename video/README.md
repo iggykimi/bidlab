@@ -65,20 +65,20 @@ npm run render        # out/bidlab-180s.mp4, H.264 1080p30
 Add the voice-over in your editor on top of `out/bidlab-180s.mp4`, or drop a `public/voiceover.mp3`
 and wire it with Remotion's `<Audio>` in `src/Video.tsx`.
 
-## Voice-over script (English, ~370 words, about 140 words per minute)
+## Voice-over script (English, ~345 words, about 140 words per minute)
 
 Times are when each scene is fully on screen; transitions overlap by half a second.
 
 | Time | Scene | Narration |
 |---|---|---|
 | 0:00–0:11 | Hook | Would you give up almost six thousand euros for exactly the same score? On a real Spanish public tender, that is the choice a small firm faces. |
-| 0:11–0:25 | Problem → import | Public tenders are written for lawyers. Often one person decides, and many are over sixty. With BidLab, you paste the link from Spain's procurement platform, and it brings in the official record and the tender PDF. |
-| 0:25–0:51 | Muse Spark reads | You decide what goes to Meta: one checkbox, a budget, and a receipt for every call. Muse Spark reads each page as text and as an image, and proposes the requirements with their exact page. Nothing counts until you confirm it. What is unknown stays unknown, and one click opens the original quote. |
+| 0:11–0:25 | Problem → import | Public tenders are written for lawyers. Dozens of pages, one small firm, one deadline. With BidLab, you paste the link from Spain's procurement platform, and it brings in the official record and the tender PDF. |
+| 0:25–0:51 | Muse Spark reads | You decide what goes to Meta: one checkbox, a budget, and a receipt for every call. Muse Spark reads each page as text and as an image, and proposes the key figures with their exact page. Nothing counts until you confirm or correct it, and one click opens the original quote on its exact page. |
 | 0:51–1:14 | Price | Then the maths, and the model never does it. A Python engine applies the tender's own formula. Ten percent off: forty-nine out of forty-nine points. Fifteen percent: the same forty-nine points, and less profit. The curve shows where more discount stops paying. |
-| 1:14–1:30 | Compare | Side by side, the ten percent bid keeps five thousand nine hundred euros more, for the same score. No win prediction and no invented rivals: every assumption is labelled. |
+| 1:14–1:30 | Compare | Side by side, the ten percent bid keeps five thousand nine hundred and sixteen euros more, for the same score. No win prediction and no invented rivals: every assumption is labelled. |
 | 1:30–1:39 | Report | The decision becomes a record you can hand to your accountant, with every figure sourced. |
 | 1:39–2:03 | Ask | If a requirement is unclear, Muse Spark drafts the formal question for the contracting body, citing the page. Or simply ask out loud. Meta's speech-to-text writes down your question, and Muse Spark answers by calling BidLab's own engine as a tool. Every number is checked before you see it. |
-| 2:03–2:24 | Proof | We tested it against traps, not happy paths: scans, tables, contradictions, even a prompt injection. Twelve out of twelve documents extracted, eighteen of eighteen figures verified by hand, zero critical errors, for about one cent. The model proposes. Python decides. You approve. |
+| 2:03–2:24 | Proof | We tested it against traps, not happy paths: scans, tables, contradictions, even a prompt injection. Twelve out of twelve documents extracted, eighteen of eighteen figures verified by hand, zero critical errors, for about one cent. The model proposes. You approve. Python decides. |
 | 2:24–2:38 | Accessibility | And it is built for the people who really do this job: large type, high contrast, big buttons, one tap for bigger letters, and a typeface designed for low vision. |
 | 2:38–2:47 | Close | BidLab. From a tender PDF to a bid you can defend. Built with Muse Spark and Muse Code. |
 

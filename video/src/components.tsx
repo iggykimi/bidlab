@@ -151,13 +151,13 @@ export function Caption({
     <div
       style={{
         position: "absolute",
-        bottom: 72,
-        [align]: 72,
-        maxWidth: 1000,
+        bottom: 56,
+        [align]: 56,
+        maxWidth: 920,
         background: C.white,
         borderLeft: `10px solid ${C.blue}`,
         borderRadius: 14,
-        padding: "26px 34px",
+        padding: "22px 30px",
         boxShadow: "0 18px 50px rgba(24,36,59,0.22)",
         fontFamily: FONT,
         color: C.ink,
@@ -166,8 +166,8 @@ export function Caption({
         transform: `translateY(${interpolate(enter, [0, 1], [40, 0])}px)`,
       }}
     >
-      <div style={{ fontSize: 46, fontWeight: 800, lineHeight: 1.15 }}>{title}</div>
-      {sub && <div style={{ fontSize: 30, marginTop: 10, color: C.muted, lineHeight: 1.35 }}>{sub}</div>}
+      <div style={{ fontSize: 41, fontWeight: 800, lineHeight: 1.15 }}>{title}</div>
+      {sub && <div style={{ fontSize: 28, marginTop: 8, color: C.muted, lineHeight: 1.35 }}>{sub}</div>}
     </div>
   );
 }

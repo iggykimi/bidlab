@@ -167,7 +167,7 @@ function Compare() {
         rings={[{ at: 1.4, box: box("compare", "duel"), until: 8 }]}
       />
       <Caption at={1.2} until={8} title="Same points. €5,916.80 more profit." sub="Saved trials compared side by side. The 10 % trial wins under the stated assumptions." />
-      <Caption at={9} title="No win prediction. No invented rivals." sub="Competitor prices are declared hypotheses, labelled as such on every screen." />
+      <Caption at={9} align="right" title="No win prediction. No invented rivals." sub="Competitor prices are declared hypotheses, labelled as such on every screen." />
     </AbsoluteFill>
   );
 }
@@ -276,7 +276,7 @@ function Pipeline() {
   const bg = spring({ frame, fps, config: { damping: 20 } });
   return (
     <AbsoluteFill style={{ background: `rgba(247,248,250,${bg})`, fontFamily: FONT }}>
-      <div style={{ position: "absolute", top: 200, left: 120 }}>
+      <div style={{ position: "absolute", top: 200, left: 100 }}>
         <Headline text="The model proposes. You approve. Python decides." size={64} />
       </div>
       <div style={{ position: "absolute", top: 470, left: 100, right: 100, display: "flex", gap: 16, alignItems: "stretch" }}>
@@ -348,7 +348,7 @@ function Access() {
 function Close() {
   return (
     <Paper>
-      <div style={{ position: "absolute", left: 140, top: 250 }}>
+      <div style={{ position: "absolute", left: 140, top: 290 }}>
         <FadeIn at={0.2}>
           <Mark size={110} />
         </FadeIn>
