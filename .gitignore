@@ -42,3 +42,6 @@ BidLab_Plan_Maestro_Meta_2026-10-28.html
 
 # Local tool hooks (machine-specific paths)
 .codex/
+
+# author-only working notes, logs and historical captures (kept locally)
+docs/internal/
