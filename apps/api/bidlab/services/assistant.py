@@ -198,7 +198,7 @@ EVALUATE_DISCOUNT_TOOL = _function(
     "the user's current rivals, cost and formula. Returns price, profit, price "
     "points and the abnormal-offer presumption as exact strings. Pass exactly "
     "one of discount_percent (absolute, e.g. '12') or change_points (relative "
-    "to the current discount, e.g. '2' or '-1.5'); the other is null.",
+    "to the current discount, e.g. '2' or '-1.5'); the other is JSON null.",
     {
         "discount_percent": {
             **_NULLABLE_TEXT,
@@ -319,6 +319,14 @@ def _figure_problem(figure: FigureOutput, registry: Registry) -> str | None:
 # --- Tools -----------------------------------------------------------------
 
 
+def _null_word_to_none(value: Any) -> Any:
+    """The strict tool schema forces both keys present, so the model writes
+    the word null for the absent one; that is absence, never a percentage."""
+    if isinstance(value, str) and value.strip().lower() == "null":
+        return None
+    return value
+
+
 def _parse_percent(raw: str) -> Decimal:
     text = raw.strip().removesuffix("%").strip().replace(",", ".")
     return MO.parse_decimal(text, field="percent")
@@ -333,7 +341,8 @@ def _evaluate_discount(
 ) -> dict[str, Any]:
     if ctx.pricing is None or ctx.current_percent is None:
         return {"error": "no pricing context: open the Precio step first"}
-    absolute, change = args.get("discount_percent"), args.get("change_points")
+    absolute = _null_word_to_none(args.get("discount_percent"))
+    change = _null_word_to_none(args.get("change_points"))
     if (absolute is None) == (change is None):
         return {"error": "pass exactly one of discount_percent or change_points"}
     raw = absolute if absolute is not None else change

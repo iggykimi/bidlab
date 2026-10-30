@@ -220,6 +220,36 @@ def test_answer_round_trip_binds_engine_and_pliego_figures(
     assert replay.json()["figures"] == body["figures"]
 
 
+def test_answer_accepts_null_word_for_absent_tool_arg(
+    live_env: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Live models write the word null for the absent strict-schema key."""
+
+    def _model(url: str, **kwargs: Any) -> httpx.Response:
+        if "tool_calls" not in json.dumps(kwargs["json"].get("messages", [])):
+            return httpx.Response(
+                200,
+                json=_tool_turn(
+                    ("evaluate_discount", {"discount_percent": "12", "change_points": "null"}),
+                ),
+            )
+        results = _tool_results(kwargs["json"])
+        price = next(f for f in results["evaluate_discount"]["figures"] if f["unit"] == "eur")
+        return httpx.Response(
+            200,
+            json=_final(
+                "Con una rebaja del 12 % este es tu precio.",
+                [{**price, "source": "engine", "page": None, "citation_id": None}],
+            ),
+        )
+
+    monkeypatch.setattr(httpx, "post", _model)
+    res = live_env.post(ANSWERS, json=_ask(), headers=_headers("k-ask-nullword"))
+    assert res.status_code == 201, res.text
+    body = g.AssistantAnswer.model_validate(res.json()).model_dump(mode="json")
+    assert body["figures"][0]["value"] == "104135.68"
+
+
 @pytest.mark.parametrize(
     ("answer", "figure"),
     [
