@@ -636,6 +636,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tenders/{tender_id}/assistant/transcriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transcribe spoken question
+         * @description One live Meta speech-to-text call (muse-voice-transcribe-1.0, PUSH_TO_TALK) turns a recorded question into editable text. The clip must be a 16-bit PCM mono WAV at 16 or 24 kHz, at most 60 s and 2 MB (415 unsupported_media, 422 audio_too_long or audio_empty, 413 upload_too_large). Requires allow_remote_processing (the audio is sent to Meta), a configured provider (503 provider_not_configured) and budget (429 budget_exhausted). The receipt is kept and spend settled either way. Idempotent via Idempotency-Key over the clip hash plus consent.
+         */
+        post: operations["transcribe_question"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tenders/{tender_id}/assistant/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer question with tools
+         * @description Answers one question (at most 300 chars) about this tender with at most three live Meta calls. The model may call evaluate_discount (the deterministic pricing engine in the supplied pricing_context) and find_requirements (reviewed requirements, eligibility verdicts and stored quotes with page); it never computes figures. The final call carries no tools and must return the strict answer schema. Every figure must equal a tool result and every page/citation must come from one, else 502 invalid_model_output with receipts kept. Requires allow_remote_processing (the question and requirement texts are sent to Meta, never the PDF), a configured provider (503 provider_not_configured) and budget (429 budget_exhausted). Idempotent via Idempotency-Key.
+         */
+        post: operations["answer_question"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -650,7 +690,7 @@ export interface components {
          * @description Machine-readable failure code; the frontend maps known codes to Spanish copy.
          * @enum {string}
          */
-        ErrorCode: "arity" | "ast_template_mismatch" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "citation_not_found" | "citation_not_linked" | "citation_unverified" | "claim_not_reviewable" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_too_large" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "invalid_model_output" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "no_documents" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "period_mismatch" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "provider_refusal" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirement_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "source_unavailable" | "stale_revision" | "stress_constraints_invalid" | "stress_cost_invalid" | "stress_not_found" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "unsupported_url" | "upload_not_pdf" | "upload_too_large" | "validation_error";
+        ErrorCode: "arity" | "ast_template_mismatch" | "audio_empty" | "audio_too_long" | "awarded_negative" | "bad_format" | "bad_kind" | "bad_node" | "bad_request" | "bad_shape" | "bad_type" | "base_not_positive" | "basis_not_approved" | "bool_forbidden" | "budget_exhausted" | "budget_not_positive" | "ceiling_exceeded" | "citation_not_found" | "citation_not_linked" | "citation_unverified" | "claim_not_reviewable" | "company_not_found" | "company_profile_corrupt" | "company_scope_mismatch" | "company_without_revision" | "compare_invalid_request" | "conflict" | "const_bad_type" | "const_float_forbidden" | "const_non_finite" | "const_too_large" | "cost_negative" | "curve_out_of_scope" | "cycle" | "demo_seed_incomplete" | "discount_out_of_range" | "discount_out_of_scope" | "document_bytes_unavailable" | "document_duplicate" | "document_not_found" | "document_too_large" | "document_wrong_tender" | "domain_non_finite" | "domain_validation" | "eligibility_unserializable" | "empty_offer_set" | "extra_forbidden" | "float_forbidden" | "forbidden" | "idempotency_conflict" | "internal" | "interpretation_not_found" | "invalid_model_output" | "job_not_found" | "job_running" | "log_non_positive" | "margin_out_of_range" | "max_depth" | "max_points_not_positive" | "method_not_allowed" | "missing_variable" | "money_unparseable" | "no_documents" | "non_finite" | "not_found" | "not_positive" | "nothing_to_review" | "offer_not_positive" | "page_not_found" | "pdf_no_pages" | "pdf_page_unreadable" | "pdf_too_large" | "pdf_too_many_pages" | "pdf_unreadable" | "period_mismatch" | "price_not_positive" | "provider_failure" | "provider_not_configured" | "provider_refusal" | "rate_limited" | "reference_not_positive" | "remote_processing_not_allowed" | "report_corrupt" | "report_html_missing" | "report_not_found" | "requirement_not_found" | "requirements_tree_corrupt" | "requirements_tree_too_deep" | "revision_conflict" | "rule_malformed" | "rule_not_approved" | "rule_not_found" | "scenario_not_found" | "scenario_snapshot_incomplete" | "scope_not_found" | "scope_tender_mismatch" | "scope_without_budget" | "snapshot_corrupt" | "source_unavailable" | "stale_revision" | "stress_constraints_invalid" | "stress_cost_invalid" | "stress_not_found" | "tender_not_found" | "too_many_nodes" | "too_many_ops" | "too_many_rivals" | "unknown_claim_key" | "unknown_op" | "unknown_template" | "unknown_variable" | "unknown_variant" | "unsupported_media" | "unsupported_url" | "upload_not_pdf" | "upload_too_large" | "validation_error";
         Error: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -1435,6 +1475,47 @@ export interface components {
         };
         ClarificationList: {
             items: components["schemas"]["ClarificationDraft"][];
+        };
+        AssistantInvocation: {
+            invocation_id: components["schemas"]["EntityId"];
+            model: string;
+            provider_request_id: string | null;
+            prompt_tokens: number | null;
+            completion_tokens: number | null;
+            estimated_cost_usd: string | null;
+            latency_ms: number;
+        };
+        AssistantTranscription: {
+            text: string;
+            audio_duration_ms: number;
+            /** @enum {string} */
+            mode: "live";
+            invocation: components["schemas"]["AssistantInvocation"];
+        };
+        AssistantAnswerRequest: {
+            question: string;
+            scope_id: components["schemas"]["EntityId"];
+            pricing_context: components["schemas"]["EvaluationRequest"] | null;
+            allow_remote_processing: boolean;
+        };
+        AssistantFigure: {
+            label: string;
+            value: string;
+            /** @enum {string} */
+            unit: "eur" | "points" | "rate" | "anomaly" | "eligibility" | "text";
+            /** @enum {string} */
+            source: "engine" | "pliego";
+            page: number | null;
+            citation_id: components["schemas"]["EntityId"] | null;
+        };
+        AssistantAnswer: {
+            answer: string;
+            figures: components["schemas"]["AssistantFigure"][];
+            tools_used: ("evaluate_discount" | "find_requirements")[];
+            /** @enum {string} */
+            mode: "live";
+            invocations: components["schemas"]["AssistantInvocation"][];
+            created_at: string;
         };
     };
     responses: {
@@ -2910,6 +2991,115 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClarificationDraft"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    transcribe_question: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description WAV clip; format, size and length are validated server-side.
+                     */
+                    audio: string;
+                    /**
+                     * @description Consent to send the audio to Meta.
+                     * @default false
+                     */
+                    allow_remote_processing?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantTranscription"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["BadGateway"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    answer_question: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Loopback client marker; every mutation requires local-ui plus a loopback Origin.
+                 * @example local-ui
+                 */
+                "X-BidLab-Client": components["parameters"]["XBidLabClient"];
+                /**
+                 * @description Caller-generated key (24h): same key+body replays the stored response, another body is 409.
+                 * @example 550e8400-e29b-41d4-a716-446655440000
+                 */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @example tias */
+                tender_id: components["schemas"]["EntityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantAnswer"];
                 };
             };
             400: components["responses"]["BadRequest"];

@@ -16,6 +16,7 @@ import { EvidenceTab } from "../evidence/EvidenceTab";
 import { ReportTab } from "../report/ReportTab";
 import { ReviewTab } from "../review/ReviewTab";
 import { isOwnTender } from "../review/ownTender";
+import { ASK_PANEL_ID, AskPanel, MicIcon } from "../assistant/AskPanel";
 
 const BASE_TABS = [
   { id: "resumen", label: "Resumen" },
@@ -150,6 +151,16 @@ export function WorkspacePage() {
       document.getElementById("tender-title")?.focus({ preventScroll: true });
     }
   }, [tenderId]);
+
+  /** The side-nav link lands on the question box itself, not just its heading. */
+  function jumpToAsk(event: React.MouseEvent) {
+    event.preventDefault();
+    const panel = document.getElementById(ASK_PANEL_ID);
+    panel?.scrollIntoView({ block: "start" });
+    const field = document.getElementById("ask-question");
+    const target = field instanceof HTMLTextAreaElement && !field.disabled ? field : document.getElementById("ask-title");
+    target?.focus({ preventScroll: true });
+  }
 
   /** APG roving tabindex: arrows move and select, Home/End jump. */
   function onTabKey(event: React.KeyboardEvent, index: number) {
@@ -293,6 +304,9 @@ export function WorkspacePage() {
               </li>
             ))}
           </ul>
+          <a href={`#${ASK_PANEL_ID}`} className="ask-jump pressable" onClick={jumpToAsk}>
+            <MicIcon size={24} /> Pregúntale al pliego
+          </a>
           <div className="base">
             <strong>Base del análisis</strong>
             {mode ? (
@@ -320,6 +334,9 @@ export function WorkspacePage() {
           {tab === "precio" && <PricingLab workspace={workspace} />}
           {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
           {tab === "informe" && <ReportTab workspace={workspace} />}
+          {/* Same place on every step, after the step itself so the step's own
+           * first field stays above the fold (R06); the side nav links here. */}
+          <AskPanel workspace={workspace} />
         </WorkspaceDraftsProvider>
         </div>
       </div>

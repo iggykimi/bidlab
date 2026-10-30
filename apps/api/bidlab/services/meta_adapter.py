@@ -35,10 +35,12 @@ reported, feeds an estimated cost from the published Standard Spark
 rates so the budget guard in ``bidlab.services.jobs`` keeps working;
 missing usage stays untracked, never zero-invented.
 
-Only the analysis-job path (``bidlab.services.jobs``) and the
-clarification-draft path (``bidlab.services.clarification``) may call this
-module; both share :func:`live_provider` (the gate) and
-:func:`post_chat_completion` (the transport). Pricing, curve, scenario,
+Only the analysis-job path (``bidlab.services.jobs``), the
+clarification-draft path (``bidlab.services.clarification``) and the
+assistant path (``bidlab.services.assistant``) may call this module; they
+share :func:`live_provider` (the gate) and :func:`post_chat_completion`
+(the transport); the assistant also uses :func:`post_transcription`
+(speech-to-text, same gate and receipts). Pricing, curve, scenario,
 report, demo and review paths never call the provider (covered by
 ``test_provider_unreachable_from_offline_paths``).
 """
@@ -50,7 +52,7 @@ import hashlib
 import json
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Protocol, cast
@@ -114,6 +116,14 @@ HYBRID_SYSTEM_PROMPT = (
 # the provider dashboard. Source: https://dev.meta.ai/docs/pricing-rate-limits
 META_INPUT_USD_PER_MTOK = Decimal("1.25")
 META_OUTPUT_USD_PER_MTOK = Decimal("4.25")
+# Speech-to-text: billed per processed audio, whole seconds rounded down;
+# failed requests and 429s are not billed.
+# Source: https://dev.meta.ai/docs/speech-to-text (Pricing)
+META_TRANSCRIBE_MODEL = "muse-voice-transcribe-1.0"
+META_TRANSCRIBE_USD_PER_HOUR = Decimal("0.18")
+META_TRANSCRIBE_URL_ENV = "META_TRANSCRIBE_URL"
+_CHAT_PATH = "/chat/completions"
+_TRANSCRIBE_PATH = "/asr/transcribe"
 _MICRO = Decimal(1_000_000)
 _COST_QUANTUM = Decimal("0.000001")
 _MAX_SCHEMA_DEPTH = 50
@@ -948,30 +958,24 @@ class LiveProvider:
     endpoint_url: str
 
 
-def post_chat_completion(
-    provider: LiveProvider, payload: Mapping[str, Any], *, timeout_s: float = 120.0
-) -> tuple[dict[str, Any], Receipt]:
-    """Send ONE ``chat/completions`` request; return the raw body and its receipt.
+def _post_once(
+    url: str,
+    *,
+    model: str,
+    timeout_s: float,
+    unbilled_error_cost: str | None = None,
+    **request: Any,
+) -> tuple[httpx.Response, int]:
+    """One HTTP POST to the provider; transport and HTTP failures become typed errors.
 
-    Shared transport for every live use (extraction, clarification drafts):
-    single attempt, no retries. Transport failures raise
-    :class:`AdapterError` carrying a receipt that says whether the request
-    may have reached the provider (timeouts stay ``uncertain``). The body
-    is not validated here; callers parse it with :func:`parse_chat_response`
-    and keep the returned receipt on any later rejection.
+    Returns the successful response and its latency. ``unbilled_error_cost``
+    is the cost booked for an error status the provider documents as not
+    billed (speech-to-text); chat errors keep it None, so their hold stays
+    ``uncertain`` until reconciled.
     """
-    model = provider.model
     started = time.monotonic()
     try:
-        response = httpx.post(
-            provider.endpoint_url,
-            json=dict(payload),
-            headers={
-                "Authorization": f"Bearer {provider.api_key}",
-                "Content-Type": "application/json",
-            },
-            timeout=timeout_s,
-        )
+        response = httpx.post(url, timeout=timeout_s, **request)
     except httpx.TimeoutException as exc:
         latency_ms = int((time.monotonic() - started) * 1000)
         raise AdapterError(
@@ -998,28 +1002,49 @@ def post_chat_completion(
             ),
         ) from exc
     latency_ms = int((time.monotonic() - started) * 1000)
-    if response.status_code == 429:
-        raise AdapterError(
-            "provider_rate_limited",
-            "model endpoint rate limited",
-            receipt=_attempt_receipt(
-                model_requested=model,
-                latency_ms=latency_ms,
-                status="failed",
-                sent=True,
-            ),
-        )
     if response.status_code >= 400:
+        error_receipt = replace(
+            _attempt_receipt(
+                model_requested=model, latency_ms=latency_ms, status="failed", sent=True
+            ),
+            estimated_cost_usd=unbilled_error_cost,
+        )
+        if response.status_code == 429:
+            raise AdapterError(
+                "provider_rate_limited", "model endpoint rate limited", receipt=error_receipt
+            )
         raise AdapterError(
             "provider_failure",
             f"model endpoint answered {response.status_code}",
-            receipt=_attempt_receipt(
-                model_requested=model,
-                latency_ms=latency_ms,
-                status="failed",
-                sent=True,
-            ),
+            receipt=error_receipt,
         )
+    return response, latency_ms
+
+
+def post_chat_completion(
+    provider: LiveProvider, payload: Mapping[str, Any], *, timeout_s: float = 120.0
+) -> tuple[dict[str, Any], Receipt]:
+    """Send ONE ``chat/completions`` request; return the raw body and its receipt.
+
+    Shared transport for every live chat use (extraction, clarification
+    drafts, assistant answers): single attempt, no retries. Transport
+    failures raise :class:`AdapterError` carrying a receipt that says
+    whether the request may have reached the provider (timeouts stay
+    ``uncertain``). The body is not validated here; callers parse it with
+    :func:`parse_chat_response` and keep the returned receipt on any later
+    rejection.
+    """
+    model = provider.model
+    response, latency_ms = _post_once(
+        provider.endpoint_url,
+        model=model,
+        timeout_s=timeout_s,
+        json=dict(payload),
+        headers={
+            "Authorization": f"Bearer {provider.api_key}",
+            "Content-Type": "application/json",
+        },
+    )
     try:
         data = response.json()
     except ValueError as exc:
@@ -1035,6 +1060,86 @@ def post_chat_completion(
         ) from exc
     body = _as_dict(data)
     return body, body_receipt(body, latency_ms=latency_ms, model_requested=model)
+
+
+def transcription_url() -> str:
+    """Speech-to-text endpoint: ``META_TRANSCRIBE_URL``, else derived, else 503.
+
+    The official file endpoint is ``https://api.meta.ai/v1/asr/transcribe``,
+    a sibling of ``/v1/chat/completions`` (https://dev.meta.ai/docs/speech-to-text),
+    so it is derived only from a ``META_API_URL`` that ends in that exact
+    chat path. Any other base needs the explicit variable: an unverified
+    endpoint is never guessed.
+    """
+    explicit = os.environ.get(META_TRANSCRIBE_URL_ENV, "").strip()
+    if explicit:
+        return explicit
+    chat = os.environ.get(META_API_URL_ENV, "").strip()
+    if chat.endswith(_CHAT_PATH):
+        return chat.removesuffix(_CHAT_PATH) + _TRANSCRIBE_PATH
+    raise ApiError(
+        503,
+        "provider_not_configured",
+        f"{META_TRANSCRIBE_URL_ENV} is not set and {META_API_URL_ENV} is not a chat URL",
+    )
+
+
+def transcription_cost_usd(audio_duration_ms: int | None) -> str | None:
+    """Billed cost of processed audio: whole seconds (rounded down) at the hourly rate."""
+    if audio_duration_ms is None:
+        return None
+    seconds = Decimal(audio_duration_ms // 1000)
+    cost = seconds * META_TRANSCRIBE_USD_PER_HOUR / Decimal(3600)
+    return str(cost.quantize(_COST_QUANTUM, rounding=ROUND_HALF_UP))
+
+
+def post_transcription(
+    provider: LiveProvider, url: str, wav: bytes, *, timeout_s: float = 60.0
+) -> tuple[dict[str, Any], Receipt]:
+    """Send ONE WAV clip to the speech-to-text file endpoint; return body and receipt.
+
+    Official contract (https://dev.meta.ai/docs/api-reference/voice/transcribe):
+    ``multipart/form-data`` with a ``request`` JSON part (``model``,
+    ``audioEncoding: "WAV"``, ``mode: "PUSH_TO_TALK"``, ``languageBias``)
+    and an ``audio`` part; ``Accept: application/json`` returns
+    ``{sessionId, transcript, audioDurationMs, turns}``. The session id is
+    the provider request id. Errors and 429s are documented as not billed,
+    so they settle at zero; timeouts stay ``uncertain``. Single attempt, no
+    retries. The body is not validated here.
+    """
+    request = {
+        "model": META_TRANSCRIBE_MODEL,
+        "audioEncoding": "WAV",
+        "mode": "PUSH_TO_TALK",
+        "languageBias": ["Spanish"],
+    }
+    response, latency_ms = _post_once(
+        url,
+        model=META_TRANSCRIBE_MODEL,
+        timeout_s=timeout_s,
+        unbilled_error_cost=transcription_cost_usd(0),
+        files={
+            "request": (None, json.dumps(request), "application/json"),
+            "audio": ("question.wav", wav, "audio/wav"),
+        },
+        headers={"Authorization": f"Bearer {provider.api_key}", "Accept": "application/json"},
+    )
+    receipt = _attempt_receipt(
+        model_requested=META_TRANSCRIBE_MODEL, latency_ms=latency_ms, status="failed", sent=True
+    )
+    try:
+        body = _as_dict(response.json())
+    except ValueError as exc:
+        raise AdapterError(
+            "invalid_model_output", "transcription endpoint answered non-JSON", receipt=receipt
+        ) from exc
+    session_id = body.get("sessionId")
+    duration = _as_non_negative_int(body.get("audioDurationMs"))
+    return body, replace(
+        receipt,
+        provider_request_id=str(session_id)[:200] if session_id is not None else None,
+        estimated_cost_usd=transcription_cost_usd(duration),
+    )
 
 
 class LiveExtractor:

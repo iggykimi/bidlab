@@ -9,6 +9,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import Response
 
 from bidlab.api import (
+    assistant,
     capabilities,
     clarifications,
     companies,
@@ -79,6 +80,7 @@ app.include_router(review.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(stress.router, prefix="/api/v1")
 app.include_router(clarifications.router, prefix="/api/v1")
+app.include_router(assistant.router, prefix="/api/v1")
 
 # Registered last: API and report routes keep their response/error semantics.
 # A build is optional for API-only development; / explains how to prepare it.

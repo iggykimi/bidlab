@@ -2450,6 +2450,212 @@ paths:
         schema:
           $ref: '#/components/schemas/EntityId'
         example: tias
+  /api/v1/tenders/{tender_id}/assistant/transcriptions:
+    post:
+      operationId: transcribe_question
+      summary: Transcribe spoken question
+      description: One live Meta speech-to-text call (muse-voice-transcribe-1.0, PUSH_TO_TALK)
+        turns a recorded question into editable text. The clip must be a 16-bit PCM
+        mono WAV at 16 or 24 kHz, at most 60 s and 2 MB (415 unsupported_media, 422
+        audio_too_long or audio_empty, 413 upload_too_large). Requires allow_remote_processing
+        (the audio is sent to Meta), a configured provider (503 provider_not_configured)
+        and budget (429 budget_exhausted). The receipt is kept and spend settled either
+        way. Idempotent via Idempotency-Key over the clip hash plus consent.
+      tags:
+      - assistant
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: WAV clip; format, size and length are validated server-side.
+                allow_remote_processing:
+                  type: boolean
+                  default: false
+                  description: Consent to send the audio to Meta.
+              required:
+              - audio
+              additionalProperties: false
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantTranscription'
+              examples:
+                example:
+                  summary: transcribe_question example
+                  value:
+                    text: ¿Y si bajo un 12 %?
+                    audio_duration_ms: 2400
+                    mode: live
+                    invocation:
+                      invocation_id: inv-stt-9f2c4a1e0b3d4f5a
+                      model: muse-voice-transcribe-1.0
+                      provider_request_id: session-example
+                      prompt_tokens: null
+                      completion_tokens: null
+                      estimated_cost_usd: '0.000100'
+                      latency_ms: 900
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/tenders/{tender_id}/assistant/answers:
+    post:
+      operationId: answer_question
+      summary: Answer question with tools
+      description: Answers one question (at most 300 chars) about this tender with
+        at most three live Meta calls. The model may call evaluate_discount (the deterministic
+        pricing engine in the supplied pricing_context) and find_requirements (reviewed
+        requirements, eligibility verdicts and stored quotes with page); it never
+        computes figures. The final call carries no tools and must return the strict
+        answer schema. Every figure must equal a tool result and every page/citation
+        must come from one, else 502 invalid_model_output with receipts kept. Requires
+        allow_remote_processing (the question and requirement texts are sent to Meta,
+        never the PDF), a configured provider (503 provider_not_configured) and budget
+        (429 budget_exhausted). Idempotent via Idempotency-Key.
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantAnswer'
+              examples:
+                example:
+                  summary: answer_question example
+                  value:
+                    answer: Con una rebaja del 12 % tu oferta queda en el precio de
+                      abajo. Con tus supuestos no parece sospechosamente baja.
+                    figures:
+                    - label: Precio de tu oferta sin impuestos
+                      value: '104135.68'
+                      unit: eur
+                      source: engine
+                      page: null
+                      citation_id: null
+                    - label: ¿Oferta sospechosamente baja?
+                      value: not_flagged_under_assumptions
+                      unit: anomaly
+                      source: engine
+                      page: null
+                      citation_id: null
+                    tools_used:
+                    - evaluate_discount
+                    mode: live
+                    invocations:
+                    - invocation_id: inv-ask-9f2c4a1e0b3d4f5a-1
+                      model: muse-spark-1.3
+                      provider_request_id: chatcmpl-example
+                      prompt_tokens: 1200
+                      completion_tokens: 300
+                      estimated_cost_usd: '0.002775'
+                      latency_ms: 1800
+                    - invocation_id: inv-ask-9f2c4a1e0b3d4f5a-2
+                      model: muse-spark-1.3
+                      provider_request_id: chatcmpl-example
+                      prompt_tokens: 1200
+                      completion_tokens: 300
+                      estimated_cost_usd: '0.002775'
+                      latency_ms: 1800
+                    created_at: '2026-10-30T00:00:00+00:00'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMedia'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      tags:
+      - assistant
+      parameters:
+      - name: tender_id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EntityId'
+        example: tias
+      - $ref: '#/components/parameters/XBidLabClient'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantAnswerRequest'
+            examples:
+              example:
+                summary: answer_question example
+                value:
+                  question: ¿Y si bajo un 12 %?
+                  scope_id: tias-whole
+                  pricing_context:
+                    scope_id: tias-whole
+                    pricing_rule_id: tias-price-r1
+                    pricing_rule_revision: 1
+                    company_id: company-demo
+                    company_revision: 1
+                    discount_rate: '0.05'
+                    rivals:
+                      state: assumed
+                      complete: true
+                      group_membership_confirmed: true
+                      own_group_id: null
+                      offers:
+                      - label: Rival A
+                        price_net: '115000.00'
+                        group_id: null
+                    curve: null
+                  allow_remote_processing: true
 components:
   schemas:
     EntityId:
@@ -2471,6 +2677,8 @@ components:
       enum:
       - arity
       - ast_template_mismatch
+      - audio_empty
+      - audio_too_long
       - awarded_negative
       - bad_format
       - bad_kind
@@ -5669,6 +5877,173 @@ components:
           maxItems: 100
       required:
       - items
+      additionalProperties: false
+    AssistantInvocation:
+      type: object
+      properties:
+        invocation_id:
+          $ref: '#/components/schemas/EntityId'
+        model:
+          type: string
+          maxLength: 80
+        provider_request_id:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+        prompt_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        completion_tokens:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+        estimated_cost_usd:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+        latency_ms:
+          type: integer
+          minimum: 0
+      required:
+      - invocation_id
+      - model
+      - provider_request_id
+      - prompt_tokens
+      - completion_tokens
+      - estimated_cost_usd
+      - latency_ms
+      additionalProperties: false
+    AssistantTranscription:
+      type: object
+      properties:
+        text:
+          type: string
+          maxLength: 4000
+        audio_duration_ms:
+          type: integer
+          minimum: 0
+        mode:
+          type: string
+          enum:
+          - live
+        invocation:
+          $ref: '#/components/schemas/AssistantInvocation'
+      required:
+      - text
+      - audio_duration_ms
+      - mode
+      - invocation
+      additionalProperties: false
+    AssistantAnswerRequest:
+      type: object
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 300
+        scope_id:
+          $ref: '#/components/schemas/EntityId'
+        pricing_context:
+          anyOf:
+          - $ref: '#/components/schemas/EvaluationRequest'
+          - type: 'null'
+        allow_remote_processing:
+          type: boolean
+      required:
+      - question
+      - scope_id
+      - pricing_context
+      - allow_remote_processing
+      additionalProperties: false
+    AssistantFigure:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        value:
+          type: string
+          minLength: 1
+          maxLength: 200
+        unit:
+          type: string
+          enum:
+          - eur
+          - points
+          - rate
+          - anomaly
+          - eligibility
+          - text
+        source:
+          type: string
+          enum:
+          - engine
+          - pliego
+        page:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        citation_id:
+          anyOf:
+          - $ref: '#/components/schemas/EntityId'
+          - type: 'null'
+      required:
+      - label
+      - value
+      - unit
+      - source
+      - page
+      - citation_id
+      additionalProperties: false
+    AssistantAnswer:
+      type: object
+      properties:
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 600
+        figures:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssistantFigure'
+          minItems: 0
+          maxItems: 6
+        tools_used:
+          type: array
+          items:
+            type: string
+            enum:
+            - evaluate_discount
+            - find_requirements
+          minItems: 0
+          maxItems: 8
+        mode:
+          type: string
+          enum:
+          - live
+        invocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssistantInvocation'
+          minItems: 1
+          maxItems: 3
+        created_at:
+          type: string
+          maxLength: 80
+      required:
+      - answer
+      - figures
+      - tools_used
+      - mode
+      - invocations
+      - created_at
       additionalProperties: false
   parameters:
     XBidLabClient:

@@ -422,3 +422,50 @@ export function draftClarification(
 export function listClarifications(tenderId: string, signal?: AbortSignal): Promise<ClarificationList> {
   return getJson<ClarificationList>(`/tenders/${encodeURIComponent(tenderId)}/clarifications`, signal);
 }
+
+// Pregúntale al pliego: voz a texto y respuesta con herramientas de BidLab
+// (llamadas live). Cada cifra de la respuesta sale de una herramienta.
+
+export type AssistantTranscription = components["schemas"]["AssistantTranscription"];
+export type AssistantAnswerRequest = components["schemas"]["AssistantAnswerRequest"];
+export type AssistantAnswer = components["schemas"]["AssistantAnswer"];
+export type AssistantFigure = components["schemas"]["AssistantFigure"];
+
+/** Transcribe one recorded question (16-bit mono WAV). 201; 200 on an idempotent replay. */
+export async function transcribeQuestion(
+  tenderId: string,
+  wav: Blob,
+  opts: { allowRemoteProcessing: boolean; idempotencyKey?: string; signal?: AbortSignal },
+): Promise<AssistantTranscription> {
+  const form = new FormData();
+  form.append("audio", wav, "question.wav");
+  form.append("allow_remote_processing", opts.allowRemoteProcessing ? "true" : "false");
+  const res = await fetch(`${API_BASE}/tenders/${encodeURIComponent(tenderId)}/assistant/transcriptions`, {
+    method: "POST",
+    headers: {
+      "X-BidLab-Client": LOCAL_CLIENT,
+      "Idempotency-Key": opts.idempotencyKey ?? newIdempotencyKey(),
+    },
+    body: form,
+    signal: opts.signal,
+  });
+  if (!res.ok) await parseError(res);
+  return (await res.json()) as AssistantTranscription;
+}
+
+/**
+ * Answer one question with BidLab tools (201; 200 on an idempotent replay).
+ * Reuse the same idempotencyKey when retrying one user action.
+ */
+export function answerQuestion(
+  tenderId: string,
+  payload: AssistantAnswerRequest,
+  opts?: { idempotencyKey?: string; signal?: AbortSignal },
+): Promise<AssistantAnswer> {
+  return sendJson<AssistantAnswer>(
+    "POST",
+    `/tenders/${encodeURIComponent(tenderId)}/assistant/answers`,
+    payload,
+    { idempotencyKey: opts?.idempotencyKey ?? newIdempotencyKey(), signal: opts?.signal },
+  );
+}

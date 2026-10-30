@@ -16,7 +16,7 @@ import {
 } from "../../api/client";
 import type { EvidenceTarget } from "../evidence/EvidenceDrawer";
 import { errorCode, errorEs } from "../../lib/errors";
-import { discountPercentToRate, parsePrecioInput } from "../../lib/format";
+import { parsePrecioInput } from "../../lib/format";
 import { LatestOnly } from "../../lib/requestSequence";
 import { loadSession, type StoredSession } from "../../lib/session";
 import { stableKey, type SavedCopy } from "../../lib/draftStore";
@@ -26,6 +26,7 @@ import {
   scenarioNameSchema,
 } from "../../lib/validation";
 import { useWorkspaceDrafts } from "../workspace/WorkspaceDrafts";
+import { buildEvaluationRequest } from "./evaluationRequest";
 import { citationsByIds, metadataForKey } from "./sources";
 import type { Hypotheses } from "./hypotheses";
 
@@ -33,8 +34,6 @@ export type { Hypotheses } from "./hypotheses";
 
 export type PricingScope = Workspace["tender"]["scopes"][number];
 export type PricingRule = Workspace["pricing_rules"][number];
-
-const CURVE_POINTS = 41;
 
 export interface PricingState {
   session: StoredSession | null;
@@ -149,30 +148,7 @@ export function usePricingState(workspace: Workspace): PricingState {
   }, [h, rivalANorm, rivalBNorm]);
   const inputsValid = Object.keys(fieldErrors).length === 0;
 
-  const requestInput: EvaluationRequest | null =
-    scope && rule && companyId && companyRevision !== undefined
-      ? {
-          scope_id: scope.id,
-          pricing_rule_id: rule.id,
-          pricing_rule_revision: rule.revision,
-          company_id: companyId,
-          company_revision: companyRevision,
-          discount_rate: discountPercentToRate(h.discountPct),
-          rivals: h.noRivals
-            ? { state: "unspecified", complete: false, group_membership_confirmed: false, own_group_id: null, offers: [] }
-            : {
-                state: h.rivalState,
-                complete: h.complete,
-                group_membership_confirmed: h.groupsConfirmed,
-                own_group_id: h.ownGroup || null,
-                offers: [
-                  { label: "Rival A", price_net: rivalANorm ?? h.rivalAPrice, group_id: h.rivalAGroup || null },
-                  { label: "Rival B", price_net: rivalBNorm ?? h.rivalBPrice, group_id: h.rivalBGroup || null },
-                ],
-              },
-          curve: { from_discount_rate: "0.0000", to_discount_rate: "0.4000", points: CURVE_POINTS },
-        }
-      : null;
+  const requestInput = buildEvaluationRequest({ scope, rule, companyId, companyRevision, h });
 
   // requestInput is rebuilt every render; its canonical key is the
   // value-stable identity (UX-04: key order must not change it).

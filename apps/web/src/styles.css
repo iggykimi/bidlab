@@ -1461,3 +1461,57 @@ a[href^="http"]::after {
   color: var(--color-primary-ink);
   font-weight: 700;
 }
+
+/* === Pregúntale al pliego (features/assistant) === */
+/* Recording ring around the 72px mic button. Under reduced motion the ring
+ * stays visible and still: the state is also told by text and the timer. */
+.ask-mic[data-recording="true"]::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-error);
+  animation: ask-pulse 1.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes ask-pulse {
+  from {
+    transform: scale(0.94);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask-mic[data-recording="true"]::after {
+    animation: none;
+  }
+}
+/* Side-nav link to the panel: visible on every step next to the steps.
+ * Below 880px the side box is hidden like .base; the panel closes each step. */
+.steps .ask-jump {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  margin-top: 8px;
+  padding: 8px 18px;
+  border: 2px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-primary);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.steps .ask-jump:hover {
+  background: var(--color-primary-soft);
+}
+@media (max-width: 880px) {
+  .steps .ask-jump {
+    display: none;
+  }
+}
+/* === end Pregúntale al pliego === */
