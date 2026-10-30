@@ -1623,9 +1623,9 @@ Guard reset verificado en codigo: seed_demo.py rechaza
 usa TemporaryDirectory (no toca storage real).
 ## V6 issue #6 offline final (30-oct-2026, Windows, lead)
 
-HEAD offline: 6e373f1 (main, limpio). Olas: 5c69fec (docs+higiene),
+HEAD offline: ffa7c78 (main, limpio). Olas: 5c69fec (docs+higiene),
 c869705 (FIX UX F1-F9 red->green), b28558a (F10+shots), 53c1d75
-(SHAs u1/u2) + 6e373f1 (este log + freeze).
+(SHAs u1/u2) + ffa7c78 (este log + freeze).
 Issue #6: BIDLAB_ISSUE_CIERRE_FINAL_META_2026.md (343 lineas),
 leido entero; S1-S7 ejecutados, S8 pendiente del autor.
 
