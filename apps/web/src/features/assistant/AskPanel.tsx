@@ -3,7 +3,7 @@
 // (motor de precios, requisitos revisados, citas del pliego).
 
 import { useEffect, useReducer, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ApiError,
   answerQuestion,
@@ -108,6 +108,7 @@ export function AskPanel({ workspace }: { workspace: Workspace }) {
   // A recording stopped by leaving the page must never be sent (and paid for).
   const aliveRef = useRef(true);
 
+  const queryClient = useQueryClient();
   const capsQuery = useQuery({ queryKey: ["capabilities"], queryFn: ({ signal }) => getCapabilities(signal) });
   const available = capsQuery.data?.meta_configured === true;
 
@@ -121,18 +122,19 @@ export function AskPanel({ workspace }: { workspace: Workspace }) {
     scopeId: scope?.id ?? "none",
     companyId: companyId ?? "none",
   });
-  const companyQuery = useQuery({
-    queryKey: ["company", companyId],
-    queryFn: ({ signal }) => getCompany(companyId ?? "", signal),
-    enabled: companyId !== null,
-  });
-  const pricingContext = buildEvaluationRequest({
-    scope,
-    rule,
-    companyId,
-    companyRevision: companyQuery.data?.revision,
-    h: drafts.pricing.h,
-  });
+  // The company revision is read when the user asks, never observed: a live
+  // observer here (mounted on every step) would keep a cached revision that
+  // the cost editor then sends back, turning a fresh save into a 409.
+  const canPrice = scope !== null && rule !== null && companyId !== null;
+  async function currentPricingContext() {
+    if (!canPrice) return null;
+    const company = await queryClient.fetchQuery({
+      queryKey: ["company", companyId],
+      queryFn: ({ signal }) => getCompany(companyId ?? "", signal),
+      staleTime: 0,
+    });
+    return buildEvaluationRequest({ scope, rule, companyId, companyRevision: company.revision, h: drafts.pricing.h });
+  }
 
   function stopTracks() {
     if (timerRef.current !== null) window.clearInterval(timerRef.current);
@@ -245,6 +247,7 @@ export function AskPanel({ workspace }: { workspace: Workspace }) {
     }
     dispatch({ type: "ask", question });
     try {
+      const pricingContext = await currentPricingContext();
       const answer = await answerQuestion(
         tenderId,
         {
@@ -370,7 +373,7 @@ export function AskPanel({ workspace }: { workspace: Workspace }) {
             disabled={disabled}
             placeholder="Por ejemplo: ¿Y si bajo un 12 %?"
             aria-describedby="ask-question-help"
-            className="mt-2 block min-h-[56px] w-full rounded-lg border border-border bg-white px-3 py-2 text-base"
+            className="mt-2 block min-h-[56px] w-full rounded-lg border-2 border-control bg-white px-3 py-2 text-base"
           />
           <p id="ask-question-help" className="m-0 mt-1 text-sm text-muted">
             {state.kind === "answering" ? state.question.length : state.draft.length} de {MAX_QUESTION} caracteres. Pulsa Intro para preguntar.
@@ -381,7 +384,7 @@ export function AskPanel({ workspace }: { workspace: Workspace }) {
         </form>
       </div>
 
-      {available && !pricingContext && (
+      {available && !canPrice && (
         <p className="mt-3 text-base text-muted">
           Para preguntar por precios, BidLab necesita tu empresa y la fórmula de puntos en la pestaña Precio.
         </p>
