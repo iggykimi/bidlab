@@ -56,7 +56,7 @@ import secrets
 import struct
 import unicodedata
 from dataclasses import dataclass, field
-from decimal import ROUND_CEILING, Decimal, InvalidOperation
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
 from functools import partial
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -334,6 +334,65 @@ def _parse_percent(raw: str) -> Decimal:
 
 def _plain(value: Decimal) -> str:
     return format(value.normalize(), "f")
+
+
+def _group_integer_es(integer: str) -> str:
+    grouped = ""
+    while len(integer) > 3:
+        grouped = "." + integer[-3:] + grouped
+        integer = integer[:-3]
+    return integer + grouped
+
+
+def _format_eur_es(raw: str) -> str:
+    try:
+        value = Decimal(raw)
+    except InvalidOperation:
+        return raw
+    if not value.is_finite():
+        return raw
+    try:
+        quantized = value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except InvalidOperation:
+        return raw
+    text = format(quantized, "f")
+    sign = "-" if text.startswith("-") else ""
+    integer, _, fraction = text.lstrip("-").partition(".")
+    return f"{sign}{_group_integer_es(integer)},{(fraction + '00')[:2]}"
+
+
+def _format_points_es(raw: str) -> str:
+    try:
+        value = Decimal(raw)
+    except InvalidOperation:
+        return raw
+    if not value.is_finite():
+        return raw
+    text = format(value, "f")
+    sign = "-" if text.startswith("-") else ""
+    integer, _, fraction = text.lstrip("-").partition(".")
+    fraction = fraction.rstrip("0")
+    grouped = _group_integer_es(integer)
+    return f"{sign}{grouped},{fraction}" if fraction else f"{sign}{grouped}"
+
+
+def _localize_answer_text(answer: str, figures: list[FigureOutput]) -> str:
+    replacements: dict[str, str] = {}
+    for figure in figures:
+        if figure.unit == "eur":
+            formatted = _format_eur_es(figure.value)
+        elif figure.unit == "points":
+            formatted = _format_points_es(figure.value)
+        else:
+            continue
+        if formatted != figure.value:
+            replacements.setdefault(figure.value, formatted)
+    if not replacements:
+        return answer
+    pattern = re.compile(
+        "|".join(re.escape(raw) for raw in sorted(replacements, key=len, reverse=True))
+    )
+    return pattern.sub(lambda match: replacements[match.group(0)], answer)
 
 
 def _evaluate_discount(
@@ -999,7 +1058,7 @@ def answer(session: Session, tender_id: str, payload: g.AssistantAnswerRequest) 
         )
         if turn is None:
             return {
-                "answer": bound.answer,
+                "answer": _localize_answer_text(bound.answer, bound.figures),
                 "figures": [figure.model_dump(mode="json") for figure in bound.figures],
                 "tools_used": registry.tools_used[: MAX_TOOL_CALLS_PER_TURN * 2],
                 "mode": "live",

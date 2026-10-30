@@ -206,13 +206,7 @@ def _sub_score(a: str, b: str) -> str:
 
 
 def _group_thousands(integer: str) -> str:
-    """Thousands dots, es-ES style, mirroring the frontend Intl formatter.
-
-    Like Intl es-ES (minimumGroupingDigits 2), integers with 4 or fewer
-    digits carry no dot: "5916", but "11.833".
-    """
-    if len(integer) <= 4:
-        return integer
+    """Thousands dots, es-ES style, mirroring Intl es-ES default grouping."""
     grouped = ""
     while len(integer) > 3:
         grouped = "." + integer[-3:] + grouped

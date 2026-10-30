@@ -54,7 +54,7 @@ def test_same_score_higher_profit_keeps_golden_sentence() -> None:
         "0",
     )
     assert code == "higher_profit_same_score"
-    assert text == "«Demo 10» conserva 5916,80\u00a0€ más de beneficio con los mismos puntos."
+    assert text == "«Demo 10» conserva 5.916,80\u00a0€ más de beneficio con los mismos puntos."
 
 
 def test_same_profit_names_same_benefit() -> None:

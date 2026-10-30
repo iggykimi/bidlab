@@ -220,6 +220,52 @@ def test_answer_round_trip_binds_engine_and_pliego_figures(
     assert replay.json()["figures"] == body["figures"]
 
 
+def test_answer_text_localizes_bound_figures_es_es(
+    live_env: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent: list[dict[str, Any]] = []
+
+    def _model(url: str, **kwargs: Any) -> httpx.Response:
+        sent.append(kwargs["json"])
+        if len(sent) == 1:
+            return httpx.Response(
+                200,
+                json=_tool_turn(
+                    ("evaluate_discount", {"discount_percent": "12", "change_points": None}),
+                ),
+            )
+        results = _tool_results(kwargs["json"])
+        figures = results["evaluate_discount"]["figures"]
+        price = next(f for f in figures if f["label"] == "Precio de tu oferta sin impuestos")
+        profit = next(f for f in figures if f["label"] == "Tu beneficio")
+        points = next(f for f in figures if f["unit"] == "points")
+        answer = (
+            f"Con esa rebaja tu precio es {price['value']}, "
+            f"tu beneficio {profit['value']} y tus puntos {points['value']}."
+        )
+        return httpx.Response(
+            200,
+            json=_final(
+                answer,
+                [
+                    {**price, "source": "engine", "page": None, "citation_id": None},
+                    {**profit, "source": "engine", "page": None, "citation_id": None},
+                    {**points, "source": "engine", "page": None, "citation_id": None},
+                ],
+            ),
+        )
+
+    monkeypatch.setattr(httpx, "post", _model)
+    res = live_env.post(ANSWERS, json=_ask(), headers=_headers("k-ask-es-format"))
+    assert res.status_code == 201, res.text
+    body = g.AssistantAnswer.model_validate(res.json()).model_dump(mode="json")
+    assert "14.135,68" in body["answer"]
+    assert "14135.68" not in body["answer"]
+    assert "49.000000000000" not in body["answer"]
+    profit_figure = next(f for f in body["figures"] if f["label"] == "Tu beneficio")
+    assert profit_figure["value"] == "14135.68"
+
+
 def test_answer_accepts_null_word_for_absent_tool_arg(
     live_env: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
