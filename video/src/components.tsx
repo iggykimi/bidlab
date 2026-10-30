@@ -161,7 +161,8 @@ export function Caption({
         boxShadow: "0 18px 50px rgba(24,36,59,0.22)",
         fontFamily: FONT,
         color: C.ink,
-        opacity: enter * exit,
+        // Fully opaque at rest (exit is 1 until fade-out); entrance is slide-only so no ghosting.
+        opacity: exit,
         transform: `translateY(${interpolate(enter, [0, 1], [40, 0])}px)`,
       }}
     >

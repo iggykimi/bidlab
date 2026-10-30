@@ -63,7 +63,7 @@ function Problem() {
     <AbsoluteFill>
       <Sequence durationInFrames={s(6.6)}>
         <Shot src="summary.png" />
-        <Caption at={0.6} until={6.4} title="Public tenders are written for lawyers" sub="Dozens of pages, one small firm, one deadline. Often one person decides, and many are over 60." />
+        <Caption at={0.6} until={6.4} title="Public tenders are written for lawyers" sub="Dozens of pages, one small firm, one deadline." />
       </Sequence>
       <Sequence from={s(6.6)}>
         <Shot
@@ -262,7 +262,7 @@ function Proof() {
   );
 }
 
-/** "The model proposes, Python decides": the architecture in one line. */
+/** "The model proposes. You approve. Python decides.": the architecture in one line. */
 function Pipeline() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -277,13 +277,13 @@ function Pipeline() {
   return (
     <AbsoluteFill style={{ background: `rgba(247,248,250,${bg})`, fontFamily: FONT }}>
       <div style={{ position: "absolute", top: 200, left: 120 }}>
-        <Headline text="The model proposes. Python decides. You approve." size={64} />
+        <Headline text="The model proposes. You approve. Python decides." size={64} />
       </div>
-      <div style={{ position: "absolute", top: 470, left: 100, right: 100, display: "flex", gap: 26, alignItems: "stretch" }}>
-        {steps.map(([title, sub], i) => {
+      <div style={{ position: "absolute", top: 470, left: 100, right: 100, display: "flex", gap: 16, alignItems: "stretch" }}>
+        {steps.flatMap(([title, sub], i) => {
           const e = spring({ frame: frame - (0.6 + i * 0.45) * fps, fps, config: { damping: 15 } });
           const meta = i === 1;
-          return (
+          const card = (
             <div
               key={title}
               style={{
@@ -301,6 +301,13 @@ function Pipeline() {
               <div style={{ fontSize: 27, marginTop: 10, opacity: 0.85, lineHeight: 1.3 }}>{sub}</div>
             </div>
           );
+          if (i === steps.length - 1) return [card];
+          return [
+            card,
+            <div key={`${title}-arrow`} style={{ display: "flex", alignItems: "center", fontSize: 34, fontWeight: 800, color: C.muted, opacity: e }}>
+              {"→"}
+            </div>,
+          ];
         })}
       </div>
     </AbsoluteFill>
