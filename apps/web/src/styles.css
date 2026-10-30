@@ -1,13 +1,59 @@
 @import "tailwindcss";
 
+/*
+ * Design system for the primary user: the owner of a small Spanish firm,
+ * often 55-75 years old, deciding alone whether a public tender is worth
+ * a bid. Every token below answers to that person, not to a style trend.
+ *
+ * 1. Reading floor. Nothing a user must read is smaller than 16px; body
+ *    copy is 18px. Tailwind's text-xs/text-sm are re-based upward here
+ *    instead of being edited in ~300 call sites, so the floor is a single
+ *    decision (NN/g, "Usability for Seniors": 16px minimum, larger body).
+ * 2. Typeface. Atkinson Hyperlegible Next was drawn by the Braille
+ *    Institute for low-vision readers: distinct I/l/1, 0/O and open
+ *    counters. In a pricing tool, a misread digit is a wrong bid, so the
+ *    figures come from Inter with a plain zero (see "BidLab Figures").
+ * 3. Contrast. Text meets WCAG 2.2 AAA (7:1) on paper and white; form
+ *    controls get their own border token at >= 3:1 (SC 1.4.11), because
+ *    a field you cannot see is a field you do not fill in.
+ * 4. Targets. Every control is >= 48px tall (buttons in ui.tsx), above the
+ *    WCAG 2.5.8 minimum, for hands that tremble or a trackpad.
+ * 5. One idea per surface, plain Spanish, the same word for the same
+ *    action everywhere (docs/copy-style-es.md): recognition over recall.
+ * 6. Motion only confirms what the user just did, and stops under
+ *    prefers-reduced-motion (see lib/motion.ts).
+ */
+/* Digits only (unicode-range), from Inter: Atkinson's zero carries a slash,
+ * which reads as "Ø" in euro amounts for a Spanish reader. Letters stay
+ * Atkinson; figures look like the ones on a bank statement. */
+@font-face {
+  font-family: "BidLab Figures";
+  src: url("../../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+    format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
 @theme {
+  --font-sans: "BidLab Figures", "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Re-based Tailwind steps (see 1.): xs 14px for incidental metadata only,
+   * sm 16px as the reading floor. Line heights keep ~1.5 for body copy. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.55;
   /* Oficina tokens (diseno_anterior/sistema/tokens.json). Names keep the
-   * existing code working; values are the mock, verified byte for byte. */
+   * existing code working; muted/line/control were darkened for (3.). */
   --color-paper: #f7f8fa;
   --color-surface: #f7f8fa;
   --color-white: #ffffff;
   --color-ink: #18243b;
-  --color-muted: #4c5d73;
+  --color-muted: #3b4a5e;
+  --color-control: #6b7a90;
   --color-primary: #2748b8;
   --color-primary-hover: #1e3fa0;
   --color-primary-ink: #162d75;
@@ -44,7 +90,7 @@ html.font-large {
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.125rem;
   line-height: 1.55;
   margin: 0;
@@ -128,7 +174,7 @@ a[href^="http"]::after {
   }
   .journey-number {
     display: block;
-    font-size: 0.889rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--color-muted);
   }
@@ -144,7 +190,7 @@ a[href^="http"]::after {
   }
   .summary-journey p {
     margin: 4px 0 0;
-    font-size: 0.889rem;
+    font-size: 1rem;
     color: var(--color-muted);
   }
   .example-presets {
@@ -158,7 +204,7 @@ a[href^="http"]::after {
     font-size: 1rem;
   }
   .example-presets button {
-    font-size: 0.889rem;
+    font-size: 1rem;
     padding: 10px 12px;
   }
   .offer-composition {
@@ -243,11 +289,11 @@ a[href^="http"]::after {
   }
   small,
   .small {
-    font-size: 0.889rem;
+    font-size: 1rem;
   }
 
   .eyebrow {
-    font-size: 0.889rem;
+    font-size: 1rem;
     font-weight: 650;
     color: var(--color-primary);
     margin: 0 0 12px;
@@ -262,7 +308,7 @@ a[href^="http"]::after {
     margin-bottom: 0;
   }
   .proof {
-    font-size: 0.889rem;
+    font-size: 1rem;
     color: var(--color-muted);
     margin-top: 16px;
   }
@@ -321,7 +367,7 @@ a[href^="http"]::after {
 
   .fineline {
     color: var(--color-muted);
-    font-size: 0.889rem;
+    font-size: 1rem;
     margin: 12px 0 0;
   }
 
@@ -385,7 +431,7 @@ a[href^="http"]::after {
     border-radius: 8px;
     padding: 10px 18px;
     font-weight: 650;
-    font-size: 0.889rem;
+    font-size: 1rem;
     line-height: 1.4;
     text-decoration: none;
     display: inline-flex;
@@ -401,7 +447,7 @@ a[href^="http"]::after {
   .disclosure {
     padding: 10px 32px;
     background: var(--color-soft);
-    font-size: 0.889rem;
+    font-size: 1rem;
   }
   .footer-help {
     padding-top: 0;
@@ -440,7 +486,7 @@ a[href^="http"]::after {
     display: inline-flex;
     align-items: center;
     padding: 8px 0;
-    font-size: 0.889rem;
+    font-size: 1rem;
   }
   /* BL-V2-03: external chart legend (text carries meaning). */
   .curve-legend {
@@ -450,7 +496,7 @@ a[href^="http"]::after {
     list-style: none;
     margin: 8px 0 0;
     padding: 0;
-    font-size: 0.889rem;
+    font-size: 1rem;
   }
   .curve-legend li {
     display: inline-flex;
@@ -539,7 +585,7 @@ a[href^="http"]::after {
     background: var(--color-white);
     color: var(--color-primary);
     padding: 10px 18px;
-    font-size: 0.889rem;
+    font-size: 1rem;
     font-weight: 650;
     line-height: 1.4;
     text-decoration: none;
@@ -557,9 +603,13 @@ a[href^="http"]::after {
     display: grid;
     gap: 10px;
   }
+  /* The five steps are the user's map of the file. All five stay visible
+   * above the fold at 1280x720 (56px each, still above the 48px target),
+   * and the current one is marked by a bar and weight, not by tint alone
+   * (WCAG 1.4.1: colour is never the only cue). */
   .steps ul {
     display: grid;
-    gap: 10px;
+    gap: 4px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -569,23 +619,25 @@ a[href^="http"]::after {
   }
   .steps button {
     text-align: left;
-    color: var(--color-muted);
+    color: var(--color-ink);
     border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
     cursor: pointer;
-    min-height: 68px;
-    padding: 10px 18px;
-    font-size: 0.889rem;
-    font-weight: 650;
+    min-height: 56px;
+    padding: 8px 18px;
+    font-size: 1.0625rem;
+    font-weight: 600;
     line-height: 1.4;
   }
   .steps button:hover {
-    filter: brightness(0.95);
+    background: var(--color-white);
   }
   .steps button[aria-current="step"] {
     background: var(--color-soft);
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
+    font-weight: 800;
+    box-shadow: inset 4px 0 0 var(--color-primary);
   }
   .stepnum {
     margin-right: 14px;
@@ -601,11 +653,11 @@ a[href^="http"]::after {
     text-align: left;
     background: var(--color-primary-soft);
     padding: 6px 8px;
-    font-size: 12px;
+    font-size: 1rem;
   }
   .steps .base {
     padding: 20px 18px;
-    font-size: 0.889rem;
+    font-size: 1rem;
   }
   .steps .base p {
     margin: 8px 0 0;
@@ -674,7 +726,7 @@ a[href^="http"]::after {
     background: var(--color-soft);
     border-radius: 6px;
     color: var(--color-primary);
-    font-size: 0.889rem;
+    font-size: 1rem;
     font-weight: 650;
     white-space: normal;
   }
@@ -892,7 +944,7 @@ a[href^="http"]::after {
     font: inherit;
     color: var(--color-ink);
     background: var(--color-white);
-    border: 2px solid var(--color-line);
+    border: 2px solid var(--color-control);
     border-radius: 8px;
     min-height: 48px;
     padding: 10px 14px;
@@ -1045,7 +1097,7 @@ a[href^="http"]::after {
     font-size: 16px;
   }
   .disclosure {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.45;
     padding: 10px 20px;
   }
@@ -1304,7 +1356,7 @@ a[href^="http"]::after {
   height: 1.5rem;
   border-radius: 9999px;
   border: 2px solid currentColor;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -1322,7 +1374,7 @@ a[href^="http"]::after {
 }
 .trace-head {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 .trace-head a {
   font-weight: 700;
@@ -1334,7 +1386,7 @@ a[href^="http"]::after {
 }
 .trace-detail {
   margin: 0.15rem 0 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 /* Decision spotlight (BL-V3 P0-04): verdict first, conditions attached. */
@@ -1353,7 +1405,7 @@ a[href^="http"]::after {
   min-width: 0;
 }
 .spotlight-figures dt {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--color-muted);
 }
 .spotlight-figures dd {
@@ -1363,7 +1415,7 @@ a[href^="http"]::after {
 }
 .spotlight-ctas {
   margin: 0.75rem 0 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 .spotlight-ctas a {
   font-weight: 700;
@@ -1394,7 +1446,7 @@ a[href^="http"]::after {
 .coverage-strip > li {
   min-width: 1.75rem;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   border: 1px solid var(--color-line);
   border-radius: 0.35rem;

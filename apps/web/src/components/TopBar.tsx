@@ -42,8 +42,10 @@ export function TopBar() {
           Nueva licitación
         </Link>
       </header>
+      {/* Trust statement first, in plain words: an older user's first
+       * question about an AI tool is "where do my papers go?". */}
       <div className="disclosure">
-        Programa local · Funciona sin conexión · Sin llamadas a Meta
+        Todo se guarda en tu ordenador. La IA de Meta solo lee un pliego si tú lo autorizas.
       </div>
     </>
   );

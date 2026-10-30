@@ -274,7 +274,9 @@ export function RequirementsTab({ workspace }: Props) {
                   <tr className="req-group">
                     <th scope="rowgroup" colSpan={5}>
                       {groupLabel}
-                      {groupOperator === "OR" ? " (basta con cumplir una)" : ""}
+                      {groupOperator === "OR" && !/basta con cumplir/i.test(groupLabel)
+                        ? " (basta con cumplir una)"
+                        : ""}
                     </th>
                   </tr>
                 )}
