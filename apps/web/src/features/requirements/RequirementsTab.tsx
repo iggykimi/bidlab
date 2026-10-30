@@ -16,6 +16,7 @@ import { formatEUR } from "../../lib/format";
 import { Button } from "../../components/ui";
 import { TechnicalDetails } from "../../components/TechnicalDetails";
 import { EvidenceDrawer, type EvidenceTarget } from "../evidence/EvidenceDrawer";
+import { ClarificationPanel } from "./ClarificationPanel";
 
 interface Props {
   workspace: Workspace;
@@ -134,6 +135,7 @@ const COST_LINK = "?tab=precio#tu-coste" as const;
 
 export function RequirementsTab({ workspace }: Props) {
   const [evidence, setEvidence] = useState<EvidenceTarget | null>(null);
+  const [asking, setAsking] = useState<{ leaf: RequirementLeaf; citation: Citation } | null>(null);
   const navigate = useNavigate();
   const session = loadSession();
   const scope = workspace.tender.scopes[0] ?? null;
@@ -264,6 +266,7 @@ export function RequirementsTab({ workspace }: Props) {
               const item = verdictById.get(leaf.id);
               const citations = citationsForLeaf(workspace, leaf);
               const apartado = groupLabel;
+              const firstCitation = citations[0];
               // Miller/H6 chunking: one band per criterion group; the old
               // Apartado column moves here so rows stop repeating it.
               const prevGroup = index === 0 ? null : (rows[index - 1]?.groupLabel ?? null);
@@ -340,6 +343,18 @@ export function RequirementsTab({ workspace }: Props) {
                     ) : (
                       "Aún no podemos comprobar este requisito."
                     )}
+                    {/* An open requirement with a cited page can become a formal
+                        question to the contracting body (ClarificationPanel). */}
+                    {item && item.verdict !== "met" && firstCitation && (
+                      <Button
+                        variant="secondary"
+                        className="mt-2"
+                        data-testid={`clarify-${leaf.id}`}
+                        onClick={() => setAsking({ leaf, citation: firstCitation })}
+                      >
+                        Pedir aclaración <span className="sr-only">sobre {leaf.label}</span>
+                      </Button>
+                    )}
                   </td>
                 </tr>
                 </Fragment>
@@ -394,6 +409,16 @@ export function RequirementsTab({ workspace }: Props) {
             : []),
         ]}
       />
+
+      {asking && (
+        <ClarificationPanel
+          key={`${asking.leaf.id}:${asking.citation.id}`}
+          tenderId={workspace.tender.id}
+          leaf={asking.leaf}
+          citation={asking.citation}
+          onClose={() => setAsking(null)}
+        />
+      )}
 
       {evidence && (
         <EvidenceDrawer

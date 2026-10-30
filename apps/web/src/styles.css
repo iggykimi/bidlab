@@ -1121,8 +1121,10 @@ a[href^="http"]::after {
   .backrow {
     display: none;
   }
+  /* Phone: the rebate field must stay in the first screen (R06) now that
+   * text is larger, so the chrome around it gives up spacing, not size. */
   .workhead {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
   .workhead .eyebrow {
     margin-top: 0;
@@ -1140,8 +1142,8 @@ a[href^="http"]::after {
   .steps ul {
     display: flex;
     overflow-x: auto;
-    margin-bottom: 24px;
-    padding-bottom: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
     gap: 4px;
   }
   .steps li {
