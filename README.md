@@ -39,7 +39,7 @@ Screens: [two-minute tour](docs/demo/README.md).
 | **Muse Spark 1.3**, Meta Model API, text + page image in one request, strict JSON Schema output | [`services/meta_adapter.py`](apps/api/bidlab/services/meta_adapter.py), [`services/jobs.py`](apps/api/bidlab/services/jobs.py) | Extracts observations from a bounded page packet. Every answer is re-validated, bound to the pages and image ids that were sent, and stored with its receipt (model, request id, tokens, cost, latency). |
 | **Muse Spark**, structured drafting | [`services/clarification.py`](apps/api/bidlab/services/clarification.py) | Writes the clarification question for an open requirement. The prompt is built server-side from one stored citation; the draft must echo that page and quote or it is rejected. |
 | **muse-voice-transcribe** + **Muse Spark tool calling** | [`services/assistant.py`](apps/api/bidlab/services/assistant.py) | «Pregúntale al pliego»: speak a question, the model answers by calling BidLab's own engine and citation tools. Every number in the answer must come from a tool result. |
-| **Muse Code** | [`AGENTS.md`](AGENTS.md) | BidLab was built with Meta's coding agent. `AGENTS.md` is the instruction file it worked from: invariants, gates and the honesty rules below. |
+| **Muse Code** | [`AGENTS.md`](AGENTS.md) | BidLab was built mainly with Meta's coding agent. `AGENTS.md` is the instruction file it worked from: invariants, gates and the honesty rules below. |
 
 **Guardrails around every model call**
 
