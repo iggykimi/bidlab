@@ -34,12 +34,12 @@ function showRivalPrice(raw: string): string {
   return norm === null ? raw : formatEurosExact(norm);
 }
 
-export function DiscountSection({ state, showExamples = false }: Props & { showExamples?: boolean }) {
+export function DiscountSection({ state }: Props) {
   const { h, setField, fieldErrors, pending, error, rawError, inputsValid } = state;
   const rawCode = errorCodeOnly(rawError);
   return (
     <Card aria-label="¿Cuánto quieres rebajar?">
-      <h2 className="text-lg font-semibold">¿Cuánto quieres rebajar?</h2>
+      <h2>¿Cuánto quieres rebajar?</h2>
       <p data-testid="discount-readout" className="tnum mt-2 text-base font-semibold">
         Rebaja: {formatPercent(discountPercentToRate(h.discountPct))}
       </p>
@@ -105,40 +105,6 @@ export function DiscountSection({ state, showExamples = false }: Props & { showE
           </span>
         )}
       </p>
-      {showExamples && (
-        <fieldset className="example-presets mt-5">
-          <legend>Explora el ejemplo</legend>
-          <p className="text-sm text-muted">
-            Cambia los supuestos con un clic. Mantienes tu coste y tus pruebas guardadas.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {[
-              { pct: 10, label: "10 % · Comparar", id: "demo-case-10" },
-              { pct: 15, label: "15 % · Comparar", id: "demo-case-15" },
-              { pct: 30, label: "30 % · Revisar costes", id: "demo-case-30" },
-            ].map((example) => (
-              <Button
-                key={example.id}
-                variant="secondary"
-                data-testid={example.id}
-                onClick={() => state.applyHypotheses({ ...DEFAULTS, discountPct: example.pct })}
-              >
-                {example.label}
-              </Button>
-            ))}
-            <Button
-              variant="secondary"
-              data-testid="demo-case-incomplete"
-              onClick={() => state.applyHypotheses({ ...DEFAULTS, complete: false })}
-            >
-              Rivales incompletos
-            </Button>
-          </div>
-          <p className="mt-2 text-sm text-muted">
-            Supones dos rivales: {formatEurosExact(DEFAULTS.rivalAPrice)} y {formatEurosExact(DEFAULTS.rivalBPrice)}. Ningún acceso guarda una prueba.
-          </p>
-        </fieldset>
-      )}
       {state.result && <OfferComposition result={state.result} stale={state.resultStale} />}
       {error && inputsValid && (
         <Alert tone="error" className="mt-2">
@@ -146,6 +112,46 @@ export function DiscountSection({ state, showExamples = false }: Props & { showE
           {rawCode ? ` (código: ${rawCode})` : ""}
         </Alert>
       )}
+    </Card>
+  );
+}
+
+/** Demo shortcuts, kept apart from the rebate control so «Guardar» sits right under it. */
+export function ExamplePresetsSection({ state }: Props) {
+  return (
+    <Card aria-label="Explora el ejemplo">
+      <fieldset className="example-presets">
+        <legend>Explora el ejemplo</legend>
+        <p className="text-sm text-muted">
+          Cambia los supuestos con un clic. Mantienes tu coste y tus pruebas guardadas.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            { pct: 10, label: "10 % · Comparar", id: "demo-case-10" },
+            { pct: 15, label: "15 % · Comparar", id: "demo-case-15" },
+            { pct: 30, label: "30 % · Revisar costes", id: "demo-case-30" },
+          ].map((example) => (
+            <Button
+              key={example.id}
+              variant="secondary"
+              data-testid={example.id}
+              onClick={() => state.applyHypotheses({ ...DEFAULTS, discountPct: example.pct })}
+            >
+              {example.label}
+            </Button>
+          ))}
+          <Button
+            variant="secondary"
+            data-testid="demo-case-incomplete"
+            onClick={() => state.applyHypotheses({ ...DEFAULTS, complete: false })}
+          >
+            Rivales incompletos
+          </Button>
+        </div>
+        <p className="mt-2 text-sm text-muted">
+          Supones dos rivales: {formatEurosExact(DEFAULTS.rivalAPrice)} y {formatEurosExact(DEFAULTS.rivalBPrice)}. Ningún acceso guarda una prueba.
+        </p>
+      </fieldset>
     </Card>
   );
 }

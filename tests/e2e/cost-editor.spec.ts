@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
-import { API_BASE, installOfflineGuard, loadDemo, openPricing, openTab, takeConsoleFailures } from "./helpers";
+import { API_BASE, installOfflineGuard, loadDemo, openPricing, openPricingAdvanced, openTab, takeConsoleFailures } from "./helpers";
 
 // C10: any console.error / pageerror fails the test.
 test.afterEach(() => {
@@ -38,6 +38,7 @@ test("cost editor save reprices profit and bumps the company revision", async ({
   await openPricing(page);
   await expect(page.getByTestId("profit-net")).toContainText("22.419,20");
 
+  await openPricingAdvanced(page);
   await page.getByText("Identificadores y códigos").click();
   const revText = await page.getByText(/company-demo rev\. \d+/).textContent();
   const rev = Number(/rev\. (\d+)/.exec(revText ?? "")?.[1]);

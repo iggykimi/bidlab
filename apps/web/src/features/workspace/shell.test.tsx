@@ -191,14 +191,10 @@ describe("shell: facts and pricing", () => {
   });
 
   it("describes the price formula in words with the backend maximum", () => {
-    expect(html).toContain("¿Cómo suma puntos tu oferta?");
-    expect(html).toContain("Cuanto más barata tu oferta, más puntos (hasta 49).");
+    expect(html).toContain("El precio da hasta 49 puntos. Cuanto más barata tu oferta, más puntos.");
   });
 
-  it("reduces live analysis to one honest line without a fake action", () => {
-    expect(html).toContain(
-      "El asistente de IA no está disponible en esta demo: aquí los datos ya vienen revisados."
-    );
+  it("offers no live-analysis action on the summary", () => {
     expect(html).not.toContain("live-attempt");
     expect(html).not.toContain("Intentar análisis en vivo");
   });
@@ -276,7 +272,6 @@ describe("shell: unknown and empty states", () => {
     const html = renderSummary(emptyWorkspace());
     expect(html).toContain("Sin determinar");
     expect(html).toContain("Los puntos de precio aún no están revisados.");
-    expect(html).toContain("Aún no hay fórmula de puntos revisada.");
     expect(html).not.toContain("NaN");
     expect(html).not.toContain("undefined");
   });
@@ -324,7 +319,7 @@ describe("shell: unknown and empty states", () => {
     const firstLinear = linear.pricing_rules[0];
     if (!firstLinear) throw new Error("fixture must carry one rule");
     firstLinear.template_id = "linear_discount";
-    expect(renderSummary(linear)).toContain("Tu oferta compite por precio (hasta 49 puntos).");
+    expect(renderSummary(linear)).toContain("El precio da hasta 49 puntos.");
 
     const blocked = makeWorkspace();
     const firstBlocked = blocked.pricing_rules[0];
@@ -356,11 +351,9 @@ describe("shell: word budget (≤20 per sentence)", () => {
 
   it("keeps every key sentence within twenty words", () => {
     for (const text of [
-      "El asistente de IA no está disponible en esta demo: aquí los datos ya vienen revisados.",
-      "Cuanto más barata tu oferta, más puntos (hasta 49).",
       "El precio da hasta 49 puntos.",
-      "Aquí solo calculas los puntos del precio.",
-      "Revisa los demás criterios en el pliego de condiciones (PCAP).",
+      "Cuanto más barata tu oferta, más puntos.",
+      "Los demás criterios están en el pliego de condiciones (PCAP).",
       "Incluye todo el periodo posible, no solo 24 meses.",
       "Datos del 25 de octubre de 2026.",
       "7 % calculado a partir de ambas cifras oficiales",
@@ -369,7 +362,6 @@ describe("shell: word budget (≤20 per sentence)", () => {
     }
     for (const text of [
       "Los puntos de precio aún no están revisados.",
-      "Aún no hay fórmula de puntos revisada.",
     ]) {
       expectShortSentence(emptyHtml, text);
     }

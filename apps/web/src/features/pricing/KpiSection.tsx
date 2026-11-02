@@ -13,7 +13,7 @@ import {
   formatSignedEurosExact,
 } from "../../lib/format";
 import { SourceCitations } from "./SourceCitations";
-import { anomalyVerdictEs, citationPages } from "./sources";
+import { anomalyVerdictEs } from "./sources";
 import { nombreImpuesto } from "../../lib/taxKind";
 import type { PricingState } from "./usePricingState";
 
@@ -55,7 +55,6 @@ export function KpiSection({ workspace, state }: Props) {
   const h = state.resultHypotheses ?? state.h;
   const rebate = formatPercent(discountPercentToRate(h.discountPct));
   const pblNet = workspace.tender.pbl_net;
-  const pblGross = workspace.tender.pbl_gross;
   const impuesto = nombreImpuesto(workspace.tender.scopes[0]?.basis.tax_kind ?? "unknown");
   const flagged = result?.anomaly.status === "possible_justification_required";
   const scoreDefined = result?.score.status === "defined" && result.score.value !== null;
@@ -68,12 +67,12 @@ export function KpiSection({ workspace, state }: Props) {
     <section
       aria-label="Indicadores"
       aria-busy={pending || resultStale}
-      className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2"
+      className="grid grid-cols-1 items-start gap-3"
     >
       {resultStale && (
         <p
           data-testid="stale-result"
-          className="rounded-lg border border-alert bg-warn-bg p-2 text-sm sm:col-span-2"
+          className="rounded-lg border border-alert bg-warn-bg p-2 text-sm"
         >
           Actualizando con tu último cambio… Estas cifras son del cálculo anterior.
         </p>
@@ -86,19 +85,18 @@ export function KpiSection({ workspace, state }: Props) {
           : "Calculando tu resultado…"}
       </span>
       <Card as="div" pad="sm">
-        <h2 className="text-sm font-medium text-muted">Tu oferta (sin {impuesto})</h2>
+        <h3 className="mb-1 text-base font-semibold text-muted">Tu oferta (sin {impuesto})</h3>
         <p data-testid="price-net" className="tnum text-2xl font-bold">
           <Crossfade key={result ? result.price_net : "none"}>
             {result ? formatEurosExact(result.price_net) : "—"}
           </Crossfade>
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           {result ? `Con una rebaja del ${rebate}.` : "Sin resultado todavía."}
         </p>
         <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
           <span>
-            Fuente: presupuesto de salida {pblNet ? formatEurosHeadline(pblNet) : "—"} sin {impuesto}
-            {pblGross ? ` (${formatEurosHeadline(pblGross)} con ${impuesto})` : ""}
+            Sobre el presupuesto de {pblNet ? formatEurosHeadline(pblNet) : "—"} sin {impuesto}
             {state.pblMeta ? (
               <>
                 {" · "}
@@ -117,25 +115,25 @@ export function KpiSection({ workspace, state }: Props) {
         </p>
       </Card>
       <Card as="div" pad="sm">
-        <h2 className="text-sm font-medium text-muted">Tu beneficio</h2>
+        <h3 className="mb-1 text-base font-semibold text-muted">Tu beneficio</h3>
         <p data-testid="profit-net" className="tnum text-2xl font-bold">
           <Crossfade key={result?.profit_net ?? "none"}>
             {result?.profit_net ? formatSignedEurosExact(result.profit_net) : "—"}
           </Crossfade>
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           {result?.margin_rate
-            ? `Margen sobre ventas (${formatPercent(result.margin_rate)}). Es tu beneficio dividido entre tu precio.`
-            : "Margen sobre ventas sin determinar."}
+            ? `Margen del ${formatPercent(result.margin_rate)} sobre tu precio.`
+            : "Margen sin determinar."}
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           {result?.cost_net
             ? `Coste: ${formatEurosExact(result.cost_net)}${state.companyName ? ` · ${state.companyName}` : ""}. ${state.companySynthetic ? "Es un dato de ejemplo." : "Es el coste declarado de tu empresa."}`
             : "Tu coste está sin determinar."}
         </p>
       </Card>
       <Card as="div" pad="sm">
-        <h2 className="text-sm font-medium text-muted">Tus puntos por precio</h2>
+        <h3 className="mb-1 text-base font-semibold text-muted">Tus puntos por precio</h3>
         <p data-testid="economic-score" className="tnum text-2xl font-bold">
           <Crossfade key={result ? `${result.score.status}:${result.score.value ?? ""}` : "none"}>
             {result
@@ -145,7 +143,7 @@ export function KpiSection({ workspace, state }: Props) {
               : "—"}
           </Crossfade>
         </p>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           {!result
             ? "Sin resultado todavía."
             : scoreDefined
@@ -156,23 +154,21 @@ export function KpiSection({ workspace, state }: Props) {
         </p>
         <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
           <span>
-            Fuente: fórmula de puntos ·{" "}
-            {result ? `${formatMaxPoints(result.score.max_points)} puntos` : "—"}
-            {citationPages(state.ruleCitations)}:{" "}
+            Fórmula del pliego, máximo {result ? formatMaxPoints(result.score.max_points) : "—"} puntos:{" "}
           </span>
           <SourceCitations citations={state.ruleCitations} onSelect={state.openEvidence} />
         </p>
       </Card>
       <Card as="div" pad="sm" data-testid="anomaly-card" className={flagged ? "border border-alert bg-warn-bg" : undefined}>
-        <h2 className="text-sm font-medium text-muted">
+        <h3 className="mb-1 text-base font-semibold text-muted">
           {flagged && <span aria-hidden="true">⚠︎ </span>}¿Oferta sospechosamente baja?
-        </h2>
+        </h3>
         <p data-testid="anomaly-status" className="text-2xl font-bold">
           <Crossfade key={result ? result.anomaly.status : "none"}>
             {result ? anomalyVerdictEs(result.anomaly.status) : "—"}
           </Crossfade>
         </p>
-        <div data-testid="anomaly-detail" className="tnum mt-1 text-xs text-muted">
+        <div data-testid="anomaly-detail" className="tnum mt-1 text-sm text-muted">
           {!result && <p>Sin resultado todavía.</p>}
           {result && result.anomaly.threshold_net === null && (
             <p>
@@ -212,11 +208,11 @@ export function KpiSection({ workspace, state }: Props) {
             </>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           La ley la llama presunción de anormalidad (art. 149 LCSP).
         </p>
         <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
-          <span>Fuente: regla del pliego de condiciones (PCAP){citationPages(state.anomalyCitations)}: </span>
+          <span>Regla del pliego (PCAP): </span>
           <SourceCitations citations={state.anomalyCitations} onSelect={state.openEvidence} />
         </p>
       </Card>

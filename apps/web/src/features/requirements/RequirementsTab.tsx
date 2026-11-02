@@ -312,7 +312,7 @@ export function RequirementsTab({ workspace }: Props) {
                       <>
                         <strong>{verdictEs(item.verdict)}</strong>
                         {item.reason_codes.length > 0 && (
-                          <span className="block text-xs text-muted">
+                          <span className="block text-sm text-muted">
                             {item.reason_codes.map(motivoEs).join("; ")}
                           </span>
                         )}
@@ -346,14 +346,14 @@ export function RequirementsTab({ workspace }: Props) {
                     {/* An open requirement with a cited page can become a formal
                         question to the contracting body (ClarificationPanel). */}
                     {item && item.verdict !== "met" && firstCitation && (
-                      <Button
-                        variant="secondary"
-                        className="mt-2"
+                      <button
+                        type="button"
+                        className="pressable mt-1 block min-h-[44px] text-left text-primary underline hover:text-primary-ink"
                         data-testid={`clarify-${leaf.id}`}
                         onClick={() => setAsking({ leaf, citation: firstCitation })}
                       >
                         Pedir aclaración <span className="sr-only">sobre {leaf.label}</span>
-                      </Button>
+                      </button>
                     )}
                   </td>
                 </tr>

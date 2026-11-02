@@ -51,6 +51,12 @@ export async function openTab(page: Page, name: "Resumen" | "Requisitos" | "Revi
   await page.getByRole("tab", { name }).click();
 }
 
+/** Specialist pricing tools (groups, stress mesh, identifiers) live in «Análisis avanzado». */
+export async function openPricingAdvanced(page: Page): Promise<void> {
+  const advanced = page.getByTestId("pricing-advanced");
+  if ((await advanced.getAttribute("open")) === null) await advanced.locator(":scope > summary").click();
+}
+
 /** Price tab ready with the default 5 % evaluation painted. */
 export async function openPricing(page: Page): Promise<void> {
   await openTab(page, "Precio");

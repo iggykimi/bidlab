@@ -68,10 +68,9 @@ function lineaCPV(codes: string[]): string {
 /** Plain sentence for the points formula; the raw identifier goes to Detalles técnicos. */
 function frasePuntos(rule: PricingRule): string {
   if (rule.template_id === "unsupported") return "Fórmula no soportada.";
-  if (rule.template_id === "proportional_inverse") {
-    return `Cuanto más barata tu oferta, más puntos (hasta ${formatMaxPoints(rule.max_points)}).`;
-  }
-  return `Tu oferta compite por precio (hasta ${formatMaxPoints(rule.max_points)} puntos).`;
+  const max = `El precio da hasta ${formatMaxPoints(rule.max_points)} puntos.`;
+  if (rule.template_id === "proportional_inverse") return `${max} Cuanto más barata tu oferta, más puntos.`;
+  return max;
 }
 
 function avisoRevision(rule: PricingRule): string | null {
@@ -149,8 +148,6 @@ export function SummaryTab({ workspace }: Props) {
 
   return (
     <div className="grid gap-4">
-      <DecisionSpotlight workspace={workspace} />
-      <DecisionTraceBar workspace={workspace} />
       {own && checklist && (
         <Card aria-label="Tu recorrido" data-testid="recorrido-propio">
           <h2>¿Qué te falta?</h2>
@@ -206,27 +203,27 @@ export function SummaryTab({ workspace }: Props) {
       <Card aria-label="Lo esencial" data-testid="lo-esencial" className="summary-essential">
         <h2>Lo esencial</h2>
         <dl className="mt-3 grid gap-2 text-sm">
-          <div className="flex justify-between gap-4">
+          <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
             <dt className="text-muted">Plazo</dt>
-            <dd className="text-right font-semibold">{textoPlazo(tender.deadline_at)}</dd>
+            <dd className="font-semibold">{textoPlazo(tender.deadline_at)}</dd>
           </div>
-          <div className="flex justify-between gap-4">
+          <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
             <dt className="text-muted">Presupuesto de salida</dt>
-            <dd className="tnum text-right font-semibold">
+            <dd className="tnum font-semibold">
               {textoPresupuesto(tender.pbl_net, tender.pbl_gross, taxKind)}
             </dd>
           </div>
-          <div className="flex justify-between gap-4">
+          <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
             <dt className="text-muted">Duración</dt>
-            <dd className="text-right font-semibold">{textoDuracion(periodMonths)}</dd>
+            <dd className="font-semibold">{textoDuracion(periodMonths)}</dd>
           </div>
-          <div className="flex justify-between gap-4">
+          <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
             <dt className="text-muted">Qué puntúa</dt>
-            <dd className="max-w-md text-right font-semibold">
+            <dd className="font-semibold">
               {rule ? (
                 <>
-                  El precio da hasta {formatMaxPoints(rule.max_points)} puntos. Aquí solo calculas los puntos del precio.
-                  Revisa los demás criterios en el pliego de condiciones (PCAP).
+                  {frasePuntos(rule)} Los demás criterios están en el pliego de condiciones (PCAP).
+                  {avisoRevision(rule) && <span className="mt-1 block text-alert">{avisoRevision(rule)}</span>}
                 </>
               ) : (
                 "Los puntos de precio aún no están revisados."
@@ -238,18 +235,22 @@ export function SummaryTab({ workspace }: Props) {
         <JourneySteps />
       </Card>
 
+      {/* Hierarchy: what the tender asks first, then the user's decision and
+       * its trail, then reference facts. An empty spotlight is one line. */}
+      <DecisionSpotlight workspace={workspace} />
+      <DecisionTraceBar workspace={workspace} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card aria-label="Hechos de la licitación">
           <h2>Hechos</h2>
           <dl className="mt-3 grid gap-2 text-sm">
-            <div className="flex justify-between gap-4">
+            <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
               <dt className="text-muted">Valor estimado del contrato</dt>
-              <dd className="text-right">
+              <dd>
                 <span className="tnum font-semibold">
                   {tender.estimated_value ? formatEurosHeadline(tender.estimated_value) : "Sin determinar"}
                 </span>
                 {tender.estimated_value && (
-                  <span className="mt-1 block text-xs font-normal text-muted">
+                  <span className="mt-1 block text-sm font-normal text-muted">
                     {periodMonths === null
                       ? "Incluye todo el periodo posible."
                       : `Incluye todo el periodo posible, no solo ${periodMonths} meses.`}
@@ -257,13 +258,13 @@ export function SummaryTab({ workspace }: Props) {
                 )}
               </dd>
             </div>
-            <div className="flex justify-between gap-4">
+            <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
               <dt className="text-muted">Estado</dt>
-              <dd className="text-right font-semibold">{estadoPublicacion(tender.status_raw)}</dd>
+              <dd className="font-semibold">{estadoPublicacion(tender.status_raw)}</dd>
             </div>
-            <div className="flex justify-between gap-4">
+            <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
               <dt className="text-muted">Tipo de servicio (código CPV)</dt>
-              <dd className="max-w-md text-right font-semibold">{lineaCPV(tender.cpv_codes)}</dd>
+              <dd className="font-semibold">{lineaCPV(tender.cpv_codes)}</dd>
             </div>
           </dl>
           <p className="mt-3 text-sm">Datos del {formatFechaCorta(tender.source_updated_at)}.</p>
@@ -273,7 +274,7 @@ export function SummaryTab({ workspace }: Props) {
               href={tender.source_url}
               target="_blank"
               rel="noreferrer"
-              className="break-all text-primary underline"
+              className="text-primary underline"
             >
               Ver publicación en Contratación del Estado
             </a>
@@ -312,28 +313,6 @@ export function SummaryTab({ workspace }: Props) {
             </p>
           </Card>
 
-          <Card aria-label="¿Cómo suma puntos tu oferta?">
-            <h2>¿Cómo suma puntos tu oferta?</h2>
-            {workspace.pricing_rules.length === 0 ? (
-              <p className="mt-2 text-sm">Aún no hay fórmula de puntos revisada.</p>
-            ) : (
-              <ul className="mt-2 space-y-2 text-sm">
-                {workspace.pricing_rules.map((r) => (
-                  <li key={`${r.id}:${r.revision}`}>
-                    <p>{frasePuntos(r)}</p>
-                    {avisoRevision(r) && <p className="mt-1">{avisoRevision(r)}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-
-          <section aria-label="Asistente de IA">
-            <p data-testid="live-unavailable" className="text-sm">
-              El asistente de IA no está disponible en esta demo: aquí los datos ya vienen
-              revisados.
-            </p>
-          </section>
         </div>
       </div>
     </div>

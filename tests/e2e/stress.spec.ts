@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { API_BASE, installOfflineGuard, loadDemo, openTab, takeConsoleFailures } from "./helpers";
+import { API_BASE, installOfflineGuard, loadDemo, openPricingAdvanced, openTab, takeConsoleFailures } from "./helpers";
 
 // Malla de resistencia: validación honesta, ejecución contra el backend,
 // selección de rebaja y traslado al simulador.
@@ -12,6 +12,7 @@ test.afterEach(() => {
 async function openStress(page: Page) {
   await loadDemo(page);
   await openTab(page, "Precio");
+  await openPricingAdvanced(page);
   const section = page.getByTestId("stress-section");
   await expect(section).toBeVisible();
   return section;
@@ -80,6 +81,7 @@ test("company change marks the grid stale with its timestamp", async ({ page }) 
   await loadDemo(page);
   await restorePristineCompany(page.request);
   await openTab(page, "Precio");
+  await openPricingAdvanced(page);
   const section = page.getByTestId("stress-section");
   await expect(section).toBeVisible();
   await section.getByLabel("Rebaja inicial en tanto por ciento").fill("5");

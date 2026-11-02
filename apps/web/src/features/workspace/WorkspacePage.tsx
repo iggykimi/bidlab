@@ -37,16 +37,11 @@ const OWN_TABS = [
 
 export type TabId = (typeof OWN_TABS)[number]["id"];
 
+/** Steps where «Pregúntale al pliego» can answer from BidLab's own tools. */
+const ASK_TABS: readonly TabId[] = ["resumen", "requisitos", "precio"];
+
 function parseTab(raw: string | null): TabId {
   return OWN_TABS.some((t) => t.id === raw) ? (raw as TabId) : "resumen";
-}
-
-/** Workhead eyebrow mode, same vocabulary as DemoBadge. */
-function modeLabel(mode: string | null | undefined): string | null {
-  if (mode === "demo") return "Datos de ejemplo";
-  if (mode === "live") return "Análisis en vivo";
-  if (mode === "manual") return "Tus datos";
-  return null;
 }
 
 /**
@@ -84,6 +79,7 @@ export function WorkspacePage() {
   const prevTabRef = useRef(rawTab);
   const skipPanelFocusRef = useRef(false);
   const firstTenderRef = useRef(tenderId);
+  const pendingAskRef = useRef(false);
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace", tenderId],
@@ -153,14 +149,30 @@ export function WorkspacePage() {
   }, [tenderId]);
 
   /** The side-nav link lands on the question box itself, not just its heading. */
-  function jumpToAsk(event: React.MouseEvent) {
-    event.preventDefault();
+  function focusAsk() {
     const panel = document.getElementById(ASK_PANEL_ID);
     panel?.scrollIntoView({ block: "start" });
     const field = document.getElementById("ask-question");
     const target = field instanceof HTMLTextAreaElement && !field.disabled ? field : document.getElementById("ask-title");
     target?.focus({ preventScroll: true });
   }
+
+  function jumpToAsk(event: React.MouseEvent) {
+    event.preventDefault();
+    if (ASK_TABS.includes(tab)) {
+      focusAsk();
+      return;
+    }
+    pendingAskRef.current = true;
+    selectTab("resumen");
+  }
+
+  useEffect(() => {
+    if (pendingAskRef.current && ASK_TABS.includes(tab)) {
+      pendingAskRef.current = false;
+      focusAsk();
+    }
+  }, [tab]);
 
   /** APG roving tabindex: arrows move and select, Home/End jump. */
   function onTabKey(event: React.KeyboardEvent, index: number) {
@@ -209,26 +221,28 @@ export function WorkspacePage() {
   const badgeMode = own && mode === "demo" ? "manual" : mode;
   const scope = tender.scopes[0] ?? null;
 
-  const eyebrowMode = modeLabel(badgeMode);
   return (
     <main id="main" className="wrap" tabIndex={-1}>
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:bg-white focus:p-2">
         Saltar al contenido
       </a>
+      {/* Reading order an older user expects: where am I (body), what is it
+       * (title), the three facts that frame it (data origin, file, budget).
+       * The way back is a quiet link: the top bar already offers it. */}
       <div className="workhead">
-        <div className="workhead-top">
-          <p className="backrow">
-            <Link to="/">← Volver a mis licitaciones</Link>
-          </p>
-          <p className="eyebrow">
-            {tender.contracting_body}
-            {eyebrowMode ? ` · ${eyebrowMode}` : ""}
-          </p>
-        </div>
+        <p className="backrow">
+          <Link to="/">← Volver a mis licitaciones</Link>
+        </p>
+        <p className="eyebrow">{tender.contracting_body}</p>
         <h1 id="tender-title" data-testid="tender-title" tabIndex={-1}>
           {tender.title}
         </h1>
         <p className="muted small workhead-meta">
+          {mode ? (
+            <>
+              <DemoBadge mode={badgeMode} />{" "}
+            </>
+          ) : null}
           Expediente {tender.external_id}
           {scope ? ` · ${scope.label}` : ""} ·{" "}
           {lineaPresupuestoCorta(tender.pbl_net, tender.pbl_gross, scope?.basis.tax_kind ?? "unknown")}
@@ -307,15 +321,6 @@ export function WorkspacePage() {
           <a href={`#${ASK_PANEL_ID}`} className="ask-jump pressable" onClick={jumpToAsk}>
             <MicIcon size={24} /> Pregúntale al pliego
           </a>
-          <div className="base">
-            <strong>Base del análisis</strong>
-            {mode ? (
-              <p>
-                <DemoBadge mode={badgeMode} />
-              </p>
-            ) : null}
-            {scope ? <p className="muted">Ámbito: {scope.label}</p> : null}
-          </div>
         </nav>
 
         <div
@@ -334,9 +339,10 @@ export function WorkspacePage() {
           {tab === "precio" && <PricingLab workspace={workspace} />}
           {tab === "evidencia" && <EvidenceTab workspace={workspace} />}
           {tab === "informe" && <ReportTab workspace={workspace} />}
-          {/* Same place on every step, after the step itself so the step's own
-           * first field stays above the fold (R06); the side nav links here. */}
-          <AskPanel workspace={workspace} />
+          {/* Only where a question has an answer in BidLab's tools (price and
+           * requirements), after the step so its first field stays above the
+           * fold (R06). Citations, review and report stay single-purpose. */}
+          {ASK_TABS.includes(tab) && <AskPanel workspace={workspace} />}
         </WorkspaceDraftsProvider>
         </div>
       </div>

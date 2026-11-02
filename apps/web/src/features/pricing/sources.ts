@@ -19,12 +19,6 @@ export function metadataForKey(tender: Tender, key: string): MetadataEvidence | 
   return tender.metadata_evidence.find((m) => m.key === key) ?? null;
 }
 
-/** Citation page numbers for "Fuente … (p. 10, 20)"; empty when no citations. */
-export function citationPages(citations: Citation[]): string {
-  const pages = [...new Set(citations.map((c) => c.page_number))].sort((a, b) => a - b);
-  return pages.length > 0 ? ` (p. ${pages.join(", ")})` : "";
-}
-
 const REASON_ES: Record<string, string> = {
   incomplete_scenario: "prueba incompleta: falta el conjunto completo de ofertas",
   incomplete_rival_set: "conjunto rival incompleto: puntos y oferta sospechosa sin determinar",

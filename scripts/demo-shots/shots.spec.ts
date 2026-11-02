@@ -127,6 +127,7 @@ test("capture 10 techo presentation shot", async ({ page }) => {
   test.setTimeout(120_000);
   await loadDemo(page);
   await openTab(page, "Precio");
+  await page.getByTestId("pricing-advanced").locator(":scope > summary").click();
   const section = page.getByTestId("stress-section");
   await expect(section).toBeVisible();
   await section.getByLabel("Rebaja inicial en tanto por ciento").fill("12");

@@ -113,7 +113,7 @@ test("CMP-03 pricing compare hero shows 10 vs 15 backend delta", async ({ page }
 
   const hero = page.getByTestId("decision-comparison-hero");
   await expect(hero).toBeVisible();
-  await expect(hero).toContainText("5916,80");
+  await expect(hero).toContainText("5.916,80");
   await expect(hero).toContainText(/mismos puntos/);
   expect(guard.blocked()).toBe(0);
 });

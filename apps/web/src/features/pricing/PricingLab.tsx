@@ -10,7 +10,7 @@ import { CompareFromPricing } from "./CompareFromPricing";
 import { ConclusionSection } from "./ConclusionSection";
 import { StressSection } from "./StressSection";
 import { CalculationSection, CurveSection } from "./CurveSection";
-import { DiscountSection, GroupReferencesSection, HypothesesForm } from "./HypothesesForm";
+import { DiscountSection, ExamplePresetsSection, GroupReferencesSection, HypothesesForm } from "./HypothesesForm";
 import { KpiSection } from "./KpiSection";
 import { AssumptionsSection, IdentifiersDetails, SaveScenarioSection } from "./SaveScenarioSection";
 import { usePricingState } from "./usePricingState";
@@ -106,17 +106,29 @@ export function PricingLab({ workspace }: Props) {
     );
   }
 
+  // Visual hierarchy follows the decision: choose a rebate and keep it
+  // (left) while its four figures answer (right); then compare, then
+  // understand the curve and rivals, then costs. Specialist tools
+  // (group references, stress mesh, identifiers) fold into one closed
+  // section so they never compete with the main loop.
   return (
     <div className="stack">
-      <div className="twocol">
-        <DiscountSection
-          state={state}
-          showExamples={workspace.mode === "demo" && workspace.tender.id === "tias"}
-        />
-        <div className="stack">
+      <div className="pricing-top">
+        <div className="pricing-discount">
+          <DiscountSection state={state} />
+        </div>
+        <div className="pricing-figures stack">
           <KpiSection workspace={workspace} state={state} />
           <ConclusionSection state={state} />
         </div>
+        <div className="pricing-save">
+          <SaveScenarioSection workspace={workspace} state={state} />
+        </div>
+        {workspace.mode === "demo" && workspace.tender.id === "tias" && (
+          <div className="pricing-presets">
+            <ExamplePresetsSection state={state} />
+          </div>
+        )}
       </div>
       <CompareFromPricing
         workspace={workspace}
@@ -130,19 +142,28 @@ export function PricingLab({ workspace }: Props) {
         </div>
         <div className="grid min-w-0 content-start gap-4 lg:col-span-4">
           <HypothesesForm state={state} />
-          <SaveScenarioSection workspace={workspace} state={state} />
-          <GroupReferencesSection state={state} />
           <AssumptionsSection state={state} />
-          <IdentifiersDetails scope={scope} rule={rule} state={state} />
         </div>
       </div>
-      <StressSection state={state} />
       <CostEditor
         companyId={companyId}
         tenderId={workspace.tender.id}
         scopeId={scope.id}
         scopeLabel={scope.label}
       />
+      <details className="pricing-advanced" data-testid="pricing-advanced">
+        <summary>
+          <span className="pricing-advanced-title">Análisis avanzado</span>
+          <span className="pricing-advanced-hint">
+            Referencias por grupo, prueba de resistencia e identificadores.
+          </span>
+        </summary>
+        <div className="stack mt-4">
+          <GroupReferencesSection state={state} />
+          <StressSection state={state} />
+          <IdentifiersDetails scope={scope} rule={rule} state={state} />
+        </div>
+      </details>
       {state.evidence && (
         <EvidenceDrawer
           key={state.evidence.citation.id}

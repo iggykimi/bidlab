@@ -194,14 +194,16 @@ a[href^="http"]::after {
     color: var(--color-muted);
   }
   .example-presets {
-    border-top: 1px solid var(--color-line);
-    padding-top: 16px;
+    border: 0;
+    margin: 0;
+    padding: 0;
     min-width: 0;
   }
   .example-presets legend {
-    padding: 0 8px 0 0;
+    padding: 0;
+    margin-bottom: 8px;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .example-presets button {
     font-size: 1rem;
@@ -347,12 +349,6 @@ a[href^="http"]::after {
     border-radius: 10px;
     padding: 20px;
   }
-  .twocol {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
-  }
   details {
     padding: 16px 0;
     border-top: 1px solid var(--color-line);
@@ -458,25 +454,23 @@ a[href^="http"]::after {
    * buttons nest in li elements, so the two li rules below carry the
    * grid/flex item behaviour the mock puts on the buttons directly. */
   .workhead {
-    margin-bottom: 28px;
+    margin-bottom: 12px;
   }
+  /* The body that publishes the tender reads as context, not as a link. */
   .workhead .eyebrow {
-    margin-top: 24px;
+    margin: 0 0 4px;
+    color: var(--color-muted);
+    font-weight: 600;
   }
-  /* U1: back + eyebrow share one row; meta folds to one line + details. */
-  .workhead-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px 24px;
-    flex-wrap: wrap;
-  }
-  .workhead-top .backrow,
-  .workhead-top .eyebrow {
+  .workhead .backrow {
     margin: 0;
   }
   .workhead-meta {
     margin: 4px 0 0;
+  }
+  .workhead-meta [data-testid="demo-badge"] {
+    margin-right: 6px;
+    vertical-align: 1px;
   }
   .workhead-details {
     padding: 0;
@@ -576,22 +570,20 @@ a[href^="http"]::after {
   .workhead .small {
     margin: 4px 0 0;
   }
+  /* A quiet way back: still a 48px target, no button chrome competing
+   * with the page's real actions. */
   .backrow a {
     display: inline-flex;
     align-items: center;
     min-height: 48px;
-    border: 1px solid var(--color-primary);
-    border-radius: 8px;
-    background: var(--color-white);
     color: var(--color-primary);
-    padding: 10px 18px;
     font-size: 1rem;
-    font-weight: 650;
-    line-height: 1.4;
-    text-decoration: none;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .backrow a:hover {
-    filter: brightness(0.95);
+    color: var(--color-primary-ink);
   }
   .workgrid {
     display: grid;
@@ -654,17 +646,6 @@ a[href^="http"]::after {
     background: var(--color-primary-soft);
     padding: 6px 8px;
     font-size: 1rem;
-  }
-  .steps .base {
-    padding: 20px 18px;
-    font-size: 1rem;
-  }
-  .steps .base p {
-    margin: 8px 0 0;
-  }
-  .steps .base .tag,
-  .steps .base [data-testid="demo-badge"] {
-    margin-top: 8px;
   }
 
   /* Surfaces, benefit, notices, tags. */
@@ -1038,9 +1019,6 @@ a[href^="http"]::after {
     gap: 24px;
     grid-template-columns: 190px minmax(0, 1fr);
   }
-  .twocol {
-    grid-template-columns: 1fr;
-  }
   .tenders li {
     grid-template-columns: minmax(0, 1fr) 150px;
   }
@@ -1153,9 +1131,6 @@ a[href^="http"]::after {
     min-height: 48px;
     padding: 10px 12px;
     white-space: nowrap;
-  }
-  .steps .base {
-    display: none;
   }
   .stepnum {
     margin-right: 8px;
@@ -1490,7 +1465,7 @@ a[href^="http"]::after {
   }
 }
 /* Side-nav link to the panel: visible on every step next to the steps.
- * Below 880px the side box is hidden like .base; the panel closes each step. */
+ * Below 880px the side link is hidden; the panel closes each step. */
 .steps .ask-jump {
   display: flex;
   align-items: center;
@@ -1515,3 +1490,68 @@ a[href^="http"]::after {
   }
 }
 /* === end Pregúntale al pliego === */
+
+/* Pricing «Análisis avanzado»: specialist tools behind one disclosure.
+ * The summary is a full-width 56px target that reads as a section, not
+ * as a link, so it is found without competing with the main decision. */
+.pricing-advanced > summary {
+  display: grid;
+  gap: 2px;
+  min-height: 56px;
+  padding: 14px 20px 14px 48px;
+  position: relative;
+  border: 2px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-white);
+  cursor: pointer;
+  list-style: none;
+}
+.pricing-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+.pricing-advanced > summary::before {
+  content: "+";
+  position: absolute;
+  left: 18px;
+  top: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.pricing-advanced[open] > summary::before {
+  content: "−";
+}
+.pricing-advanced-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.pricing-advanced-hint {
+  color: var(--color-muted);
+  font-size: 1rem;
+}
+
+/* Pricing top: rebate, save and shortcuts on the left, the four figures on
+ * the right. On a phone the figures come straight after the rebate, so the
+ * answer follows the question before any secondary action. */
+.pricing-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    "discount figures"
+    "save figures"
+    "presets figures";
+  gap: 20px 24px;
+  align-items: start;
+}
+.pricing-discount { grid-area: discount; }
+.pricing-figures { grid-area: figures; }
+.pricing-save { grid-area: save; }
+.pricing-presets { grid-area: presets; }
+@media (max-width: 1100px) {
+  .pricing-top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: "discount" "figures" "save" "presets";
+  }
+}

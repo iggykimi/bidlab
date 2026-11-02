@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { installOfflineGuard, loadDemo, openPricing, takeConsoleFailures } from "./helpers";
+import { installOfflineGuard, loadDemo, openPricing, openPricingAdvanced, takeConsoleFailures } from "./helpers";
 
 // C10: any console.error / pageerror fails the test.
 test.afterEach(() => {
@@ -45,6 +45,7 @@ test("T23 group references show backend minima, mean, threshold and branch", asy
   await loadDemo(page);
   await openPricing(page);
 
+  await openPricingAdvanced(page);
   const refs = page.getByTestId("group-references");
   await expect(refs).toContainText("Tu oferta");
   await expect(refs).toContainText("Rival A");

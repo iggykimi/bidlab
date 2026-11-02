@@ -84,11 +84,7 @@ test("Resumen shows Lo esencial with a dynamic deadline", async ({ page }) => {
   await expect(esencial).toContainText("hasta 49 puntos");
   await expect(page.locator("main")).toContainText("Datos del 25 de octubre de 2026");
   await expect(page.locator("main")).toContainText("Publicada");
-  await expect(page.locator("main")).toContainText("¿Cómo suma puntos tu oferta?");
-  await expect(page.locator("main")).toContainText("Cuanto más barata tu oferta");
-  await expect(page.getByTestId("live-unavailable")).toContainText(
-    "El asistente de IA no está disponible en esta demo: aquí los datos ya vienen revisados"
-  );
+  await expect(esencial).toContainText("Cuanto más barata tu oferta");
   expect(guard.blocked()).toBe(0);
 });
 
@@ -127,9 +123,7 @@ test("E09 demo shows the assistant as unavailable without analysis calls", async
     if (req.url().includes("/analysis")) analysisCalls += 1;
   });
   await loadDemo(page);
-  await expect(page.getByTestId("live-unavailable")).toContainText(
-    "El asistente de IA no está disponible en esta demo: aquí los datos ya vienen revisados"
-  );
+  await expect(page.getByTestId("ask-unavailable")).toContainText("no está activada aquí");
   await expect(page.getByTestId("live-attempt")).toHaveCount(0);
   expect(analysisCalls).toBe(0);
   expect(guard.blocked()).toBe(0);
