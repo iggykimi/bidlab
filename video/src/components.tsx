@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -32,26 +32,89 @@ export function box(shot: string, key: string): Box {
 
 type Cam = { z: number; tx: number; ty: number };
 
-// Camera framing: fit the target box with breathing room, never zoom past
-// 2.2x (UI text stays crisp from 1080p captures), never show beyond the
-// screenshot's edges.
-function frameBox(b: Box | null): Cam {
-  if (!b) return { z: 1, tx: 0, ty: 0 };
-  const pad = 90;
-  const z = Math.min(2.2, Math.max(1, Math.min(W / (b.w + 2 * pad), H / (b.h + 2 * pad))));
+/**
+ * Layout of every app scene. The app sits in a browser window; captions
+ * live in their own band below it. Nothing is ever drawn over the UI the
+ * camera is pointing at, so a caption can never hide what it describes.
+ */
+export const WINDOW = { x: 80, y: 36, w: 1760, h: 824, bar: 40 };
+export const BAND_TOP = WINDOW.y + WINDOW.h + 34;
+
+type View = { w: number; h: number };
+const ViewContext = createContext<View>({ w: WINDOW.w, h: WINDOW.h - WINDOW.bar });
+
+/** Browser-window frame; children render in its content area. */
+export function Window({
+  children,
+  rect = WINDOW,
+  title = "BidLab",
+}: {
+  children: ReactNode;
+  rect?: { x: number; y: number; w: number; h: number; bar: number };
+  title?: string;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: rect.x,
+        top: rect.y,
+        width: rect.w,
+        height: rect.h,
+        borderRadius: 18,
+        overflow: "hidden",
+        background: C.white,
+        boxShadow: "0 24px 60px rgba(24,36,59,0.18), 0 0 0 1px rgba(24,36,59,0.08)",
+      }}
+    >
+      <div
+        style={{
+          height: rect.bar,
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+          padding: "0 18px",
+          background: "#eef1f6",
+          borderBottom: "1px solid #dde3ec",
+          fontFamily: FONT,
+          fontSize: 18,
+          color: C.muted,
+        }}
+      >
+        {["#e5534b", "#e0a43a", "#45a35a"].map((c) => (
+          <span key={c} style={{ width: 13, height: 13, borderRadius: 7, background: c }} />
+        ))}
+        <span style={{ marginLeft: 14 }}>{title}</span>
+      </div>
+      <div style={{ position: "relative", width: rect.w, height: rect.h - rect.bar, overflow: "hidden" }}>
+        <ViewContext.Provider value={{ w: rect.w, h: rect.h - rect.bar }}>{children}</ViewContext.Provider>
+      </div>
+    </div>
+  );
+}
+
+// Camera framing inside the window: fit the target with breathing room,
+// never magnify a source pixel more than 1.7x (crisp text, and enough of the
+// neighbouring UI stays in frame to show where we are),
+// never show past the screenshot's edges.
+function frameBox(b: Box | null, view: View): Cam {
+  const base = view.w / W;
+  if (!b) return { z: base, tx: 0, ty: 0 };
+  const pad = 100;
+  const z = Math.min(1.7, Math.max(base, Math.min(view.w / (b.w + 2 * pad), view.h / (b.h + 2 * pad))));
   const cx = b.x + b.w / 2;
   const cy = b.y + b.h / 2;
-  const tx = Math.min(0, Math.max(W - W * z, W / 2 - cx * z));
-  const ty = Math.min(0, Math.max(H - H * z, H / 2 - cy * z));
+  const tx = Math.min(0, Math.max(view.w - W * z, view.w / 2 - cx * z));
+  const ty = Math.min(0, Math.max(view.h - H * z, view.h / 2 - cy * z));
   return { z, tx, ty };
 }
 
 export type Move = { at: number; to: Box | null };
 
 /**
- * A real app screenshot under a moving camera. `moves` are keyframes in
- * seconds; each move eases over 0.9 s. `rings` outline boxes in the
- * screenshot's own coordinates, so they travel with the camera.
+ * A real app screenshot under a moving camera, inside the current Window.
+ * `moves` are keyframes in seconds; each move eases over 0.9 s. `rings`
+ * outline boxes in the screenshot's own coordinates and travel with it.
  */
 export function Shot({
   src,
@@ -66,7 +129,8 @@ export function Shot({
 }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  let cam = frameBox(null);
+  const view = useContext(ViewContext);
+  let cam = frameBox(null, view);
   for (const m of moves) {
     const start = m.at * fps;
     const t = interpolate(frame, [start, start + 0.9 * fps], [0, 1], {
@@ -75,15 +139,15 @@ export function Shot({
       easing: Easing.bezier(0.65, 0, 0.35, 1),
     });
     if (t <= 0) break;
-    const next = frameBox(m.to);
+    const next = frameBox(m.to, view);
     cam = {
       z: cam.z + (next.z - cam.z) * t,
       tx: cam.tx + (next.tx - cam.tx) * t,
       ty: cam.ty + (next.ty - cam.ty) * t,
     };
   }
-  // Slow push-in keeps static frames alive without distracting.
-  const push = drift ? interpolate(frame, [0, 30 * fps], [1, 1.04]) : 1;
+  // Slow push-in keeps a static frame alive without distracting.
+  const push = drift ? interpolate(frame, [0, 30 * fps], [1, 1.03]) : 1;
   return (
     <AbsoluteFill style={{ background: C.paper, overflow: "hidden" }}>
       <div
@@ -104,12 +168,13 @@ export function Shot({
   );
 }
 
+/** Highlight: an outline and a soft glow, never a dimmed screen. */
 function Ring({ box: b, at, until, zoom }: { box: Box; at: number; until?: number; zoom: number }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const enter = spring({ frame: frame - at * fps, fps, config: { damping: 14 } });
   const exit = until === undefined ? 1 : interpolate(frame, [until * fps, until * fps + 8], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const grow = interpolate(enter, [0, 1], [18, 8]);
+  const grow = interpolate(enter, [0, 1], [16, 8]);
   return (
     <div
       style={{
@@ -118,28 +183,26 @@ function Ring({ box: b, at, until, zoom }: { box: Box; at: number; until?: numbe
         top: b.y - grow,
         width: b.w + 2 * grow,
         height: b.h + 2 * grow,
-        border: `${6 / zoom}px solid ${C.blue}`,
-        borderRadius: 16,
-        boxShadow: `0 0 0 ${9999}px rgba(24, 36, 59, ${0.28 * enter * exit})`,
+        border: `${4 / zoom}px solid ${C.blue}`,
+        borderRadius: 14,
+        boxShadow: `0 0 ${24 / zoom}px rgba(39,72,184,0.35)`,
         opacity: enter * exit,
       }}
     />
   );
 }
 
-/** Lower-third caption: one claim, one supporting line. */
+/** Caption in the band under the window: one claim, one supporting line. */
 export function Caption({
   at,
   until,
   title,
   sub,
-  align = "left",
 }: {
   at: number;
   until?: number;
   title: string;
   sub?: string;
-  align?: "left" | "right";
 }) {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
@@ -151,23 +214,19 @@ export function Caption({
     <div
       style={{
         position: "absolute",
-        bottom: 56,
-        [align]: 56,
-        maxWidth: 920,
-        background: C.white,
-        borderLeft: `10px solid ${C.blue}`,
-        borderRadius: 14,
-        padding: "22px 30px",
-        boxShadow: "0 18px 50px rgba(24,36,59,0.22)",
+        top: BAND_TOP,
+        left: WINDOW.x,
+        width: WINDOW.w,
+        paddingLeft: 28,
+        borderLeft: `8px solid ${C.blue}`,
         fontFamily: FONT,
         color: C.ink,
-        // Fully opaque at rest (exit is 1 until fade-out); entrance is slide-only so no ghosting.
-        opacity: exit,
-        transform: `translateY(${interpolate(enter, [0, 1], [40, 0])}px)`,
+        opacity: enter * exit,
+        transform: `translateY(${interpolate(enter, [0, 1], [18, 0])}px)`,
       }}
     >
-      <div style={{ fontSize: 41, fontWeight: 800, lineHeight: 1.15 }}>{title}</div>
-      {sub && <div style={{ fontSize: 28, marginTop: 8, color: C.muted, lineHeight: 1.35 }}>{sub}</div>}
+      <div style={{ fontSize: 44, fontWeight: 800, lineHeight: 1.1 }}>{title}</div>
+      {sub && <div style={{ fontSize: 29, marginTop: 8, color: C.muted, lineHeight: 1.3 }}>{sub}</div>}
     </div>
   );
 }
