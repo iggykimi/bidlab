@@ -120,3 +120,10 @@ def test_record_with_dtd_is_refused() -> None:
     with pytest.raises(ApiError) as caught:
         placsp.parse_call_for_tenders(hostile)
     assert caught.value.code == "source_unavailable"
+
+
+def test_client_identifies_with_mozilla_prefix_and_bidlab_suffix() -> None:
+    # The Plataforma WAF rejects non-browser UAs on document downloads, so
+    # the client sends a Mozilla-prefix UA that still names BidLab (2026-11-03).
+    assert placsp.USER_AGENT.startswith("Mozilla/5.0 ")
+    assert "BidLab/1.0 (single user-initiated tender import)" in placsp.USER_AGENT

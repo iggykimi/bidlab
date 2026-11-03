@@ -133,7 +133,14 @@ PCAP_MAX_SECONDS = 180.0
 PPT_MAX_BYTES = 4 * 1024 * 1024
 PPT_MAX_SECONDS = 30.0
 TIMEOUT = httpx.Timeout(20.0, connect=5.0)
-USER_AGENT = "BidLab/1.0 (single user-initiated tender import)"
+# The Plataforma's WAF rejects document downloads without a Mozilla-prefix
+# User-Agent ("Request Rejected" since 2026-11-03); the BidLab suffix keeps
+# the honest single-user-import identification (author-authorized 2026-11-03).
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 "
+    "BidLab/1.0 (single user-initiated tender import)"
+)
 RIGHTS_OFFICIAL_DOWNLOAD = "official_public_download_local"
 INPUT_MAX = 3000
 

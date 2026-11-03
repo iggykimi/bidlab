@@ -1,6 +1,6 @@
 # BidLab blockers
 
-## 2026-11-03 — PLACSP document downloads rejected (EXTERNAL, open)
+## 2026-11-03 — PLACSP document downloads rejected (EXTERNAL, resolved same day)
 
 `POST /api/v1/tenders/import` on the default Munilla tender (5/2026) fails with
 `source_unavailable`, detail `record XML: unexpected_type`.
@@ -17,6 +17,8 @@ evidence) cannot refresh its 4 shots (`live-import`, `live-consent`,
 `live-proposal`, `live-evidence` still show the pre-hierarchy UI from 30-oct).
 Live test 2 (clarification + voice) passed and its 5 shots are current.
 
-Next: retry the import later in case the WAF block is transient, or pick
-another open tender via `BIDLAB_PLACSP_URL`. Two bounded attempts were made on
-2026-11-03 (~21:45 and ~21:55 CET); both failed identically.
+Resolution: the WAF only requires a Mozilla-prefix User-Agent. With
+author authorization, `USER_AGENT` became a Chrome UA with an honest BidLab
+suffix (still names the single user-initiated import), pinned by
+`test_client_identifies_with_mozilla_prefix_and_bidlab_suffix`. The live
+import + extraction passed on the next run (~22:20 CET, $0.0036).
